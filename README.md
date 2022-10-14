@@ -1,4 +1,8 @@
-Leetcode cli helper
+# Leetgo
+
+Beat leetcode problems in your terminal
+
+---
 
 ## Main functions
 
