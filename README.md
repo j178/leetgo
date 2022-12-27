@@ -1,10 +1,12 @@
 # Leetgo
 
-Beat leetcode problems in your terminal
+Solve leetcode problems in your terminal
 
 ---
 
-## Main functions
+** This project is in its early development stage, anything are subtle to change. **
+
+## Main features
 
 - Search and view a problem by id or slug
 - Generate template code and testing code for a problem
@@ -35,7 +37,8 @@ Commands:
   new
   random
   today
-  update-questions
+  update
+  test
 ```
 
 ## Config file
