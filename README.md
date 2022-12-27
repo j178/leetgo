@@ -24,7 +24,7 @@ Beat leetcode problems in your terminal
 
 ## Usage
 ```
-Usage: leetcode [OPTIONS] COMMAND [ARGS]...
+Usage: leet [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --help  Show this message and exit.
