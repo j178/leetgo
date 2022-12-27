@@ -1,5 +1,10 @@
 package lang
 
+type GoConfig struct {
+	SeparatePackage  bool
+	FilenameTemplate string
+}
+
 type golang struct {
 }
 
