@@ -1,8 +1,8 @@
 package lang
 
 type GoConfig struct {
-	SeparatePackage  bool
-	FilenameTemplate string
+	SeparatePackage  bool   `json:"separate_package"`
+	FilenameTemplate string `json:"filename_template"`
 }
 
 type golang struct {

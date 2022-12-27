@@ -25,6 +25,7 @@ type Config struct {
 
 func initConfig() {
 	Opts = Config{
+		QuestionsDB: "./data/questions.json",
 		Go: lang.GoConfig{
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
@@ -83,5 +84,7 @@ func init() {
 	_ = rootCmd.MarkPersistentFlagFilename("config", "yml", "yaml")
 	_ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
 
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(todayCmd)
 }

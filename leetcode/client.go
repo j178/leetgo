@@ -1,6 +1,10 @@
 package leetcode
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/dghubble/sling"
 )
 
@@ -122,4 +126,41 @@ func (c *Client) GetQuestionData(slug string) (Question, error) {
 		return Question{}, err
 	}
 	return q.Data.Question, nil
+}
+
+type debugRespDecoder struct{}
+
+func (debugRespDecoder) Decode(resp *http.Response, v interface{}) error {
+	data, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(data))
+	return nil
+}
+
+func (c *Client) GetAllQuestions() ([]map[string]any, error) {
+	query := `
+	query AllQuestionUrls {
+		allQuestionUrls {
+			questionUrl
+		}
+	}
+	`
+	var resp struct {
+		Data struct {
+			AllQuestionUrls struct {
+				QuestionUrl string `json:"questionUrl"`
+			} `json:"allQuestionUrls"`
+		} `json:"data"`
+	}
+	_, err := c.graphqlPost(query, "AllQuestionUrls", nil).ReceiveSuccess(&resp)
+	if err != nil {
+		return nil, err
+	}
+	url := resp.Data.AllQuestionUrls.QuestionUrl
+
+	var all []map[string]any
+	_, err = sling.New().Get(url).ReceiveSuccess(&all)
+	if err != nil {
+		return nil, err
+	}
+	return all, err
 }
