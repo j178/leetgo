@@ -51,7 +51,7 @@ func initConfig() {
     )
     cobra.CheckErr(err)
 
-    leetcode.Cache = leetcode.NewCache(Opts.QuestionsDB)
+    leetcode.DbPath = Opts.QuestionsDB
 }
 
 var rootCmd = &cobra.Command{
@@ -65,7 +65,6 @@ var rootCmd = &cobra.Command{
         for _, p := range args {
             fmt.Println(c.GetQuestionData(p))
         }
-
         return nil
     },
 }

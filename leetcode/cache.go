@@ -3,8 +3,11 @@ package leetcode
 import (
     "encoding/json"
     "errors"
+    "fmt"
     "os"
     "path/filepath"
+    "sync"
+    "time"
 )
 
 type questionRecord struct {
@@ -51,6 +54,16 @@ func (c *cache) load() error {
         c.frontIds[r.FrontendId] = &r
     }
     return nil
+}
+
+func (c *cache) checkUpdateTime() {
+    stat, err := os.Stat(c.path)
+    if errors.Is(err, os.ErrNotExist) {
+        return
+    }
+    if time.Since(stat.ModTime()) >= 14*24*time.Hour {
+        _, _ = fmt.Fprintf(os.Stderr, "database is too old, try updating with `leet update`")
+    }
 }
 
 func (c *cache) Update(client Client) error {
@@ -103,10 +116,24 @@ func (c *cache) GetById(id string) *questionRecord {
     return c.frontIds[id]
 }
 
-func NewCache(path string) QuestionsDB {
-    c := &cache{path: path}
-    _ = c.load()
-    return c
+func GetCache() QuestionsDB {
+    once.Do(
+        func() {
+            c := &cache{path: DbPath}
+            c.checkUpdateTime()
+            err := c.load()
+            if err != nil {
+                _, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v", DbPath)
+            }
+            lazyCache = c
+        },
+    )
+
+    return lazyCache
 }
 
-var Cache QuestionsDB
+var (
+    once      sync.Once
+    lazyCache QuestionsDB
+    DbPath    string
+)

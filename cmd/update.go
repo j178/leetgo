@@ -10,6 +10,6 @@ var updateCmd = &cobra.Command{
     Short: "Update local questions DB",
     RunE: func(cmd *cobra.Command, args []string) error {
         c := leetcode.NewClient()
-        return leetcode.Cache.Update(c)
+        return leetcode.GetCache().Update(c)
     },
 }

@@ -1,6 +1,8 @@
 package leetcode
 
-import "errors"
+import (
+    "errors"
+)
 
 type TopicTag struct {
     Slug           string `json:"slug"`
@@ -34,7 +36,7 @@ type QuestionData struct {
     CodeSnippets       []CodeSnippet `json:"codeSnippets"`
 }
 
-func BySlug(slug string, c Client) (QuestionData, error) {
+func QuestionBySlug(slug string, c Client) (QuestionData, error) {
     q, err := c.GetQuestionData(slug)
     if err != nil {
         return QuestionData{}, err
@@ -42,10 +44,10 @@ func BySlug(slug string, c Client) (QuestionData, error) {
     return q, nil
 }
 
-func ById(id string, c Client) (QuestionData, error) {
-    qr := Cache.GetById(id)
+func QuestionById(id string, c Client) (QuestionData, error) {
+    qr := GetCache().GetById(id)
     if qr != nil {
-        return BySlug(qr.Slug, c)
+        return QuestionBySlug(qr.Slug, c)
     }
     return QuestionData{}, errors.New("no such question")
 }
@@ -54,9 +56,9 @@ func Question(s string, c Client) (QuestionData, error) {
     if s == "today" {
         return c.GetTodayQuestion()
     }
-    q, err := BySlug(s, c)
+    q, err := QuestionBySlug(s, c)
     if err == nil {
         return q, nil
     }
-    return ById(s, c)
+    return QuestionById(s, c)
 }
