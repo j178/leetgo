@@ -29,21 +29,25 @@ type LeetCodeConfig struct {
 	QuestionsCachePath string `json:"questions_cache_path" yaml:"questions_cache_path"`
 }
 
-var Opts = Config{
-	Cn: true,
-	LeetCode: LeetCodeConfig{
-		QuestionsCachePath: defaultLeetcodeQuestionsCachePath,
-	},
-	Go: lang.GoConfig{
-		SeparatePackage:  true,
-		FilenameTemplate: ``,
-	},
-}
+var (
+	DefaultOpts = Config{
+		Cn: true,
+		LeetCode: LeetCodeConfig{
+			QuestionsCachePath: defaultLeetcodeQuestionsCachePath,
+		},
+		Go: lang.GoConfig{
+			SeparatePackage:  true,
+			FilenameTemplate: ``,
+		},
+	}
+	Opts = DefaultOpts
+)
 
 func initConfig(cmd *cobra.Command, args []string) error {
 	if cmd == initCmd {
 		return nil
 	}
+
 	viper.SetConfigName("leet")
 	viper.AddConfigPath(".")
 	if configFile != "" {
@@ -109,6 +113,7 @@ func init() {
 	rootCmd.AddCommand(todayCmd)
 	rootCmd.AddCommand(infoCmd)
 	rootCmd.AddCommand(testCmd)
+	rootCmd.AddCommand(submitCmd)
 	rootCmd.AddCommand(contestCmd)
 	rootCmd.AddCommand(updateCmd)
 }
