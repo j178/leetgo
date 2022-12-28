@@ -8,13 +8,13 @@ type baseLang struct {
     BlockCommentEnd   string
 }
 
-type LangGenerator interface {
+type Generator interface {
     Name() string
     Generate() []any
     GenerateContest() []any
 }
 
-var SupportedLanguages = []LangGenerator{
+var SupportedLanguages = []Generator{
     golang{
         baseLang{
             Name:              "go",
