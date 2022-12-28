@@ -45,9 +45,9 @@ func QuestionBySlug(slug string, c Client) (QuestionData, error) {
 }
 
 func QuestionById(id string, c Client) (QuestionData, error) {
-    qr := GetCache().GetById(id)
-    if qr != nil {
-        return QuestionBySlug(qr.Slug, c)
+    q := GetCache().GetById(id)
+    if q != nil {
+        return QuestionBySlug(q.Slug, c)
     }
     return QuestionData{}, errors.New("no such question")
 }

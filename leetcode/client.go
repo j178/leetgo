@@ -2,6 +2,7 @@ package leetcode
 
 import (
     "encoding/json"
+    "errors"
     "fmt"
     "io"
     "net/http"
@@ -164,6 +165,9 @@ func (c *cnClient) GetQuestionData(slug string) (QuestionData, error) {
     if err != nil {
         return QuestionData{}, err
     }
+    if resp.Data.Question.TitleSlug == "" {
+        return QuestionData{}, errors.New("question not found")
+    }
     return resp.Data.Question, nil
 }
 
@@ -191,6 +195,19 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 }
 
 func (c *cnClient) GetTodayQuestion() (QuestionData, error) {
-    // TODO implement me
-    panic("implement me")
+    query := `
+    query questionOfToday {
+        todayRecord {
+            question {
+                titleSlug
+            }
+        }
+    }`
+    var resp gjson.Result
+    _, err := c.graphqlPost(query, "questionOfToday", nil).ReceiveSuccess(&resp)
+    if err != nil {
+        return QuestionData{}, err
+    }
+    slug := resp.Get("data.todayRecord.0.question.titleSlug").Str
+    return c.GetQuestionData(slug)
 }
