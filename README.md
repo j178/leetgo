@@ -4,7 +4,7 @@ Solve leetcode problems in your terminal
 
 ---
 
-** This project is in its early development stage, anything are subtle to change. **
+**This project is in its early development stage, and anything is likely to change.**
 
 ## Main features
 
