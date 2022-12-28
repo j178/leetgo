@@ -8,13 +8,13 @@ import (
 )
 
 type QuestionRecord struct {
-	FrontendId string   `json:"frontendId,omitempty"`
-	Slug       string   `json:"slug,omitempty"`
-	Title      string   `json:"title,omitempty"`
-	CnTitle    string   `json:"cnTitle,omitempty"`
-	Difficulty string   `json:"difficulty,omitempty"`
-	Tags       []string `json:"tags,omitempty"`
-	PaidOnly   bool     `json:"paidOnly,omitempty"`
+	FrontendId string   `json:"frontendId"`
+	Slug       string   `json:"slug"`
+	Title      string   `json:"title"`
+	CnTitle    string   `json:"cnTitle"`
+	Difficulty string   `json:"difficulty"`
+	Tags       []string `json:"tags"`
+	PaidOnly   bool     `json:"paidOnly"`
 }
 
 type QuestionsDB interface {
@@ -67,39 +67,34 @@ func (c *cache) Update() error {
 	if err != nil {
 		return err
 	}
+	questions := make([]QuestionRecord, 0, len(all.Array()))
+	for _, q := range all.Array() {
+		topicTags := q.Get("topicTags").Array()
+		tags := make([]string, 0, len(topicTags))
+		for _, t := range topicTags {
+			tags = append(tags, t.Get("slug").String())
+		}
+		questions = append(
+			questions, QuestionRecord{
+				FrontendId: q.Get("questionFrontendId").Str,
+				Slug:       q.Get("titleSlug").Str,
+				Title:      q.Get("title").Str,
+				CnTitle:    q.Get("translatedTitle").String(),
+				Difficulty: q.Get("difficulty").Str,
+				Tags:       tags,
+				PaidOnly:   q.Get("isPaidOnly").Bool(),
+			},
+		)
+	}
+
 	f, err := os.Create(c.path)
 	if err != nil {
 		return err
 	}
-	questions := make([]QuestionRecord, 0, len(all))
-	for _, q := range all {
-		tags := make([]string, 0, len(q["topicTags"].([]any)))
-		for _, t := range q["topicTags"].([]any) {
-			tags = append(tags, t.(map[string]any)["slug"].(string))
-		}
-		cnTitle := ""
-		if q["translatedTitle"] != nil {
-			cnTitle = q["translatedTitle"].(string)
-		}
-		questions = append(
-			questions, QuestionRecord{
-				FrontendId: q["questionFrontendId"].(string),
-				Slug:       q["titleSlug"].(string),
-				Title:      q["title"].(string),
-				CnTitle:    cnTitle,
-				Difficulty: q["difficulty"].(string),
-				Tags:       tags,
-				PaidOnly:   q["isPaidOnly"].(bool),
-			},
-		)
-	}
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "\t")
 	err = enc.Encode(questions)
-	if err != nil {
-		return err
-	}
-	return c.load()
+	return err
 }
 
 func (c *cache) GetBySlug(slug string) *QuestionRecord {

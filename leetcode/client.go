@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 
 	"github.com/dghubble/sling"
+	"github.com/tidwall/gjson"
 )
 
 const (
@@ -26,6 +28,37 @@ func WithCredential(cred CredentialProvider) Option {
 	return func(c *Client) {
 		c.cred = cred
 	}
+}
+
+type debugRespDecoder struct{}
+
+func (debugRespDecoder) Decode(resp *http.Response, v interface{}) error {
+	data, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(data))
+	return nil
+}
+
+type nonDecoder struct{}
+
+func (nonDecoder) Decode(resp *http.Response, v interface{}) error {
+	data, _ := io.ReadAll(resp.Body)
+	reflect.ValueOf(v).Elem().SetBytes(data)
+	return nil
+}
+
+type gjsonDecoder struct {
+	path string
+}
+
+func (g gjsonDecoder) Decode(resp *http.Response, v interface{}) error {
+	data, _ := io.ReadAll(resp.Body)
+	ele := reflect.ValueOf(v).Elem()
+	if g.path == "" {
+		ele.Set(reflect.ValueOf(gjson.ParseBytes(data)))
+	} else {
+		ele.Set(reflect.ValueOf(gjson.GetBytes(data, g.path)))
+	}
+	return nil
 }
 
 type Client struct {
@@ -53,7 +86,7 @@ func NewClient(options ...Option) *Client {
 	c.http.Add("Accept-Encoding", "gzip, deflate, br")
 	c.http.Add("Referer", c.baseUri)
 	c.http.Add("Origin", c.baseUri[:len(c.baseUri)-1])
-
+	c.http.ResponseDecoder(gjsonDecoder{})
 	return c
 }
 
@@ -128,15 +161,7 @@ func (c *Client) GetQuestionData(slug string) (Question, error) {
 	return q.Data.Question, nil
 }
 
-type debugRespDecoder struct{}
-
-func (debugRespDecoder) Decode(resp *http.Response, v interface{}) error {
-	data, _ := io.ReadAll(resp.Body)
-	fmt.Println(string(data))
-	return nil
-}
-
-func (c *Client) GetAllQuestions() ([]map[string]any, error) {
+func (c *Client) GetAllQuestions() (*gjson.Result, error) {
 	query := `
 	query AllQuestionUrls {
 		allQuestionUrls {
@@ -144,23 +169,16 @@ func (c *Client) GetAllQuestions() ([]map[string]any, error) {
 		}
 	}
 	`
-	var resp struct {
-		Data struct {
-			AllQuestionUrls struct {
-				QuestionUrl string `json:"questionUrl"`
-			} `json:"allQuestionUrls"`
-		} `json:"data"`
-	}
+	var resp gjson.Result
 	_, err := c.graphqlPost(query, "AllQuestionUrls", nil).ReceiveSuccess(&resp)
 	if err != nil {
 		return nil, err
 	}
-	url := resp.Data.AllQuestionUrls.QuestionUrl
+	url := resp.Get("data.allQuestionUrls.questionUrl").Str
 
-	var all []map[string]any
-	_, err = sling.New().Get(url).ReceiveSuccess(&all)
+	_, err = c.http.New().Get(url).ReceiveSuccess(&resp)
 	if err != nil {
 		return nil, err
 	}
-	return all, err
+	return &resp, err
 }
