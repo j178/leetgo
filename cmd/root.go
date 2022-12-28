@@ -50,6 +50,8 @@ func initConfig() {
         },
     )
     cobra.CheckErr(err)
+
+    leetcode.Cache = leetcode.NewCache(Opts.QuestionsDB)
 }
 
 var rootCmd = &cobra.Command{
@@ -87,4 +89,5 @@ func init() {
     rootCmd.AddCommand(initCmd)
     rootCmd.AddCommand(updateCmd)
     rootCmd.AddCommand(todayCmd)
+    rootCmd.AddCommand(infoCmd)
 }

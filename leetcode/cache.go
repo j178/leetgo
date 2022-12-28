@@ -7,7 +7,7 @@ import (
     "path/filepath"
 )
 
-type QuestionRecord struct {
+type questionRecord struct {
     FrontendId string   `json:"frontendId"`
     Slug       string   `json:"slug"`
     Title      string   `json:"title"`
@@ -18,23 +18,22 @@ type QuestionRecord struct {
 }
 
 type QuestionsDB interface {
-    GetBySlug(slug string) *QuestionRecord
-    GetById(id string) *QuestionRecord
-    Update() error
+    GetBySlug(slug string) *questionRecord
+    GetById(id string) *questionRecord
+    Update(client Client) error
 }
 
 type cache struct {
     path     string
-    client   *Client
-    slugs    map[string]*QuestionRecord
-    frontIds map[string]*QuestionRecord
+    slugs    map[string]*questionRecord
+    frontIds map[string]*questionRecord
 }
 
 func (c *cache) load() error {
-    c.slugs = make(map[string]*QuestionRecord)
-    c.frontIds = make(map[string]*QuestionRecord)
+    c.slugs = make(map[string]*questionRecord)
+    c.frontIds = make(map[string]*questionRecord)
 
-    var records []QuestionRecord
+    var records []questionRecord
     if _, err := os.Stat(c.path); errors.Is(err, os.ErrNotExist) {
         return err
     }
@@ -54,7 +53,7 @@ func (c *cache) load() error {
     return nil
 }
 
-func (c *cache) Update() error {
+func (c *cache) Update(client Client) error {
     dir := filepath.Dir(c.path)
     if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
         err = os.MkdirAll(dir, os.ModePerm)
@@ -63,26 +62,25 @@ func (c *cache) Update() error {
         }
     }
 
-    all, err := c.client.GetAllQuestions()
+    all, err := client.GetAllQuestions()
     if err != nil {
         return err
     }
-    questions := make([]QuestionRecord, 0, len(all.Array()))
-    for _, q := range all.Array() {
-        topicTags := q.Get("topicTags").Array()
-        tags := make([]string, 0, len(topicTags))
-        for _, t := range topicTags {
-            tags = append(tags, t.Get("slug").String())
+    questions := make([]questionRecord, 0, len(all))
+    for _, q := range all {
+        tags := make([]string, 0, len(q.TopicTags))
+        for _, t := range q.TopicTags {
+            tags = append(tags, t.Slug)
         }
         questions = append(
-            questions, QuestionRecord{
-                FrontendId: q.Get("questionFrontendId").Str,
-                Slug:       q.Get("titleSlug").Str,
-                Title:      q.Get("title").Str,
-                CnTitle:    q.Get("translatedTitle").String(),
-                Difficulty: q.Get("difficulty").Str,
+            questions, questionRecord{
+                FrontendId: q.QuestionFrontendId,
+                Slug:       q.TitleSlug,
+                Title:      q.Title,
+                CnTitle:    q.TranslatedTitle,
+                Difficulty: q.Difficulty,
                 Tags:       tags,
-                PaidOnly:   q.Get("isPaidOnly").Bool(),
+                PaidOnly:   q.IsPaidOnly,
             },
         )
     }
@@ -97,16 +95,18 @@ func (c *cache) Update() error {
     return err
 }
 
-func (c *cache) GetBySlug(slug string) *QuestionRecord {
+func (c *cache) GetBySlug(slug string) *questionRecord {
     return c.slugs[slug]
 }
 
-func (c *cache) GetById(id string) *QuestionRecord {
+func (c *cache) GetById(id string) *questionRecord {
     return c.frontIds[id]
 }
 
-func NewDB(path string, client *Client) QuestionsDB {
-    c := &cache{path: path, client: client}
+func NewCache(path string) QuestionsDB {
+    c := &cache{path: path}
     _ = c.load()
     return c
 }
+
+var Cache QuestionsDB
