@@ -55,7 +55,7 @@ func initConfig() {
 }
 
 var rootCmd = &cobra.Command{
-    Use:     "leet [OPTIONS] COMMAND [ARGS]",
+    Use:     "leet",
     Short:   "Leetcode",
     Long:    "Leetcode command line tool.",
     Version: Version,
@@ -73,8 +73,10 @@ func addLangFlags(cmd *cobra.Command) {
 
 func init() {
     cobra.OnInitialize(initConfig)
+    cobra.EnableCommandSorting = false
 
     rootCmd.InitDefaultVersionFlag()
+    rootCmd.UsageTemplate()
     rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file path")
     rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
 
@@ -86,5 +88,6 @@ func init() {
     rootCmd.AddCommand(todayCmd)
     rootCmd.AddCommand(infoCmd)
     rootCmd.AddCommand(testCmd)
+    rootCmd.AddCommand(contestCmd)
     rootCmd.AddCommand(updateCmd)
 }

@@ -8,9 +8,10 @@ import (
 )
 
 var newCmd = &cobra.Command{
-    Use:   "new",
-    Short: "Generate a new question",
-    Args:  cobra.MinimumNArgs(1),
+    Use:     "new SLUG_OR_ID...",
+    Short:   "Generate a new question",
+    Example: "leet new 450 --go\nleet new two-sum --go",
+    Args:    cobra.MinimumNArgs(1),
     RunE: func(cmd *cobra.Command, args []string) error {
         c := leetcode.NewClient()
         for _, p := range args {

@@ -8,8 +8,9 @@ import (
 )
 
 var todayCmd = &cobra.Command{
-    Use:   "today",
-    Short: "Generate the question of today",
+    Use:     "today",
+    Short:   "Generate the question of today",
+    Example: `leet today --go`,
     RunE: func(cmd *cobra.Command, args []string) error {
         c := leetcode.NewClient()
         q, err := c.GetTodayQuestion()
