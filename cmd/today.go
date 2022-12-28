@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/spf13/cobra"
+    "github.com/spf13/cobra"
 )
 
 var todayCmd = &cobra.Command{
-	Use:   "today",
-	Short: "Generate the question of today",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("today!")
-	},
+    Use:   "today",
+    Short: "Generate the question of today",
+    Run: func(cmd *cobra.Command, args []string) {
+        fmt.Println("today!")
+    },
 }

@@ -13,7 +13,6 @@ Solve leetcode problems in your terminal
 - Run test case in your local machine
 - Generate contest problems just in time
 
-
 ## Supported languages
 
 - Golang
@@ -21,10 +20,12 @@ Solve leetcode problems in your terminal
 - Rust
 
 ### Planning
+
 - Java
 - C++
 
 ## Usage
+
 ```
 Usage: leet [OPTIONS] COMMAND [ARGS]...
 
