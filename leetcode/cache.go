@@ -97,11 +97,11 @@ func (c *cache) Update(client Client) error {
             },
         )
     }
-
     f, err := os.Create(c.path)
     if err != nil {
         return err
     }
+    defer func() { _ = f.Close() }()
     enc := json.NewEncoder(f)
     enc.SetIndent("", "\t")
     err = enc.Encode(questions)

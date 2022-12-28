@@ -41,7 +41,7 @@ type decoder struct {
 
 var debugResponse = false
 
-func (g decoder) Decode(resp *http.Response, v interface{}) error {
+func (d decoder) Decode(resp *http.Response, v interface{}) error {
     data, _ := io.ReadAll(resp.Body)
     if debugResponse {
         fmt.Println(string(data))
@@ -50,10 +50,10 @@ func (g decoder) Decode(resp *http.Response, v interface{}) error {
     ele := reflect.ValueOf(v).Elem()
     switch ty.Elem() {
     case reflect.TypeOf(gjson.Result{}):
-        if g.path == "" {
+        if d.path == "" {
             ele.Set(reflect.ValueOf(gjson.ParseBytes(data)))
         } else {
-            ele.Set(reflect.ValueOf(gjson.GetBytes(data, g.path)))
+            ele.Set(reflect.ValueOf(gjson.GetBytes(data, d.path)))
         }
     case reflect.TypeOf([]byte{}):
         ele.SetBytes(data)
@@ -62,7 +62,7 @@ func (g decoder) Decode(resp *http.Response, v interface{}) error {
     }
     return nil
 }
-
+  
 type ErrorResp struct {
     Errors string `json:"errors"`
 }
