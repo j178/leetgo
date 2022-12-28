@@ -1,10 +1,27 @@
 package lang
 
-type Lang interface {
-    Name() string
-    Ext() string
+type baseLang struct {
+    Name              string
+    Suffix            string
+    LineComment       string
+    BlockCommentStart string
+    BlockCommentEnd   string
 }
 
-var SupportedLanguages = []Lang{
-    golang{},
+type LangGenerator interface {
+    Name() string
+    Generate() []any
+    GenerateContest() []any
+}
+
+var SupportedLanguages = []LangGenerator{
+    golang{
+        baseLang{
+            Name:              "go",
+            Suffix:            ".go",
+            LineComment:       "//",
+            BlockCommentStart: "/*",
+            BlockCommentEnd:   "*/",
+        },
+    },
 }

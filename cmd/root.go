@@ -55,22 +55,20 @@ func initConfig() {
 }
 
 var rootCmd = &cobra.Command{
-    Use:     "leet SLUG_OR_ID...",
+    Use:     "leet [OPTIONS] COMMAND [ARGS]",
     Short:   "Leetcode",
     Long:    "Leetcode command line tool.",
-    Args:    cobra.MinimumNArgs(1),
     Version: Version,
-    RunE: func(cmd *cobra.Command, args []string) error {
-        c := leetcode.NewClient()
-        for _, p := range args {
-            fmt.Println(c.GetQuestionData(p))
-        }
-        return nil
-    },
 }
 
 func Execute() {
     cobra.CheckErr(rootCmd.Execute())
+}
+
+func addLangFlags(cmd *cobra.Command) {
+    for _, l := range lang.SupportedLanguages {
+        cmd.Flags().Bool(strings.ToLower(l.Name()), false, fmt.Sprintf("generate %s output", l.Name()))
+    }
 }
 
 func init() {
@@ -79,14 +77,14 @@ func init() {
     rootCmd.InitDefaultVersionFlag()
     rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file path")
     rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
-    for _, l := range lang.SupportedLanguages {
-        rootCmd.PersistentFlags().Bool(strings.ToLower(l.Name()), false, fmt.Sprintf("generate %s output", l.Name()))
-    }
+
     _ = rootCmd.MarkPersistentFlagFilename("config", "yml", "yaml")
     _ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
 
     rootCmd.AddCommand(initCmd)
-    rootCmd.AddCommand(updateCmd)
+    rootCmd.AddCommand(newCmd)
     rootCmd.AddCommand(todayCmd)
     rootCmd.AddCommand(infoCmd)
+    rootCmd.AddCommand(testCmd)
+    rootCmd.AddCommand(updateCmd)
 }

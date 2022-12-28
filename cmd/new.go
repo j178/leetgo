@@ -7,20 +7,20 @@ import (
     "github.com/spf13/cobra"
 )
 
-var todayCmd = &cobra.Command{
-    Use:   "today",
-    Short: "Generate the question of today",
+var newCmd = &cobra.Command{
+    Use:   "new",
+    Short: "Generate a new question",
+    Args:  cobra.MinimumNArgs(1),
     RunE: func(cmd *cobra.Command, args []string) error {
         c := leetcode.NewClient()
-        q, err := c.GetTodayQuestion()
-        if err != nil {
-            return err
+        for _, p := range args {
+            q, _ := leetcode.Question(p, c)
+            fmt.Println(q)
         }
-        fmt.Printf("%v\n", q)
         return nil
     },
 }
 
 func init() {
-    addLangFlags(todayCmd)
+    addLangFlags(newCmd)
 }

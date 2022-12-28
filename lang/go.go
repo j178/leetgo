@@ -6,12 +6,17 @@ type GoConfig struct {
 }
 
 type golang struct {
+    baseLang
 }
 
 func (golang) Name() string {
     return "Go"
 }
 
-func (golang) Ext() string {
-    return "go"
+func (golang) Generate() []any {
+    return nil
+}
+
+func (golang) GenerateContest() []any {
+    return nil
 }
