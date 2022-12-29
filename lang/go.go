@@ -1,11 +1,6 @@
 package lang
 
-type GoConfig struct {
-	Enable           bool   `json:"enable" yaml:"enable"`
-	OutDir           string `json:"out_dir" yaml:"out_dir"`
-	SeparatePackage  bool   `json:"separate_package" yaml:"separate_package"`
-	FilenameTemplate string `json:"filename_template" yaml:"filename_template"`
-}
+import "github.com/j178/leetgo/leetcode"
 
 type golang struct {
 	baseLang
@@ -15,7 +10,7 @@ func (g golang) Name() string {
 	return g.baseLang.Name
 }
 
-func (golang) Generate() []any {
+func (golang) Generate(q leetcode.QuestionData) []any {
 	return nil
 }
 

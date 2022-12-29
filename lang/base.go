@@ -1,5 +1,7 @@
 package lang
 
+import "github.com/j178/leetgo/leetcode"
+
 type baseLang struct {
 	Name              string
 	Suffix            string
@@ -10,7 +12,7 @@ type baseLang struct {
 
 type Generator interface {
 	Name() string
-	Generate() []any
+	Generate(q leetcode.QuestionData) []any
 	GenerateContest() []any
 }
 

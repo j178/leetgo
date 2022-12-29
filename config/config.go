@@ -3,7 +3,6 @@ package config
 import (
 	"path/filepath"
 
-	"github.com/j178/leetgo/lang"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -16,12 +15,24 @@ const (
 var cfg *Config
 
 type Config struct {
-	Cn       bool              `json:"cn" yaml:"cn"`
-	LeetCode LeetCodeConfig    `json:"leetcode" yaml:"leetcode"`
-	Go       lang.GoConfig     `json:"go" yaml:"go"`
-	Python   lang.PythonConfig `json:"python" yaml:"python"`
+	Cn       bool           `json:"cn" yaml:"cn"`
+	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
+	Go       GoConfig       `json:"go" yaml:"go"`
+	Python   PythonConfig   `json:"python" yaml:"python"`
 	// Add more languages here
 	dir string
+}
+
+type PythonConfig struct {
+	Enable bool   `json:"enable" yaml:"enable"`
+	OutDir string `json:"out_dir" yaml:"out_dir"`
+}
+
+type GoConfig struct {
+	Enable           bool   `json:"enable" yaml:"enable"`
+	OutDir           string `json:"out_dir" yaml:"out_dir"`
+	SeparatePackage  bool   `json:"separate_package" yaml:"separate_package"`
+	FilenameTemplate string `json:"filename_template" yaml:"filename_template"`
 }
 
 type LeetCodeConfig struct {
@@ -46,13 +57,13 @@ func Default() Config {
 		dir:      configDir,
 		Cn:       true,
 		LeetCode: LeetCodeConfig{},
-		Go: lang.GoConfig{
+		Go: GoConfig{
 			Enable:           false,
 			OutDir:           "go",
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
-		Python: lang.PythonConfig{
+		Python: PythonConfig{
 			Enable: false,
 			OutDir: "python",
 		},

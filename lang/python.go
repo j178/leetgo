@@ -1,9 +1,6 @@
 package lang
 
-type PythonConfig struct {
-	Enable bool   `json:"enable" yaml:"enable"`
-	OutDir string `json:"out_dir" yaml:"out_dir"`
-}
+import "github.com/j178/leetgo/leetcode"
 
 type python struct {
 	baseLang
@@ -13,7 +10,7 @@ func (p python) Name() string {
 	return p.baseLang.Name
 }
 
-func (p python) Generate() []any {
+func (p python) Generate(q leetcode.QuestionData) []any {
 	// TODO implement me
 	panic("implement me")
 }
