@@ -8,10 +8,10 @@ Solve leetcode problems in your terminal
 
 ## Main features
 
-- Search and view a problem by id or slug
-- Generate template code and testing code for a problem
-- Run test case in your local machine
-- Generate contest problems just in time
+- Search for and view a problem by its ID or slug.
+- Generate template and testing code for a problem.
+- Run test cases on your local machine.
+- Generate contest questions just in time.
 
 ## Supported languages
 
