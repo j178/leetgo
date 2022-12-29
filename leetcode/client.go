@@ -9,12 +9,8 @@ import (
 	"reflect"
 
 	"github.com/dghubble/sling"
+	"github.com/j178/leetgo/config"
 	"github.com/tidwall/gjson"
-)
-
-const (
-	originCN = "https://leetcode.cn"
-	originEN = "https://leetcode.com"
 )
 
 type Client interface {
@@ -71,30 +67,37 @@ type ErrorResp struct {
 type Variables map[string]string
 
 type cnClient struct {
-	baseUri string
-	opts    Options
-	http    *sling.Sling
+	opts Options
+	http *sling.Sling
 }
 
 func NewClient(options ...Option) Client {
-	c := &cnClient{
-		baseUri: originCN,
-		http:    sling.New(),
-	}
+	var opts Options
 	for _, f := range options {
-		f(&c.opts)
+		f(&opts)
 	}
-
-	c.http.Base(c.baseUri)
-	c.http.Add(
+	httpClient := sling.New()
+	httpClient.Add(
 		"User-Agent",
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
 	)
-	c.http.Add("Accept-Encoding", "gzip, deflate, br")
-	c.http.Add("Referer", c.baseUri)
-	c.http.Add("Origin", c.baseUri[:len(c.baseUri)-1])
-	c.http.ResponseDecoder(decoder{})
-	return c
+	httpClient.Add("Accept-Encoding", "gzip, deflate, br")
+	httpClient.ResponseDecoder(decoder{})
+
+	cfg := config.Get()
+	if cfg.LeetCode.Site == config.LeetCodeCN {
+		c := &cnClient{
+			opts: opts,
+			http: httpClient,
+		}
+		c.http.Base(c.BaseURI())
+		c.http.Add("Referer", c.BaseURI())
+		c.http.Add("Origin", string(config.LeetCodeCN))
+		return c
+	} else {
+		panic(fmt.Sprintf("site not supported yet: %s", cfg.LeetCode.Site))
+	}
+	return nil
 }
 
 type graphQLBody struct {
@@ -126,7 +129,7 @@ func (c *cnClient) graphqlPost(query string, operation string, variables Variabl
 }
 
 func (c *cnClient) BaseURI() string {
-	return c.baseUri
+	return string(config.LeetCodeCN) + "/"
 }
 
 func (c *cnClient) GetQuestionData(slug string) (QuestionData, error) {

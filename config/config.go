@@ -14,8 +14,15 @@ const (
 
 var cfg *Config
 
+type Site string
+
+const (
+	LeetCodeCN Site = "https://leetcode.cn"
+	LeetCodeUS Site = "https://leetcode.com"
+)
+
 type Config struct {
-	Cn       bool           `json:"cn" yaml:"cn"`
+	CN       bool           `json:"cn" yaml:"cn"`
 	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
 	Go       GoConfig       `json:"go" yaml:"go"`
 	Python   PythonConfig   `json:"python" yaml:"python"`
@@ -36,6 +43,7 @@ type GoConfig struct {
 }
 
 type LeetCodeConfig struct {
+	Site Site `json:"site" yaml:"site"`
 }
 
 func (c Config) ConfigDir() string {
@@ -54,9 +62,11 @@ func Default() Config {
 	home, _ := homedir.Dir()
 	configDir := filepath.Join(home, ".config", cmdName)
 	return Config{
-		dir:      configDir,
-		Cn:       true,
-		LeetCode: LeetCodeConfig{},
+		dir: configDir,
+		CN:  true,
+		LeetCode: LeetCodeConfig{
+			Site: LeetCodeCN,
+		},
 		Go: GoConfig{
 			Enable:           false,
 			OutDir:           "go",

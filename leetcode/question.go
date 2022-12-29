@@ -38,7 +38,7 @@ type QuestionData struct {
 }
 
 func (q *QuestionData) Url() string {
-	return q.client.BaseURI() + "/problems/" + q.TitleSlug + "/"
+	return q.client.BaseURI() + "problems/" + q.TitleSlug + "/"
 }
 
 func QuestionBySlug(slug string, c Client) (QuestionData, error) {

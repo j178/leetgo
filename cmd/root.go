@@ -82,8 +82,6 @@ func init() {
 
 	rootCmd.Flags().SortFlags = false
 	rootCmd.InitDefaultVersionFlag()
-	rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
-	_ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
 
 	commands := []*cobra.Command{
 		initCmd,

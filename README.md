@@ -28,7 +28,7 @@ Solve leetcode problems in your terminal
 <!-- BEGIN USAGE -->
 ```
 Usage:
-  leet [command]
+  leetgo [command]
 
 Available Commands:
   init        Init a leetcode workspace
@@ -41,10 +41,9 @@ Available Commands:
   update      Update local questions DB
 
 Flags:
-      --cn        use Chinese (default true)
-  -v, --version   version for leet
+  -v, --version   version for leetgo
 
-Use "leet [command] --help" for more information about a command.
+Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
