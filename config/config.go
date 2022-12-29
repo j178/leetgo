@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
@@ -22,28 +23,28 @@ const (
 )
 
 type Config struct {
-	CN       bool           `json:"cn" yaml:"cn"`
-	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
-	Go       GoConfig       `json:"go" yaml:"go"`
-	Python   PythonConfig   `json:"python" yaml:"python"`
+	CN       bool           `yaml:"cn"`
+	LeetCode LeetCodeConfig `yaml:"leetcode"`
+	Go       GoConfig       `yaml:"go"`
+	Python   PythonConfig   `yaml:"python"`
 	// Add more languages here
 	dir string
 }
 
 type PythonConfig struct {
-	Enable bool   `json:"enable" yaml:"enable"`
-	OutDir string `json:"out_dir" yaml:"out_dir"`
+	Enable bool   `yaml:"enable"`
+	OutDir string `yaml:"out_dir"`
 }
 
 type GoConfig struct {
-	Enable           bool   `json:"enable" yaml:"enable"`
-	OutDir           string `json:"out_dir" yaml:"out_dir"`
-	SeparatePackage  bool   `json:"separate_package" yaml:"separate_package"`
-	FilenameTemplate string `json:"filename_template" yaml:"filename_template"`
+	Enable           bool   `yaml:"enable"`
+	OutDir           string `yaml:"out_dir"`
+	SeparatePackage  bool   `yaml:"separate_package"`
+	FilenameTemplate string `yaml:"filename_template"`
 }
 
 type LeetCodeConfig struct {
-	Site Site `json:"site" yaml:"site"`
+	Site Site `yaml:"site"`
 }
 
 func (c Config) ConfigDir() string {
@@ -90,4 +91,12 @@ func Get() Config {
 
 func Init(c Config) {
 	cfg = &c
+}
+
+func Verify(c Config) error {
+	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
+		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
+	}
+
+	return nil
 }

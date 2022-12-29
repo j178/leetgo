@@ -29,11 +29,14 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	}
 	err = viper.Unmarshal(
 		&cfg, func(c *mapstructure.DecoderConfig) {
-			c.TagName = "json"
+			c.TagName = "yaml"
 		},
 	)
 	if err != nil {
 		return err
+	}
+	if err = config.Verify(cfg); err != nil {
+		return fmt.Errorf("config file is invalid: %w", err)
 	}
 
 	config.Init(cfg)
