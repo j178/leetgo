@@ -10,12 +10,12 @@ func (p python) Name() string {
 	return p.baseLang.Name
 }
 
-func (p python) Generate(q leetcode.QuestionData) []any {
+func (p python) Generate(q leetcode.QuestionData) []FileOutput {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (p python) GenerateContest() []any {
+func (p python) GenerateContest(leetcode.Contest) []FileOutput {
 	// TODO implement me
 	panic("implement me")
 }

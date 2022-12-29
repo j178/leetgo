@@ -10,10 +10,15 @@ type baseLang struct {
 	BlockCommentEnd   string
 }
 
+type FileOutput struct {
+	Filename string
+	Content  string
+}
+
 type Generator interface {
 	Name() string
-	Generate(q leetcode.QuestionData) []any
-	GenerateContest() []any
+	Generate(q leetcode.QuestionData) []FileOutput
+	GenerateContest(c leetcode.Contest) []FileOutput
 }
 
 var SupportedLanguages = []Generator{

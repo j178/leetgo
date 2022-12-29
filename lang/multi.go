@@ -21,9 +21,10 @@ func NewMultiGenerator() MultiGenerator {
 	return MultiGenerator{generators: gen}
 }
 
-func (m MultiGenerator) Generate(q leetcode.QuestionData) error {
+func (m MultiGenerator) Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
+	var files [][]FileOutput
 	for _, gen := range m.generators {
-		gen.Generate(q)
+		files = append(files, gen.Generate(q))
 	}
-	return nil
+	return files, nil
 }
