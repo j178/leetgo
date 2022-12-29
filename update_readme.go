@@ -14,7 +14,7 @@ const (
 
 func main() {
 	help := cmd.HelpText()
-	help = "\n```\n" + help + "\n```\n"
+	help = "\n```\n" + help + "```\n"
 	readmeBytes, _ := os.ReadFile("README.md")
 	readme := string(readmeBytes)
 	usageStart := strings.Index(readme, beginMark) + len(beginMark)

@@ -38,6 +38,7 @@ Available Commands:
   today       Generate the question of today
   info        Show question info
   test        Run question test cases
+  submit      Submit solution
   contest     Generate contest questions
   update      Update local questions DB
 
@@ -47,9 +48,13 @@ Flags:
   -v, --version         version for leet
 
 Use "leet [command] --help" for more information about a command.
-
 ```
 <!-- END USAGE -->
 
 ## Config file
 
+## Credits
+
+- https://github.com/EndlessCheng/codeforces-go
+- https://github.com/clearloop/leetcode-cli
+- https://github.com/budougumi0617/leetgode

@@ -34,7 +34,7 @@ type cache struct {
 	frontIds map[string]*questionRecord
 }
 
-func (c *cache) loadCache() error {
+func (c *cache) doLoad() error {
 	c.slugs = make(map[string]*questionRecord)
 	c.frontIds = make(map[string]*questionRecord)
 
@@ -62,7 +62,7 @@ func (c *cache) load() {
 	c.once.Do(
 		func() {
 			c.checkUpdateTime()
-			err := c.loadCache()
+			err := c.doLoad()
 			if err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v")
 			}
