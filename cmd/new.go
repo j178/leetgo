@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
 )
@@ -14,8 +15,10 @@ var newCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
+		gen := lang.NewMultiGenerator()
 		for _, p := range args {
 			q, _ := leetcode.Question(p, c)
+			_ = gen.Generate(q)
 			fmt.Println(q)
 		}
 		return nil

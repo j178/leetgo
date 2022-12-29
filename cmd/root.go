@@ -80,27 +80,23 @@ func addLangFlags(cmd *cobra.Command) {
 func init() {
 	cobra.EnableCommandSorting = false
 
+	rootCmd.Flags().SortFlags = false
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
 	_ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
 
-	rootCmd.Flags().SortFlags = false
-	initCmd.Flags().SortFlags = false
-	initCmd.Flags().SortFlags = false
-	newCmd.Flags().SortFlags = false
-	todayCmd.Flags().SortFlags = false
-	infoCmd.Flags().SortFlags = false
-	testCmd.Flags().SortFlags = false
-	submitCmd.Flags().SortFlags = false
-	contestCmd.Flags().SortFlags = false
-	updateCmd.Flags().SortFlags = false
-
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(newCmd)
-	rootCmd.AddCommand(todayCmd)
-	rootCmd.AddCommand(infoCmd)
-	rootCmd.AddCommand(testCmd)
-	rootCmd.AddCommand(submitCmd)
-	rootCmd.AddCommand(contestCmd)
-	rootCmd.AddCommand(updateCmd)
+	commands := []*cobra.Command{
+		initCmd,
+		newCmd,
+		todayCmd,
+		infoCmd,
+		testCmd,
+		submitCmd,
+		contestCmd,
+		updateCmd,
+	}
+	for _, cmd := range commands {
+		cmd.Flags().SortFlags = false
+		rootCmd.AddCommand(cmd)
+	}
 }
