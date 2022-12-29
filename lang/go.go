@@ -7,6 +7,16 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
+var golangGen = golang{
+	baseLang{
+		Name:              "Go",
+		Suffix:            ".go",
+		LineComment:       "//",
+		BlockCommentStart: "/*",
+		BlockCommentEnd:   "*/",
+	},
+}
+
 type golang struct {
 	baseLang
 }

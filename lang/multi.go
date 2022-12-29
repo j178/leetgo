@@ -13,10 +13,10 @@ func NewMultiGenerator() MultiGenerator {
 	cfg := config.Get()
 	var gen []Generator
 	if cfg.Go.Enable {
-		gen = append(gen, golang{})
+		gen = append(gen, golangGen)
 	}
 	if cfg.Python.Enable {
-		gen = append(gen, python{})
+		gen = append(gen, pythonGen)
 	}
 	return MultiGenerator{generators: gen}
 }

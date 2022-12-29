@@ -2,6 +2,16 @@ package lang
 
 import "github.com/j178/leetgo/leetcode"
 
+var pythonGen = python{
+	baseLang{
+		Name:              "Python",
+		Suffix:            ".py",
+		LineComment:       "#",
+		BlockCommentStart: `"""`,
+		BlockCommentEnd:   `"""`,
+	},
+}
+
 type python struct {
 	baseLang
 }
