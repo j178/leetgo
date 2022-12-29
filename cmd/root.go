@@ -2,64 +2,32 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
-	"github.com/j178/leetgo/leetcode"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	configFile                        = ""
-	Version                           = "0.0.1"
-	defaultConfigFile                 = "leet.yml"
-	defaultLeetcodeQuestionsCachePath = "./data/leetcode-questions.json"
+	Version = "0.0.1"
 )
 
-type Config struct {
-	Cn       bool           `json:"cn" yaml:"cn"`
-	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
-	Go       lang.GoConfig  `json:"go" yaml:"go"`
-}
-
-type LeetCodeConfig struct {
-	QuestionsCachePath string `json:"questions_cache_path" yaml:"questions_cache_path"`
-}
-
-var (
-	DefaultOpts = Config{
-		Cn: true,
-		LeetCode: LeetCodeConfig{
-			QuestionsCachePath: defaultLeetcodeQuestionsCachePath,
-		},
-		Go: lang.GoConfig{
-			SeparatePackage:  true,
-			FilenameTemplate: ``,
-		},
-	}
-	Opts = DefaultOpts
-)
-
-func initConfig(cmd *cobra.Command, args []string) error {
-	if cmd == initCmd {
-		return nil
-	}
-
-	viper.SetConfigName("leet")
-	viper.AddConfigPath(".")
-	if configFile != "" {
-		viper.SetConfigFile(configFile)
-	}
+func loadConfig(cmd *cobra.Command, args []string) error {
+	cfg := config.Default()
+	viper.SetConfigFile(cfg.ConfigFile())
 	err := viper.ReadInConfig()
 	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return err
+		if os.IsNotExist(err) {
+			return nil
 		}
+		return err
 	}
 	err = viper.Unmarshal(
-		&Opts, func(c *mapstructure.DecoderConfig) {
+		&cfg, func(c *mapstructure.DecoderConfig) {
 			c.TagName = "json"
 		},
 	)
@@ -67,7 +35,7 @@ func initConfig(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	leetcode.QuestionsCachePath = Opts.LeetCode.QuestionsCachePath
+	config.Init(cfg)
 	return err
 }
 
@@ -76,7 +44,7 @@ var rootCmd = &cobra.Command{
 	Short:             "Leetcode",
 	Long:              "Leetcode command line tool.",
 	Version:           Version,
-	PersistentPreRunE: initConfig,
+	PersistentPreRunE: loadConfig,
 }
 
 func Execute() {
@@ -97,11 +65,7 @@ func init() {
 	cobra.EnableCommandSorting = false
 
 	rootCmd.InitDefaultVersionFlag()
-	rootCmd.UsageTemplate()
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file path")
 	rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
-
-	_ = rootCmd.MarkPersistentFlagFilename("config", "yml", "yaml")
 	_ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
 
 	rootCmd.AddCommand(initCmd)

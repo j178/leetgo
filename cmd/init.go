@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
@@ -17,13 +17,22 @@ var initCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := args[0]
-		if !utils.IsExist(dir) {
-			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-				return err
-			}
+		err := utils.CreateIfNotExists(dir, true)
+		if err != nil {
+			return err
 		}
-		createConfigFile(dir)
-		createQuestionDB(dir)
+		err = createConfigDir()
+		if err != nil {
+			return err
+		}
+		err = createConfigFile()
+		if err != nil {
+			return err
+		}
+		err = createQuestionDB()
+		if err != nil {
+			return err
+		}
 		// 生成目录
 		// 写入基础库代码
 
@@ -31,17 +40,26 @@ var initCmd = &cobra.Command{
 	},
 }
 
-func createConfigFile(dir string) error {
-	f, err := os.Create(filepath.Join(dir, defaultConfigFile))
+func createConfigDir() error {
+	return utils.CreateIfNotExists(config.Get().ConfigDir(), true)
+}
+
+func createConfigFile() error {
+	if utils.IsExist(config.Get().ConfigFile()) {
+		return nil
+	}
+	f, err := os.Create(config.Get().ConfigFile())
 	if err != nil {
 		return err
 	}
 	enc := yaml.NewEncoder(f)
-	return enc.Encode(DefaultOpts)
+	return enc.Encode(config.Default())
 }
 
-func createQuestionDB(dir string) error {
-	leetcode.QuestionsCachePath = filepath.Join(dir, defaultLeetcodeQuestionsCachePath)
+func createQuestionDB() error {
+	if utils.IsExist(config.Get().LeetCodeCacheFile()) {
+		return nil
+	}
 	c := leetcode.NewClient()
 	return leetcode.GetCache().Update(c)
 }

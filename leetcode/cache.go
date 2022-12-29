@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -131,13 +132,12 @@ func (c *cache) GetById(id string) *questionRecord {
 
 func GetCache() QuestionsCache {
 	if lazyCache == nil {
-		lazyCache = &cache{path: QuestionsCachePath}
+		lazyCache = &cache{path: config.Get().LeetCodeCacheFile()}
 	}
 
 	return lazyCache
 }
 
 var (
-	lazyCache          QuestionsCache
-	QuestionsCachePath string
+	lazyCache QuestionsCache
 )

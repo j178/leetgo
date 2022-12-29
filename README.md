@@ -41,9 +41,8 @@ Available Commands:
   update      Update local questions DB
 
 Flags:
-      --cn              use Chinese (default true)
-  -c, --config string   config file path
-  -v, --version         version for leet
+      --cn        use Chinese (default true)
+  -v, --version   version for leet
 
 Use "leet [command] --help" for more information about a command.
 ```
