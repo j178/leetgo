@@ -19,7 +19,8 @@ type Config struct {
 	Cn       bool           `json:"cn" yaml:"cn"`
 	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
 	Go       lang.GoConfig  `json:"go" yaml:"go"`
-	dir      string
+	// Add more languages here
+	dir string
 }
 
 type LeetCodeConfig struct {

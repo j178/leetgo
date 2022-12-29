@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var todayCmd = &cobra.Command{
@@ -17,7 +19,7 @@ var todayCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%v\n", q)
+		fmt.Printf("%v\n", q.TitleSlug)
 		return nil
 	},
 }

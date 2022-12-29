@@ -10,7 +10,7 @@ import (
 var newCmd = &cobra.Command{
 	Use:     "new SLUG_OR_ID...",
 	Short:   "Generate a new question",
-	Example: "leetgo new 450 --go\nleet new two-sum --go",
+	Example: "leetgo new 450 --go\nleetgo new two-sum --go",
 	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()

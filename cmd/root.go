@@ -9,6 +9,7 @@ import (
 	"github.com/j178/leetgo/lang"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -55,9 +56,21 @@ func UsageString() string {
 	return rootCmd.UsageString()
 }
 
+var langFlags = make(map[string]*pflag.Flag)
+
 func addLangFlags(cmd *cobra.Command) {
 	for _, l := range lang.SupportedLanguages {
-		cmd.Flags().Bool(strings.ToLower(l.Name()), false, fmt.Sprintf("generate %s output", l.Name()))
+		entry := strings.ToLower(l.Name())
+		flag, ok := langFlags[entry]
+		if ok {
+			cmd.Flags().AddFlag(flag)
+		} else {
+			cmd.Flags().Bool(entry, false, fmt.Sprintf("generate %s output", entry))
+			flag = cmd.Flags().Lookup(entry)
+			langFlags[entry] = flag
+		}
+
+		_ = viper.BindPFlag(entry+".enable", flag)
 	}
 }
 
