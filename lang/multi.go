@@ -1,6 +1,8 @@
 package lang
 
 import (
+	"errors"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
@@ -23,6 +25,9 @@ func NewMultiGenerator() MultiGenerator {
 
 func (m MultiGenerator) Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	var files [][]FileOutput
+	if len(m.generators) == 0 {
+		return nil, errors.New("no language enabled")
+	}
 	for _, gen := range m.generators {
 		files = append(files, gen.Generate(q))
 	}

@@ -62,11 +62,12 @@ func (c *cache) doLoad() error {
 func (c *cache) load() {
 	c.once.Do(
 		func() {
-			c.checkUpdateTime()
 			err := c.doLoad()
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v")
+				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v, try updating with `leetgo update`")
+				return
 			}
+			c.checkUpdateTime()
 		},
 	)
 }
@@ -77,7 +78,7 @@ func (c *cache) checkUpdateTime() {
 		return
 	}
 	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
-		_, _ = fmt.Fprintf(os.Stderr, "database is too old, try updating with `leet update`")
+		_, _ = fmt.Fprintf(os.Stderr, "cache is too old, try updating with `leetgo update`")
 	}
 }
 
