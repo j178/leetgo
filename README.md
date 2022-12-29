@@ -48,6 +48,21 @@ Use "leetgo [command] --help" for more information about a command.
 <!-- END USAGE -->
 
 ## Config file
+<!-- BEGIN CONFIG -->
+```yaml
+cn: true
+leetcode:
+  site: https://leetcode.cn
+go:
+  enable: false
+  out_dir: go
+  separate_package: true
+  filename_template: ""
+python:
+  enable: false
+  out_dir: python
+```
+<!-- END CONFIG -->
 
 ## Credits
 
