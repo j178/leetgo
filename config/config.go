@@ -2,9 +2,11 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -23,8 +25,8 @@ const (
 )
 
 type Config struct {
-	CN       bool           `yaml:"cn"`
-	LeetCode LeetCodeConfig `yaml:"leetcode"`
+	CN       bool           `yaml:"cn" comment:"Use Chinese language"`
+	LeetCode LeetCodeConfig `yaml:"leetcode" comment:"LeetCode configuration"`
 	Go       GoConfig       `yaml:"go"`
 	Python   PythonConfig   `yaml:"python"`
 	// Add more languages here
@@ -32,19 +34,19 @@ type Config struct {
 }
 
 type PythonConfig struct {
-	Enable bool   `yaml:"enable"`
-	OutDir string `yaml:"out_dir"`
+	Enable bool   `yaml:"enable" comment:"Enable Python generator"`
+	OutDir string `yaml:"out_dir" comment:"Output directory for Python files"`
 }
 
 type GoConfig struct {
-	Enable           bool   `yaml:"enable"`
-	OutDir           string `yaml:"out_dir"`
-	SeparatePackage  bool   `yaml:"separate_package"`
-	FilenameTemplate string `yaml:"filename_template"`
+	Enable           bool   `yaml:"enable" comment:"Enable Go generator"`
+	OutDir           string `yaml:"out_dir" comment:"Output directory for Go files"`
+	SeparatePackage  bool   `yaml:"separate_package" comment:"Generate separate package for each question"`
+	FilenameTemplate string `yaml:"filename_template" comment:"Filename template for Go files"`
 }
 
 type LeetCodeConfig struct {
-	Site Site `yaml:"site"`
+	Site Site `yaml:"site" comment:"LeetCode site"`
 }
 
 func (c Config) ConfigDir() string {
@@ -57,6 +59,14 @@ func (c Config) ConfigFile() string {
 
 func (c Config) LeetCodeCacheFile() string {
 	return filepath.Join(c.dir, leetcodeCacheFile)
+}
+
+func (c Config) WriteTo(w io.Writer) error {
+	enc := yaml.NewEncoder(w)
+	enc.SetIndent(2)
+	node, _ := toYamlNode(c)
+	err := enc.Encode(node)
+	return err
 }
 
 func Default() Config {

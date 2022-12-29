@@ -7,7 +7,6 @@ import (
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var initCmd = &cobra.Command{
@@ -52,9 +51,7 @@ func createConfigFile() error {
 	if err != nil {
 		return err
 	}
-	enc := yaml.NewEncoder(f)
-	enc.SetIndent(2)
-	return enc.Encode(config.Default())
+	return config.Default().WriteTo(f)
 }
 
 func createQuestionDB() error {

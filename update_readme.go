@@ -6,7 +6,6 @@ import (
 
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -37,10 +36,7 @@ func updateUsage(readme []byte) []byte {
 
 func updateConfig(readme []byte) []byte {
 	buf := new(bytes.Buffer)
-	cfg := config.Default()
-	enc := yaml.NewEncoder(buf)
-	enc.SetIndent(2)
-	_ = enc.Encode(cfg)
+	_ = config.Default().WriteTo(buf)
 	configStr := buf.String()
 	configStr = "\n```yaml\n" + configStr + "```\n"
 
