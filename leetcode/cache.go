@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -73,7 +72,7 @@ func (c *cache) load() {
 
 func (c *cache) checkUpdateTime() {
 	stat, err := os.Stat(c.path)
-	if errors.Is(err, os.ErrNotExist) {
+	if os.IsNotExist(err) {
 		return
 	}
 	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
@@ -82,12 +81,9 @@ func (c *cache) checkUpdateTime() {
 }
 
 func (c *cache) Update(client Client) error {
-	dir := filepath.Dir(c.path)
-	if !utils.IsExist(dir) {
-		err := os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
+	err := utils.CreateIfNotExists(c.path, false)
+	if err != nil {
+		return err
 	}
 
 	all, err := client.GetAllQuestions()
