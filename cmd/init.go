@@ -13,7 +13,7 @@ import (
 var initCmd = &cobra.Command{
 	Use:     "init DIR",
 	Short:   "Init a leetcode workspace",
-	Example: "leet init . --go",
+	Example: "leetgo init . --go",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := args[0]

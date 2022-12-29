@@ -40,7 +40,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 }
 
 var rootCmd = &cobra.Command{
-	Use:               "leet",
+	Use:               "leetgo",
 	Short:             "Leetcode",
 	Long:              "Leetcode command line tool.",
 	Version:           Version,
