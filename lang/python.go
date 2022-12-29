@@ -1,7 +1,8 @@
 package lang
 
 type PythonConfig struct {
-	Enable bool `json:"enable" yaml:"enable"`
+	Enable bool   `json:"enable" yaml:"enable"`
+	OutDir string `json:"out_dir" yaml:"out_dir"`
 }
 
 type python struct {

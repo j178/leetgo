@@ -53,6 +53,7 @@ func createConfigFile() error {
 		return err
 	}
 	enc := yaml.NewEncoder(f)
+	enc.SetIndent(2)
 	return enc.Encode(config.Default())
 }
 

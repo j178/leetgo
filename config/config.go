@@ -48,11 +48,13 @@ func Default() Config {
 		LeetCode: LeetCodeConfig{},
 		Go: lang.GoConfig{
 			Enable:           false,
+			OutDir:           "go",
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
 		Python: lang.PythonConfig{
 			Enable: false,
+			OutDir: "python",
 		},
 		// Add more languages here
 	}

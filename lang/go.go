@@ -2,6 +2,7 @@ package lang
 
 type GoConfig struct {
 	Enable           bool   `json:"enable" yaml:"enable"`
+	OutDir           string `json:"out_dir" yaml:"out_dir"`
 	SeparatePackage  bool   `json:"separate_package" yaml:"separate_package"`
 	FilenameTemplate string `json:"filename_template" yaml:"filename_template"`
 }
