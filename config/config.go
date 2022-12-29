@@ -16,9 +16,10 @@ const (
 var cfg *Config
 
 type Config struct {
-	Cn       bool           `json:"cn" yaml:"cn"`
-	LeetCode LeetCodeConfig `json:"leetcode" yaml:"leetcode"`
-	Go       lang.GoConfig  `json:"go" yaml:"go"`
+	Cn       bool              `json:"cn" yaml:"cn"`
+	LeetCode LeetCodeConfig    `json:"leetcode" yaml:"leetcode"`
+	Go       lang.GoConfig     `json:"go" yaml:"go"`
+	Python   lang.PythonConfig `json:"python" yaml:"python"`
 	// Add more languages here
 	dir string
 }
@@ -46,9 +47,14 @@ func Default() Config {
 		Cn:       true,
 		LeetCode: LeetCodeConfig{},
 		Go: lang.GoConfig{
+			Enable:           false,
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
+		Python: lang.PythonConfig{
+			Enable: false,
+		},
+		// Add more languages here
 	}
 }
 

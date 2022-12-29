@@ -17,11 +17,20 @@ type Generator interface {
 var SupportedLanguages = []Generator{
 	golang{
 		baseLang{
-			Name:              "go",
+			Name:              "Go",
 			Suffix:            ".go",
 			LineComment:       "//",
 			BlockCommentStart: "/*",
 			BlockCommentEnd:   "*/",
+		},
+	},
+	python{
+		baseLang{
+			Name:              "Python",
+			Suffix:            ".py",
+			LineComment:       "#",
+			BlockCommentStart: `"""`,
+			BlockCommentEnd:   `"""`,
 		},
 	},
 }

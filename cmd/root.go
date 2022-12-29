@@ -56,20 +56,23 @@ func UsageString() string {
 	return rootCmd.UsageString()
 }
 
-var langFlags = make(map[string]*pflag.Flag)
+var langFlags map[string]*pflag.Flag
 
 func addLangFlags(cmd *cobra.Command) {
+	if langFlags == nil {
+		langFlags = make(map[string]*pflag.Flag)
+		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+		for _, l := range lang.SupportedLanguages {
+			entry := strings.ToLower(l.Name())
+			flagSet.Bool(entry, false, fmt.Sprintf("generate %s code", entry))
+			langFlags[entry] = flagSet.Lookup(entry)
+		}
+	}
+
 	for _, l := range lang.SupportedLanguages {
 		entry := strings.ToLower(l.Name())
-		flag, ok := langFlags[entry]
-		if ok {
-			cmd.Flags().AddFlag(flag)
-		} else {
-			cmd.Flags().Bool(entry, false, fmt.Sprintf("generate %s output", entry))
-			flag = cmd.Flags().Lookup(entry)
-			langFlags[entry] = flag
-		}
-
+		flag := langFlags[entry]
+		cmd.Flags().AddFlag(flag)
 		_ = viper.BindPFlag(entry+".enable", flag)
 	}
 }
@@ -80,6 +83,17 @@ func init() {
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.PersistentFlags().Bool("cn", true, "use Chinese")
 	_ = viper.BindPFlag("cn", rootCmd.PersistentFlags().Lookup("cn"))
+
+	rootCmd.Flags().SortFlags = false
+	initCmd.Flags().SortFlags = false
+	initCmd.Flags().SortFlags = false
+	newCmd.Flags().SortFlags = false
+	todayCmd.Flags().SortFlags = false
+	infoCmd.Flags().SortFlags = false
+	testCmd.Flags().SortFlags = false
+	submitCmd.Flags().SortFlags = false
+	contestCmd.Flags().SortFlags = false
+	updateCmd.Flags().SortFlags = false
 
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(newCmd)

@@ -10,8 +10,8 @@ type golang struct {
 	baseLang
 }
 
-func (golang) Name() string {
-	return "Go"
+func (g golang) Name() string {
+	return g.baseLang.Name
 }
 
 func (golang) Generate() []any {
