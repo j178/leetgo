@@ -27,8 +27,6 @@ Solve leetcode problems in your terminal
 ## Usage
 <!-- BEGIN USAGE -->
 ```
-Leetcode command line tool.
-
 Usage:
   leet [command]
 

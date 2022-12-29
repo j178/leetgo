@@ -13,12 +13,12 @@ const (
 )
 
 func main() {
-	help := cmd.HelpText()
-	help = "\n```\n" + help + "```\n"
+	usage := cmd.UsageString()
+	usage = "\n```\n" + usage + "```\n"
 	readmeBytes, _ := os.ReadFile("README.md")
 	readme := string(readmeBytes)
 	usageStart := strings.Index(readme, beginMark) + len(beginMark)
 	usageEnd := strings.Index(readme, endMark)
-	readme = strings.Replace(readme, readme[usageStart:usageEnd], help, 1)
+	readme = strings.Replace(readme, readme[usageStart:usageEnd], usage, 1)
 	_ = os.WriteFile("README.md", []byte(readme), 0644)
 }

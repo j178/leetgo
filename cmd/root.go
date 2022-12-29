@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
@@ -84,11 +83,8 @@ func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
-func HelpText() string {
-	out := new(bytes.Buffer)
-	rootCmd.SetOut(out)
-	_ = rootCmd.Help()
-	return out.String()
+func UsageString() string {
+	return rootCmd.UsageString()
 }
 
 func addLangFlags(cmd *cobra.Command) {
