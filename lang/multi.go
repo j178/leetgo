@@ -23,7 +23,7 @@ func NewMultiGenerator() MultiGenerator {
 
 func (m MultiGenerator) Generate(q leetcode.QuestionData) error {
 	for _, gen := range m.generators {
-		gen.Generate()
+		gen.Generate(q)
 	}
 	return nil
 }

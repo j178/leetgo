@@ -10,6 +10,8 @@ import (
 const tmpl = `{{ .QuestionFrontendId }}. {{ .Title }}
 Slug: {{ .TitleSlug }}
 Difficulty: {{ .Difficulty }}
+URL: {{ .Url }}
+{{ range $i, $t := .Hints }}Hint: {{ $t }}{{ end }}
 `
 
 var infoCmd = &cobra.Command{
@@ -21,7 +23,7 @@ var infoCmd = &cobra.Command{
 		t := template.Must(template.New("").Parse(tmpl))
 		for _, s := range args {
 			q, _ := leetcode.Question(s, c)
-			err := t.Execute(cmd.OutOrStdout(), q)
+			err := t.Execute(cmd.OutOrStdout(), &q)
 			if err != nil {
 				return err
 			}
