@@ -97,7 +97,6 @@ func NewClient(options ...Option) Client {
 	} else {
 		panic(fmt.Sprintf("site not supported yet: %s", cfg.LeetCode.Site))
 	}
-	return nil
 }
 
 type graphQLBody struct {
@@ -106,6 +105,7 @@ type graphQLBody struct {
 	Variables     Variables `url:"variables" json:"variables"`
 }
 
+//nolint:unused
 func (c *cnClient) graphqlGet(query string, operation string, variables Variables) *sling.Sling {
 	r := c.http.New().Get("/graphql/").QueryStruct(
 		&graphQLBody{

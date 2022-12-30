@@ -64,7 +64,7 @@ func (c *cache) load() {
 		func() {
 			err := c.doLoad()
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v, try updating with `leetgo update`")
+				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v, try updating with `leetgo update`", err)
 				return
 			}
 			c.checkUpdateTime()
