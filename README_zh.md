@@ -6,7 +6,7 @@ Best LeetCode friend for geek.
 
 [![CI](https://github.com/j178/leetgo/actions/workflows/ci.yaml/badge.svg)](https://github.com/j178/leetgo/actions/workflows/ci.yaml)
 
-[中文](./README_zh.md) | English
+中文 | [English](./README.md)
 
 Leetgo is a command line tool that generates skeleton code for LeetCode questions. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
