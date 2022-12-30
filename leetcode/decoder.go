@@ -8,6 +8,7 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/go-hclog"
+	"github.com/j178/leetgo/utils"
 	"github.com/jedib0t/go-pretty/v6/progress"
 	"github.com/tidwall/gjson"
 )
@@ -19,11 +20,11 @@ type smartDecoder struct {
 
 func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 	data, _ := io.ReadAll(resp.Body)
+	dataStr := "<omitted>"
 	if d.LogResponseData {
-		hclog.L().Trace("response", "url", resp.Request.URL.String(), "data", string(data))
-	} else {
-		hclog.L().Trace("response", "url", resp.Request.URL.String())
+		dataStr = utils.BytesToString(data)
 	}
+	hclog.L().Trace("response", "url", resp.Request.URL.String(), "data", dataStr)
 
 	ty := reflect.TypeOf(v)
 	ele := reflect.ValueOf(v).Elem()

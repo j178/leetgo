@@ -186,7 +186,6 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	pw.Style().Visibility.ETAOverall = false
 
 	go pw.Render()
-	defer pw.Stop()
 
 	var qs []QuestionData
 	dec := progressDecoder{smartDecoder{LogResponseData: false}, tracker}
