@@ -39,7 +39,7 @@ type decoder struct {
 
 func (d decoder) Decode(resp *http.Response, v interface{}) error {
 	data, _ := io.ReadAll(resp.Body)
-	hclog.L().Trace("Leetcode response", "data", string(data), "url", resp.Request.URL.String())
+	hclog.L().Trace("Leetcode response", "url", resp.Request.URL.String(), "data", string(data))
 
 	ty := reflect.TypeOf(v)
 	ele := reflect.ValueOf(v).Elem()

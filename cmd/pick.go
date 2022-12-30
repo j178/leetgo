@@ -6,13 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var newCmd = &cobra.Command{
-	Use:     "new SLUG_OR_ID...",
+var pickCmd = &cobra.Command{
+	Use:     "pick [SLUG_OR_ID...]",
 	Short:   "Generate a new question",
 	Example: "leetgo new 450 --go\nleetgo new two-sum --go",
-	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
+		if len(args) == 0 {
+			// 	TODO Start tea TUI to pick a question
+			args = append(args, "two-sum")
+		}
 		gen := lang.NewMultiGenerator()
 		for _, p := range args {
 			q, err := leetcode.Question(p, c)
@@ -33,5 +36,5 @@ var newCmd = &cobra.Command{
 }
 
 func init() {
-	addLangFlags(newCmd)
+	addLangFlags(pickCmd)
 }

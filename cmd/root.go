@@ -106,7 +106,7 @@ func initCommands() {
 
 	commands := []*cobra.Command{
 		initCmd,
-		newCmd,
+		pickCmd,
 		todayCmd,
 		infoCmd,
 		testCmd,

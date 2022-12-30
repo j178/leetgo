@@ -55,13 +55,13 @@ Usage:
 
 Available Commands:
   init                    Init a leetcode workspace
-  new                     Generate a new question
+  pick                    Generate a new question
   today                   Generate the question of today
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
   contest                 Generate contest questions
-  update                  Update local questions DB
+  update                  Update local questions cache
 
 Flags:
   -v, --version   version for leetgo
