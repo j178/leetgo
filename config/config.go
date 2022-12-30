@@ -15,6 +15,8 @@ const (
 	globalConfigFile  = "config.yaml"
 	projectConfigFile = CmdName + ".yaml"
 	leetcodeCacheFile = "cache/leetcode-questions.json"
+	CodeBeginMark     = "Leetgo Code Begin"
+	CodeEndMark       = "Leetgo Code End"
 )
 
 var (
@@ -36,6 +38,7 @@ const (
 
 type Config struct {
 	dir        string
+	Author     string         `yaml:"author" mapstructure:"author" comment:"Your name"`
 	Gen        string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
 	Language   Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
 	LeetCode   LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
@@ -98,9 +101,11 @@ func (c Config) WriteTo(w io.Writer) error {
 
 func Default() Config {
 	home, _ := homedir.Dir()
+	author := "Bob"
 	configDir := filepath.Join(home, ".config", CmdName)
 	return Config{
 		dir:      configDir,
+		Author:   author,
 		Gen:      "go",
 		Language: ZH,
 		LeetCode: LeetCodeConfig{

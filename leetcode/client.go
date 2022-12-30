@@ -14,9 +14,9 @@ import (
 
 type Client interface {
 	BaseURI() string
-	GetQuestionData(slug string) (QuestionData, error)
-	GetAllQuestions() ([]QuestionData, error)
-	GetTodayQuestion() (QuestionData, error)
+	GetQuestionData(slug string) (*QuestionData, error)
+	GetAllQuestions() ([]*QuestionData, error)
+	GetTodayQuestion() (*QuestionData, error)
 }
 
 type Option func(opts *Options)
@@ -109,7 +109,7 @@ func (c *cnClient) BaseURI() string {
 	return string(config.LeetCodeCN) + "/"
 }
 
-func (c *cnClient) GetQuestionData(slug string) (QuestionData, error) {
+func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	query := `
 	query questionData($titleSlug: String!) {
 		question(titleSlug: $titleSlug) {
@@ -148,17 +148,17 @@ func (c *cnClient) GetQuestionData(slug string) (QuestionData, error) {
 	}
 	err := c.graphqlPost(query, "questionData", Variables{"titleSlug": slug}, &resp)
 	if err != nil {
-		return QuestionData{}, err
+		return nil, err
 	}
 	if resp.Data.Question.TitleSlug == "" {
-		return QuestionData{}, errors.New("question not found")
+		return nil, errors.New("question not found")
 	}
 	q := resp.Data.Question
 	q.client = c
-	return q, nil
+	return &q, nil
 }
 
-func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
+func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	query := `
 	query AllQuestionUrls {
 		allQuestionUrls {
@@ -188,7 +188,7 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 
 	go pw.Render()
 
-	var qs []QuestionData
+	var qs []*QuestionData
 	dec := progressDecoder{smartDecoder{LogResponseData: false}, tracker}
 	_, err = c.http.New().Get(url).ResponseDecoder(dec).ReceiveSuccess(&qs)
 	if err != nil {
@@ -199,7 +199,7 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	return qs, err
 }
 
-func (c *cnClient) GetTodayQuestion() (QuestionData, error) {
+func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	query := `
     query questionOfToday {
         todayRecord {
@@ -211,7 +211,7 @@ func (c *cnClient) GetTodayQuestion() (QuestionData, error) {
 	var resp gjson.Result
 	err := c.graphqlPost(query, "questionOfToday", nil, &resp)
 	if err != nil {
-		return QuestionData{}, err
+		return nil, err
 	}
 	slug := resp.Get("data.todayRecord.0.question.titleSlug").Str
 	return c.GetQuestionData(slug)

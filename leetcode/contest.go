@@ -1,9 +1,12 @@
 package leetcode
 
 type Contest struct {
-	Slug      string
-	Questions []ContestQuestion
+	TitleSlug string `json:"titleSlug"`
+	Title     string `json:"title"`
+	StartTime string `json:"startTime"`
+	Questions []*QuestionData
 }
 
-type ContestQuestion struct {
+func ContestBySlug(slug string, c Client) *Contest {
+	return nil
 }

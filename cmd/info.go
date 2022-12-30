@@ -19,7 +19,7 @@ var infoCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		var questions []leetcode.QuestionData
+		var questions []*leetcode.QuestionData
 		for _, s := range args {
 			q, err := leetcode.Question(s, c)
 			if err != nil {
@@ -55,6 +55,7 @@ var infoCmd = &cobra.Command{
 					fmt.Sprintf("%s/%s %s", q.Stats.TotalAccepted, q.Stats.TotalSubmission, q.Stats.ACRate),
 				},
 			)
+			w.AppendRow(table.Row{"Content", q.GetCleanContent()})
 			for _, h := range q.Hints {
 				w.AppendRow(table.Row{"Hint", h})
 			}

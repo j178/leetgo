@@ -1,6 +1,9 @@
 package utils
 
-import "unsafe"
+import (
+	"strings"
+	"unsafe"
+)
 
 // BytesToString converts byte slice to string.
 func BytesToString(b []byte) string {
@@ -15,4 +18,15 @@ func StringToBytes(s string) []byte {
 			Cap int
 		}{s, len(s)},
 	))
+}
+
+func RemoveEmptyLine(s string) string {
+	lines := strings.Split(s, "\n")
+	var result []string
+	for _, line := range lines {
+		if line != "" {
+			result = append(result, line)
+		}
+	}
+	return strings.Join(result, "\n")
 }

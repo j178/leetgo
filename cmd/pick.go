@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -33,7 +31,6 @@ var pickCmd = &cobra.Command{
 			for _, f := range files {
 				hclog.L().Info("generated", "files", f)
 			}
-			fmt.Println(q.CodeSnippets)
 		}
 		return nil
 	},

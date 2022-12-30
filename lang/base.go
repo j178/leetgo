@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/spf13/viper"
 )
 
 type baseLang struct {
@@ -32,7 +34,60 @@ func (l baseLang) ShortName() string {
 	return l.shortName
 }
 
+// TODO use template
+func (l baseLang) generateComments(q *leetcode.QuestionData) string {
+	var content []string
+	cfg := config.Get()
+	now := time.Now().Format("2006/01/02 15:04")
+	content = append(content, fmt.Sprintf("%s Created by %s at %s", l.lineComment, cfg.Author, now))
+	content = append(content, fmt.Sprintf("%s %s", l.lineComment, q.Url()))
+	if q.IsContest() {
+		content = append(content, fmt.Sprintf("%s %s", l.lineComment, q.ContestUrl()))
+	}
+	content = append(content, "")
+	content = append(content, l.blockCommentStart)
+	content = append(content, fmt.Sprintf("%s.%s (%s)", q.QuestionFrontendId, q.GetTitle(), q.Difficulty))
+	content = append(content, "")
+	content = append(content, q.GetCleanContent())
+	content = append(content, l.blockCommentEnd)
+	content = append(content, "")
+	return strings.Join(content, "\n")
+}
+
+func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...func(string) string) string {
+	code := q.GetCodeSnippet(l.Slug())
+	for _, m := range modifiers {
+		code = m(code)
+	}
+	return code
+}
+
+func addCodeMark(comment string) func(string) string {
+	return func(s string) string {
+		return fmt.Sprintf("%s %s\n\n%s\n\n%s %s", comment, config.CodeBeginMark, s, comment, config.CodeEndMark)
+	}
+}
+
+func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+	comment := l.generateComments(q)
+	code := l.generateCode(q, addCodeMark(l.lineComment))
+	content := comment + "\n" + code + "\n"
+
+	files := FileOutput{
+		// TODO filename template
+		Filename: fmt.Sprintf("%s%s", q.TitleSlug, l.extension),
+		Content:  content,
+	}
+	return []FileOutput{files}, nil
+}
+
+func (l baseLang) GenerateTest(q *leetcode.QuestionData) ([]FileOutput, error) {
+	// 检查基础库是否生成，如果没有生成，先生成基础库
+	return nil, NotSupported
+}
+
 type FileOutput struct {
+	BaseDir  string
 	Filename string
 	Content  string
 }
@@ -46,161 +101,9 @@ type Generator interface {
 	Name() string
 	ShortName() string
 	Slug() string
-	Generate(q leetcode.QuestionData) ([]FileOutput, error)
-	GenerateTest(q leetcode.QuestionData) ([]FileOutput, error)
-	GenerateContest(c leetcode.Contest) ([]FileOutput, error)
-	GenerateContestTest(c leetcode.Contest) ([]FileOutput, error)
+	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
+	GenerateTest(q *leetcode.QuestionData) ([]FileOutput, error)
 }
-
-var (
-	golangGen = golang{
-		baseLang{
-			name:              "Go",
-			slug:              "golang",
-			shortName:         "go",
-			extension:         ".go",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	pythonGen = python{
-		baseLang{
-			name:              "Python",
-			slug:              "python",
-			shortName:         "py",
-			extension:         ".py",
-			lineComment:       "#",
-			blockCommentStart: `"""`,
-			blockCommentEnd:   `"""`,
-		},
-	}
-	cppGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "C++",
-			slug:              "cpp",
-			shortName:         "cpp",
-			extension:         ".cpp",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	rustGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "Rust",
-			slug:              "rust",
-			shortName:         "rs",
-			extension:         ".rs",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	javaGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "Java",
-			slug:              "java",
-			shortName:         "java",
-			extension:         ".java",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	cGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "C",
-			slug:              "c",
-			shortName:         "c",
-			extension:         ".c",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	csharpGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "C#",
-			slug:              "csharp",
-			shortName:         "cs",
-			extension:         ".cs",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	jsGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "JavaScript",
-			slug:              "javascript",
-			shortName:         "js",
-			extension:         ".js",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	phpGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "PHP",
-			slug:              "php",
-			shortName:         "php",
-			extension:         ".php",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	rubyGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "Ruby",
-			slug:              "ruby",
-			shortName:         "rb",
-			extension:         ".rb",
-			lineComment:       "#",
-			blockCommentStart: "=begin",
-			blockCommentEnd:   "=end",
-		},
-	}
-	swiftGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "Swift",
-			slug:              "swift",
-			shortName:         "swift",
-			extension:         ".swift",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	kotlinGen = commonGenerator{
-		baseLang: baseLang{
-			name:              "Kotlin",
-			slug:              "kotlin",
-			shortName:         "kt",
-			extension:         ".kt",
-			lineComment:       "//",
-			blockCommentStart: "/*",
-			blockCommentEnd:   "*/",
-		},
-	}
-	// TODO scala, typescript, php, erlang, dart, racket
-	SupportedLanguages = []Generator{
-		golangGen,
-		pythonGen,
-		cppGen,
-		rustGen,
-		javaGen,
-		jsGen,
-		phpGen,
-		cGen,
-		csharpGen,
-		rubyGen,
-		swiftGen,
-		kotlinGen,
-	}
-)
 
 func getGenerator(gen string) Generator {
 	gen = strings.ToLower(gen)
@@ -212,9 +115,9 @@ func getGenerator(gen string) Generator {
 	return nil
 }
 
-func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
+func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	cfg := config.Get()
-	var files [][]FileOutput
+	var files []FileOutput
 	gen := getGenerator(cfg.Gen)
 	if gen == nil {
 		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
@@ -229,34 +132,22 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	if err != nil {
 		return nil, err
 	}
-	files = append(files, f)
+	files = append(files, f...)
 	f, err = gen.GenerateTest(q)
 	if err != nil {
 		if err == NotSupported {
 			hclog.L().Warn("test generation not supported for language, skip", "language", gen.Name())
 		}
+	} else {
+		files = append(files, f...)
 	}
-	files = append(files, f)
 
+	dir := viper.GetString(cfg.Gen + ".out_dir")
+	if dir == "" {
+		dir = cfg.Gen
+	}
+	for i := range files {
+		files[i].BaseDir = dir
+	}
 	return files, nil
-}
-
-type commonGenerator struct {
-	baseLang
-}
-
-func (g commonGenerator) Generate(q leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotImplemented
-}
-
-func (g commonGenerator) GenerateTest(q leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotSupported
-}
-
-func (g commonGenerator) GenerateContest(c leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
-}
-
-func (g commonGenerator) GenerateContestTest(c leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
 }

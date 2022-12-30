@@ -61,7 +61,7 @@ func updateConfig(readme []byte) []byte {
 func updateSupportMatrix(readme []byte) []byte {
 	w := table.NewWriter()
 	w.AppendHeader(table.Row{"", "Generate", "Local Test"})
-	q := leetcode.QuestionData{}
+	q := &leetcode.QuestionData{}
 	for _, l := range lang.SupportedLanguages {
 		_, err := l.GenerateTest(q)
 		localTest := ":white_check_mark:"

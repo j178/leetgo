@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 
+	md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/JohannesKaufmann/html-to-markdown/plugin"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 )
@@ -93,6 +96,7 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 
 type QuestionData struct {
 	client             Client
+	contestSlug        string
 	TitleSlug          string        `json:"titleSlug"`
 	QuestionId         string        `json:"questionId"`
 	QuestionFrontendId string        `json:"questionFrontendId"`
@@ -116,6 +120,14 @@ func (q *QuestionData) Url() string {
 	return q.client.BaseURI() + "problems/" + q.TitleSlug + "/"
 }
 
+func (q *QuestionData) ContestUrl() string {
+	return q.client.BaseURI() + "contest/" + q.contestSlug + "/problems/" + q.TitleSlug + "/"
+}
+
+func (q *QuestionData) IsContest() bool {
+	return q.contestSlug != ""
+}
+
 func (q *QuestionData) GetTitle() string {
 	if config.Get().Language == config.ZH && q.TranslatedTitle != "" {
 		return q.TranslatedTitle
@@ -127,7 +139,25 @@ func (q *QuestionData) GetContent() string {
 	if config.Get().Language == config.ZH && q.TranslatedContent != "" {
 		return q.TranslatedContent
 	}
+	if config.Get().Language == config.EN && (q.Content == "" || strings.Contains(
+		q.Content,
+		"English description is not available for the problem.",
+	)) {
+		return q.TranslatedContent
+	}
 	return q.Content
+}
+
+func (q *QuestionData) GetCleanContent() string {
+	content := q.GetContent()
+	converter := md.NewConverter("", true, nil)
+	converter.Use(plugin.GitHubFlavored())
+	content, err := converter.ConvertString(content)
+	if err != nil {
+		return content
+	}
+	content = utils.RemoveEmptyLine(content)
+	return content
 }
 
 func (q *QuestionData) TagSlugs() []string {
@@ -147,23 +177,23 @@ func (q *QuestionData) GetCodeSnippet(slug string) string {
 	return ""
 }
 
-func QuestionBySlug(slug string, c Client) (QuestionData, error) {
+func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
 	q, err := c.GetQuestionData(slug)
 	if err != nil {
-		return QuestionData{}, err
+		return nil, err
 	}
 	return q, nil
 }
 
-func QuestionById(id string, c Client) (QuestionData, error) {
+func QuestionById(id string, c Client) (*QuestionData, error) {
 	q := GetCache().GetById(id)
 	if q != nil {
 		return QuestionBySlug(q.Slug, c)
 	}
-	return QuestionData{}, errors.New("no such question")
+	return nil, errors.New("no such question")
 }
 
-func Question(s string, c Client) (QuestionData, error) {
+func Question(s string, c Client) (*QuestionData, error) {
 	if s == "today" {
 		return c.GetTodayQuestion()
 	}
