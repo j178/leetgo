@@ -7,16 +7,16 @@
 
 [中文](./README_zh.md) | English
 
-Leetgo is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
+`leetgo` is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
 
-Leetgo supports generating contest questions as well.
+`leetgo` supports generating contest questions as well.
 
 TODO: add a https://asciinema.org/
 
-Currently, Leetgo supports generating code and local test for the following languages:
+Currently, `leetgo` supports generating code and local test for the following languages:
 
 |        | Generate           | Local Test                    |
 |--------|--------------------|-------------------------------|
@@ -37,17 +37,17 @@ and many other languages are in plan. (help wanted, contributions welcome!)
 - Run test cases on your local machine.
 - Generate contest questions just in time.
 
-## Install `leetgo`
+## Installation
 
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
-### go install
+### Install via `go install`
  
 ```shell
 go install github.com/j178/leetgo@latest
 ```
 
-### brew install
+### Install via `brew install`
 
 ```shell
 brew install j178/tap/leetgo
