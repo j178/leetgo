@@ -36,9 +36,10 @@ Currently, `leetgo` supports generating code and local test for the following la
 | C++ | :white_check_mark: | :x: |
 | Rust | :white_check_mark: | :x: |
 | Java | :white_check_mark: | :x: |
+| JavaScript | :white_check_mark: | :x: |
+| PHP | :white_check_mark: | :x: |
 | C | :white_check_mark: | :x: |
 | C# | :white_check_mark: | :x: |
-| JavaScript | :white_check_mark: | :x: |
 | Ruby | :white_check_mark: | :x: |
 | Swift | :white_check_mark: | :x: |
 | Kotlin | :white_check_mark: | :x: |
@@ -109,15 +110,32 @@ leetcode:
   site: https://leetcode.cn
 editor: {}
 go:
-  # Output directory for Go files
-  out_dir: go
   # Generate separate package for each question
   separate_package: true
   # Filename template for Go files
   filename_template: ""
 python:
-  # Output directory for Python files
   out_dir: python
+cpp:
+  out_dir: cpp
+java:
+  out_dir: java
+rust:
+  out_dir: rust
+c:
+  out_dir: c
+csharp:
+  out_dir: csharp
+javascript:
+  out_dir: javascript
+ruby:
+  out_dir: ruby
+swift:
+  out_dir: swift
+kotlin:
+  out_dir: kotlin
+php:
+  out_dir: php
 ```
 <!-- END CONFIG -->
 

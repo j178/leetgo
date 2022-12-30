@@ -141,6 +141,17 @@ var (
 			blockCommentEnd:   "*/",
 		},
 	}
+	phpGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "PHP",
+			slug:              "php",
+			shortName:         "php",
+			extension:         ".php",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
 	rubyGen = commonGenerator{
 		baseLang: baseLang{
 			name:              "Ruby",
@@ -181,9 +192,10 @@ var (
 		cppGen,
 		rustGen,
 		javaGen,
+		jsGen,
+		phpGen,
 		cGen,
 		csharpGen,
-		jsGen,
 		rubyGen,
 		swiftGen,
 		kotlinGen,

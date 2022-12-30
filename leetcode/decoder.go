@@ -65,7 +65,7 @@ func (r *reader) Close() (err error) {
 }
 
 type progressDecoder struct {
-	decoder sling.ResponseDecoder
+	sling.ResponseDecoder
 	tracker *progress.Tracker
 }
 
@@ -73,5 +73,5 @@ func (d progressDecoder) Decode(resp *http.Response, v interface{}) error {
 	total := resp.ContentLength
 	d.tracker.UpdateTotal(total)
 	resp.Body = &reader{resp.Body, d.tracker}
-	return d.decoder.Decode(resp, v)
+	return d.ResponseDecoder.Decode(resp, v)
 }

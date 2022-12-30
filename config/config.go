@@ -35,25 +35,35 @@ const (
 )
 
 type Config struct {
-	dir      string
-	Gen      string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
-	Language Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
-	LeetCode LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
-	Editor   Editor         `yaml:"editor" mapstructure:"editor"`
-	Go       GoConfig       `yaml:"go" mapstructure:"go"`
-	Python   PythonConfig   `yaml:"python" mapstructure:"python"`
+	dir        string
+	Gen        string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
+	Language   Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
+	LeetCode   LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
+	Editor     Editor         `yaml:"editor" mapstructure:"editor"`
+	Go         GoConfig       `yaml:"go" mapstructure:"go"`
+	Python     baseLangConfig `yaml:"python" mapstructure:"python"`
+	Cpp        baseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java       baseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust       baseLangConfig `yaml:"rust" mapstructure:"rust"`
+	C          baseLangConfig `yaml:"c" mapstructure:"c"`
+	CSharp     baseLangConfig `yaml:"csharp" mapstructure:"csharp"`
+	JavaScript baseLangConfig `yaml:"javascript" mapstructure:"javascript"`
+	Ruby       baseLangConfig `yaml:"ruby" mapstructure:"ruby"`
+	Swift      baseLangConfig `yaml:"swift" mapstructure:"swift"`
+	Kotlin     baseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
+	PHP        baseLangConfig `yaml:"php" mapstructure:"php"`
 	// Add more languages here
 }
 
 type Editor struct {
 }
 
-type PythonConfig struct {
-	OutDir string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Python files"`
+type baseLangConfig struct {
+	OutDir string `yaml:"out_dir" mapstructure:"out_dir"`
 }
 
 type GoConfig struct {
-	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Go files"`
+	baseLangConfig   `yaml:",inline" mapstructure:",squash"`
 	SeparatePackage  bool   `yaml:"separate_package" mapstructure:"separate_package" comment:"Generate separate package for each question"`
 	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
 }
@@ -97,13 +107,21 @@ func Default() Config {
 			Site: LeetCodeCN,
 		},
 		Go: GoConfig{
-			OutDir:           "go",
+			baseLangConfig:   baseLangConfig{OutDir: "go"},
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
-		Python: PythonConfig{
-			OutDir: "python",
-		},
+		Python:     baseLangConfig{OutDir: "python"},
+		Cpp:        baseLangConfig{OutDir: "cpp"},
+		Java:       baseLangConfig{OutDir: "java"},
+		Rust:       baseLangConfig{OutDir: "rust"},
+		C:          baseLangConfig{OutDir: "c"},
+		CSharp:     baseLangConfig{OutDir: "csharp"},
+		JavaScript: baseLangConfig{OutDir: "javascript"},
+		Ruby:       baseLangConfig{OutDir: "ruby"},
+		Swift:      baseLangConfig{OutDir: "swift"},
+		Kotlin:     baseLangConfig{OutDir: "kotlin"},
+		PHP:        baseLangConfig{OutDir: "php"},
 		// Add more languages here
 	}
 }
