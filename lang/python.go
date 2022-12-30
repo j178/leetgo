@@ -6,7 +6,7 @@ var pythonGen = python{
 	baseLang{
 		Name:              "Python",
 		ShortName:         "py",
-		Suffix:            ".py",
+		Extension:         ".py",
 		LineComment:       "#",
 		BlockCommentStart: `"""`,
 		BlockCommentEnd:   `"""`,

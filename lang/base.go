@@ -11,7 +11,7 @@ import (
 type baseLang struct {
 	Name              string
 	ShortName         string
-	Suffix            string
+	Extension         string
 	LineComment       string
 	BlockCommentStart string
 	BlockCommentEnd   string
@@ -36,6 +36,36 @@ type Generator interface {
 var SupportedLanguages = []Generator{
 	golangGen,
 	pythonGen,
+	commonGenerator{
+		baseLang: baseLang{
+			Name:              "C++",
+			ShortName:         "cpp",
+			Extension:         ".cpp",
+			LineComment:       "//",
+			BlockCommentStart: "/*",
+			BlockCommentEnd:   "*/",
+		},
+	},
+	commonGenerator{
+		baseLang: baseLang{
+			Name:              "Rust",
+			ShortName:         "rs",
+			Extension:         ".rs",
+			LineComment:       "//",
+			BlockCommentStart: "/*",
+			BlockCommentEnd:   "*/",
+		},
+	},
+	commonGenerator{
+		baseLang: baseLang{
+			Name:              "Java",
+			ShortName:         "java",
+			Extension:         ".java",
+			LineComment:       "//",
+			BlockCommentStart: "/*",
+			BlockCommentEnd:   "*/",
+		},
+	},
 }
 
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
@@ -65,4 +95,32 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	files = append(files, f)
 
 	return files, nil
+}
+
+type commonGenerator struct {
+	baseLang
+}
+
+func (g commonGenerator) Name() string {
+	return g.baseLang.Name
+}
+
+func (g commonGenerator) ShortName() string {
+	return g.baseLang.ShortName
+}
+
+func (g commonGenerator) Generate(q leetcode.QuestionData) ([]FileOutput, error) {
+	return nil, NotSupported
+}
+
+func (g commonGenerator) GenerateTest(q leetcode.QuestionData) ([]FileOutput, error) {
+	return nil, NotSupported
+}
+
+func (g commonGenerator) GenerateContest(c leetcode.Contest) ([]FileOutput, error) {
+	return nil, NotSupported
+}
+
+func (g commonGenerator) GenerateContestTest(c leetcode.Contest) ([]FileOutput, error) {
+	return nil, NotSupported
 }

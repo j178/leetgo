@@ -11,7 +11,7 @@ var golangGen = golang{
 	baseLang{
 		Name:              "Go",
 		ShortName:         "go",
-		Suffix:            ".go",
+		Extension:         ".go",
 		LineComment:       "//",
 		BlockCommentStart: "/*",
 		BlockCommentEnd:   "*/",
