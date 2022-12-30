@@ -21,7 +21,7 @@ var initCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		gen := viper.GetString("gen")
 		if gen == "" {
-			return fmt.Errorf("--gen is required")
+			return fmt.Errorf("--gen is required for init")
 		}
 		dir := args[0]
 		err := utils.CreateIfNotExists(dir, true)

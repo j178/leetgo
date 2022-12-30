@@ -34,10 +34,8 @@ type Generator interface {
 	GenerateContestTest(c leetcode.Contest) ([]FileOutput, error)
 }
 
-var SupportedLanguages = map[string]Generator{
-	golangGen.ShortName(): golangGen,
-	pythonGen.ShortName(): pythonGen,
-	"cpp": commonGenerator{
+var (
+	cppGen = commonGenerator{
 		baseLang: baseLang{
 			Name:              "C++",
 			ShortName:         "cpp",
@@ -46,8 +44,8 @@ var SupportedLanguages = map[string]Generator{
 			BlockCommentStart: "/*",
 			BlockCommentEnd:   "*/",
 		},
-	},
-	"rs": commonGenerator{
+	}
+	rustGen = commonGenerator{
 		baseLang: baseLang{
 			Name:              "Rust",
 			ShortName:         "rs",
@@ -56,8 +54,8 @@ var SupportedLanguages = map[string]Generator{
 			BlockCommentStart: "/*",
 			BlockCommentEnd:   "*/",
 		},
-	},
-	"java": commonGenerator{
+	}
+	javaGen = commonGenerator{
 		baseLang: baseLang{
 			Name:              "Java",
 			ShortName:         "java",
@@ -66,13 +64,21 @@ var SupportedLanguages = map[string]Generator{
 			BlockCommentStart: "/*",
 			BlockCommentEnd:   "*/",
 		},
-	},
-}
+	}
+
+	supportedLanguages = map[string]Generator{
+		golangGen.ShortName(): golangGen,
+		pythonGen.ShortName(): pythonGen,
+		cppGen.ShortName():    cppGen,
+		rustGen.ShortName():   rustGen,
+		javaGen.ShortName():   javaGen,
+	}
+)
 
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	cfg := config.Get()
 	var files [][]FileOutput
-	gen, ok := SupportedLanguages[cfg.Gen]
+	gen, ok := supportedLanguages[cfg.Gen]
 	if !ok {
 		return nil, fmt.Errorf("language %s is not supported yet", cfg.Gen)
 	}

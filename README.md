@@ -16,14 +16,17 @@ Leetgo supports generating contest questions as well.
 
 TODO: add a https://asciinema.org/
 
-Currently, Leetgo supports the following languages:
-- Golang
-- Python
+Currently, Leetgo supports generating code and local test for the following languages:
 
-and some other languages are in plan (help wanted, contributions welcome!):
-- Java
-- C++
-- Rust
+|        | Generate           | Local Test                    |
+|--------|--------------------|-------------------------------|
+| Golang | :white_check_mark: | :white_check_mark:            |
+| Python | :white_check_mark: | :white_check_mark:            |
+| C++    | :white_check_mark: | :negative_squared_cross_mark: |
+| Java   | :white_check_mark: | :negative_squared_cross_mark: |
+| Rust   | :white_check_mark: | :negative_squared_cross_mark: |
+
+and many other languages are in plan. (help wanted, contributions welcome!)
 
 **This project is in its early development stage, and anything is likely to change.**
 
