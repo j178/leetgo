@@ -18,6 +18,10 @@ func IsExist(path string) bool {
 	return false
 }
 
+func MakeDir(dir string) error {
+	return os.MkdirAll(dir, 0755)
+}
+
 // CreateIfNotExists creates a file or a directory only if it does not already exist.
 func CreateIfNotExists(path string, isDir bool) error {
 	if _, err := os.Stat(path); err != nil {

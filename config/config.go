@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
@@ -10,12 +11,15 @@ import (
 )
 
 const (
-	cmdName           = "leetgo"
+	CmdName           = "leetgo"
 	configFile        = "config.yml"
 	leetcodeCacheFile = "cache/leetcode-questions.json"
 )
 
-var cfg *Config
+var (
+	cfg   *Config
+	Debug = os.Getenv("DEBUG") != ""
+)
 
 type Site string
 
@@ -71,7 +75,7 @@ func (c Config) WriteTo(w io.Writer) error {
 
 func Default() Config {
 	home, _ := homedir.Dir()
-	configDir := filepath.Join(home, ".config", cmdName)
+	configDir := filepath.Join(home, ".config", CmdName)
 	return Config{
 		dir: configDir,
 		CN:  true,

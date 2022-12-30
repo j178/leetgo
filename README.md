@@ -107,6 +107,10 @@ python:
 ```
 <!-- END CONFIG -->
 
+## Troubleshooting
+
+If you encounter any problems, please run your command with `DEBUG` environment variable set to `1`, copy the command output and open an issue.
+
 ## Contributions welcome!
 
 [Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start.

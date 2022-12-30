@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.13.0
+	github.com/hashicorp/go-hclog v1.2.0
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0

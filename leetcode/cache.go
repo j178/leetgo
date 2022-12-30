@@ -3,11 +3,11 @@ package leetcode
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 )
@@ -64,7 +64,7 @@ func (c *cache) load() {
 		func() {
 			err := c.doLoad()
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "failed to load cache: %v, try updating with `leetgo update`", err)
+				hclog.L().Warn("failed to load cache, try updating with `leetgo update`", "err", err)
 				return
 			}
 			c.checkUpdateTime()
@@ -78,7 +78,7 @@ func (c *cache) checkUpdateTime() {
 		return
 	}
 	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
-		_, _ = fmt.Fprintf(os.Stderr, "cache is too old, try updating with `leetgo update`")
+		hclog.L().Warn("cache is too old, try updating with `leetgo update`")
 	}
 }
 
@@ -118,7 +118,11 @@ func (c *cache) Update(client Client) error {
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "\t")
 	err = enc.Encode(questions)
-	return err
+	if err != nil {
+		return err
+	}
+	hclog.L().Info("cache updated", "path", c.path)
+	return nil
 }
 
 func (c *cache) GetBySlug(slug string) *questionRecord {

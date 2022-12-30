@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"github.com/dghubble/sling"
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/tidwall/gjson"
 )
@@ -36,13 +37,10 @@ type decoder struct {
 	path string
 }
 
-var debugResponse = false
-
 func (d decoder) Decode(resp *http.Response, v interface{}) error {
 	data, _ := io.ReadAll(resp.Body)
-	if debugResponse {
-		fmt.Println(string(data))
-	}
+	hclog.L().Trace("Leetcode response", "data", string(data), "url", resp.Request.URL.String())
+
 	ty := reflect.TypeOf(v)
 	ele := reflect.ValueOf(v).Elem()
 	switch ty.Elem() {
@@ -106,26 +104,36 @@ type graphQLBody struct {
 }
 
 //nolint:unused
-func (c *cnClient) graphqlGet(query string, operation string, variables Variables) *sling.Sling {
-	r := c.http.New().Get("/graphql/").QueryStruct(
+func (c *cnClient) graphqlGet(query string, operation string, variables Variables, result any) error {
+	r, err := c.http.New().Get("/graphql/").QueryStruct(
 		&graphQLBody{
 			Query:         query,
 			OperationName: operation,
 			Variables:     variables,
 		},
-	)
-	return r
+	).Request()
+	if err != nil {
+		return err
+	}
+	hclog.L().Trace("Requesting", "method", "GET", "url", r.URL.String())
+	_, err = c.http.Do(r, result, nil)
+	return err
 }
 
-func (c *cnClient) graphqlPost(query string, operation string, variables Variables) *sling.Sling {
-	r := c.http.New().Post("/graphql/").BodyJSON(
+func (c *cnClient) graphqlPost(query string, operation string, variables Variables, result any) error {
+	r, err := c.http.New().Post("/graphql/").BodyJSON(
 		&graphQLBody{
 			Query:         query,
 			OperationName: operation,
 			Variables:     variables,
 		},
-	)
-	return r
+	).Request()
+	if err != nil {
+		return err
+	}
+	hclog.L().Trace("Requesting", "method", "POST", "url", r.URL.String())
+	_, err = c.http.Do(r, result, nil)
+	return err
 }
 
 func (c *cnClient) BaseURI() string {
@@ -169,7 +177,7 @@ func (c *cnClient) GetQuestionData(slug string) (QuestionData, error) {
 			Question QuestionData `json:"question"`
 		}
 	}
-	_, err := c.graphqlPost(query, "questionData", Variables{"titleSlug": slug}).ReceiveSuccess(&resp)
+	err := c.graphqlPost(query, "questionData", Variables{"titleSlug": slug}, &resp)
 	if err != nil {
 		return QuestionData{}, err
 	}
@@ -190,13 +198,14 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	}
 	`
 	var resp gjson.Result
-	_, err := c.graphqlPost(query, "AllQuestionUrls", nil).ReceiveSuccess(&resp)
+	err := c.graphqlPost(query, "AllQuestionUrls", nil, &resp)
 	if err != nil {
 		return nil, err
 	}
 	url := resp.Get("data.allQuestionUrls.questionUrl").Str
 
 	var qs []QuestionData
+	hclog.L().Trace("Requesting", "url", url)
 	_, err = c.http.New().Get(url).ReceiveSuccess(&qs)
 	if err != nil {
 		return nil, err
@@ -214,7 +223,7 @@ func (c *cnClient) GetTodayQuestion() (QuestionData, error) {
         }
     }`
 	var resp gjson.Result
-	_, err := c.graphqlPost(query, "questionOfToday", nil).ReceiveSuccess(&resp)
+	err := c.graphqlPost(query, "questionOfToday", nil, &resp)
 	if err != nil {
 		return QuestionData{}, err
 	}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
@@ -34,24 +35,38 @@ var initCmd = &cobra.Command{
 		}
 		// 生成目录
 		// 写入基础库代码
-
 		return nil
 	},
 }
 
 func createConfigDir() error {
-	return utils.CreateIfNotExists(config.Get().ConfigDir(), true)
-}
-
-func createConfigFile() error {
-	if utils.IsExist(config.Get().ConfigFile()) {
+	dir := config.Get().ConfigDir()
+	if utils.IsExist(dir) {
 		return nil
 	}
-	f, err := os.Create(config.Get().ConfigFile())
+	err := utils.MakeDir(dir)
 	if err != nil {
 		return err
 	}
-	return config.Default().WriteTo(f)
+	hclog.L().Info("config dir created", "dir", dir)
+	return nil
+}
+
+func createConfigFile() error {
+	file := config.Get().ConfigFile()
+	if utils.IsExist(file) {
+		return nil
+	}
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	err = config.Default().WriteTo(f)
+	if err != nil {
+		return err
+	}
+	hclog.L().Info("config file created", "file", file)
+	return nil
 }
 
 func createQuestionDB() error {
@@ -59,7 +74,11 @@ func createQuestionDB() error {
 		return nil
 	}
 	c := leetcode.NewClient()
-	return leetcode.GetCache().Update(c)
+	err := leetcode.GetCache().Update(c)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

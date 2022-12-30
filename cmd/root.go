@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
@@ -14,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// TODO set when building
 var (
 	Version = "0.0.1"
 )
@@ -45,7 +47,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 }
 
 var rootCmd = &cobra.Command{
-	Use:               "leetgo",
+	Use:               config.CmdName,
 	Short:             "Leetcode",
 	Long:              "Leetcode friend for geek.",
 	Version:           Version,
@@ -81,7 +83,22 @@ func addLangFlags(cmd *cobra.Command) {
 	}
 }
 
-func init() {
+func initLogger() {
+	opts := &hclog.LoggerOptions{
+		Level:           hclog.Info,
+		DisableTime:     true,
+		Color:           hclog.AutoColor,
+		ColorHeaderOnly: true,
+	}
+	if config.Debug {
+		opts.Level = hclog.Trace
+		opts.DisableTime = false
+		opts.Color = hclog.ColorOff
+	}
+	hclog.SetDefault(hclog.New(opts))
+}
+
+func initCommands() {
 	cobra.EnableCommandSorting = false
 
 	rootCmd.Flags().SortFlags = false
@@ -114,4 +131,9 @@ func init() {
 			NoBottomNewline: true,
 		},
 	)
+}
+
+func init() {
+	initCommands()
+	initLogger()
 }
