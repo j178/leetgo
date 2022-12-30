@@ -1,19 +1,19 @@
 # Leetgo
 
-Best LeetCode friend for geek.
-
----
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/j178/leetgo)](https://goreportcard.com/report/github.com/j178/leetgo)
 [![CI](https://github.com/j178/leetgo/actions/workflows/ci.yaml/badge.svg)](https://github.com/j178/leetgo/actions/workflows/ci.yaml)
+[![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
 [中文](./README_zh.md) | English
 
 Leetgo is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
 
-TODO: add a screen replay video
+TODO: add a screen replay
 
 Leetgo supports generating contest questions as well.
+
+TODO: add a screen replay
 
 Currently, Leetgo supports the following languages:
 - Golang
@@ -38,7 +38,7 @@ and some other languages are in plan (help wanted, contributions welcome!):
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
 ### go install
-
+ 
 ```shell
 go install github.com/j178/leetgo@latest
 ```
