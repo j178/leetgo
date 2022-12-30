@@ -62,6 +62,7 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 			hclog.L().Warn("test generation not supported for language, skip", "lang", gen.Name())
 		}
 	}
+	files = append(files, f)
 
 	return files, nil
 }
