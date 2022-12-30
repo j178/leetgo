@@ -78,7 +78,7 @@ Use "leetgo [command] --help" for more information about a command.
 language: zh
 # LeetCode configuration
 leetcode:
-  # LeetCode site
+  # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
 editor: {}
 go:

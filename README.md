@@ -89,7 +89,7 @@ You can tweak the configuration to your liking.
 language: zh
 # LeetCode configuration
 leetcode:
-  # LeetCode site
+  # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
 editor: {}
 go:
