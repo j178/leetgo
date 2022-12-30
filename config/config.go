@@ -126,5 +126,8 @@ func Verify(c Config) error {
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid language: %s", c.Language)
 	}
+	if c.Gen == "" {
+		return fmt.Errorf("gen is empty")
+	}
 	return nil
 }

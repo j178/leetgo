@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
@@ -19,16 +22,18 @@ var pickCmd = &cobra.Command{
 		for _, p := range args {
 			q, err := leetcode.Question(p, c)
 			if err != nil {
-				cmd.Printf("Failed to get question %s: %v\n", p, err)
+				hclog.L().Error("failed to get question", "question", p, "error", err)
+				continue
 			}
 			files, err := lang.Generate(q)
 			if err != nil {
-				cmd.Printf("Failed to generate %s: %v\n", q.TitleSlug, err)
+				hclog.L().Error("failed to get generate", "question", p, "error", err)
 				continue
 			}
 			for _, f := range files {
-				cmd.Printf("Generated %s\n", f)
+				hclog.L().Info("generated", "files", f)
 			}
+			fmt.Println(q.CodeSnippets)
 		}
 		return nil
 	},

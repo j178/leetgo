@@ -7,27 +7,8 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
-var golangGen = golang{
-	baseLang{
-		Name:              "Go",
-		ShortName:         "go",
-		Extension:         ".go",
-		LineComment:       "//",
-		BlockCommentStart: "/*",
-		BlockCommentEnd:   "*/",
-	},
-}
-
 type golang struct {
 	baseLang
-}
-
-func (g golang) ShortName() string {
-	return g.baseLang.ShortName
-}
-
-func (g golang) Name() string {
-	return g.baseLang.Name
 }
 
 func (g golang) Generate(q leetcode.QuestionData) ([]FileOutput, error) {

@@ -10,12 +10,25 @@ import (
 )
 
 type baseLang struct {
-	Name              string
-	ShortName         string
-	Extension         string
-	LineComment       string
-	BlockCommentStart string
-	BlockCommentEnd   string
+	name              string
+	slug              string
+	shortName         string
+	extension         string
+	lineComment       string
+	blockCommentStart string
+	blockCommentEnd   string
+}
+
+func (l baseLang) Name() string {
+	return l.name
+}
+
+func (l baseLang) Slug() string {
+	return l.slug
+}
+
+func (l baseLang) ShortName() string {
+	return l.shortName
 }
 
 type FileOutput struct {
@@ -28,6 +41,7 @@ var NotSupported = errors.New("not supported")
 type Generator interface {
 	Name() string
 	ShortName() string
+	Slug() string
 	Generate(q leetcode.QuestionData) ([]FileOutput, error)
 	GenerateTest(q leetcode.QuestionData) ([]FileOutput, error)
 	GenerateContest(c leetcode.Contest) ([]FileOutput, error)
@@ -35,53 +49,170 @@ type Generator interface {
 }
 
 var (
+	golangGen = golang{
+		baseLang{
+			name:              "Go",
+			slug:              "golang",
+			shortName:         "go",
+			extension:         ".go",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
+	pythonGen = python{
+		baseLang{
+			name:              "Python",
+			slug:              "python",
+			shortName:         "py",
+			extension:         ".py",
+			lineComment:       "#",
+			blockCommentStart: `"""`,
+			blockCommentEnd:   `"""`,
+		},
+	}
 	cppGen = commonGenerator{
 		baseLang: baseLang{
-			Name:              "C++",
-			ShortName:         "cpp",
-			Extension:         ".cpp",
-			LineComment:       "//",
-			BlockCommentStart: "/*",
-			BlockCommentEnd:   "*/",
+			name:              "C++",
+			slug:              "cpp",
+			shortName:         "cpp",
+			extension:         ".cpp",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
 		},
 	}
 	rustGen = commonGenerator{
 		baseLang: baseLang{
-			Name:              "Rust",
-			ShortName:         "rs",
-			Extension:         ".rs",
-			LineComment:       "//",
-			BlockCommentStart: "/*",
-			BlockCommentEnd:   "*/",
+			name:              "Rust",
+			slug:              "rust",
+			shortName:         "rs",
+			extension:         ".rs",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
 		},
 	}
 	javaGen = commonGenerator{
 		baseLang: baseLang{
-			Name:              "Java",
-			ShortName:         "java",
-			Extension:         ".java",
-			LineComment:       "//",
-			BlockCommentStart: "/*",
-			BlockCommentEnd:   "*/",
+			name:              "Java",
+			slug:              "java",
+			shortName:         "java",
+			extension:         ".java",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
 		},
 	}
-
-	supportedLanguages = map[string]Generator{
-		golangGen.ShortName(): golangGen,
-		pythonGen.ShortName(): pythonGen,
-		cppGen.ShortName():    cppGen,
-		rustGen.ShortName():   rustGen,
-		javaGen.ShortName():   javaGen,
+	cGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "C",
+			slug:              "c",
+			shortName:         "c",
+			extension:         ".c",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
 	}
+	csharpGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "C#",
+			slug:              "csharp",
+			shortName:         "cs",
+			extension:         ".cs",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
+	jsGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "JavaScript",
+			slug:              "javascript",
+			shortName:         "js",
+			extension:         ".js",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
+	rubyGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "Ruby",
+			slug:              "ruby",
+			shortName:         "rb",
+			extension:         ".rb",
+			lineComment:       "#",
+			blockCommentStart: "=begin",
+			blockCommentEnd:   "=end",
+		},
+	}
+	swiftGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "Swift",
+			slug:              "swift",
+			shortName:         "swift",
+			extension:         ".swift",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
+	kotlinGen = commonGenerator{
+		baseLang: baseLang{
+			name:              "Kotlin",
+			slug:              "kotlin",
+			shortName:         "kt",
+			extension:         ".kt",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
+	}
+	// TODO scala, typescript, php, erlang, dart, racket
+	supportedLanguages = []Generator{
+		golangGen,
+		pythonGen,
+		cppGen,
+		rustGen,
+		javaGen,
+		cGen,
+		csharpGen,
+		jsGen,
+		rubyGen,
+		swiftGen,
+		kotlinGen,
+	}
+	shortNames = func() map[string]Generator {
+		m := make(map[string]Generator)
+		for _, g := range supportedLanguages {
+			m[g.ShortName()] = g
+		}
+		return m
+	}()
+	slugs = func() map[string]Generator {
+		m := make(map[string]Generator)
+		for _, g := range supportedLanguages {
+			m[g.Name()] = g
+		}
+		return m
+	}()
 )
 
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	cfg := config.Get()
 	var files [][]FileOutput
-	gen, ok := supportedLanguages[cfg.Gen]
+	gen, ok := shortNames[cfg.Gen]
 	if !ok {
 		return nil, fmt.Errorf("language %s is not supported yet", cfg.Gen)
 	}
+
+	codeSnippet := q.GetCodeSnippet(gen.Slug())
+	if codeSnippet == "" {
+		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Gen, q.TitleSlug)
+	}
+	
 	f, err := gen.Generate(q)
 	if err != nil {
 		return nil, err

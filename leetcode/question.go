@@ -51,10 +51,12 @@ type MetaDataParam struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
+
 type MetaDataReturn struct {
 	Type string `json:"type"`
 	Size int    `json:"size"`
 }
+
 type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
@@ -134,6 +136,15 @@ func (q *QuestionData) TagSlugs() []string {
 		slugs = append(slugs, tag.Slug)
 	}
 	return slugs
+}
+
+func (q *QuestionData) GetCodeSnippet(slug string) string {
+	for _, snippet := range q.CodeSnippets {
+		if slug == snippet.LangSlug {
+			return snippet.Code
+		}
+	}
+	return ""
 }
 
 func QuestionBySlug(slug string, c Client) (QuestionData, error) {

@@ -2,27 +2,8 @@ package lang
 
 import "github.com/j178/leetgo/leetcode"
 
-var pythonGen = python{
-	baseLang{
-		Name:              "Python",
-		ShortName:         "py",
-		Extension:         ".py",
-		LineComment:       "#",
-		BlockCommentStart: `"""`,
-		BlockCommentEnd:   `"""`,
-	},
-}
-
 type python struct {
 	baseLang
-}
-
-func (p python) ShortName() string {
-	return p.baseLang.ShortName
-}
-
-func (p python) Name() string {
-	return p.baseLang.Name
 }
 
 func (python) Generate(leetcode.QuestionData) ([]FileOutput, error) {
