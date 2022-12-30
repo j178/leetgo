@@ -16,7 +16,7 @@ Currently, Leetgo supports the following languages:
 - Golang
 - Python
 
-and some other languages are in plan (help wanted, welcome contributing!):
+and some other languages are in plan (help wanted, contributions welcome!):
 - Java
 - C++
 - Rust
