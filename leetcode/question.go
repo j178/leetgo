@@ -22,11 +22,11 @@ type CodeSnippet struct {
 }
 
 type Stats struct {
-	TotalAccepted      string  `json:"totalAccepted"`
-	TotalSubmission    string  `json:"totalSubmission"`
-	TotalAcceptedRaw   float64 `json:"totalAcceptedRaw"`
-	TotalSubmissionRaw float64 `json:"totalSubmissionRaw"`
-	ACRate             string  `json:"acRate"`
+	TotalAccepted      string `json:"totalAccepted"`
+	TotalSubmission    string `json:"totalSubmission"`
+	TotalAcceptedRaw   int    `json:"totalAcceptedRaw"`
+	TotalSubmissionRaw int    `json:"totalSubmissionRaw"`
+	ACRate             string `json:"acRate"`
 }
 
 func (s *Stats) UnmarshalJSON(data []byte) error {
@@ -41,9 +41,51 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 	}
 	s.TotalAccepted = v["totalAccepted"].(string)
 	s.TotalSubmission = v["totalSubmission"].(string)
-	s.TotalAcceptedRaw = v["totalAcceptedRaw"].(float64)
-	s.TotalSubmissionRaw = v["totalSubmissionRaw"].(float64)
+	s.TotalAcceptedRaw = int(v["totalAcceptedRaw"].(float64))
+	s.TotalSubmissionRaw = int(v["totalSubmissionRaw"].(float64))
 	s.ACRate = v["acRate"].(string)
+	return nil
+}
+
+type MetaDataParam struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+type MetaDataReturn struct {
+	Type string `json:"type"`
+	Size int    `json:"size"`
+}
+type MetaData struct {
+	Name   string          `json:"name"`
+	Params []MetaDataParam `json:"params"`
+	Return MetaDataReturn  `json:"return"`
+	Manual bool            `json:"manual"`
+}
+
+func (m *MetaData) UnmarshalJSON(data []byte) error {
+	var v map[string]any
+	unquoted, err := strconv.Unquote(utils.BytesToString(data))
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+		return err
+	}
+	m.Name = v["name"].(string)
+	m.Manual = v["manual"].(bool)
+	for _, param := range v["params"].([]any) {
+		p := param.(map[string]any)
+		m.Params = append(
+			m.Params, MetaDataParam{
+				Name: p["name"].(string),
+				Type: p["type"].(string),
+			},
+		)
+	}
+	m.Return = MetaDataReturn{
+		Type: v["return"].(map[string]any)["type"].(string),
+		Size: int(v["return"].(map[string]any)["size"].(float64)),
+	}
 	return nil
 }
 
@@ -64,7 +106,7 @@ type QuestionData struct {
 	SimilarQuestions   string        `json:"similarQuestions"`
 	SampleTestCase     string        `json:"sampleTestCase"`
 	ExampleTestcases   string        `json:"exampleTestcases"`
-	MetaData           string        `json:"metaData"`
+	MetaData           MetaData      `json:"metaData"`
 	CodeSnippets       []CodeSnippet `json:"codeSnippets"`
 }
 

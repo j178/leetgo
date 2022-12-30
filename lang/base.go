@@ -21,6 +21,24 @@ type Generator interface {
 	GenerateContest(c leetcode.Contest) []FileOutput
 }
 
+// defaultGenerator generates anything that other generators can't process.
+type defaultGenerator struct {
+}
+
+func (d defaultGenerator) Name() string {
+	return "default"
+}
+
+func (d defaultGenerator) Generate(q leetcode.QuestionData) []FileOutput {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (d defaultGenerator) GenerateContest(c leetcode.Contest) []FileOutput {
+	// TODO implement me
+	panic("implement me")
+}
+
 var SupportedLanguages = []Generator{
 	golangGen,
 	pythonGen,
