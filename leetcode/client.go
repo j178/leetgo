@@ -174,7 +174,7 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 
 	hclog.L().Trace("request", "url", url)
 	tracker := &progress.Tracker{
-		Message: "Downloading",
+		Message: "Downloading questions",
 		Total:   0,
 		Units:   progress.UnitsBytes,
 	}
@@ -184,7 +184,7 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	pw.SetStyle(progress.StyleBlocks)
 	pw.Style().Visibility.ETA = false
 	pw.Style().Visibility.ETAOverall = false
-	
+
 	go pw.Render()
 	defer pw.Stop()
 

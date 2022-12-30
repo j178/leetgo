@@ -62,6 +62,7 @@ Available Commands:
   submit                  Submit solution
   contest                 Generate contest questions
   cache                   Manage local questions cache
+  config                  Show leetgo config dir
 
 Flags:
   -v, --version   version for leetgo
