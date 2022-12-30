@@ -4,7 +4,25 @@ Solve leetcode problems in your terminal
 
 ---
 
+[![CI](https://github.com/j178/leetgo/actions/workflows/ci.yaml/badge.svg)](https://github.com/j178/leetgo/actions/workflows/ci.yaml)
+
 **This project is in its early development stage, and anything is likely to change.**
+
+## Install `leetgo`
+
+You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
+
+### go install
+
+```shell
+go install github.com/j178/leetgo@latest
+```
+
+### brew install
+
+```shell
+brew install j178/tap/leetgo
+```
 
 ## Main features
 
