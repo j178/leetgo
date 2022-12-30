@@ -8,8 +8,18 @@ Best LeetCode friend for geek.
 
 [中文](./README_zh.md) | English
 
-Leetgo is a command line tool that generates skeleton code for LeetCode questions. You can run and debug test cases locally with your favorite IDE.
+Leetgo is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
+Leetgo supports generating contest questions as well.
+
+Currently, Leetgo supports the following languages:
+- Golang
+- Python
+
+and some other languages are in plan (help wanted, welcome contributing!):
+- Java
+- C++
+- Rust
 
 **This project is in its early development stage, and anything is likely to change.**
 
@@ -36,17 +46,6 @@ go install github.com/j178/leetgo@latest
 brew install j178/tap/leetgo
 ```
 
-## Supported languages
-
-- Golang
-- Python
-- Rust
-
-### Planning
-
-- Java
-- C++
-
 ## Usage
 <!-- BEGIN USAGE -->
 ```
@@ -71,6 +70,10 @@ Use "leetgo [command] --help" for more information about a command.
 <!-- END USAGE -->
 
 ## Config file
+
+Leetgo reads configuration from `~/.config/leetgo/config.yml`, which is generated automatically when you run `leetgo init`.
+You can tweak the configuration to your liking.
+
 <!-- BEGIN CONFIG -->
 ```yaml
 # Use Chinese language
