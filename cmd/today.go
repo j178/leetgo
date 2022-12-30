@@ -10,7 +10,7 @@ import (
 var todayCmd = &cobra.Command{
 	Use:     "today",
 	Short:   "Generate the question of today",
-	Example: `leetgo today --go`,
+	Example: `leetgo today`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		q, err := c.GetTodayQuestion()

@@ -9,7 +9,7 @@ import (
 var pickCmd = &cobra.Command{
 	Use:     "pick [SLUG_OR_ID...]",
 	Short:   "Generate a new question",
-	Example: "leetgo new 450 --go\nleetgo new two-sum --go",
+	Example: "leetgo pick 450\nleetgo pick two-sum",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		if len(args) == 0 {

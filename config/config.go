@@ -12,7 +12,8 @@ import (
 
 const (
 	CmdName           = "leetgo"
-	configFile        = "config.yml"
+	globalConfigFile  = "config.yaml"
+	projectConfigFile = CmdName + ".yaml"
 	leetcodeCacheFile = "cache/leetcode-questions.json"
 )
 
@@ -35,7 +36,7 @@ const (
 
 type Config struct {
 	dir      string
-	Gen      string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by --gen, default is go)"`
+	Gen      string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
 	Language Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
 	LeetCode LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Editor   Editor         `yaml:"editor" mapstructure:"editor"`
@@ -65,8 +66,12 @@ func (c Config) ConfigDir() string {
 	return c.dir
 }
 
-func (c Config) ConfigFile() string {
-	return filepath.Join(c.dir, configFile)
+func (c Config) GlobalConfigFile() string {
+	return filepath.Join(c.dir, globalConfigFile)
+}
+
+func (c Config) ProjectConfigFile() string {
+	return projectConfigFile
 }
 
 func (c Config) LeetCodeCacheFile() string {

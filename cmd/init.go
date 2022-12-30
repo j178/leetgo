@@ -1,21 +1,28 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var initCmd = &cobra.Command{
 	Use:     "init DIR",
 	Short:   "Init a leetcode workspace",
-	Example: "leetgo init . --go",
+	Example: "leetgo init . --gen go",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		gen := viper.GetString("gen")
+		if gen == "" {
+			return fmt.Errorf("--gen is required")
+		}
 		dir := args[0]
 		err := utils.CreateIfNotExists(dir, true)
 		if err != nil {
@@ -25,7 +32,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = createConfigFile()
+		err = createConfigFiles(dir, gen)
 		if err != nil {
 			return err
 		}
@@ -52,20 +59,29 @@ func createConfigDir() error {
 	return nil
 }
 
-func createConfigFile() error {
-	file := config.Get().ConfigFile()
-	if utils.IsExist(file) {
-		return nil
+func createConfigFiles(dir string, gen string) error {
+	cfg := config.Default()
+	globalFile := cfg.GlobalConfigFile()
+	if !utils.IsExist(globalFile) {
+		f, err := os.Create(globalFile)
+		if err != nil {
+			return err
+		}
+		err = cfg.WriteTo(f)
+		if err != nil {
+			return err
+		}
+		hclog.L().Info("global config file created", "file", globalFile)
 	}
-	f, err := os.Create(file)
+
+	projectFile := filepath.Join(dir, cfg.ProjectConfigFile())
+	f, err := os.Create(projectFile)
 	if err != nil {
 		return err
 	}
-	err = config.Default().WriteTo(f)
-	if err != nil {
-		return err
-	}
-	hclog.L().Info("config file created", "file", file)
+	_, _ = f.WriteString("gen: " + gen + "\n")
+	hclog.L().Info("project config file created", "file", projectFile)
+
 	return nil
 }
 

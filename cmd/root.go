@@ -20,14 +20,21 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	if cmd == initCmd {
 		return nil
 	}
+	// load global configuration
 	cfg := config.Default()
-	viper.SetConfigFile(cfg.ConfigFile())
+	viper.SetConfigFile(cfg.GlobalConfigFile())
 	err := viper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
 			hclog.L().Debug("config file not found, have you ran `leetgo init`?")
 			return nil
 		}
+		return err
+	}
+	// load project configuration
+	viper.SetConfigFile(cfg.ProjectConfigFile())
+	err = viper.MergeInConfig()
+	if err != nil {
 		return err
 	}
 	err = viper.Unmarshal(&cfg)

@@ -13,12 +13,13 @@ import (
 )
 
 var infoCmd = &cobra.Command{
-	Use:   "info",
-	Short: "Show question info",
-	Args:  cobra.MinimumNArgs(1),
+	Use:     "info",
+	Short:   "Show question info",
+	Example: "leetgo info 145\nleetgo info two-sum",
+	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		questions := []leetcode.QuestionData{}
+		var questions []leetcode.QuestionData
 		for _, s := range args {
 			q, err := leetcode.Question(s, c)
 			if err != nil {

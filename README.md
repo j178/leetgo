@@ -83,7 +83,7 @@ Currently only `leetcode.cn` is supported. `leetcode.com` is under development.
 
 ## Configuration
 
-Leetgo reads configuration from `~/.config/leetgo/config.yml`, which is generated automatically when you run `leetgo init`.
+Leetgo reads global configuration from `~/.config/leetgo/config.yaml` and local configuration from `leetgo.yaml` in your project root, which are generated automatically when you run `leetgo init`.
 You can tweak the configuration to your liking.
 
 <!-- BEGIN CONFIG -->
