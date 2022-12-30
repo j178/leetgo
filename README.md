@@ -85,15 +85,14 @@ You can tweak the configuration to your liking.
 
 <!-- BEGIN CONFIG -->
 ```yaml
-# Use Chinese language
-cn: true
+# Language of the questions, zh or en
+language: zh
 # LeetCode configuration
 leetcode:
   # LeetCode site
   site: https://leetcode.cn
+editor: {}
 go:
-  # Enable Go generator
-  enable: false
   # Output directory for Go files
   out_dir: go
   # Generate separate package for each question
@@ -101,8 +100,6 @@ go:
   # Filename template for Go files
   filename_template: ""
 python:
-  # Enable Python generator
-  enable: false
   # Output directory for Python files
   out_dir: python
 ```
