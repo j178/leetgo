@@ -34,25 +34,24 @@ const (
 )
 
 type Config struct {
+	dir      string
+	Gen      string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by --gen, default is go)"`
 	Language Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
 	LeetCode LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Editor   Editor         `yaml:"editor" mapstructure:"editor"`
 	Go       GoConfig       `yaml:"go" mapstructure:"go"`
 	Python   PythonConfig   `yaml:"python" mapstructure:"python"`
 	// Add more languages here
-	dir string
 }
 
 type Editor struct {
 }
 
 type PythonConfig struct {
-	Enable bool   `yaml:"-" mapstructure:"enable"`
 	OutDir string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Python files"`
 }
 
 type GoConfig struct {
-	Enable           bool   `yaml:"-" mapstructure:"enable"`
 	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Go files"`
 	SeparatePackage  bool   `yaml:"separate_package" mapstructure:"separate_package" comment:"Generate separate package for each question"`
 	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
@@ -87,18 +86,17 @@ func Default() Config {
 	configDir := filepath.Join(home, ".config", CmdName)
 	return Config{
 		dir:      configDir,
+		Gen:      "go",
 		Language: ZH,
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 		},
 		Go: GoConfig{
-			Enable:           false,
 			OutDir:           "go",
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
 		Python: PythonConfig{
-			Enable: false,
 			OutDir: "python",
 		},
 		// Add more languages here

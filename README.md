@@ -68,7 +68,8 @@ Available Commands:
   config                  Show leetgo config dir
 
 Flags:
-  -v, --version   version for leetgo
+  -v, --version      version for leetgo
+  -g, --gen string   language to generate: cpp, go, python ...
 
 Use "leetgo [command] --help" for more information about a command.
 ```
@@ -87,6 +88,8 @@ You can tweak the configuration to your liking.
 
 <!-- BEGIN CONFIG -->
 ```yaml
+# Generate code for questions, go, python, ... (will be override by --gen, default is go)
+gen: go
 # Language of the questions, zh or en
 language: zh
 # LeetCode configuration

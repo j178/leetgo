@@ -80,7 +80,3 @@ func createQuestionDB() error {
 	}
 	return nil
 }
-
-func init() {
-	addLangFlags(initCmd)
-}

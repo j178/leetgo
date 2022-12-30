@@ -21,7 +21,3 @@ var todayCmd = &cobra.Command{
 		return nil
 	},
 }
-
-func init() {
-	addLangFlags(todayCmd)
-}

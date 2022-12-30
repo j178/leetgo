@@ -33,7 +33,3 @@ var pickCmd = &cobra.Command{
 		return nil
 	},
 }
-
-func init() {
-	addLangFlags(pickCmd)
-}

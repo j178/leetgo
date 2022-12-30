@@ -7,9 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/lang"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -19,6 +17,9 @@ var (
 )
 
 func loadConfig(cmd *cobra.Command, args []string) error {
+	if cmd == initCmd {
+		return nil
+	}
 	cfg := config.Default()
 	viper.SetConfigFile(cfg.ConfigFile())
 	err := viper.ReadInConfig()
@@ -57,28 +58,6 @@ func UsageString() string {
 	return rootCmd.UsageString()
 }
 
-var langFlags map[string]*pflag.Flag
-
-func addLangFlags(cmd *cobra.Command) {
-	if langFlags == nil {
-		langFlags = make(map[string]*pflag.Flag)
-		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
-		for _, l := range lang.SupportedLanguages {
-			flagSet.Bool(l.ShortName(), false, fmt.Sprintf("generate %s code", l.Name()))
-			langFlags[l.ShortName()] = flagSet.Lookup(l.ShortName())
-		}
-	}
-
-	var langKeys []string
-	for _, l := range lang.SupportedLanguages {
-		flag := langFlags[l.ShortName()]
-		cmd.Flags().AddFlag(flag)
-		_ = viper.BindPFlag(l.ShortName()+".enable", flag)
-		langKeys = append(langKeys, l.ShortName())
-	}
-	cmd.MarkFlagsMutuallyExclusive(langKeys...)
-}
-
 func initLogger() {
 	opts := &hclog.LoggerOptions{
 		Level:           hclog.Info,
@@ -99,6 +78,8 @@ func initCommands() {
 
 	rootCmd.Flags().SortFlags = false
 	rootCmd.InitDefaultVersionFlag()
+	rootCmd.PersistentFlags().StringP("gen", "g", "", "language to generate: cpp, go, python ...")
+	_ = viper.BindPFlag("gen", rootCmd.PersistentFlags().Lookup("gen"))
 
 	commands := []*cobra.Command{
 		initCmd,

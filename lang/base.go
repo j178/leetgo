@@ -2,6 +2,7 @@ package lang
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
@@ -33,10 +34,10 @@ type Generator interface {
 	GenerateContestTest(c leetcode.Contest) ([]FileOutput, error)
 }
 
-var SupportedLanguages = []Generator{
-	golangGen,
-	pythonGen,
-	commonGenerator{
+var SupportedLanguages = map[string]Generator{
+	golangGen.ShortName(): golangGen,
+	pythonGen.ShortName(): pythonGen,
+	"cpp": commonGenerator{
 		baseLang: baseLang{
 			Name:              "C++",
 			ShortName:         "cpp",
@@ -46,7 +47,7 @@ var SupportedLanguages = []Generator{
 			BlockCommentEnd:   "*/",
 		},
 	},
-	commonGenerator{
+	"rs": commonGenerator{
 		baseLang: baseLang{
 			Name:              "Rust",
 			ShortName:         "rs",
@@ -56,7 +57,7 @@ var SupportedLanguages = []Generator{
 			BlockCommentEnd:   "*/",
 		},
 	},
-	commonGenerator{
+	"java": commonGenerator{
 		baseLang: baseLang{
 			Name:              "Java",
 			ShortName:         "java",
@@ -71,15 +72,9 @@ var SupportedLanguages = []Generator{
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	cfg := config.Get()
 	var files [][]FileOutput
-	var gen Generator
-	switch {
-	case cfg.Go.Enable:
-		gen = golangGen
-	case cfg.Python.Enable:
-		gen = pythonGen
-	}
-	if gen == nil {
-		return nil, errors.New("no language enabled")
+	gen, ok := SupportedLanguages[cfg.Gen]
+	if !ok {
+		return nil, fmt.Errorf("language %s is not supported yet", cfg.Gen)
 	}
 	f, err := gen.Generate(q)
 	if err != nil {
@@ -89,7 +84,7 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	f, err = gen.GenerateTest(q)
 	if err != nil {
 		if err == NotSupported {
-			hclog.L().Warn("test generation not supported for language, skip", "lang", gen.Name())
+			hclog.L().Warn("test generation not supported for language, skip", "language", gen.Name())
 		}
 	}
 	files = append(files, f)
