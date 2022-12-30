@@ -3,6 +3,7 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
@@ -36,7 +37,10 @@ type FileOutput struct {
 	Content  string
 }
 
-var NotSupported = errors.New("not supported")
+var (
+	NotSupported   = errors.New("not supported")
+	NotImplemented = errors.New("not implemented")
+)
 
 type Generator interface {
 	Name() string
@@ -184,20 +188,23 @@ var (
 		swiftGen,
 		kotlinGen,
 	}
-	shortNames = func() map[string]Generator {
-		m := make(map[string]Generator)
-		for _, g := range SupportedLanguages {
-			m[g.ShortName()] = g
-		}
-		return m
-	}()
 )
+
+func getGenerator(gen string) Generator {
+	gen = strings.ToLower(gen)
+	for _, l := range SupportedLanguages {
+		if strings.HasPrefix(l.ShortName(), gen) || strings.HasPrefix(l.Slug(), gen) {
+			return l
+		}
+	}
+	return nil
+}
 
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	cfg := config.Get()
 	var files [][]FileOutput
-	gen, ok := shortNames[cfg.Gen]
-	if !ok {
+	gen := getGenerator(cfg.Gen)
+	if gen == nil {
 		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
 	}
 
@@ -227,7 +234,7 @@ type commonGenerator struct {
 }
 
 func (g commonGenerator) Generate(q leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (g commonGenerator) GenerateTest(q leetcode.QuestionData) ([]FileOutput, error) {

@@ -7,17 +7,17 @@ type python struct {
 }
 
 func (python) Generate(leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (p python) GenerateTest(leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (python) GenerateContest(leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (python) GenerateContestTest(leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }

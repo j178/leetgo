@@ -27,7 +27,7 @@ var pickCmd = &cobra.Command{
 			}
 			files, err := lang.Generate(q)
 			if err != nil {
-				hclog.L().Error("failed to get generate", "question", p, "error", err)
+				hclog.L().Error("failed to generate", "question", p, "error", err)
 				continue
 			}
 			for _, f := range files {

@@ -26,13 +26,13 @@ func (g golang) Generate(q leetcode.QuestionData) ([]FileOutput, error) {
 }
 
 func (g golang) GenerateTest(leetcode.QuestionData) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (golang) GenerateContest(leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
 
 func (golang) GenerateContestTest(leetcode.Contest) ([]FileOutput, error) {
-	return nil, NotSupported
+	return nil, NotImplemented
 }
