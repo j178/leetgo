@@ -112,7 +112,7 @@ func initCommands() {
 		testCmd,
 		submitCmd,
 		contestCmd,
-		updateCmd,
+		cacheCmd,
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false
