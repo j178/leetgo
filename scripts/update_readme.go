@@ -17,10 +17,12 @@ var (
 )
 
 func main() {
-	readme, _ := os.ReadFile("README.md")
-	readme = updateUsage(readme)
-	readme = updateConfig(readme)
-	_ = os.WriteFile("README.md", readme, 0644)
+	for _, f := range []string{"README.md", "README_zh.md"} {
+		readme, _ := os.ReadFile(f)
+		readme = updateUsage(readme)
+		readme = updateConfig(readme)
+		_ = os.WriteFile(f, readme, 0644)
+	}
 }
 
 func updateUsage(readme []byte) []byte {

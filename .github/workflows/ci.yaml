@@ -18,3 +18,7 @@ jobs:
         with:
           version: v1.50.1
           args: --timeout 3m0s
+      - name: check-readme
+        run: |
+          go run ./scripts/update_readme.go
+          git diff --exit-code README.md README_zh.md || (echo "README.md is not up to date. Please run 'go run ./scripts/update_readme.go' and commit the changes." && exit 1)
