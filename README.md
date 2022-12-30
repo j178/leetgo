@@ -10,6 +10,9 @@ Best LeetCode friend for geek.
 
 Leetgo is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
+
+TODO: add a screen replay video
+
 Leetgo supports generating contest questions as well.
 
 Currently, Leetgo supports the following languages:
@@ -69,7 +72,11 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
-## Config file
+## LeetCode authentication
+
+Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. You need to provide your LeetCode session ID to authenticate.
+
+## Configuration
 
 Leetgo reads configuration from `~/.config/leetgo/config.yml`, which is generated automatically when you run `leetgo init`.
 You can tweak the configuration to your liking.
