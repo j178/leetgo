@@ -3,13 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
-	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -31,11 +29,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	err = viper.Unmarshal(
-		&cfg, func(c *mapstructure.DecoderConfig) {
-			c.TagName = "yaml"
-		},
-	)
+	err = viper.Unmarshal(&cfg)
 	if err != nil {
 		return err
 	}
@@ -70,18 +64,19 @@ func addLangFlags(cmd *cobra.Command) {
 		langFlags = make(map[string]*pflag.Flag)
 		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
 		for _, l := range lang.SupportedLanguages {
-			entry := strings.ToLower(l.Name())
-			flagSet.Bool(entry, false, fmt.Sprintf("generate %s code", entry))
-			langFlags[entry] = flagSet.Lookup(entry)
+			flagSet.Bool(l.ShortName(), false, fmt.Sprintf("generate %s code", l.Name()))
+			langFlags[l.ShortName()] = flagSet.Lookup(l.ShortName())
 		}
 	}
 
+	var langKeys []string
 	for _, l := range lang.SupportedLanguages {
-		entry := strings.ToLower(l.Name())
-		flag := langFlags[entry]
+		flag := langFlags[l.ShortName()]
 		cmd.Flags().AddFlag(flag)
-		_ = viper.BindPFlag(entry+".enable", flag)
+		_ = viper.BindPFlag(l.ShortName()+".enable", flag)
+		langKeys = append(langKeys, l.ShortName())
 	}
+	cmd.MarkFlagsMutuallyExclusive(langKeys...)
 }
 
 func initLogger() {

@@ -22,35 +22,42 @@ var (
 )
 
 type Site string
+type Language string
 
 const (
-	LeetCodeCN Site = "https://leetcode.cn"
-	LeetCodeUS Site = "https://leetcode.com"
+	LeetCodeCN Site     = "https://leetcode.cn"
+	LeetCodeUS Site     = "https://leetcode.com"
+	ZH         Language = "zh"
+	EN         Language = "en"
 )
 
 type Config struct {
-	CN       bool           `yaml:"cn" comment:"Use Chinese language"`
-	LeetCode LeetCodeConfig `yaml:"leetcode" comment:"LeetCode configuration"`
-	Go       GoConfig       `yaml:"go"`
-	Python   PythonConfig   `yaml:"python"`
+	Language Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
+	LeetCode LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
+	Editor   Editor         `yaml:"editor" mapstructure:"editor"`
+	Go       GoConfig       `yaml:"go" mapstructure:"go"`
+	Python   PythonConfig   `yaml:"python" mapstructure:"python"`
 	// Add more languages here
 	dir string
 }
 
+type Editor struct {
+}
+
 type PythonConfig struct {
-	Enable bool   `yaml:"enable" comment:"Enable Python generator"`
-	OutDir string `yaml:"out_dir" comment:"Output directory for Python files"`
+	Enable bool   `yaml:"-" mapstructure:"enable"`
+	OutDir string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Python files"`
 }
 
 type GoConfig struct {
-	Enable           bool   `yaml:"enable" comment:"Enable Go generator"`
-	OutDir           string `yaml:"out_dir" comment:"Output directory for Go files"`
-	SeparatePackage  bool   `yaml:"separate_package" comment:"Generate separate package for each question"`
-	FilenameTemplate string `yaml:"filename_template" comment:"Filename template for Go files"`
+	Enable           bool   `yaml:"-" mapstructure:"enable"`
+	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Output directory for Go files"`
+	SeparatePackage  bool   `yaml:"separate_package" mapstructure:"separate_package" comment:"Generate separate package for each question"`
+	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
 }
 
 type LeetCodeConfig struct {
-	Site Site `yaml:"site" comment:"LeetCode site"`
+	Site Site `yaml:"site" mapstructure:"site" comment:"LeetCode site"`
 }
 
 func (c Config) ConfigDir() string {
@@ -77,8 +84,8 @@ func Default() Config {
 	home, _ := homedir.Dir()
 	configDir := filepath.Join(home, ".config", CmdName)
 	return Config{
-		dir: configDir,
-		CN:  true,
+		dir:      configDir,
+		Language: ZH,
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 		},

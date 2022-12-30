@@ -16,13 +16,12 @@ var pickCmd = &cobra.Command{
 			// 	TODO Start tea TUI to pick a question
 			args = append(args, "two-sum")
 		}
-		gen := lang.NewMultiGenerator()
 		for _, p := range args {
 			q, err := leetcode.Question(p, c)
 			if err != nil {
 				cmd.Printf("Failed to get question %s: %v\n", p, err)
 			}
-			files, err := gen.Generate(q)
+			files, err := lang.Generate(q)
 			if err != nil {
 				cmd.Printf("Failed to generate %s: %v\n", q.TitleSlug, err)
 				continue

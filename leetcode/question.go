@@ -115,14 +115,14 @@ func (q *QuestionData) Url() string {
 }
 
 func (q *QuestionData) GetTitle() string {
-	if config.Get().CN && q.TranslatedTitle != "" {
+	if config.Get().Language == config.ZH && q.TranslatedTitle != "" {
 		return q.TranslatedTitle
 	}
 	return q.Title
 }
 
 func (q *QuestionData) GetContent() string {
-	if config.Get().CN && q.TranslatedContent != "" {
+	if config.Get().Language == config.ZH && q.TranslatedContent != "" {
 		return q.TranslatedContent
 	}
 	return q.Content
