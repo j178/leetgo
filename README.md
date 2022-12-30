@@ -88,7 +88,7 @@ You can tweak the configuration to your liking.
 
 <!-- BEGIN CONFIG -->
 ```yaml
-# Generate code for questions, go, python, ... (will be override by --gen, default is go)
+# Generate code for questions, go, python, ... (will be override by project config and flag --gen)
 gen: go
 # Language of the questions, zh or en
 language: zh
