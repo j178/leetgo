@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/mitchellh/mapstructure"
@@ -46,7 +47,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 var rootCmd = &cobra.Command{
 	Use:               "leetgo",
 	Short:             "Leetcode",
-	Long:              "Leetcode command line tool.",
+	Long:              "Leetcode friend for geek.",
 	Version:           Version,
 	PersistentPreRunE: loadConfig,
 }
@@ -100,4 +101,17 @@ func init() {
 		cmd.Flags().SortFlags = false
 		rootCmd.AddCommand(cmd)
 	}
+
+	cc.Init(
+		&cc.Config{
+			RootCmd:         rootCmd,
+			Headings:        cc.HiCyan + cc.Bold + cc.Underline,
+			Commands:        cc.HiYellow + cc.Bold,
+			Example:         cc.Italic,
+			ExecName:        cc.Bold,
+			Flags:           cc.Bold,
+			NoExtraNewlines: true,
+			NoBottomNewline: true,
+		},
+	)
 }

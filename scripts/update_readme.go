@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
 )
@@ -23,6 +24,7 @@ func main() {
 }
 
 func updateUsage(readme []byte) []byte {
+	color.NoColor = true
 	usage := cmd.UsageString()
 	usage = "\n```\n" + usage + "```\n"
 
