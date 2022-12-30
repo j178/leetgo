@@ -10,11 +10,11 @@
 Leetgo is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
 Then you can submit your code to LeetCode directly.
 
-TODO: add a screen replay
+[![asciicast](https://asciinema.org/a/zFcJ5319dfB3KtDGNovJOeZTv.svg)](https://asciinema.org/a/zFcJ5319dfB3KtDGNovJOeZTv)
 
 Leetgo supports generating contest questions as well.
 
-TODO: add a screen replay
+TODO: add a https://asciinema.org/
 
 Currently, Leetgo supports the following languages:
 - Golang
@@ -27,7 +27,7 @@ and some other languages are in plan (help wanted, contributions welcome!):
 
 **This project is in its early development stage, and anything is likely to change.**
 
-## Main features
+## Highlight of features
 
 - Search for and view a question by its ID or slug.
 - Generate skeleton code and testing code for a question.
