@@ -212,7 +212,7 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	if codeSnippet == "" {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Gen, q.TitleSlug)
 	}
-	
+
 	f, err := gen.Generate(q)
 	if err != nil {
 		return nil, err
@@ -231,14 +231,6 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 
 type commonGenerator struct {
 	baseLang
-}
-
-func (g commonGenerator) Name() string {
-	return g.baseLang.Name
-}
-
-func (g commonGenerator) ShortName() string {
-	return g.baseLang.ShortName
 }
 
 func (g commonGenerator) Generate(q leetcode.QuestionData) ([]FileOutput, error) {
