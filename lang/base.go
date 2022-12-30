@@ -191,13 +191,6 @@ var (
 		}
 		return m
 	}()
-	slugs = func() map[string]Generator {
-		m := make(map[string]Generator)
-		for _, g := range supportedLanguages {
-			m[g.Name()] = g
-		}
-		return m
-	}()
 )
 
 func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
