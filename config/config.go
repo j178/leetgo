@@ -21,8 +21,10 @@ var (
 	Debug = os.Getenv("DEBUG") != ""
 )
 
-type Site string
-type Language string
+type (
+	Site     string
+	Language string
+)
 
 const (
 	LeetCodeCN Site     = "https://leetcode.cn"
@@ -57,7 +59,7 @@ type GoConfig struct {
 }
 
 type LeetCodeConfig struct {
-	Site Site `yaml:"site" mapstructure:"site" comment:"LeetCode site"`
+	Site Site `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
 }
 
 func (c Config) ConfigDir() string {
@@ -118,6 +120,8 @@ func Verify(c Config) error {
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
 		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
 	}
-
+	if c.Language != ZH && c.Language != EN {
+		return fmt.Errorf("invalid language: %s", c.Language)
+	}
 	return nil
 }
