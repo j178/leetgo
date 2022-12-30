@@ -1,16 +1,13 @@
 package leetcode
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"reflect"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
+	"github.com/jedib0t/go-pretty/v6/progress"
 	"github.com/tidwall/gjson"
 )
 
@@ -33,35 +30,6 @@ func WithCredential(cred CredentialProvider) Option {
 	}
 }
 
-type decoder struct {
-	path string
-}
-
-func (d decoder) Decode(resp *http.Response, v interface{}) error {
-	data, _ := io.ReadAll(resp.Body)
-	hclog.L().Trace("Leetcode response", "url", resp.Request.URL.String(), "data", string(data))
-
-	ty := reflect.TypeOf(v)
-	ele := reflect.ValueOf(v).Elem()
-	switch ty.Elem() {
-	case reflect.TypeOf(gjson.Result{}):
-		if d.path == "" {
-			ele.Set(reflect.ValueOf(gjson.ParseBytes(data)))
-		} else {
-			ele.Set(reflect.ValueOf(gjson.GetBytes(data, d.path)))
-		}
-	case reflect.TypeOf([]byte{}):
-		ele.SetBytes(data)
-	default:
-		return json.Unmarshal(data, v)
-	}
-	return nil
-}
-
-type ErrorResp struct {
-	Errors string `json:"errors"`
-}
-
 type Variables map[string]string
 
 type cnClient struct {
@@ -80,7 +48,7 @@ func NewClient(options ...Option) Client {
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
 	)
 	httpClient.Add("Accept-Encoding", "gzip, deflate, br")
-	httpClient.ResponseDecoder(decoder{})
+	httpClient.ResponseDecoder(smartDecoder{LogResponseData: true})
 
 	cfg := config.Get()
 	if cfg.LeetCode.Site == config.LeetCodeCN {
@@ -115,7 +83,7 @@ func (c *cnClient) graphqlGet(query string, operation string, variables Variable
 	if err != nil {
 		return err
 	}
-	hclog.L().Trace("Requesting", "method", "GET", "url", r.URL.String())
+	hclog.L().Trace("request", "method", "GET", "url", r.URL.String())
 	_, err = c.http.Do(r, result, nil)
 	return err
 }
@@ -131,7 +99,7 @@ func (c *cnClient) graphqlPost(query string, operation string, variables Variabl
 	if err != nil {
 		return err
 	}
-	hclog.L().Trace("Requesting", "method", "POST", "url", r.URL.String())
+	hclog.L().Trace("request", "method", "POST", "url", r.URL.String())
 	_, err = c.http.Do(r, result, nil)
 	return err
 }
@@ -204,9 +172,25 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	}
 	url := resp.Get("data.allQuestionUrls.questionUrl").Str
 
+	hclog.L().Trace("request", "url", url)
+	tracker := &progress.Tracker{
+		Message: "Downloading",
+		Total:   0,
+		Units:   progress.UnitsBytes,
+	}
+	pw := progress.NewWriter()
+	pw.SetAutoStop(true)
+	pw.AppendTracker(tracker)
+	pw.SetStyle(progress.StyleBlocks)
+	pw.Style().Visibility.ETA = false
+	pw.Style().Visibility.ETAOverall = false
+	
+	go pw.Render()
+	defer pw.Stop()
+
 	var qs []QuestionData
-	hclog.L().Trace("Requesting", "url", url)
-	_, err = c.http.New().Get(url).ReceiveSuccess(&qs)
+	dec := progressDecoder{smartDecoder{LogResponseData: false}, tracker}
+	_, err = c.http.New().Get(url).ResponseDecoder(dec).ReceiveSuccess(&qs)
 	if err != nil {
 		return nil, err
 	}

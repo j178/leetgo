@@ -64,7 +64,7 @@ func (c *cache) load() {
 		func() {
 			err := c.doLoad()
 			if err != nil {
-				hclog.L().Warn("failed to load cache, try updating with `leetgo update`", "err", err)
+				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
 				return
 			}
 			c.checkUpdateTime()
@@ -78,7 +78,7 @@ func (c *cache) checkUpdateTime() {
 		return
 	}
 	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
-		hclog.L().Warn("cache is too old, try updating with `leetgo update`")
+		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
 	}
 }
 
