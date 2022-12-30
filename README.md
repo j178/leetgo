@@ -74,9 +74,11 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
-## LeetCode authentication
+## LeetCode Support
 
 Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. You need to provide your LeetCode session ID to authenticate.
+
+Currently only `leetcode.cn` is supported. `leetcode.com` is under development.
 
 ## Configuration
 
