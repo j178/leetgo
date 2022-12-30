@@ -171,7 +171,7 @@ var (
 		},
 	}
 	// TODO scala, typescript, php, erlang, dart, racket
-	supportedLanguages = []Generator{
+	SupportedLanguages = []Generator{
 		golangGen,
 		pythonGen,
 		cppGen,
@@ -186,7 +186,7 @@ var (
 	}
 	shortNames = func() map[string]Generator {
 		m := make(map[string]Generator)
-		for _, g := range supportedLanguages {
+		for _, g := range SupportedLanguages {
 			m[g.ShortName()] = g
 		}
 		return m
@@ -198,7 +198,7 @@ func Generate(q leetcode.QuestionData) ([][]FileOutput, error) {
 	var files [][]FileOutput
 	gen, ok := shortNames[cfg.Gen]
 	if !ok {
-		return nil, fmt.Errorf("language %s is not supported yet", cfg.Gen)
+		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
 	}
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())

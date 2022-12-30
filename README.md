@@ -16,18 +16,6 @@ Then you can submit your code to LeetCode directly.
 
 TODO: add a https://asciinema.org/
 
-Currently, `leetgo` supports generating code and local test for the following languages:
-
-|        | Generate           | Local Test                    |
-|--------|--------------------|-------------------------------|
-| Golang | :white_check_mark: | :white_check_mark:            |
-| Python | :white_check_mark: | :white_check_mark:            |
-| C++    | :white_check_mark: | :negative_squared_cross_mark: |
-| Java   | :white_check_mark: | :negative_squared_cross_mark: |
-| Rust   | :white_check_mark: | :negative_squared_cross_mark: |
-
-and many other languages are in plan. (help wanted, contributions welcome!)
-
 **This project is in its early development stage, and anything is likely to change.**
 
 ## Highlight of features
@@ -36,6 +24,26 @@ and many other languages are in plan. (help wanted, contributions welcome!)
 - Generate skeleton code and testing code for a question.
 - Run test cases on your local machine.
 - Generate contest questions just in time.
+
+## Language support
+
+Currently, `leetgo` supports generating code and local test for the following languages:
+<!-- BEGIN MATRIX -->
+|  | Generate | Local Test |
+| --- | --- | --- |
+| Go | :white_check_mark: | :x: |
+| Python | :white_check_mark: | :x: |
+| C++ | :white_check_mark: | :x: |
+| Rust | :white_check_mark: | :x: |
+| Java | :white_check_mark: | :x: |
+| C | :white_check_mark: | :x: |
+| C# | :white_check_mark: | :x: |
+| JavaScript | :white_check_mark: | :x: |
+| Ruby | :white_check_mark: | :x: |
+| Swift | :white_check_mark: | :x: |
+| Kotlin | :white_check_mark: | :x: |
+<!-- END MATRIX -->
+and many other languages are in plan. (help wanted, contributions welcome!)
 
 ## Installation
 

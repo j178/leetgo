@@ -7,6 +7,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/lang"
+	"github.com/j178/leetgo/leetcode"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 var (
@@ -14,6 +17,8 @@ var (
 	endUsageMark    = []byte("<!-- END USAGE -->")
 	beginConfigMark = []byte("<!-- BEGIN CONFIG -->")
 	endConfigMark   = []byte("<!-- END CONFIG -->")
+	beginMatrixMark = []byte("<!-- BEGIN MATRIX -->")
+	endMatrixMark   = []byte("<!-- END MATRIX -->")
 )
 
 func main() {
@@ -21,6 +26,7 @@ func main() {
 		readme, _ := os.ReadFile(f)
 		readme = updateUsage(readme)
 		readme = updateConfig(readme)
+		readme = updateSupportMatrix(readme)
 		_ = os.WriteFile(f, readme, 0644)
 	}
 }
@@ -49,5 +55,34 @@ func updateConfig(readme []byte) []byte {
 	result := append([]byte(nil), readme[:configStart]...)
 	result = append(result, configStr...)
 	result = append(result, readme[configEnd:]...)
+	return result
+}
+
+func updateSupportMatrix(readme []byte) []byte {
+	w := table.NewWriter()
+	w.AppendHeader(table.Row{"", "Generate", "Local Test"})
+	q := leetcode.QuestionData{}
+	for _, l := range lang.SupportedLanguages {
+		_, err := l.GenerateTest(q)
+		localTest := ":white_check_mark:"
+		if err == lang.NotSupported {
+			localTest = ":x:"
+		}
+		w.AppendRow(
+			table.Row{
+				l.Name(),
+				":white_check_mark:",
+				localTest,
+			},
+		)
+	}
+	matrixStr := w.RenderMarkdown()
+	matrixStr = "\n" + matrixStr + "\n"
+
+	matrixStart := bytes.Index(readme, beginMatrixMark) + len(beginMatrixMark)
+	matrixEnd := bytes.Index(readme, endMatrixMark)
+	result := append([]byte(nil), readme[:matrixStart]...)
+	result = append(result, matrixStr...)
+	result = append(result, readme[matrixEnd:]...)
 	return result
 }
