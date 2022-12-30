@@ -12,13 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const tmpl = `{{ .QuestionFrontendId }}. {{ .Title }}
-Slug: {{ .TitleSlug }}
-Difficulty: {{ .Difficulty }}
-URL: {{ .Url }}
-{{ range $i, $t := .Hints }}Hint: {{ $t }}{{ end }}
-`
-
 var infoCmd = &cobra.Command{
 	Use:   "info",
 	Short: "Show question info",
