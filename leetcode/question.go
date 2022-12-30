@@ -1,7 +1,12 @@
 package leetcode
 
 import (
+	"encoding/json"
 	"errors"
+	"strconv"
+
+	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/utils"
 )
 
 type TopicTag struct {
@@ -16,6 +21,32 @@ type CodeSnippet struct {
 	Code     string `json:"code"`
 }
 
+type Stats struct {
+	TotalAccepted      string  `json:"totalAccepted"`
+	TotalSubmission    string  `json:"totalSubmission"`
+	TotalAcceptedRaw   float64 `json:"totalAcceptedRaw"`
+	TotalSubmissionRaw float64 `json:"totalSubmissionRaw"`
+	ACRate             string  `json:"acRate"`
+}
+
+func (s *Stats) UnmarshalJSON(data []byte) error {
+	// Cannot use `var v Stats` here, because it will cause infinite recursion.
+	var v map[string]any
+	unquoted, err := strconv.Unquote(utils.BytesToString(data))
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+		return err
+	}
+	s.TotalAccepted = v["totalAccepted"].(string)
+	s.TotalSubmission = v["totalSubmission"].(string)
+	s.TotalAcceptedRaw = v["totalAcceptedRaw"].(float64)
+	s.TotalSubmissionRaw = v["totalSubmissionRaw"].(float64)
+	s.ACRate = v["acRate"].(string)
+	return nil
+}
+
 type QuestionData struct {
 	client             Client
 	TitleSlug          string        `json:"titleSlug"`
@@ -28,7 +59,7 @@ type QuestionData struct {
 	IsPaidOnly         bool          `json:"isPaidOnly"`
 	Content            string        `json:"content"`
 	TranslatedContent  string        `json:"translatedContent"`
-	Stats              string        `json:"stats"`
+	Stats              Stats         `json:"stats"`
 	Hints              []string      `json:"hints"`
 	SimilarQuestions   string        `json:"similarQuestions"`
 	SampleTestCase     string        `json:"sampleTestCase"`
@@ -39,6 +70,28 @@ type QuestionData struct {
 
 func (q *QuestionData) Url() string {
 	return q.client.BaseURI() + "problems/" + q.TitleSlug + "/"
+}
+
+func (q *QuestionData) GetTitle() string {
+	if config.Get().CN && q.TranslatedTitle != "" {
+		return q.TranslatedTitle
+	}
+	return q.Title
+}
+
+func (q *QuestionData) GetContent() string {
+	if config.Get().CN && q.TranslatedContent != "" {
+		return q.TranslatedContent
+	}
+	return q.Content
+}
+
+func (q *QuestionData) TagSlugs() []string {
+	var slugs []string
+	for _, tag := range q.TopicTags {
+		slugs = append(slugs, tag.Slug)
+	}
+	return slugs
 }
 
 func QuestionBySlug(slug string, c Client) (QuestionData, error) {

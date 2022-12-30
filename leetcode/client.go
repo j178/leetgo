@@ -3,6 +3,7 @@ package leetcode
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/go-hclog"
@@ -193,6 +194,8 @@ func (c *cnClient) GetAllQuestions() ([]QuestionData, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Sleep a while to make sure the progress bar is rendered.
+	time.Sleep(time.Millisecond * 100)
 	return qs, err
 }
 
