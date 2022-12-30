@@ -64,7 +64,7 @@ Available Commands:
   test                    Run question test cases
   submit                  Submit solution
   contest                 Generate contest questions
-  update                  Update local questions cache
+  cache                   Manage local questions cache
 
 Flags:
   -v, --version   version for leetgo

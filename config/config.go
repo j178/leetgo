@@ -103,7 +103,7 @@ func Get() Config {
 	return *cfg
 }
 
-func Init(c Config) {
+func Set(c Config) {
 	cfg = &c
 }
 

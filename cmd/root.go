@@ -26,6 +26,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
+			hclog.L().Debug("config file not found, have you ran `leetgo init`?", "file", cfg.ConfigFile())
 			return nil
 		}
 		return err
@@ -42,7 +43,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("config file is invalid: %w", err)
 	}
 
-	config.Init(cfg)
+	config.Set(cfg)
 	return err
 }
 
