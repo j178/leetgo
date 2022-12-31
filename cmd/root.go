@@ -45,7 +45,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("config file is invalid: %w", err)
 	}
 
-	config.Set(cfg)
+	config.Set(*cfg)
 	return err
 }
 

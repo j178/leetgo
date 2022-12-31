@@ -6,17 +6,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	CmdName           = "leetgo"
-	globalConfigFile  = "config.yaml"
-	projectConfigFile = CmdName + ".yaml"
-	leetcodeCacheFile = "cache/leetcode-questions.db"
-	CodeBeginMark     = "Leetgo Code Begin"
-	CodeEndMark       = "Leetgo Code End"
+	CmdName               = "leetgo"
+	globalConfigFile      = "config.yaml"
+	ProjectConfigFilename = CmdName + ".yaml"
+	leetcodeCacheFile     = "cache/leetcode-questions.db"
+	CodeBeginMark         = "Leetgo Code Begin"
+	CodeEndMark           = "Leetgo Code End"
 )
 
 var (
@@ -37,25 +38,26 @@ const (
 )
 
 type Config struct {
-	dir        string
-	Author     string         `yaml:"author" mapstructure:"author" comment:"Your name"`
-	Gen        string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
-	Language   Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
-	LeetCode   LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
-	Editor     Editor         `yaml:"editor" mapstructure:"editor"`
-	Cache      string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
-	Go         GoConfig       `yaml:"go" mapstructure:"go"`
-	Python     baseLangConfig `yaml:"python" mapstructure:"python"`
-	Cpp        baseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java       baseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust       baseLangConfig `yaml:"rust" mapstructure:"rust"`
-	C          baseLangConfig `yaml:"c" mapstructure:"c"`
-	CSharp     baseLangConfig `yaml:"csharp" mapstructure:"csharp"`
-	JavaScript baseLangConfig `yaml:"javascript" mapstructure:"javascript"`
-	Ruby       baseLangConfig `yaml:"ruby" mapstructure:"ruby"`
-	Swift      baseLangConfig `yaml:"swift" mapstructure:"swift"`
-	Kotlin     baseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
-	PHP        baseLangConfig `yaml:"php" mapstructure:"php"`
+	dir         string
+	projectRoot string
+	Author      string         `yaml:"author" mapstructure:"author" comment:"Your name"`
+	Gen         string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
+	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
+	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
+	Editor      Editor         `yaml:"editor" mapstructure:"editor"`
+	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
+	Go          GoConfig       `yaml:"go" mapstructure:"go"`
+	Python      baseLangConfig `yaml:"python" mapstructure:"python"`
+	Cpp         baseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java        baseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust        baseLangConfig `yaml:"rust" mapstructure:"rust"`
+	C           baseLangConfig `yaml:"c" mapstructure:"c"`
+	CSharp      baseLangConfig `yaml:"csharp" mapstructure:"csharp"`
+	JavaScript  baseLangConfig `yaml:"javascript" mapstructure:"javascript"`
+	Ruby        baseLangConfig `yaml:"ruby" mapstructure:"ruby"`
+	Swift       baseLangConfig `yaml:"swift" mapstructure:"swift"`
+	Kotlin      baseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
+	PHP         baseLangConfig `yaml:"php" mapstructure:"php"`
 	// Add more languages here
 }
 
@@ -76,23 +78,38 @@ type LeetCodeConfig struct {
 	Site Site `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
 }
 
-func (c Config) ConfigDir() string {
+func (c *Config) ConfigDir() string {
 	return c.dir
 }
 
-func (c Config) GlobalConfigFile() string {
+func (c *Config) GlobalConfigFile() string {
 	return filepath.Join(c.dir, globalConfigFile)
 }
 
-func (c Config) ProjectConfigFile() string {
-	return projectConfigFile
+func (c *Config) ProjectRoot() string {
+	if c.projectRoot == "" {
+		dir, _ := os.Getwd()
+		c.projectRoot = dir
+		for dir != "" {
+			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
+				c.projectRoot = dir
+				break
+			}
+			dir, _ = filepath.Split(dir)
+		}
+	}
+	return c.projectRoot
 }
 
-func (c Config) LeetCodeCacheFile() string {
+func (c *Config) ProjectConfigFile() string {
+	return filepath.Join(c.ProjectRoot(), ProjectConfigFilename)
+}
+
+func (c *Config) LeetCodeCacheFile() string {
 	return filepath.Join(c.dir, leetcodeCacheFile)
 }
 
-func (c Config) WriteTo(w io.Writer) error {
+func (c *Config) WriteTo(w io.Writer) error {
 	enc := yaml.NewEncoder(w)
 	enc.SetIndent(2)
 	node, _ := toYamlNode(c)
@@ -100,11 +117,11 @@ func (c Config) WriteTo(w io.Writer) error {
 	return err
 }
 
-func Default() Config {
+func Default() *Config {
 	home, _ := homedir.Dir()
 	author := "Bob"
 	configDir := filepath.Join(home, ".config", CmdName)
-	return Config{
+	return &Config{
 		dir:      configDir,
 		Author:   author,
 		Gen:      "go",
@@ -134,18 +151,18 @@ func Default() Config {
 	}
 }
 
-func Get() Config {
+func Get() *Config {
 	if cfg == nil {
 		return Default()
 	}
-	return *cfg
+	return cfg
 }
 
 func Set(c Config) {
 	cfg = &c
 }
 
-func Verify(c Config) error {
+func Verify(c *Config) error {
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
 		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
 	}

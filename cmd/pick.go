@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/hashicorp/go-hclog"
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
@@ -15,6 +19,7 @@ var pickCmd = &cobra.Command{
 		c := leetcode.NewClient()
 		if len(args) == 0 {
 			// 	TODO Start tea TUI to pick a question
+			//   looks like https://leetcode.cn/problemset/all/
 			args = append(args, "two-sum")
 		}
 		for _, p := range args {
@@ -24,12 +29,16 @@ var pickCmd = &cobra.Command{
 				continue
 			}
 			files, err := lang.Generate(q)
+			// todo how editor/opener step in?
 			if err != nil {
 				hclog.L().Error("failed to generate", "question", p, "error", err)
 				continue
 			}
+			projectRoot := config.Get().ProjectRoot()
 			for _, f := range files {
-				hclog.L().Info("generated", "files", f)
+				fmt.Println("Filename:", filepath.Join(projectRoot, f.BaseDir, f.Filename))
+				fmt.Println("Content:")
+				fmt.Println(f.Content)
 			}
 		}
 		return nil
