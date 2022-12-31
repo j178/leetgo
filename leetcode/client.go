@@ -115,6 +115,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 		question(titleSlug: $titleSlug) {
 			questionId
 			questionFrontendId
+			categoryTitle
 			title
 			titleSlug
 			content
@@ -122,11 +123,13 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 			translatedTitle
 			translatedContent
 			difficulty
+			status
 			stats
 			hints
 			similarQuestions
 			sampleTestCase
 			exampleTestcases
+			jsonExampleTestcases
 			metaData
 			codeSnippets {
 				lang

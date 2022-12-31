@@ -78,7 +78,9 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	m.Name = v["name"].(string)
-	m.Manual = v["manual"].(bool)
+	if manual, ok := v["manual"].(bool); ok {
+		m.Manual = manual
+	}
 	for _, param := range v["params"].([]any) {
 		p := param.(map[string]any)
 		m.Params = append(
@@ -88,33 +90,85 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 			},
 		)
 	}
-	m.Return = MetaDataReturn{
-		Type: v["return"].(map[string]any)["type"].(string),
-		Size: int(v["return"].(map[string]any)["size"].(float64)),
+	ret := v["return"].(map[string]any)
+	m.Return.Type = ret["type"].(string)
+	if size, ok := ret["size"].(float64); ok {
+		m.Return.Size = int(size)
+	}
+	return nil
+}
+
+type JsonExampleTestCases []string
+
+func (j *JsonExampleTestCases) UnmarshalJSON(data []byte) error {
+	unquoted, err := strconv.Unquote(utils.BytesToString(data))
+	if err != nil {
+		return err
+	}
+	var v []any
+	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+		return err
+	}
+	for _, c := range v {
+		*j = append(*j, c.(string))
+	}
+	return nil
+}
+
+type SimilarQuestion struct {
+	Title           string `json:"title"`
+	TitleSlug       string `json:"titleSlug"`
+	Difficulty      string `json:"difficulty"`
+	TranslatedTitle string `json:"translatedTitle"`
+}
+
+type SimilarQuestions []SimilarQuestion
+
+func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
+	unquoted, err := strconv.Unquote(utils.BytesToString(data))
+	if err != nil {
+		return err
+	}
+	var v []map[string]string
+	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+		return err
+	}
+	for _, q := range v {
+		*s = append(
+			*s, SimilarQuestion{
+				Title:           q["title"],
+				TitleSlug:       q["titleSlug"],
+				Difficulty:      q["difficulty"],
+				TranslatedTitle: q["translatedTitle"],
+			},
+		)
 	}
 	return nil
 }
 
 type QuestionData struct {
-	client             Client
-	contestSlug        string
-	TitleSlug          string        `json:"titleSlug"`
-	QuestionId         string        `json:"questionId"`
-	QuestionFrontendId string        `json:"questionFrontendId"`
-	Title              string        `json:"title"`
-	TranslatedTitle    string        `json:"translatedTitle"`
-	Difficulty         string        `json:"difficulty"`
-	TopicTags          []TopicTag    `json:"topicTags"`
-	IsPaidOnly         bool          `json:"isPaidOnly"`
-	Content            string        `json:"content"`
-	TranslatedContent  string        `json:"translatedContent"`
-	Stats              Stats         `json:"stats"`
-	Hints              []string      `json:"hints"`
-	SimilarQuestions   string        `json:"similarQuestions"`
-	SampleTestCase     string        `json:"sampleTestCase"`
-	ExampleTestcases   string        `json:"exampleTestcases"`
-	MetaData           MetaData      `json:"metaData"`
-	CodeSnippets       []CodeSnippet `json:"codeSnippets"`
+	client               Client
+	contestSlug          string
+	TitleSlug            string               `json:"titleSlug"`
+	QuestionId           string               `json:"questionId"`
+	QuestionFrontendId   string               `json:"questionFrontendId"`
+	CategoryTitle        string               `json:"CategoryTitle"`
+	Title                string               `json:"title"`
+	TranslatedTitle      string               `json:"translatedTitle"`
+	Difficulty           string               `json:"difficulty"`
+	TopicTags            []TopicTag           `json:"topicTags"`
+	IsPaidOnly           bool                 `json:"isPaidOnly"`
+	Content              string               `json:"content"`
+	TranslatedContent    string               `json:"translatedContent"`
+	Status               string               `json:"status"` // "ac", "notac", or null
+	Stats                Stats                `json:"stats"`
+	Hints                []string             `json:"hints"`
+	SimilarQuestions     SimilarQuestions     `json:"similarQuestions"`
+	SampleTestCase       string               `json:"sampleTestCase"`
+	ExampleTestcases     string               `json:"exampleTestcases"`
+	JsonExampleTestcases JsonExampleTestCases `json:"jsonExampleTestcases"`
+	MetaData             MetaData             `json:"metaData"`
+	CodeSnippets         []CodeSnippet        `json:"codeSnippets"`
 }
 
 func (q *QuestionData) Url() string {
@@ -163,6 +217,11 @@ func (q *QuestionData) GetFormattedContent() string {
 	return content
 }
 
+// GetExampleOutput parses example output from content and translatedContent
+func (q *QuestionData) GetExampleOutput() []string {
+	return nil
+}
+
 func (q *QuestionData) TagSlugs() []string {
 	slugs := make([]string, 0, len(q.TopicTags))
 	for _, tag := range q.TopicTags {
@@ -200,9 +259,9 @@ func Question(s string, c Client) (*QuestionData, error) {
 	if s == "today" {
 		return c.GetTodayQuestion()
 	}
-	q, err := QuestionById(s, c)
-	if err == nil {
-		return q, nil
+	q := GetCache().GetById(s)
+	if q != nil {
+		return QuestionBySlug(q.Slug, c)
 	}
 	return QuestionBySlug(s, c)
 }
