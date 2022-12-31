@@ -95,8 +95,8 @@ Currently only `leetcode.cn` is supported. `leetcode.com` is under development.
 
 ## Configuration
 
-Leetgo uses two levels of configuration files, the global configuration file located at ~/.config/leetgo/config.yaml and the local configuration file located at leetgo.yaml in the current directory. 
-These configuration files are generated during the leetgo init process. 
+Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the current directory. 
+These configuration files are generated during the `leetgo init` process. 
 The local configuration file in the project will override the global configuration. 
 It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the leetgo.yaml file.
 
