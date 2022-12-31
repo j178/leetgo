@@ -97,6 +97,7 @@ func initCommands() {
 		contestCmd,
 		cacheCmd,
 		configCmd,
+		encryptCmd,
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-homedir"
@@ -197,6 +198,24 @@ func Verify(c *Config) error {
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
 		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
 	}
+	if c.LeetCode.Site == LeetCodeUS && c.LeetCode.Credentials.Password != "" {
+		return fmt.Errorf("username/password authentication is not supported for leetcode.com")
+	}
+	if c.LeetCode.Credentials.Password != "" && !strings.HasPrefix(c.LeetCode.Credentials.Password, vaultHeader) {
+		return fmt.Errorf("password is not encrypted")
+	}
+	pw := c.LeetCode.Credentials.Password
+	if pw != "" {
+		var err error
+		c.LeetCode.Credentials.Password, err = Decrypt(pw)
+		if err != nil {
+			return err
+		}
+	}
+	
+	if c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
+		return fmt.Errorf("invalid leetcode.credentials.read_from_browser: %s", c.LeetCode.Credentials.ReadFromBrowser)
+	}
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid language: %s", c.Language)
 	}
@@ -204,7 +223,7 @@ func Verify(c *Config) error {
 		return fmt.Errorf("gen is empty")
 	}
 	if c.Cache != "json" && c.Cache != "sqlite" {
-		return fmt.Errorf("invalid cache type: %s", c.Cache)
+		return fmt.Errorf("invalid cache: %s", c.Cache)
 	}
 	return nil
 }
