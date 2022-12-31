@@ -46,6 +46,9 @@ func (c *sqliteCache) checkUpdateTime() {
 	}
 	var ts int64
 	err = st.QueryRow().Scan(&ts)
+	if err != nil {
+		return
+	}
 	if time.Since(time.Unix(ts, 0)) >= 14*24*time.Hour {
 		hclog.L().Warn("jsonCache is too old, try updating with `leetgo jsonCache update`")
 	}
