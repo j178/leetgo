@@ -149,6 +149,7 @@ func (q *QuestionData) GetContent() string {
 }
 
 func (q *QuestionData) GetCleanContent() string {
+	// TODO 处理上标、下标，行宽度
 	content := q.GetContent()
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())

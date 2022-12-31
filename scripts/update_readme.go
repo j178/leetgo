@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -10,15 +11,6 @@ import (
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/jedib0t/go-pretty/v6/table"
-)
-
-var (
-	beginUsageMark  = []byte("<!-- BEGIN USAGE -->")
-	endUsageMark    = []byte("<!-- END USAGE -->")
-	beginConfigMark = []byte("<!-- BEGIN CONFIG -->")
-	endConfigMark   = []byte("<!-- END CONFIG -->")
-	beginMatrixMark = []byte("<!-- BEGIN MATRIX -->")
-	endMatrixMark   = []byte("<!-- END MATRIX -->")
 )
 
 func main() {
@@ -31,17 +23,23 @@ func main() {
 	}
 }
 
+func replace(mark string, origin []byte, new []byte) []byte {
+	beginMark := fmt.Appendf(nil, "<!-- BEGIN %s -->", mark)
+	endMark := fmt.Appendf(nil, "<!-- END %s -->", mark)
+	begin := bytes.Index(origin, beginMark) + len(beginMark)
+	end := bytes.Index(origin, endMark)
+	result := append([]byte(nil), origin[:begin]...)
+	result = append(result, new...)
+	result = append(result, origin[end:]...)
+	return result
+}
+
 func updateUsage(readme []byte) []byte {
 	color.NoColor = true
 	usage := cmd.UsageString()
 	usage = "\n```\n" + usage + "```\n"
 
-	usageStart := bytes.Index(readme, beginUsageMark) + len(beginUsageMark)
-	usageEnd := bytes.Index(readme, endUsageMark)
-	result := append([]byte(nil), readme[:usageStart]...)
-	result = append(result, usage...)
-	result = append(result, readme[usageEnd:]...)
-	return result
+	return replace("USAGE", readme, []byte(usage))
 }
 
 func updateConfig(readme []byte) []byte {
@@ -50,12 +48,7 @@ func updateConfig(readme []byte) []byte {
 	configStr := buf.String()
 	configStr = "\n```yaml\n" + configStr + "```\n"
 
-	configStart := bytes.Index(readme, beginConfigMark) + len(beginConfigMark)
-	configEnd := bytes.Index(readme, endConfigMark)
-	result := append([]byte(nil), readme[:configStart]...)
-	result = append(result, configStr...)
-	result = append(result, readme[configEnd:]...)
-	return result
+	return replace("CONFIG", readme, []byte(configStr))
 }
 
 func updateSupportMatrix(readme []byte) []byte {
@@ -79,10 +72,5 @@ func updateSupportMatrix(readme []byte) []byte {
 	matrixStr := w.RenderMarkdown()
 	matrixStr = "\n" + matrixStr + "\n"
 
-	matrixStart := bytes.Index(readme, beginMatrixMark) + len(beginMatrixMark)
-	matrixEnd := bytes.Index(readme, endMatrixMark)
-	result := append([]byte(nil), readme[:matrixStart]...)
-	result = append(result, matrixStr...)
-	result = append(result, readme[matrixEnd:]...)
-	return result
+	return replace("MATRIX", readme, []byte(matrixStr))
 }

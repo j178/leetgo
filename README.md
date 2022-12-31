@@ -147,8 +147,8 @@ If you encounter any problems, please run your command with `DEBUG` environment 
 
 ## Contributions welcome!
 
-[Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start.
-
+[Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start, 
+and you can also check out some [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
 
 ## Credits
 
