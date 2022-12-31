@@ -90,12 +90,17 @@ func (c *Config) ProjectRoot() string {
 	if c.projectRoot == "" {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
-		for dir != "" {
+		for {
 			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
-			dir, _ = filepath.Split(dir)
+			dir1 := filepath.Dir(dir)
+			// Reached root.
+			if dir1 == dir {
+				break
+			}
+			dir = dir1
 		}
 	}
 	return c.projectRoot
