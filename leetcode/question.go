@@ -164,7 +164,7 @@ func (q *QuestionData) GetFormattedContent() string {
 }
 
 func (q *QuestionData) TagSlugs() []string {
-	var slugs []string
+	slugs := make([]string, 0, len(q.TopicTags))
 	for _, tag := range q.TopicTags {
 		slugs = append(slugs, tag.Slug)
 	}
@@ -200,9 +200,9 @@ func Question(s string, c Client) (*QuestionData, error) {
 	if s == "today" {
 		return c.GetTodayQuestion()
 	}
-	q, err := QuestionBySlug(s, c)
+	q, err := QuestionById(s, c)
 	if err == nil {
 		return q, nil
 	}
-	return QuestionById(s, c)
+	return QuestionBySlug(s, c)
 }

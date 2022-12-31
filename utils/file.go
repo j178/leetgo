@@ -41,3 +41,14 @@ func CreateIfNotExists(path string, isDir bool) error {
 	}
 	return nil
 }
+
+func Truncate(filename string) error {
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return err
+	}
+	if err = f.Close(); err != nil {
+		return err
+	}
+	return nil
+}

@@ -11,10 +11,10 @@
 
 `leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
 allowing you to complete all of your LeetCode exercises without leaving the terminal. 
-It can automatically generate **skeleton code** and **test cases**, support local testing and debugging, 
+It can automatically generate **skeleton code and test cases**, support **local testing and debugging**, 
 and you can use any IDE you like to solve problems. 
 
-And `leetgo` also supports real-time generation of contest questions, so your submissions are one step ahead!
+And `leetgo` also supports real-time generation of **contest questions**, so your submissions are one step ahead!
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
 
@@ -92,7 +92,7 @@ Use "leetgo [command] --help" for more information about a command.
 
 Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. You need to provide your LeetCode session ID to authenticate.
 
-Currently only `leetcode.cn` is supported. `leetcode.com` is under development.
+Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
 
 ## Configuration
 
@@ -158,3 +158,4 @@ and you can also check out some [help wanted](https://github.com/j178/leetgo/iss
 - https://github.com/EndlessCheng/codeforces-go
 - https://github.com/clearloop/leetcode-cli
 - https://github.com/budougumi0617/leetgode
+- https://github.com/skygragon/leetcode-cli

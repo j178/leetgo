@@ -14,7 +14,7 @@ const (
 	CmdName           = "leetgo"
 	globalConfigFile  = "config.yaml"
 	projectConfigFile = CmdName + ".yaml"
-	leetcodeCacheFile = "cache/leetcode-questions.json"
+	leetcodeCacheFile = "cache/leetcode-questions.db"
 	CodeBeginMark     = "Leetgo Code Begin"
 	CodeEndMark       = "Leetgo Code End"
 )
