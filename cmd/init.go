@@ -78,10 +78,10 @@ func createConfigFiles(dir string) error {
 gen: %s
 leetcode:
   site: %s
-  credential:
+  credentials:
     read_from_browser: %s
 `
-	_, _ = f.WriteString(fmt.Sprintf(tmpl, cfg.Gen, cfg.LeetCode.Site, cfg.LeetCode.Credential.ReadFromBrowser))
+	_, _ = f.WriteString(fmt.Sprintf(tmpl, cfg.Gen, cfg.LeetCode.Site, cfg.LeetCode.Credentials.ReadFromBrowser))
 	hclog.L().Info("project config file created", "file", projectFile)
 
 	return nil
