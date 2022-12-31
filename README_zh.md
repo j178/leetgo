@@ -78,6 +78,7 @@ Available Commands:
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show leetgo config dir
+  encrypt                 Encrypt a sensitive string to be used in config file
 
 Flags:
   -v, --version      version for leetgo
