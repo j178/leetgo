@@ -114,6 +114,8 @@ leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
 editor: {}
+# Cache type, json or sqlite
+cache: json
 go:
   # Generate separate package for each question
   separate_package: true

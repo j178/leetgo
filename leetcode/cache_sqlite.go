@@ -1,5 +1,3 @@
-//go:build cache_sqlite
-
 package leetcode
 
 import (
@@ -14,23 +12,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type cache struct {
+type sqliteCache struct {
 	path string
 	once sync.Once
 	db   *sql.DB
 }
 
-func newCache(path string) QuestionsCache {
-	return &cache{path: path}
+func newSqliteCache(path string) QuestionsCache {
+	return &sqliteCache{path: path}
 }
 
-func (c *cache) load() {
+func (c *sqliteCache) load() {
 	c.once.Do(
 		func() {
 			var err error
 			c.db, err = sql.Open("sqlite3", c.path)
 			if err != nil {
-				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
+				hclog.L().Warn("failed to load jsonCache, try updating with `leetgo jsonCache update`")
 				return
 			}
 			c.checkUpdateTime()
@@ -38,7 +36,7 @@ func (c *cache) load() {
 	)
 }
 
-func (c *cache) checkUpdateTime() {
+func (c *sqliteCache) checkUpdateTime() {
 	if c.db == nil {
 		return
 	}
@@ -49,11 +47,11 @@ func (c *cache) checkUpdateTime() {
 	var ts int64
 	err = st.QueryRow().Scan(&ts)
 	if time.Since(time.Unix(ts, 0)) >= 14*24*time.Hour {
-		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
+		hclog.L().Warn("jsonCache is too old, try updating with `leetgo jsonCache update`")
 	}
 }
 
-func (c *cache) updateTime() error {
+func (c *sqliteCache) updateTime() error {
 	st, err := c.db.Prepare("update lastUpdate set timestamp = ? ")
 	if err != nil {
 		return err
@@ -62,7 +60,7 @@ func (c *cache) updateTime() error {
 	return err
 }
 
-func (c *cache) GetBySlug(slug string) *questionRecord {
+func (c *sqliteCache) GetBySlug(slug string) *questionRecord {
 	c.load()
 	if c.db == nil {
 		return nil
@@ -84,7 +82,7 @@ func (c *cache) GetBySlug(slug string) *questionRecord {
 	return &q
 }
 
-func (c *cache) GetById(id string) *questionRecord {
+func (c *sqliteCache) GetById(id string) *questionRecord {
 	c.load()
 	if c.db == nil {
 		return nil
@@ -106,7 +104,7 @@ func (c *cache) GetById(id string) *questionRecord {
 	return &q
 }
 
-func (c *cache) createTable() error {
+func (c *sqliteCache) createTable() error {
 	err := utils.Truncate(c.path)
 	if err != nil {
 		return err
@@ -137,7 +135,7 @@ insert into lastUpdate values (0);
 	return err
 }
 
-func (c *cache) Update(client Client) error {
+func (c *sqliteCache) Update(client Client) error {
 	err := c.createTable()
 	if err != nil {
 		return err
@@ -177,6 +175,6 @@ func (c *cache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.path)
+	hclog.L().Info("jsonCache updated", "path", c.path)
 	return nil
 }

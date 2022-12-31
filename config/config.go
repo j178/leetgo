@@ -43,6 +43,7 @@ type Config struct {
 	Language   Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
 	LeetCode   LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Editor     Editor         `yaml:"editor" mapstructure:"editor"`
+	Cache      string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
 	Go         GoConfig       `yaml:"go" mapstructure:"go"`
 	Python     baseLangConfig `yaml:"python" mapstructure:"python"`
 	Cpp        baseLangConfig `yaml:"cpp" mapstructure:"cpp"`
@@ -111,6 +112,8 @@ func Default() Config {
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 		},
+		Editor: Editor{},
+		Cache:  "json",
 		Go: GoConfig{
 			baseLangConfig:   baseLangConfig{OutDir: "go"},
 			SeparatePackage:  true,
@@ -151,6 +154,9 @@ func Verify(c Config) error {
 	}
 	if c.Gen == "" {
 		return fmt.Errorf("gen is empty")
+	}
+	if c.Cache != "json" && c.Cache != "sqlite" {
+		return fmt.Errorf("invalid cache type: %s", c.Cache)
 	}
 	return nil
 }
