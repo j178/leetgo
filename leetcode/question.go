@@ -39,8 +39,8 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	type Alias Stats
-	var v Alias
+	type alias Stats
+	var v alias
 	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
 		return err
 	}
@@ -195,20 +195,12 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	var v []map[string]string
+	type alias SimilarQuestions
+	var v alias
 	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
 		return err
 	}
-	for _, q := range v {
-		*s = append(
-			*s, SimilarQuestion{
-				Title:           q["title"],
-				TitleSlug:       q["titleSlug"],
-				Difficulty:      q["difficulty"],
-				TranslatedTitle: q["translatedTitle"],
-			},
-		)
-	}
+	*s = SimilarQuestions(v)
 	return nil
 }
 
