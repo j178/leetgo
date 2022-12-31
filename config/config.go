@@ -81,8 +81,17 @@ type GoConfig struct {
 	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
 }
 
+type Credential struct {
+	ReadFromBrowser string `yaml:"read_from_browser" mapstructure:"read_from_browser" comment:"Read leetcode cookie from browser, currently only chrome is supported."`
+	Cookie          string `yaml:"cookie,omitempty" mapstructure:"cookie" comment:"LeetCode cookie"`
+	CsrfToken       string `yaml:"csrf_token,omitempty" mapstructure:"csrf_token" comment:"LeetCode csrf token"`
+	Username        string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
+	Password        string `yaml:"password,omitempty" mapstructure:"password" comment:"Encrypted LeetCode password"`
+}
+
 type LeetCodeConfig struct {
-	Site Site `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
+	Site       Site       `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
+	Credential Credential `yaml:"credential" mapstructure:"credential" comment:"Credential to access LeetCode"`
 }
 
 func (c *Config) ConfigDir() string {
@@ -144,6 +153,9 @@ func Default() *Config {
 		Language: ZH,
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
+			Credential: Credential{
+				ReadFromBrowser: "chrome",
+			},
 		},
 		Editor: Editor{
 			Command: "vim",

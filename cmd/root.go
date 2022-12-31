@@ -17,9 +17,6 @@ var (
 )
 
 func loadConfig(cmd *cobra.Command, args []string) error {
-	if cmd == initCmd {
-		return nil
-	}
 	// load global configuration
 	cfg := config.Default()
 	viper.SetConfigFile(cfg.GlobalConfigFile())

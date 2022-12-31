@@ -10,7 +10,6 @@ import (
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var initCmd = &cobra.Command{
@@ -19,10 +18,6 @@ var initCmd = &cobra.Command{
 	Example: "leetgo init . --gen go",
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		gen := viper.GetString("gen")
-		if gen == "" {
-			return fmt.Errorf("--gen is required for init")
-		}
 		dir := args[0]
 		err := utils.CreateIfNotExists(dir, true)
 		if err != nil {
@@ -32,7 +27,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = createConfigFiles(dir, gen)
+		err = createConfigFiles(dir)
 		if err != nil {
 			return err
 		}
@@ -59,8 +54,8 @@ func createConfigDir() error {
 	return nil
 }
 
-func createConfigFiles(dir string, gen string) error {
-	cfg := config.Default()
+func createConfigFiles(dir string) error {
+	cfg := config.Get()
 	globalFile := cfg.GlobalConfigFile()
 	if !utils.IsExist(globalFile) {
 		f, err := os.Create(globalFile)
@@ -79,7 +74,14 @@ func createConfigFiles(dir string, gen string) error {
 	if err != nil {
 		return err
 	}
-	_, _ = f.WriteString("gen: " + gen + "\n")
+	tmpl := `# leetgo project level config
+gen: %s
+leetcode:
+  site: %s
+  credential:
+    read_from_browser: %s
+`
+	_, _ = f.WriteString(fmt.Sprintf(tmpl, cfg.Gen, cfg.LeetCode.Site, cfg.LeetCode.Credential.ReadFromBrowser))
 	hclog.L().Info("project config file created", "file", projectFile)
 
 	return nil
