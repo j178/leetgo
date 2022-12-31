@@ -31,7 +31,7 @@ Currently, `leetgo` supports generating code and local test for the following la
 <!-- BEGIN MATRIX -->
 |  | Generate | Local Test |
 | --- | --- | --- |
-| Go | :white_check_mark: | :x: |
+| Go | :white_check_mark: | :white_check_mark: |
 | Python | :white_check_mark: | :x: |
 | C++ | :white_check_mark: | :x: |
 | Rust | :white_check_mark: | :x: |
@@ -82,6 +82,7 @@ Available Commands:
 Flags:
   -v, --version      version for leetgo
   -g, --gen string   language to generate: cpp, go, python ...
+  -y, --yes          answer yes to all prompts
 
 Use "leetgo [command] --help" for more information about a command.
 ```
@@ -110,7 +111,13 @@ language: zh
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
-editor: {}
+contest:
+  # Base dir to put generated contest questions
+  out_dir: ""
+# The editor to open generated files
+editor:
+  command: vim
+  args: []
 # Cache type, json or sqlite
 cache: json
 go:

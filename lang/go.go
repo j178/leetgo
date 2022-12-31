@@ -8,10 +8,55 @@ type golang struct {
 	baseLang
 }
 
-func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
-	return g.baseLang.Generate(q)
+func prepend(s string) Modifier {
+	return func(code string, q *leetcode.QuestionData) string {
+		return s + code
+	}
 }
 
-func (g golang) GenerateTest(q *leetcode.QuestionData) ([]FileOutput, error) {
-	return g.baseLang.GenerateTest(q)
+func addNamedReturn(code string, q *leetcode.QuestionData) string {
+	return code
+}
+
+func changeReceiverName(code string, q *leetcode.QuestionData) string {
+	return code
+}
+
+func (g golang) CheckLibrary() bool {
+	return true
+}
+
+func (g golang) GenerateLibrary() error {
+	return nil
+}
+
+func (g golang) SupportTest() bool {
+	return true
+}
+
+func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+	comment := g.generateComments(q)
+	code := g.generateCode(
+		q,
+		addCodeMark(g.lineComment),
+		removeComments,
+		addNamedReturn,
+		changeReceiverName,
+		prepend("package main\n\n"),
+	)
+	content := comment + "\n" + code + "\n"
+
+	files := []FileOutput{
+		{
+			// TODO filename template
+			Path:    q.TitleSlug + ".go",
+			Content: content,
+		},
+		{
+			Path:    q.TitleSlug + "_test.go",
+			Content: "",
+		},
+	}
+
+	return files, nil
 }

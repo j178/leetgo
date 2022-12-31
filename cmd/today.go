@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ var todayCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%v\n", q.TitleSlug)
-		return nil
+		_, err = lang.Generate(q)
+		return err
 	},
 }

@@ -264,6 +264,7 @@ func (q *QuestionData) GetContent() string {
 
 func (q *QuestionData) GetFormattedContent() string {
 	// TODO 处理上标、下标
+	// TODO 处理 NBSP
 	content := q.GetContent()
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())

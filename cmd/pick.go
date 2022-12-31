@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
@@ -29,17 +27,12 @@ var pickCmd = &cobra.Command{
 				continue
 			}
 			files, err := lang.Generate(q)
-			// todo how editor/opener step in?
 			if err != nil {
 				hclog.L().Error("failed to generate", "question", p, "error", err)
 				continue
 			}
-			projectRoot := config.Get().ProjectRoot()
-			for _, f := range files {
-				fmt.Println("Filename:", filepath.Join(projectRoot, f.BaseDir, f.Filename))
-				fmt.Println("Content:")
-				fmt.Println(f.Content)
-			}
+			// todo how editor/opener step in?
+			fmt.Println("Generated files:", files)
 		}
 		return nil
 	},

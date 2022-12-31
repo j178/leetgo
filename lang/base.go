@@ -3,14 +3,37 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 	"github.com/spf13/viper"
 )
+
+var (
+	NotSupported   = errors.New("not supported")
+	NotImplemented = errors.New("not implemented")
+)
+
+type Generator interface {
+	Name() string
+	ShortName() string
+	Slug() string
+	// SupportTest returns true if the language supports local test.
+	SupportTest() bool
+	// CheckLibrary checks if the library is installed. Return false if not installed.
+	CheckLibrary() bool
+	// GenerateLibrary copies necessary supporting library files to project.
+	GenerateLibrary() error
+	// Generate generates code files for the question.
+	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
+}
 
 type baseLang struct {
 	name              string
@@ -34,6 +57,18 @@ func (l baseLang) ShortName() string {
 	return l.shortName
 }
 
+func (l baseLang) SupportTest() bool {
+	return false
+}
+
+func (l baseLang) CheckLibrary() bool {
+	return true
+}
+
+func (l baseLang) GenerateLibrary() error {
+	return nil
+}
+
 // TODO use template
 func (l baseLang) generateComments(q *leetcode.QuestionData) string {
 	var content []string
@@ -54,18 +89,24 @@ func (l baseLang) generateComments(q *leetcode.QuestionData) string {
 	return strings.Join(content, "\n")
 }
 
-func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...func(string) string) string {
+type Modifier func(string, *leetcode.QuestionData) string
+
+func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) string {
 	code := q.GetCodeSnippet(l.Slug())
 	for _, m := range modifiers {
-		code = m(code)
+		code = m(code, q)
 	}
 	return code
 }
 
-func addCodeMark(comment string) func(string) string {
-	return func(s string) string {
+func addCodeMark(comment string) Modifier {
+	return func(s string, q *leetcode.QuestionData) string {
 		return fmt.Sprintf("%s %s\n\n%s\n\n%s %s", comment, config.CodeBeginMark, s, comment, config.CodeEndMark)
 	}
+}
+
+func removeComments(code string, q *leetcode.QuestionData) string {
+	return code
 }
 
 func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
@@ -75,34 +116,15 @@ func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 
 	files := FileOutput{
 		// TODO filename template
-		Filename: fmt.Sprintf("%s%s", q.TitleSlug, l.extension),
-		Content:  content,
+		Path:    fmt.Sprintf("%s%s", q.TitleSlug, l.extension),
+		Content: content,
 	}
 	return []FileOutput{files}, nil
 }
 
-func (l baseLang) GenerateTest(q *leetcode.QuestionData) ([]FileOutput, error) {
-	// 检查基础库是否生成，如果没有生成，先生成基础库
-	return nil, NotSupported
-}
-
 type FileOutput struct {
-	BaseDir  string
-	Filename string
-	Content  string
-}
-
-var (
-	NotSupported   = errors.New("not supported")
-	NotImplemented = errors.New("not implemented")
-)
-
-type Generator interface {
-	Name() string
-	ShortName() string
-	Slug() string
-	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
-	GenerateTest(q *leetcode.QuestionData) ([]FileOutput, error)
+	Path    string
+	Content string
 }
 
 func getGenerator(gen string) Generator {
@@ -115,9 +137,8 @@ func getGenerator(gen string) Generator {
 	return nil
 }
 
-func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+func Generate(q *leetcode.QuestionData) ([]string, error) {
 	cfg := config.Get()
-	var files []FileOutput
 	gen := getGenerator(cfg.Gen)
 	if gen == nil {
 		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
@@ -128,26 +149,62 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Gen, q.TitleSlug)
 	}
 
-	f, err := gen.Generate(q)
+	if !gen.CheckLibrary() {
+		err := gen.GenerateLibrary()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	files, err := gen.Generate(q)
 	if err != nil {
 		return nil, err
 	}
-	files = append(files, f...)
-	f, err = gen.GenerateTest(q)
-	if err != nil {
-		if err == NotSupported {
-			hclog.L().Warn("test generation not supported for language, skip", "language", gen.Name())
-		}
-	} else {
-		files = append(files, f...)
-	}
 
+	// 1. 没有读到配置文件中的值
 	dir := viper.GetString(cfg.Gen + ".out_dir")
 	if dir == "" {
 		dir = cfg.Gen
 	}
+
+	var generated []string
 	for i := range files {
-		files[i].BaseDir = dir
+		path := filepath.Join(cfg.ProjectRoot(), dir, files[i].Path)
+		written, err := tryWrite(path, files[i].Content)
+		if err != nil {
+			hclog.L().Error("failed to write file", "path", path, "err", err)
+			continue
+		}
+		if written {
+			generated = append(generated, path)
+		}
 	}
-	return files, nil
+	return generated, nil
+}
+
+func tryWrite(file string, content string) (bool, error) {
+	write := true
+	if utils.IsExist(file) {
+		if !viper.GetBool("yes") {
+			prompt := &survey.Confirm{Message: fmt.Sprintf("File \"%s\" already exists, overwrite?", file)}
+			err := survey.AskOne(prompt, &write)
+			if err != nil {
+				return false, err
+			}
+		}
+	}
+	if !write {
+		return false, nil
+	}
+
+	err := utils.CreateIfNotExists(file, false)
+	if err != nil {
+		return false, err
+	}
+	err = os.WriteFile(file, []byte(content), 0644)
+	if err != nil {
+		return false, err
+	}
+	hclog.L().Info("generated", "file", file)
+	return true, nil
 }

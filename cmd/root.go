@@ -86,7 +86,9 @@ func initCommands() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.PersistentFlags().StringP("gen", "g", "", "language to generate: cpp, go, python ...")
+	rootCmd.PersistentFlags().BoolP("yes", "y", false, "answer yes to all prompts")
 	_ = viper.BindPFlag("gen", rootCmd.PersistentFlags().Lookup("gen"))
+	_ = viper.BindPFlag("yes", rootCmd.PersistentFlags().Lookup("yes"))
 
 	commands := []*cobra.Command{
 		initCmd,

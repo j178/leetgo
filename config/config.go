@@ -44,7 +44,8 @@ type Config struct {
 	Gen         string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
 	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
 	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
-	Editor      Editor         `yaml:"editor" mapstructure:"editor"`
+	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
+	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
 	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
 	Go          GoConfig       `yaml:"go" mapstructure:"go"`
 	Python      baseLangConfig `yaml:"python" mapstructure:"python"`
@@ -61,7 +62,13 @@ type Config struct {
 	// Add more languages here
 }
 
+type ContestConfig struct {
+	OutDir string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base dir to put generated contest questions"`
+}
+
 type Editor struct {
+	Command string   `yaml:"command" mapstructure:"command"`
+	Args    []string `yaml:"args" mapstructure:"args"`
 }
 
 type baseLangConfig struct {
@@ -118,7 +125,7 @@ func (c *Config) LeetCodeCacheFile() string {
 	return filepath.Join(c.dir, leetcodeCacheFile)
 }
 
-func (c *Config) WriteTo(w io.Writer) error {
+func (c *Config) Write(w io.Writer) error {
 	enc := yaml.NewEncoder(w)
 	enc.SetIndent(2)
 	node, _ := toYamlNode(c)
@@ -138,8 +145,11 @@ func Default() *Config {
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 		},
-		Editor: Editor{},
-		Cache:  "json",
+		Editor: Editor{
+			Command: "vim",
+			Args:    nil,
+		},
+		Cache: "json",
 		Go: GoConfig{
 			baseLangConfig:   baseLangConfig{OutDir: "go"},
 			SeparatePackage:  true,

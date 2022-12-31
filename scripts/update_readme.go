@@ -9,7 +9,6 @@ import (
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
-	"github.com/j178/leetgo/leetcode"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -44,7 +43,7 @@ func updateUsage(readme []byte) []byte {
 
 func updateConfig(readme []byte) []byte {
 	buf := new(bytes.Buffer)
-	_ = config.Default().WriteTo(buf)
+	_ = config.Default().Write(buf)
 	configStr := buf.String()
 	configStr = "\n```yaml\n" + configStr + "```\n"
 
@@ -54,11 +53,9 @@ func updateConfig(readme []byte) []byte {
 func updateSupportMatrix(readme []byte) []byte {
 	w := table.NewWriter()
 	w.AppendHeader(table.Row{"", "Generate", "Local Test"})
-	q := &leetcode.QuestionData{}
 	for _, l := range lang.SupportedLanguages {
-		_, err := l.GenerateTest(q)
 		localTest := ":white_check_mark:"
-		if err == lang.NotSupported || err == lang.NotImplemented {
+		if !l.SupportTest() {
 			localTest = ":x:"
 		}
 		w.AppendRow(

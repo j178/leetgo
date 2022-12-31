@@ -67,7 +67,7 @@ func createConfigFiles(dir string, gen string) error {
 		if err != nil {
 			return err
 		}
-		err = cfg.WriteTo(f)
+		err = cfg.Write(f)
 		if err != nil {
 			return err
 		}
