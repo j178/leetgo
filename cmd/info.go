@@ -55,7 +55,7 @@ var infoCmd = &cobra.Command{
 					fmt.Sprintf("%s/%s %s", q.Stats.TotalAccepted, q.Stats.TotalSubmission, q.Stats.ACRate),
 				},
 			)
-			w.AppendRow(table.Row{"Content", q.GetCleanContent()})
+			w.AppendRow(table.Row{"Content", q.GetFormattedContent()})
 			for _, h := range q.Hints {
 				w.AppendRow(table.Row{"Hint", h})
 			}

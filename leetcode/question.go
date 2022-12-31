@@ -10,6 +10,7 @@ import (
 	"github.com/JohannesKaufmann/html-to-markdown/plugin"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type TopicTag struct {
@@ -148,8 +149,8 @@ func (q *QuestionData) GetContent() string {
 	return q.Content
 }
 
-func (q *QuestionData) GetCleanContent() string {
-	// TODO 处理上标、下标，行宽度
+func (q *QuestionData) GetFormattedContent() string {
+	// TODO 处理上标、下标
 	content := q.GetContent()
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
@@ -157,6 +158,7 @@ func (q *QuestionData) GetCleanContent() string {
 	if err != nil {
 		return content
 	}
+	content = text.WrapText(content, 100)
 	content = utils.RemoveEmptyLine(content)
 	return content
 }
