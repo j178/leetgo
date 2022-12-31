@@ -18,11 +18,6 @@ And `leetgo` also supports real-time generation of contest questions, so your su
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
 
-`leetgo` supports generating contest questions as well.
-
-TODO: add a https://asciinema.org/
-
-**This project is in its early development stage, and anything is likely to change.**
 
 ## Highlight of features
 
