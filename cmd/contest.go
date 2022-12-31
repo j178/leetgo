@@ -1,11 +1,20 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"time"
+
+	"github.com/briandowns/spinner"
+	"github.com/spf13/cobra"
+)
 
 var contestCmd = &cobra.Command{
 	Use:   "contest",
 	Short: "Generate contest questions",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithHiddenCursor(true))
+		spin.Start()
+		defer spin.Stop()
+		time.Sleep(10 * time.Second)
 		return nil
 	},
 }
