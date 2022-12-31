@@ -5,10 +5,16 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
+*This project is still in its early development stage and many features have not yet been implemented. Everything is subject to rapid change.*
+
 [中文](./README_zh.md) | English
 
-`leetgo` is a command line tool that generates skeleton code for LeetCode questions in many languages. You can run and debug test cases locally with your favorite IDE.
-Then you can submit your code to LeetCode directly.
+`leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
+allowing you to complete all of your LeetCode exercises without leaving the terminal. 
+It can automatically generate **skeleton code** and **test cases**, support local testing and debugging, 
+and you can use any IDE you like to solve problems. 
+
+And `leetgo` also supports real-time generation of contest questions, so your submissions are one step ahead!
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
 
