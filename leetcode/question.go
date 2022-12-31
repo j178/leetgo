@@ -35,19 +35,16 @@ type Stats struct {
 
 func (s *Stats) UnmarshalJSON(data []byte) error {
 	// Cannot use `var v Stats` here, because it will cause infinite recursion.
-	var v map[string]any
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		return err
 	}
+	type Alias Stats
+	var v Alias
 	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
 		return err
 	}
-	s.TotalAccepted = v["totalAccepted"].(string)
-	s.TotalSubmission = v["totalSubmission"].(string)
-	s.TotalAcceptedRaw = int(v["totalAcceptedRaw"].(float64))
-	s.TotalSubmissionRaw = int(v["totalSubmissionRaw"].(float64))
-	s.ACRate = v["acRate"].(string)
+	*s = Stats(v)
 	return nil
 }
 
@@ -57,44 +54,113 @@ type MetaDataParam struct {
 }
 
 type MetaDataReturn struct {
-	Type string `json:"type"`
-	Size int    `json:"size"`
+	Type    string `json:"type"`
+	Size    int    `json:"size"`
+	Dealloc bool   `json:"dealloc"`
 }
+
+type MetaDataMethod struct {
+	Name   string          `json:"name"`
+	Params []MetaDataParam `json:"params"`
+	Return MetaDataReturn  `json:"return"`
+}
+
+type MetaDataConstructor struct {
+	Params []MetaDataParam `json:"params"`
+}
+
+// Normal problems metadata:
+// {
+//  "name": "minMovesToSeat",
+//  "params": [
+//    {
+//      "name": "seats",
+//      "type": "integer[]"
+//    },
+//    {
+//      "type": "integer[]",
+//      "name": "students"
+//    }
+//  ],
+//  "return": {
+//    "type": "integer"
+//  }
+// }
+
+// System design problems metadata:
+// {
+//  "classname": "ExamRoom",
+//  "maxbytesperline": 200000,
+//  "constructor": {
+//    "params": [
+//      {
+//        "type": "integer",
+//        "name": "n"
+//      }
+//    ]
+//  },
+//  "methods": [
+//    {
+//      "name": "seat",
+//      "params": [],
+//      "return": {
+//        "type": "integer"
+//      }
+//    },
+//    {
+//      "name": "leave",
+//      "params": [
+//        {
+//          "type": "integer",
+//          "name": "p"
+//        }
+//      ],
+//      "return": {
+//        "type": "void"
+//      }
+//    }
+//  ],
+//  "systemdesign": true,
+//  "params": [
+//    {
+//      "name": "inputs",
+//      "type": "integer[]"
+//    },
+//    {
+//      "name": "inputs",
+//      "type": "integer[]"
+//    }
+//  ],
+//  "return": {
+//    "type": "list<String>",
+//    "dealloc": true
+//  }
+// }
 
 type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
 	Return MetaDataReturn  `json:"return"`
-	Manual bool            `json:"manual"`
+	// System design problems related
+	SystemDesign bool                `json:"systemdesign"`
+	ClassName    string              `json:"classname"`
+	Constructor  MetaDataConstructor `json:"constructor"`
+	Methods      []MetaDataMethod    `json:"methods"`
+	// Unknown fields
+	Manual bool `json:"manual"`
 }
 
 func (m *MetaData) UnmarshalJSON(data []byte) error {
-	var v map[string]any
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		return err
 	}
+	type alias MetaData
+	var v alias
 	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
 		return err
 	}
-	m.Name = v["name"].(string)
-	if manual, ok := v["manual"].(bool); ok {
-		m.Manual = manual
-	}
-	for _, param := range v["params"].([]any) {
-		p := param.(map[string]any)
-		m.Params = append(
-			m.Params, MetaDataParam{
-				Name: p["name"].(string),
-				Type: p["type"].(string),
-			},
-		)
-	}
-	ret := v["return"].(map[string]any)
-	m.Return.Type = ret["type"].(string)
-	if size, ok := ret["size"].(float64); ok {
-		m.Return.Size = int(size)
-	}
+	*m = MetaData(v)
 	return nil
 }
 
@@ -152,7 +218,7 @@ type QuestionData struct {
 	TitleSlug            string               `json:"titleSlug"`
 	QuestionId           string               `json:"questionId"`
 	QuestionFrontendId   string               `json:"questionFrontendId"`
-	CategoryTitle        string               `json:"CategoryTitle"`
+	CategoryTitle        string               `json:"categoryTitle"`
 	Title                string               `json:"title"`
 	TranslatedTitle      string               `json:"translatedTitle"`
 	Difficulty           string               `json:"difficulty"`
