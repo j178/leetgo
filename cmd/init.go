@@ -74,7 +74,7 @@ func createConfigFiles(dir string, gen string) error {
 		hclog.L().Info("global config file created", "file", globalFile)
 	}
 
-	projectFile := filepath.Join(dir, config.ProjectConfigFilename)
+	projectFile := filepath.Join(dir, cfg.ProjectConfigFilename())
 	f, err := os.Create(projectFile)
 	if err != nil {
 		return err

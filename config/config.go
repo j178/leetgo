@@ -14,7 +14,7 @@ import (
 const (
 	CmdName               = "leetgo"
 	globalConfigFile      = "config.yaml"
-	ProjectConfigFilename = CmdName + ".yaml"
+	projectConfigFilename = CmdName + ".yaml"
 	leetcodeCacheFile     = "cache/leetcode-questions.db"
 	CodeBeginMark         = "Leetgo Code Begin"
 	CodeEndMark           = "Leetgo Code End"
@@ -91,7 +91,7 @@ func (c *Config) ProjectRoot() string {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
 		for {
-			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
+			if utils.IsExist(filepath.Join(dir, projectConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
@@ -107,7 +107,11 @@ func (c *Config) ProjectRoot() string {
 }
 
 func (c *Config) ProjectConfigFile() string {
-	return filepath.Join(c.ProjectRoot(), ProjectConfigFilename)
+	return filepath.Join(c.ProjectRoot(), projectConfigFilename)
+}
+
+func (c *Config) ProjectConfigFilename() string {
+	return projectConfigFilename
 }
 
 func (c *Config) LeetCodeCacheFile() string {
