@@ -111,6 +111,10 @@ language: zh
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
+  # Credential to access LeetCode
+  credential:
+    # Read leetcode cookie from browser, currently only chrome is supported.
+    read_from_browser: chrome
 contest:
   # Base dir to put generated contest questions
   out_dir: ""
@@ -121,6 +125,7 @@ editor:
 # Cache type, json or sqlite
 cache: json
 go:
+  out_dir: go
   # Generate separate package for each question
   separate_package: true
   # Filename template for Go files

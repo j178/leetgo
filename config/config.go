@@ -48,17 +48,17 @@ type Config struct {
 	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
 	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
 	Go          GoConfig       `yaml:"go" mapstructure:"go"`
-	Python      baseLangConfig `yaml:"python" mapstructure:"python"`
-	Cpp         baseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java        baseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust        baseLangConfig `yaml:"rust" mapstructure:"rust"`
-	C           baseLangConfig `yaml:"c" mapstructure:"c"`
-	CSharp      baseLangConfig `yaml:"csharp" mapstructure:"csharp"`
-	JavaScript  baseLangConfig `yaml:"javascript" mapstructure:"javascript"`
-	Ruby        baseLangConfig `yaml:"ruby" mapstructure:"ruby"`
-	Swift       baseLangConfig `yaml:"swift" mapstructure:"swift"`
-	Kotlin      baseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
-	PHP         baseLangConfig `yaml:"php" mapstructure:"php"`
+	Python      BaseLangConfig `yaml:"python" mapstructure:"python"`
+	Cpp         BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java        BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust        BaseLangConfig `yaml:"rust" mapstructure:"rust"`
+	C           BaseLangConfig `yaml:"c" mapstructure:"c"`
+	CSharp      BaseLangConfig `yaml:"csharp" mapstructure:"csharp"`
+	JavaScript  BaseLangConfig `yaml:"javascript" mapstructure:"javascript"`
+	Ruby        BaseLangConfig `yaml:"ruby" mapstructure:"ruby"`
+	Swift       BaseLangConfig `yaml:"swift" mapstructure:"swift"`
+	Kotlin      BaseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
+	PHP         BaseLangConfig `yaml:"php" mapstructure:"php"`
 	// Add more languages here
 }
 
@@ -71,12 +71,12 @@ type Editor struct {
 	Args    []string `yaml:"args" mapstructure:"args"`
 }
 
-type baseLangConfig struct {
+type BaseLangConfig struct {
 	OutDir string `yaml:"out_dir" mapstructure:"out_dir"`
 }
 
 type GoConfig struct {
-	baseLangConfig   `yaml:",inline" mapstructure:",squash"`
+	BaseLangConfig   `yaml:",inline" mapstructure:",squash"`
 	SeparatePackage  bool   `yaml:"separate_package" mapstructure:"separate_package" comment:"Generate separate package for each question"`
 	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
 }
@@ -163,21 +163,21 @@ func Default() *Config {
 		},
 		Cache: "json",
 		Go: GoConfig{
-			baseLangConfig:   baseLangConfig{OutDir: "go"},
+			BaseLangConfig:   BaseLangConfig{OutDir: "go"},
 			SeparatePackage:  true,
 			FilenameTemplate: ``,
 		},
-		Python:     baseLangConfig{OutDir: "python"},
-		Cpp:        baseLangConfig{OutDir: "cpp"},
-		Java:       baseLangConfig{OutDir: "java"},
-		Rust:       baseLangConfig{OutDir: "rust"},
-		C:          baseLangConfig{OutDir: "c"},
-		CSharp:     baseLangConfig{OutDir: "csharp"},
-		JavaScript: baseLangConfig{OutDir: "javascript"},
-		Ruby:       baseLangConfig{OutDir: "ruby"},
-		Swift:      baseLangConfig{OutDir: "swift"},
-		Kotlin:     baseLangConfig{OutDir: "kotlin"},
-		PHP:        baseLangConfig{OutDir: "php"},
+		Python:     BaseLangConfig{OutDir: "python"},
+		Cpp:        BaseLangConfig{OutDir: "cpp"},
+		Java:       BaseLangConfig{OutDir: "java"},
+		Rust:       BaseLangConfig{OutDir: "rust"},
+		C:          BaseLangConfig{OutDir: "c"},
+		CSharp:     BaseLangConfig{OutDir: "csharp"},
+		JavaScript: BaseLangConfig{OutDir: "javascript"},
+		Ruby:       BaseLangConfig{OutDir: "ruby"},
+		Swift:      BaseLangConfig{OutDir: "swift"},
+		Kotlin:     BaseLangConfig{OutDir: "kotlin"},
+		PHP:        BaseLangConfig{OutDir: "php"},
 		// Add more languages here
 	}
 }

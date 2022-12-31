@@ -161,7 +161,6 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 		return nil, err
 	}
 
-	// 1. 没有读到配置文件中的值
 	dir := viper.GetString(cfg.Gen + ".out_dir")
 	if dir == "" {
 		dir = cfg.Gen
