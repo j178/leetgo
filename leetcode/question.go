@@ -3,6 +3,7 @@ package leetcode
 import (
 	"encoding/json"
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -275,9 +276,25 @@ func (q *QuestionData) GetFormattedContent() string {
 	return content
 }
 
-// GetExampleOutput parses example output from content and translatedContent
-func (q *QuestionData) GetExampleOutput() []string {
-	return nil
+// GetExampleOutputs parses example output from content and translatedContent.
+// We can also get correct example outputs by submitting example inputs to judge server.
+func (q *QuestionData) GetExampleOutputs() []string {
+	pat := ""
+	content := ""
+	if q.Content != "" && !strings.Contains(q.Content, "English description is not available for the problem.") {
+		content = q.Content
+		pat = `<strong>Output[:：]?</strong>\s?\n?\s*(.+)`
+	} else {
+		content = q.TranslatedContent
+		pat = `<strong>输出[:：]?</strong>\s?\n?\s*(.+)`
+	}
+	re := regexp.MustCompile(pat)
+	found := re.FindAllStringSubmatch(content, -1)
+	result := make([]string, 0, len(found))
+	for _, f := range found {
+		result = append(result, strings.TrimSuffix(f[1], "</pre>"))
+	}
+	return result
 }
 
 func (q *QuestionData) TagSlugs() []string {
