@@ -86,7 +86,14 @@ func NewClient(options ...ClientOption) Client {
 		c.http.Add("Origin", string(config.LeetCodeCN))
 		return c
 	} else {
-		panic(fmt.Sprintf("site not supported yet: %s", cfg.LeetCode.Site))
+		c := &usClient{
+			http: httpClient,
+			opt:  opts,
+		}
+		c.http.Base(c.BaseURI())
+		c.http.Add("Referer", c.BaseURI())
+		c.http.Add("Origin", string(config.LeetCodeUS))
+		return c
 	}
 }
 
@@ -440,6 +447,8 @@ func (c *cnClient) CheckSubmissionResult(submissionId string) (*SubmissionCheckR
 	_, err := c.jsonGet(url, nil, &resp, nil)
 	return &resp, err
 }
+
+// TODO 处理提交频繁的问题
 
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
 	url := fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)

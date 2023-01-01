@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/zellyn/kooky"
 	_ "github.com/zellyn/kooky/browser/chrome"
@@ -56,6 +57,7 @@ func NewPasswordAuth(username, passwd string) CredentialsProvider {
 
 func (p *passwordAuth) AddCredentials(req *http.Request, c Client) error {
 	if !p.hasAuth() {
+		hclog.L().Info("logging in with username and password")
 		resp, err := c.Login(p.username, p.password)
 		if err != nil {
 			return err
@@ -87,6 +89,7 @@ func NewBrowserAuth(browsers ...string) CredentialsProvider {
 
 func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
 	if !b.hasAuth() {
+		hclog.L().Info("reading credentials from browser")
 		site := string(config.Get().LeetCode.Site)
 		u, _ := url.Parse(site)
 		domain := u.Host
