@@ -14,12 +14,22 @@ type CredentialsProvider interface {
 	AddCredentials(req *http.Request, c Client) error
 }
 
+type nonAuth struct{}
+
+func NonAuth() CredentialsProvider {
+	return &nonAuth{}
+}
+
+func (n *nonAuth) AddCredentials(req *http.Request, c Client) error {
+	return nil
+}
+
 type cookiesAuth struct {
 	LeetcodeSession string
 	CsrfToken       string
 }
 
-func newCookiesAuth(session, csrftoken string) *cookiesAuth {
+func NewCookiesAuth(session, csrftoken string) CredentialsProvider {
 	return &cookiesAuth{LeetcodeSession: session, CsrfToken: csrftoken}
 }
 
@@ -40,7 +50,7 @@ type passwordAuth struct {
 	password string
 }
 
-func newPasswordAuth(username, passwd string) *passwordAuth {
+func NewPasswordAuth(username, passwd string) CredentialsProvider {
 	return &passwordAuth{username: username, password: passwd}
 }
 
@@ -71,7 +81,7 @@ type browserAuth struct {
 	cookiesAuth
 }
 
-func newBrowserAuth(browsers ...string) *browserAuth {
+func NewBrowserAuth(browsers ...string) CredentialsProvider {
 	return &browserAuth{browsers: browsers}
 }
 
@@ -100,16 +110,16 @@ func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
 	return b.cookiesAuth.AddCredentials(req, c)
 }
 
-func CredentialsFromConfig() (CredentialsProvider, error) {
+func CredentialsFromConfig() CredentialsProvider {
 	cfg := config.Get()
 	if cfg.LeetCode.Credentials.ReadFromBrowser != "" {
-		return newBrowserAuth(cfg.LeetCode.Credentials.ReadFromBrowser), nil
+		return NewBrowserAuth(cfg.LeetCode.Credentials.ReadFromBrowser)
 	}
 	if cfg.LeetCode.Credentials.Session != "" {
-		return newCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken), nil
+		return NewCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken)
 	}
 	if cfg.LeetCode.Credentials.Username != "" {
-		return newPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password), nil
+		return NewPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password)
 	}
-	return nil, errors.New("no credential found")
+	return NonAuth()
 }

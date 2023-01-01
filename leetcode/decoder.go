@@ -1,10 +1,12 @@
 package leetcode
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/go-hclog"
@@ -13,30 +15,70 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+var (
+	gjsonType  = reflect.TypeOf(gjson.Result{})
+	bytesType  = reflect.TypeOf([]byte{})
+	stringType = reflect.TypeOf("")
+)
+
 type smartDecoder struct {
-	LogResponseData bool
-	path            string
+	Debug       bool
+	LogResponse bool
+	LogLimit    int
+	path        string
+}
+
+func headerString(h http.Header) string {
+	w := &strings.Builder{}
+	_ = h.Write(w)
+	return w.String()
 }
 
 func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
-	data, _ := io.ReadAll(resp.Body)
-	dataStr := "<omitted>"
-	if d.LogResponseData {
-		dataStr = utils.BytesToString(data)
+	if strings.EqualFold(resp.Header.Get("Content-Encoding"), "gzip") && resp.ContentLength != 0 {
+		if _, ok := resp.Body.(*gzip.Reader); !ok {
+			var err error
+			resp.Body, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	hclog.L().Trace("response", "url", resp.Request.URL.String(), "data", dataStr)
+
+	data, _ := io.ReadAll(resp.Body)
+
+	if d.Debug {
+		dataStr := "<omitted>"
+		if d.LogResponse {
+			dataStr = utils.BytesToString(data)
+			limit := d.LogLimit
+			if len(data) < limit {
+				limit = len(data)
+			}
+			dataStr = dataStr[:limit]
+		}
+		hclog.L().Trace(
+			"response",
+			"url", resp.Request.URL.String(),
+			"code", resp.StatusCode,
+			"headers", headerString(resp.Header),
+			"data", dataStr,
+		)
+	}
 
 	ty := reflect.TypeOf(v)
 	ele := reflect.ValueOf(v).Elem()
 	switch ty.Elem() {
-	case reflect.TypeOf(gjson.Result{}):
+	case gjsonType:
 		if d.path == "" {
 			ele.Set(reflect.ValueOf(gjson.ParseBytes(data)))
 		} else {
 			ele.Set(reflect.ValueOf(gjson.GetBytes(data, d.path)))
 		}
-	case reflect.TypeOf([]byte{}):
+	case bytesType:
 		ele.SetBytes(data)
+	case stringType:
+		ele.SetString(utils.BytesToString(data))
 	default:
 		return json.Unmarshal(data, v)
 	}

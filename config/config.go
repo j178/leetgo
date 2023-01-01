@@ -27,15 +27,15 @@ var (
 )
 
 type (
-	Site     string
-	Language string
+	LeetcodeSite string
+	Language     string
 )
 
 const (
-	LeetCodeCN Site     = "https://leetcode.cn"
-	LeetCodeUS Site     = "https://leetcode.com"
-	ZH         Language = "zh"
-	EN         Language = "en"
+	LeetCodeCN LeetcodeSite = "https://leetcode.cn"
+	LeetCodeUS LeetcodeSite = "https://leetcode.com"
+	ZH         Language     = "zh"
+	EN         Language     = "en"
 )
 
 type Config struct {
@@ -91,8 +91,8 @@ type Credentials struct {
 }
 
 type LeetCodeConfig struct {
-	Site        Site        `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
-	Credentials Credentials `yaml:"credential" mapstructure:"credential" comment:"Credential to access LeetCode"`
+	Site        LeetcodeSite `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
+	Credentials Credentials  `yaml:"credential" mapstructure:"credential" comment:"Credential to access LeetCode"`
 }
 
 func (c *Config) ConfigDir() string {
@@ -212,7 +212,7 @@ func Verify(c *Config) error {
 			return err
 		}
 	}
-	
+
 	if c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
 		return fmt.Errorf("invalid leetcode.credentials.read_from_browser: %s", c.LeetCode.Credentials.ReadFromBrowser)
 	}
