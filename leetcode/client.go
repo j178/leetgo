@@ -16,6 +16,10 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+var (
+	PaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
+)
+
 type Client interface {
 	BaseURI() string
 	Login(username, password string) (*http.Response, error)
@@ -133,7 +137,7 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 }
 
 //nolint:unused
-func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) error {
+func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*http.Response, error) {
 	r, err := c.http.New().Get(req.path).QueryStruct(
 		map[string]any{
 			"query":         req.query,
@@ -142,13 +146,12 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) error
 		},
 	).Request()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.send(r, result, failure)
-	return err
+	return c.send(r, result, failure)
 }
 
-func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) error {
+func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) (*http.Response, error) {
 	r, err := c.http.New().Post(req.path).BodyJSON(
 		map[string]any{
 			"query":         req.query,
@@ -157,28 +160,31 @@ func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) erro
 		},
 	).Request()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.send(r, result, failure)
-	return err
+	return c.send(r, result, failure)
 }
 
-func (c *cnClient) jsonGet(url string, query any, result any, failure any) error {
+func (c *cnClient) jsonGet(url string, query any, result any, failure any) (*http.Response, error) {
 	r, err := c.http.New().Get(url).QueryStruct(query).Request()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.send(r, result, failure)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return c.send(r, result, failure)
 }
 
-func (c *cnClient) jsonPost(url string, json any, result any, failure any) error {
+func (c *cnClient) jsonPost(url string, json any, result any, failure any) (*http.Response, error) {
 	r, err := c.http.New().Post(url).BodyJSON(json).Request()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.send(r, result, failure)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return c.send(r, result, failure)
 }
 
 func (c *cnClient) BaseURI() string {
@@ -186,7 +192,56 @@ func (c *cnClient) BaseURI() string {
 }
 
 func (c *cnClient) Login(username, password string) (*http.Response, error) {
-	return nil, errors.New("not implemented")
+	// touch "csrftoken" cookie
+	req, _ := c.http.New().Post(graphQLPath).BodyJSON(
+		map[string]any{
+			"query":         `query nojGlobalData {\n  siteRegion\n  chinaHost\n  websocketUrl\n}`,
+			"operationName": "nojGlobalData",
+			"variables":     nil,
+		},
+	).Request()
+	resp, err := c.http.Do(req, nil, nil)
+	if err != nil {
+		return resp, err
+	}
+
+	var csrfToken string
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "csrftoken" {
+			csrfToken = cookie.Value
+			break
+		}
+	}
+	if csrfToken == "" {
+		return nil, errors.New("csrf token not found")
+	}
+
+	cc := c.http.New()
+	// Disable redirect
+	httpClient := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	cc.Client(httpClient)
+
+	body := struct {
+		Login               string `url:"login"`
+		Password            string `url:"password"`
+		CsrfMiddlewareToken string `url:"csrfmiddlewaretoken"`
+	}{username, password, csrfToken}
+	req, err = cc.Post("/accounts/login/").BodyForm(body).Request()
+	if err != nil {
+		return nil, err
+	}
+	resp, err = cc.Do(req, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusBadRequest {
+		return nil, errors.New("login failed, please check your username and password")
+	}
+	return resp, nil
 }
 
 func (c *cnClient) GetUserStatus() (*UserStatus, error) {
@@ -207,7 +262,7 @@ query userStatusGlobal {
 			UserStatus UserStatus `json:"userStatus"`
 		} `json:"data"`
 	}
-	err := c.graphqlPost(
+	_, err := c.graphqlPost(
 		graphqlRequest{
 			path:          nojGoPath,
 			query:         query,
@@ -262,7 +317,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 			Question QuestionData `json:"question"`
 		}
 	}
-	err := c.graphqlPost(
+	_, err := c.graphqlPost(
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
@@ -273,10 +328,13 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.Data.Question.TitleSlug == "" {
+	q := resp.Data.Question
+	if q.TitleSlug == "" {
 		return nil, errors.New("question not found")
 	}
-	q := resp.Data.Question
+	if q.IsPaidOnly && q.Content == "" {
+		return nil, PaidOnlyQuestion
+	}
 	q.client = c
 	return &q, nil
 }
@@ -290,7 +348,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	}
 	`
 	var resp gjson.Result
-	err := c.graphqlPost(
+	_, err := c.graphqlPost(
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
@@ -339,7 +397,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
         }
     }`
 	var resp gjson.Result
-	err := c.graphqlPost(
+	_, err := c.graphqlPost(
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
@@ -362,15 +420,12 @@ func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, 
 ) {
 	url := fmt.Sprintf("%sproblems/%s/interpret_solution/", c.BaseURI(), q.TitleSlug)
 	var resp InterpretSolutionResult
-	err := c.jsonPost(
+	_, err := c.jsonPost(
 		url, map[string]any{
 			"lang":        lang,
 			"question_id": q.QuestionId,
 			"typed_code":  code,
 			"data_input":  dataInput,
-			// "judge_type":  "large",
-			// "test_mode":   false,
-			// "test_judger": "",
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -382,22 +437,19 @@ func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, 
 func (c *cnClient) CheckSubmissionResult(submissionId string) (*SubmissionCheckResult, error) {
 	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), submissionId)
 	var resp SubmissionCheckResult
-	err := c.jsonGet(url, nil, &resp, nil)
+	_, err := c.jsonGet(url, nil, &resp, nil)
 	return &resp, err
 }
 
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
 	url := fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)
 	var resp string
-	err := c.jsonPost(
+	_, err := c.jsonPost(
 		url, map[string]any{
 			"lang":         lang,
 			"questionSlug": q.TitleSlug,
 			"question_id":  q.QuestionId,
 			"typed_code":   code,
-			// "judge_type":  "large",
-			// "test_mode":   false,
-			// "test_judger": "",
 		}, &resp, nil,
 	)
 	return resp, err

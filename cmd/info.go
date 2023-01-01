@@ -49,6 +49,7 @@ var infoCmd = &cobra.Command{
 			w.AppendRow(table.Row{"Difficulty", q.Difficulty})
 			w.AppendRow(table.Row{"URL", q.Url()})
 			w.AppendRow(table.Row{"Tags", strings.Join(q.TagSlugs(), ", ")})
+			w.AppendRow(table.Row{"Paid Only", q.IsPaidOnly})
 			w.AppendRow(
 				table.Row{
 					"AC Rate",
