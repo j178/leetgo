@@ -67,11 +67,12 @@ func (p *passwordAuth) AddCredentials(req *http.Request, c Client) error {
 }
 
 type browserAuth struct {
+	browsers []string
 	cookiesAuth
 }
 
-func newBrowserAuth() *browserAuth {
-	return &browserAuth{}
+func newBrowserAuth(browsers ...string) *browserAuth {
+	return &browserAuth{browsers: browsers}
 }
 
 func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
@@ -102,7 +103,7 @@ func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
 func CredentialsFromConfig() (CredentialsProvider, error) {
 	cfg := config.Get()
 	if cfg.LeetCode.Credentials.ReadFromBrowser != "" {
-		return newBrowserAuth(), nil
+		return newBrowserAuth(cfg.LeetCode.Credentials.ReadFromBrowser), nil
 	}
 	if cfg.LeetCode.Credentials.Session != "" {
 		return newCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken), nil

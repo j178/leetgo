@@ -15,7 +15,6 @@ import (
 
 type Client interface {
 	BaseURI() string
-	WithCredentials(provider CredentialsProvider) Client
 	Login(username, password string) (*http.Response, error)
 	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
@@ -23,14 +22,28 @@ type Client interface {
 	GetTodayQuestion() (*QuestionData, error)
 }
 
-type Variables map[string]string
-
 type cnClient struct {
-	cred CredentialsProvider
+	opt  Options
 	http *sling.Sling
 }
 
-func NewClient() Client {
+type Options struct {
+	cred CredentialsProvider
+}
+
+type ClientOption func(*Options)
+
+func WithCredentials(cred CredentialsProvider) ClientOption {
+	return func(o *Options) {
+		o.cred = cred
+	}
+}
+
+func NewClient(options ...ClientOption) Client {
+	var opts Options
+	for _, f := range options {
+		f(&opts)
+	}
 	httpClient := sling.New()
 	httpClient.Add(
 		"User-Agent",
@@ -44,6 +57,7 @@ func NewClient() Client {
 	if cfg.LeetCode.Site == config.LeetCodeCN {
 		c := &cnClient{
 			http: httpClient,
+			opt:  opts,
 		}
 		c.http.Base(c.BaseURI())
 		c.http.Add("Referer", c.BaseURI())
@@ -54,19 +68,13 @@ func NewClient() Client {
 	}
 }
 
-func (c *cnClient) WithCredentials(provider CredentialsProvider) Client {
-	cc := &cnClient{
-		cred: provider,
-		http: c.http.New(),
-	}
-	return cc
-}
+type variables map[string]string
 
 type request struct {
 	path          string
 	query         string
 	operationName string
-	variables     Variables
+	variables     variables
 	needAuth      bool
 }
 
@@ -87,11 +95,11 @@ func (c *cnClient) graphqlGet(req request, result any) error {
 	if err != nil {
 		return err
 	}
-	if req.needAuth && c.cred == nil {
+	if req.needAuth && c.opt.cred == nil {
 		return errors.New("no credentials provider set")
 	}
 	if req.needAuth {
-		err = c.cred.AddCredentials(r, c)
+		err = c.opt.cred.AddCredentials(r, c)
 		if err != nil {
 			return err
 		}
@@ -112,11 +120,11 @@ func (c *cnClient) graphqlPost(req request, result any) error {
 	if err != nil {
 		return err
 	}
-	if req.needAuth && c.cred == nil {
+	if req.needAuth && c.opt.cred == nil {
 		return errors.New("no credentials provider set")
 	}
 	if req.needAuth {
-		err = c.cred.AddCredentials(r, c)
+		err = c.opt.cred.AddCredentials(r, c)
 		if err != nil {
 			return err
 		}
@@ -213,7 +221,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 			path:          graphQLPath,
 			query:         query,
 			operationName: "questionData",
-			variables:     Variables{"titleSlug": slug},
+			variables:     variables{"titleSlug": slug},
 			needAuth:      false,
 		}, &resp,
 	)

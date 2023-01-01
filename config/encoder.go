@@ -43,6 +43,7 @@ func isNil(value reflect.Value) bool {
 	}
 }
 
+//nolint:gocyclo
 func toYamlNode(in interface{}) (*yaml.Node, error) {
 	node := &yaml.Node{}
 
