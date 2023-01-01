@@ -127,7 +127,7 @@ type FileOutput struct {
 	Content string
 }
 
-func getGenerator(gen string) Generator {
+func GetGenerator(gen string) Generator {
 	gen = strings.ToLower(gen)
 	for _, l := range SupportedLanguages {
 		if strings.HasPrefix(l.ShortName(), gen) || strings.HasPrefix(l.Slug(), gen) {
@@ -139,7 +139,7 @@ func getGenerator(gen string) Generator {
 
 func Generate(q *leetcode.QuestionData) ([]string, error) {
 	cfg := config.Get()
-	gen := getGenerator(cfg.Gen)
+	gen := GetGenerator(cfg.Gen)
 	if gen == nil {
 		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
 	}

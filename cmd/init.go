@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
@@ -35,9 +36,8 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// 生成目录
-		// 写入基础库代码
-		return nil
+		err = createLibrary(dir)
+		return err
 	},
 }
 
@@ -97,4 +97,16 @@ func createQuestionDB() error {
 		return err
 	}
 	return nil
+}
+
+func createLibrary(dir string) error {
+	cfg := config.Get()
+	gen := lang.GetGenerator(cfg.Gen)
+	if gen == nil {
+		return fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
+	}
+	if gen.CheckLibrary() {
+		return nil
+	}
+	return gen.GenerateLibrary()
 }

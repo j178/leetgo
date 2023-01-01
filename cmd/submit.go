@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +18,7 @@ var submitCmd = &cobra.Command{
 		}
 		c = c.WithCredentials(cred)
 		// c.GetUser()
+		fmt.Println(c)
 		return nil
 	},
 }
