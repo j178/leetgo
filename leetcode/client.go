@@ -3,6 +3,7 @@ package leetcode
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -15,6 +16,8 @@ import (
 type Client interface {
 	BaseURI() string
 	WithCredentials(provider CredentialsProvider) Client
+	Login(username, password string) (*http.Response, error)
+	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
@@ -34,6 +37,7 @@ func NewClient() Client {
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
 	)
 	httpClient.Add("Accept-Encoding", "gzip, deflate, br")
+	httpClient.Add("x-requested-with", "XMLHttpRequest")
 	httpClient.ResponseDecoder(smartDecoder{LogResponseData: true})
 
 	cfg := config.Get()
@@ -58,29 +62,36 @@ func (c *cnClient) WithCredentials(provider CredentialsProvider) Client {
 	return cc
 }
 
-type graphQLBody struct {
-	Query         string    `url:"query" json:"query"`
-	OperationName string    `url:"operationName" json:"operationName"`
-	Variables     Variables `url:"variables" json:"variables"`
+type request struct {
+	path          string
+	query         string
+	operationName string
+	variables     Variables
+	needAuth      bool
 }
 
+const (
+	graphQLPath = "/graphql"
+	nojGoPath   = "/graphql/noj-go"
+)
+
 //nolint:unused
-func (c *cnClient) graphqlGet(query string, operation string, variables Variables, needAuth bool, result any) error {
-	r, err := c.http.New().Get("/graphql/").QueryStruct(
-		&graphQLBody{
-			Query:         query,
-			OperationName: operation,
-			Variables:     variables,
+func (c *cnClient) graphqlGet(req request, result any) error {
+	r, err := c.http.New().Get(req.path).QueryStruct(
+		map[string]any{
+			"query":         req.query,
+			"operationName": req.operationName,
+			"variables":     req.variables,
 		},
 	).Request()
 	if err != nil {
 		return err
 	}
-	if needAuth && c.cred == nil {
+	if req.needAuth && c.cred == nil {
 		return errors.New("no credentials provider set")
 	}
-	if needAuth {
-		err = c.cred.AddCredentials(r)
+	if req.needAuth {
+		err = c.cred.AddCredentials(r, c)
 		if err != nil {
 			return err
 		}
@@ -90,22 +101,22 @@ func (c *cnClient) graphqlGet(query string, operation string, variables Variable
 	return err
 }
 
-func (c *cnClient) graphqlPost(query string, operation string, variables Variables, needAuth bool, result any) error {
-	r, err := c.http.New().Post("/graphql/").BodyJSON(
-		&graphQLBody{
-			Query:         query,
-			OperationName: operation,
-			Variables:     variables,
+func (c *cnClient) graphqlPost(req request, result any) error {
+	r, err := c.http.New().Post(req.path).BodyJSON(
+		map[string]any{
+			"query":         req.query,
+			"operationName": req.operationName,
+			"variables":     req.variables,
 		},
 	).Request()
 	if err != nil {
 		return err
 	}
-	if needAuth && c.cred == nil {
+	if req.needAuth && c.cred == nil {
 		return errors.New("no credentials provider set")
 	}
-	if needAuth {
-		err = c.cred.AddCredentials(r)
+	if req.needAuth {
+		err = c.cred.AddCredentials(r, c)
 		if err != nil {
 			return err
 		}
@@ -117,6 +128,44 @@ func (c *cnClient) graphqlPost(query string, operation string, variables Variabl
 
 func (c *cnClient) BaseURI() string {
 	return string(config.LeetCodeCN) + "/"
+}
+
+func (c *cnClient) Login(username, password string) (*http.Response, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (c *cnClient) GetUserStatus() (*UserStatus, error) {
+	query := `
+query userStatusGlobal {
+  userStatus {
+    isSignedIn
+    username
+    realName
+    userSlug
+    avatar
+    activeSessionId
+	isPremium
+  }
+}`
+	var resp struct {
+		Data struct {
+			UserStatus UserStatus `json:"userStatus"`
+		} `json:"data"`
+	}
+	err := c.graphqlPost(
+		request{
+			path:          nojGoPath,
+			query:         query,
+			operationName: "userStatusGlobal",
+			variables:     nil,
+			needAuth:      true,
+		}, &resp,
+	)
+	if err != nil {
+		return nil, err
+	}
+	userStatus := resp.Data.UserStatus
+	return &userStatus, nil
 }
 
 func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
@@ -159,7 +208,15 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 			Question QuestionData `json:"question"`
 		}
 	}
-	err := c.graphqlPost(query, "questionData", Variables{"titleSlug": slug}, false, &resp)
+	err := c.graphqlPost(
+		request{
+			path:          graphQLPath,
+			query:         query,
+			operationName: "questionData",
+			variables:     Variables{"titleSlug": slug},
+			needAuth:      false,
+		}, &resp,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +237,15 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	}
 	`
 	var resp gjson.Result
-	err := c.graphqlPost(query, "AllQuestionUrls", nil, false, &resp)
+	err := c.graphqlPost(
+		request{
+			path:          graphQLPath,
+			query:         query,
+			operationName: "AllQuestionUrls",
+			variables:     nil,
+			needAuth:      false,
+		}, &resp,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +287,15 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
         }
     }`
 	var resp gjson.Result
-	err := c.graphqlPost(query, "questionOfToday", nil, false, &resp)
+	err := c.graphqlPost(
+		request{
+			path:          graphQLPath,
+			query:         query,
+			operationName: "questionOfToday",
+			variables:     nil,
+			needAuth:      false,
+		}, &resp,
+	)
 	if err != nil {
 		return nil, err
 	}

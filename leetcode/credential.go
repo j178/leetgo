@@ -3,19 +3,15 @@ package leetcode
 import (
 	"errors"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
-	"os"
-	"path/filepath"
 
 	"github.com/j178/leetgo/config"
 	"github.com/zellyn/kooky"
-	"github.com/zellyn/kooky/browser/chrome"
 	_ "github.com/zellyn/kooky/browser/chrome"
 )
 
 type CredentialsProvider interface {
-	AddCredentials(req *http.Request) error
+	AddCredentials(req *http.Request, c Client) error
 }
 
 type cookiesAuth struct {
@@ -27,31 +23,47 @@ func newCookiesAuth(session, csrftoken string) *cookiesAuth {
 	return &cookiesAuth{LeetcodeSession: session, CsrfToken: csrftoken}
 }
 
-func (c *cookiesAuth) AddCredentials(req *http.Request) error {
-	req.Header.Add("Cookie", "LEETCODE_SESSION="+c.LeetcodeSession+";csrftoken="+c.CsrfToken)
+func (c *cookiesAuth) AddCredentials(req *http.Request, ct Client) error {
+	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetcodeSession})
+	req.AddCookie(&http.Cookie{Name: "csrftoken", Value: c.CsrfToken})
+	req.Header.Add("x-csrftoken", c.CsrfToken)
 	return nil
 }
 
+func (c *cookiesAuth) hasAuth() bool {
+	return c.LeetcodeSession != "" && c.CsrfToken != ""
+}
+
 type passwordAuth struct {
+	cookiesAuth
 	username string
 	password string
-	jar      *cookiejar.Jar
 }
 
 func newPasswordAuth(username, passwd string) *passwordAuth {
 	return &passwordAuth{username: username, password: passwd}
 }
 
-func (p *passwordAuth) AddCredentials(req *http.Request) error {
-	if p.jar == nil {
-		resp, _ := http.Get("")
-		p.jar.SetCookies(&url.URL{}, resp.Cookies())
-		// 	TODO do login
+func (p *passwordAuth) AddCredentials(req *http.Request, c Client) error {
+	if !p.hasAuth() {
+		resp, err := c.Login(p.username, p.password)
+		if err != nil {
+			return err
+		}
+		cookies := resp.Cookies()
+		for _, cookie := range cookies {
+			if cookie.Name == "LEETCODE_SESSION" {
+				p.LeetcodeSession = cookie.Value
+			}
+			if cookie.Name == "csrftoken" {
+				p.CsrfToken = cookie.Value
+			}
+		}
+		if !p.hasAuth() {
+			return errors.New("no credential found")
+		}
 	}
-	for _, c := range p.jar.Cookies(&url.URL{}) {
-		req.AddCookie(c)
-	}
-	return nil
+	return p.cookiesAuth.AddCredentials(req, c)
 }
 
 type browserAuth struct {
@@ -62,34 +74,29 @@ func newBrowserAuth() *browserAuth {
 	return &browserAuth{}
 }
 
-func (b *browserAuth) AddCredentials(req *http.Request) error {
-	domain := string(config.Get().LeetCode.Site)
-	dir, _ := os.UserConfigDir()
-	cookiesFile := filepath.Join(dir, "Google/Chrome/Default/Cookies")
-	session, err := chrome.ReadCookies(
-		cookiesFile,
-		kooky.Valid,
-		kooky.Domain(domain),
-		kooky.Name("LEETCODE_SESSION"),
-	)
-	if err != nil {
-		return err
+func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
+	if !b.hasAuth() {
+		site := string(config.Get().LeetCode.Site)
+		u, _ := url.Parse(site)
+		domain := u.Host
+		session := kooky.ReadCookies(
+			kooky.Valid,
+			kooky.DomainContains(domain),
+			kooky.Name("LEETCODE_SESSION"),
+		)
+		csrfToken := kooky.ReadCookies(
+			kooky.Valid,
+			kooky.DomainContains(domain),
+			kooky.Name("csrftoken"),
+		)
+		if len(session) == 0 || len(csrfToken) == 0 {
+			return errors.New("no cookie found in browser")
+		}
+		b.LeetcodeSession = session[0].Value
+		b.CsrfToken = csrfToken[0].Value
 	}
-	csrfToken, err := chrome.ReadCookies(
-		cookiesFile,
-		kooky.Valid,
-		kooky.Domain(domain),
-		kooky.Name("csrftoken"),
-	)
-	if err != nil {
-		return err
-	}
-	if len(session) == 0 || len(csrfToken) == 0 {
-		return errors.New("no cookie found")
-	}
-	b.LeetcodeSession = session[0].Value
-	b.CsrfToken = csrfToken[0].Value
-	return b.cookiesAuth.AddCredentials(req)
+
+	return b.cookiesAuth.AddCredentials(req, c)
 }
 
 func CredentialsFromConfig() (CredentialsProvider, error) {

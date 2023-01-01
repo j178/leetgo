@@ -17,8 +17,7 @@ var submitCmd = &cobra.Command{
 			return err
 		}
 		c = c.WithCredentials(cred)
-		// c.GetUser()
-		fmt.Println(c)
+		fmt.Println(c.GetUserStatus())
 		return nil
 	},
 }
