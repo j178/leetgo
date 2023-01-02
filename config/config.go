@@ -18,8 +18,8 @@ const (
 	projectConfigFilename = CmdName + ".yaml"
 	leetcodeCacheFile     = "cache/leetcode-questions.db"
 	stateFile             = "cache/state.json"
-	CodeBeginMark         = "Leetgo Code Begin"
-	CodeEndMark           = "Leetgo Code End"
+	CodeBeginMark         = "@lc code=start"
+	CodeEndMark           = "@lc code=end"
 )
 
 var (
