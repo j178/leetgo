@@ -77,12 +77,8 @@ var rootCmd = &cobra.Command{
 	Version:       buildVersion(version, commit, date),
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		err := loadConfig(cmd, args)
-		if err != nil {
-			return err
-		}
 		initLogger()
-		return nil
+		return loadConfig(cmd, args)
 	},
 }
 

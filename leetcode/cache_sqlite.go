@@ -28,7 +28,7 @@ func (c *sqliteCache) load() {
 			var err error
 			c.db, err = sql.Open("sqlite3", c.path)
 			if err != nil {
-				hclog.L().Warn("failed to load jsonCache, try updating with `leetgo jsonCache update`")
+				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
 				return
 			}
 			c.checkUpdateTime()
@@ -50,7 +50,7 @@ func (c *sqliteCache) checkUpdateTime() {
 		return
 	}
 	if time.Since(time.Unix(ts, 0)) >= 14*24*time.Hour {
-		hclog.L().Warn("jsonCache is too old, try updating with `leetgo jsonCache update`")
+		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
 	}
 }
 
@@ -178,6 +178,6 @@ func (c *sqliteCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("jsonCache updated", "path", c.path)
+	hclog.L().Info("cache updated", "path", c.path)
 	return nil
 }

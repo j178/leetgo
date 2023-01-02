@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -20,7 +19,7 @@ type jsonCache struct {
 }
 
 func newJsonCache(path string) QuestionsCache {
-	return &jsonCache{path: config.Get().LeetCodeCacheFile()}
+	return &jsonCache{path: path}
 }
 
 func (c *jsonCache) doLoad() error {
@@ -52,7 +51,7 @@ func (c *jsonCache) load() {
 		func() {
 			err := c.doLoad()
 			if err != nil {
-				hclog.L().Warn("failed to load jsonCache, try updating with `leetgo jsonCache update`")
+				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
 				return
 			}
 			c.checkUpdateTime()
@@ -66,7 +65,7 @@ func (c *jsonCache) checkUpdateTime() {
 		return
 	}
 	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
-		hclog.L().Warn("jsonCache is too old, try updating with `leetgo jsonCache update`")
+		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
 	}
 }
 
@@ -109,7 +108,7 @@ func (c *jsonCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("jsonCache updated", "path", c.path)
+	hclog.L().Info("cache updated", "path", c.path)
 	return nil
 }
 
