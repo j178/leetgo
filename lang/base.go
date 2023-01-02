@@ -178,6 +178,15 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 			generated = append(generated, path)
 		}
 	}
+
+	state := config.LoadState()
+	state.LastGenerated = config.LastGeneratedQuestion{
+		Slug:       q.TitleSlug,
+		FrontendID: q.QuestionFrontendId,
+		Gen:        gen.Slug(),
+	}
+	config.SaveState(state)
+
 	return generated, nil
 }
 

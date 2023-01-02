@@ -17,6 +17,7 @@ const (
 	globalConfigFile      = "config.yaml"
 	projectConfigFilename = CmdName + ".yaml"
 	leetcodeCacheFile     = "cache/leetcode-questions.db"
+	stateFile             = "cache/state.json"
 	CodeBeginMark         = "Leetgo Code Begin"
 	CodeEndMark           = "Leetgo Code End"
 )
@@ -129,6 +130,10 @@ func (c *Config) ProjectConfigFile() string {
 
 func (c *Config) ProjectConfigFilename() string {
 	return projectConfigFilename
+}
+
+func (c *Config) StateFile() string {
+	return filepath.Join(c.dir, stateFile)
 }
 
 func (c *Config) LeetCodeCacheFile() string {
