@@ -118,7 +118,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		hclog.L().Info("reading credentials from browser", "domain", domain)
+		hclog.L().Info("reading credentials from browser", "browser", "chrome", "domain", domain)
 		session := kooky.ReadCookies(
 			kooky.Valid,
 			kooky.DomainContains(domain),

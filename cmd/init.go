@@ -13,13 +13,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	initTemplate string
+)
+
 var initCmd = &cobra.Command{
-	Use:     "init DIR",
+	Use:     "init [DIR]",
 	Short:   "Init a leetcode workspace",
-	Example: "leetgo init . --gen go",
-	Args:    cobra.ExactArgs(1),
+	Example: "leetgo init -t us -g cpp",
+	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dir := args[0]
+		dir := "."
+		if len(args) > 0 {
+			dir = args[0]
+		}
+		if initTemplate != "us" && initTemplate != "cn" {
+			return fmt.Errorf("invalid template %s, only us or cn is supported", initTemplate)
+		}
 		err := utils.CreateIfNotExists(dir, true)
 		if err != nil {
 			return err
@@ -41,6 +51,11 @@ var initCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "us", "template to use, cn or us")
+	_ = initCmd.MarkFlagRequired("template")
+}
+
 func createConfigDir() error {
 	dir := config.Get().ConfigDir()
 	if utils.IsExist(dir) {
@@ -56,12 +71,26 @@ func createConfigDir() error {
 
 func createConfigFiles(dir string) error {
 	cfg := config.Get()
+	var site config.LeetcodeSite
+	var language config.Language
+	if initTemplate == "us" {
+		site = config.LeetCodeUS
+		language = config.EN
+	} else {
+		site = config.LeetCodeCN
+		language = config.ZH
+	}
+
 	globalFile := cfg.GlobalConfigFile()
 	if !utils.IsExist(globalFile) {
 		f, err := os.Create(globalFile)
 		if err != nil {
 			return err
 		}
+
+		cfg.LeetCode.Site = site
+		cfg.Language = language
+
 		err = cfg.Write(f)
 		if err != nil {
 			return err
@@ -74,14 +103,24 @@ func createConfigFiles(dir string) error {
 	if err != nil {
 		return err
 	}
-	tmpl := `# leetgo project level config
+	tmpl := `# leetgo project level config, global config is at %s
+language: %s
 gen: %s
 leetcode:
   site: %s
   credentials:
     read_from_browser: %s
 `
-	_, _ = f.WriteString(fmt.Sprintf(tmpl, cfg.Gen, cfg.LeetCode.Site, cfg.LeetCode.Credentials.ReadFromBrowser))
+	_, _ = f.WriteString(
+		fmt.Sprintf(
+			tmpl,
+			globalFile,
+			language,
+			cfg.Gen,
+			site,
+			cfg.LeetCode.Credentials.ReadFromBrowser,
+		),
+	)
 	hclog.L().Info("project config file created", "file", projectFile)
 
 	return nil

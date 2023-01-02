@@ -43,7 +43,13 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
-			hclog.L().Warn("global config file not found, have you ran `leetgo init`?", "file", cfg.GlobalConfigFile())
+			if cmd != initCmd {
+				hclog.L().Warn(
+					"global config file not found, have you ran `leetgo init`?",
+					"file",
+					cfg.GlobalConfigFile(),
+				)
+			}
 			return nil
 		}
 		return err
