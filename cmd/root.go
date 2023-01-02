@@ -53,7 +53,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	err = viper.MergeInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
-			hclog.L().Warn("project config file not found, use global config only", "file", cfg.ProjectConfigFile())
+			hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
 		} else {
 			return err
 		}
