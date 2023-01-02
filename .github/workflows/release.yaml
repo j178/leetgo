@@ -27,4 +27,5 @@ jobs:
           version: latest
           args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Custom secret here since we need to access to j178/homebrew-tap repo.
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
