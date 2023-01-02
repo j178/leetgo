@@ -124,6 +124,10 @@ contest:
   out_dir: ""
 # The editor to open generated files
 editor:
+  # The mark to indicate the beginning of the code
+  code_begin_mark: '@lc code=start'
+  # The mark to indicate the end of the code
+  code_end_mark: '@lc code=end'
   command: vim
   args: []
 # Cache type, json or sqlite

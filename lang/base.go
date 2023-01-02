@@ -101,7 +101,15 @@ func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) 
 
 func addCodeMark(comment string) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
-		return fmt.Sprintf("%s %s\n\n%s\n\n%s %s", comment, config.CodeBeginMark, s, comment, config.CodeEndMark)
+		cfg := config.Get()
+		return fmt.Sprintf(
+			"%s %s\n\n%s\n\n%s %s",
+			comment,
+			cfg.Editor.CodeBeginMark,
+			s,
+			comment,
+			cfg.Editor.CodeEndMark,
+		)
 	}
 }
 

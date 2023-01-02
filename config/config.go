@@ -18,8 +18,8 @@ const (
 	projectConfigFilename = CmdName + ".yaml"
 	leetcodeCacheFile     = "cache/leetcode-questions.db"
 	stateFile             = "cache/state.json"
-	CodeBeginMark         = "@lc code=start"
-	CodeEndMark           = "@lc code=end"
+	codeBeginMark         = "@lc code=start"
+	codeEndMark           = "@lc code=end"
 )
 
 var (
@@ -69,8 +69,10 @@ type ContestConfig struct {
 }
 
 type Editor struct {
-	Command string   `yaml:"command" mapstructure:"command"`
-	Args    []string `yaml:"args" mapstructure:"args"`
+	CodeBeginMark string   `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
+	CodeEndMark   string   `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
+	Command       string   `yaml:"command" mapstructure:"command"`
+	Args          []string `yaml:"args" mapstructure:"args"`
 }
 
 type BaseLangConfig struct {
@@ -164,8 +166,10 @@ func Default() *Config {
 			},
 		},
 		Editor: Editor{
-			Command: "vim",
-			Args:    nil,
+			CodeBeginMark: codeBeginMark,
+			CodeEndMark:   codeEndMark,
+			Command:       "vim",
+			Args:          nil,
 		},
 		Cache: "json",
 		Go: GoConfig{
