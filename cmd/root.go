@@ -112,9 +112,11 @@ func initLogger() {
 func initCommands() {
 	cobra.EnableCommandSorting = false
 
+	rootCmd.InitDefaultVersionFlag()
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().StringP("gen", "g", "", "language to generate: cpp, go, python ...")
 	rootCmd.PersistentFlags().BoolP("yes", "y", false, "answer yes to all prompts")
+	rootCmd.InitDefaultHelpFlag()
 	_ = viper.BindPFlag("gen", rootCmd.PersistentFlags().Lookup("gen"))
 	_ = viper.BindPFlag("yes", rootCmd.PersistentFlags().Lookup("yes"))
 
@@ -134,6 +136,8 @@ func initCommands() {
 		cmd.Flags().SortFlags = false
 		rootCmd.AddCommand(cmd)
 	}
+	rootCmd.InitDefaultHelpCmd()
+	rootCmd.InitDefaultCompletionCmd()
 
 	cc.Init(
 		&cc.Config{

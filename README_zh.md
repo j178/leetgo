@@ -79,11 +79,14 @@ Available Commands:
   cache                   Manage local questions cache
   config                  Show leetgo config dir
   encrypt                 Encrypt a sensitive string to be used in config file
+  help                    Help about any command
+  completion              Generate the autocompletion script for the specified shell
 
 Flags:
   -v, --version      version for leetgo
   -g, --gen string   language to generate: cpp, go, python ...
   -y, --yes          answer yes to all prompts
+  -h, --help         help for leetgo
 
 Use "leetgo [command] --help" for more information about a command.
 ```
