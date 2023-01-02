@@ -52,16 +52,22 @@ and many other languages are in plan. (help wanted, contributions welcome!)
 
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
-### Install via `go install`
+### Install via `go`
  
 ```shell
 go install github.com/j178/leetgo@latest
 ```
 
-### Install via `brew install`
+### Install via `brew`
 
 ```shell
 brew install j178/tap/leetgo
+```
+
+### Install via `scoop`
+
+```shell
+scoop install leetgo
 ```
 
 ## Usage
