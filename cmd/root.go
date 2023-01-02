@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"github.com/fatih/color"
 	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/j178/leetgo/config"
@@ -89,7 +90,11 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
+	err := rootCmd.Execute()
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, color.New(color.FgHiRed).Sprint("Error:"), err)
+		os.Exit(1)
+	}
 }
 
 func UsageString() string {

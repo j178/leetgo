@@ -17,6 +17,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/tidwall/gjson v1.14.4
+	github.com/zalando/go-keyring v0.2.1
 	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -52,7 +53,6 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/zalando/go-keyring v0.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
 	golang.org/x/sys v0.3.0 // indirect
