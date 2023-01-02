@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"runtime/debug"
 
 	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
@@ -11,10 +13,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-// TODO set when building
 var (
-	Version = "0.0.1"
+	version = "0.0.1"
+	commit  = "HEAD"
+	date    = "unknown"
 )
+
+const website = "https://github.com/j178/leetgo"
+
+func buildVersion(version, commit, date string) string {
+	result := version
+	if commit != "" {
+		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
+	}
+	if date != "" {
+		result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
+	}
+	result = fmt.Sprintf("%s\ngoos: %s\ngoarch: %s", result, runtime.GOOS, runtime.GOARCH)
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+		result = fmt.Sprintf("%s\nmodule version: %s, checksum: %s", result, info.Main.Version, info.Main.Sum)
+	}
+	return result + "\n\n" + website
+}
 
 func loadConfig(cmd *cobra.Command, args []string) error {
 	// load global configuration
@@ -23,7 +43,7 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
-			hclog.L().Debug("config file not found, have you ran `leetgo init`?")
+			hclog.L().Warn("global config file not found, have you ran `leetgo init`?", "file", cfg.GlobalConfigFile())
 			return nil
 		}
 		return err
@@ -32,7 +52,11 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	viper.SetConfigFile(cfg.ProjectConfigFile())
 	err = viper.MergeInConfig()
 	if err != nil {
-		return err
+		if os.IsNotExist(err) {
+			hclog.L().Warn("project config file not found, use global config only", "file", cfg.ProjectConfigFile())
+		} else {
+			return err
+		}
 	}
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
@@ -47,11 +71,19 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 }
 
 var rootCmd = &cobra.Command{
-	Use:               config.CmdName,
-	Short:             "Leetcode",
-	Long:              "Leetcode friend for geek.",
-	Version:           Version,
-	PersistentPreRunE: loadConfig,
+	Use:           config.CmdName,
+	Short:         "Leetcode",
+	Long:          "Leetcode friend for geek.",
+	Version:       buildVersion(version, commit, date),
+	SilenceErrors: true,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		err := loadConfig(cmd, args)
+		if err != nil {
+			return err
+		}
+		initLogger()
+		return nil
+	},
 }
 
 func Execute() {
@@ -81,7 +113,6 @@ func initCommands() {
 	cobra.EnableCommandSorting = false
 
 	rootCmd.Flags().SortFlags = false
-	rootCmd.InitDefaultVersionFlag()
 	rootCmd.PersistentFlags().StringP("gen", "g", "", "language to generate: cpp, go, python ...")
 	rootCmd.PersistentFlags().BoolP("yes", "y", false, "answer yes to all prompts")
 	_ = viper.BindPFlag("gen", rootCmd.PersistentFlags().Lookup("gen"))
@@ -120,5 +151,4 @@ func initCommands() {
 
 func init() {
 	initCommands()
-	initLogger()
 }
