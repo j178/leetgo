@@ -82,6 +82,7 @@ var rootCmd = &cobra.Command{
 	Long:          "Leetcode friend for geek.",
 	Version:       buildVersion(version, commit, date),
 	SilenceErrors: true,
+	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		initLogger()
 		return loadConfig(cmd, args)
@@ -89,7 +90,11 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
+	err := rootCmd.Execute()
+	if err != nil {
+		hclog.L().Error("command failed", "error", err)
+		os.Exit(1)
+	}
 }
 
 func UsageString() string {
