@@ -2,16 +2,19 @@ package config
 
 import (
 	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"strings"
 
-	"github.com/99designs/keyring"
 	vault "github.com/sosedoff/ansible-vault-go"
+	"github.com/zalando/go-keyring"
 )
 
 const (
 	originVaultHeader = "$ANSIBLE_VAULT;1.1;AES256"
 	vaultHeader       = "$LEETGO_VAULT;1.1;AES256"
 	serviceName       = CmdName
+	keyName           = "encryption_key"
 )
 
 // randomSecret generates a secure random string.
@@ -21,36 +24,28 @@ func randomSecret() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(buf), nil
+	return hex.EncodeToString(buf), nil
 }
 
-func getEncryptKey(service string) (string, error) {
-	ring, err := keyring.Open(
-		keyring.Config{
-			ServiceName: service,
-		},
-	)
-	if err != nil {
-		return "", err
-	}
-	pw, err := ring.Get("password")
+// https://github.com/99designs/keyring relies on CGO to use keychain on macOS.
+// But it cannot compile successfully on macOS even with CGO enabled.
+// Use a simper github.com/zalando/go-keyring instead.
+
+func getEncryptKey() (string, error) {
+	pw, err := keyring.Get(serviceName, keyName)
 	if err == nil {
-		return string(pw.Data), nil
+		return pw, nil
 	}
-	if err != keyring.ErrKeyNotFound {
-		return "", err
+	if err != keyring.ErrNotFound {
+		return "", fmt.Errorf("keyring get error: %w", err)
 	}
+
+	// key not found, generate a new one
 	passwd, err := randomSecret()
 	if err != nil {
 		return "", err
 	}
-	err = ring.Set(
-		keyring.Item{
-			Key:         "password",
-			Data:        []byte(passwd),
-			Description: "Password to encrypt/decrypt sensitive data",
-		},
-	)
+	err = keyring.Set(serviceName, keyName, passwd)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +53,7 @@ func getEncryptKey(service string) (string, error) {
 }
 
 func Encrypt(in string) (string, error) {
-	passwd, err := getEncryptKey(serviceName)
+	passwd, err := getEncryptKey()
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +65,7 @@ func Encrypt(in string) (string, error) {
 }
 
 func Decrypt(in string) (string, error) {
-	passwd, err := getEncryptKey(serviceName)
+	passwd, err := getEncryptKey()
 	if err != nil {
 		return "", err
 	}
