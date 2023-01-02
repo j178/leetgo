@@ -71,7 +71,6 @@ Usage:
 Available Commands:
   init                    Init a leetcode workspace
   pick                    Generate a new question
-  today                   Generate the question of today
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution

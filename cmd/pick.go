@@ -12,7 +12,7 @@ import (
 var pickCmd = &cobra.Command{
 	Use:     "pick [SLUG_OR_ID...]",
 	Short:   "Generate a new question",
-	Example: "leetgo pick 450\nleetgo pick two-sum",
+	Example: "leetgo pick today\nleetgo pick 549\nleetgo pick two-sum",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		if len(args) == 0 {
@@ -31,7 +31,7 @@ var pickCmd = &cobra.Command{
 				hclog.L().Error("failed to generate", "question", p, "error", err)
 				continue
 			}
-			// todo how editor/opener step in?
+			// TODO how editor/opener step in?
 			fmt.Println("Generated files:", files)
 		}
 		return nil

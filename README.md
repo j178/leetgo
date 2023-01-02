@@ -21,10 +21,11 @@ And `leetgo` also supports real-time generation of **contest questions**, so you
 
 ## Highlight of features
 
-- Search for and view a question by its ID or slug.
+- Pick question with a simple and fancy UI.
 - Generate skeleton code and testing code for a question.
 - Run test cases on your local machine.
 - Generate contest questions just in time.
+- Support both leetcode.com and leetcode.cn
 
 ## Language support
 
@@ -72,7 +73,6 @@ Usage:
 Available Commands:
   init                    Init a leetcode workspace
   pick                    Generate a new question
-  today                   Generate the question of today
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
