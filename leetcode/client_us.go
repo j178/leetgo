@@ -1,15 +1,14 @@
 package leetcode
 
 import (
+	"errors"
 	"net/http"
 
-	"github.com/dghubble/sling"
 	"github.com/j178/leetgo/config"
 )
 
 type usClient struct {
-	opt  Options
-	http *sling.Sling
+	cnClient
 }
 
 func (c *usClient) BaseURI() string {
@@ -17,14 +16,10 @@ func (c *usClient) BaseURI() string {
 }
 
 func (c *usClient) Login(username, password string) (*http.Response, error) {
-	// TODO implement me
-	panic("implement me")
+	return nil, errors.New("leetcode.com does not support login with username and password")
 }
 
-func (c *usClient) GetUserStatus() (*UserStatus, error) {
-	// TODO implement me
-	panic("implement me")
-}
+// GetUserStatus can be reused from cnClient
 
 func (c *usClient) GetQuestionData(slug string) (*QuestionData, error) {
 	// TODO implement me

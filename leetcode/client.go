@@ -65,7 +65,7 @@ func NewClient(options ...ClientOption) Client {
 		"User-Agent",
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
 	)
-	httpClient.Add("Accept-Encoding", "gzip, deflate, br")
+	httpClient.Add("Accept-Encoding", "gzip, deflate")
 	httpClient.Add("x-requested-with", "XMLHttpRequest")
 	httpClient.ResponseDecoder(
 		smartDecoder{
@@ -87,8 +87,10 @@ func NewClient(options ...ClientOption) Client {
 		return c
 	} else {
 		c := &usClient{
-			http: httpClient,
-			opt:  opts,
+			cnClient{
+				http: httpClient,
+				opt:  opts,
+			},
 		}
 		c.http.Base(c.BaseURI())
 		c.http.Add("Referer", c.BaseURI())
@@ -133,7 +135,7 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 
 	// default error detection
 	var failureV string
-	resp, err := c.http.Do(req, result, failureV)
+	resp, err := c.http.Do(req, result, &failureV)
 	if err != nil {
 		return resp, err
 	}

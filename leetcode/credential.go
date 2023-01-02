@@ -13,6 +13,7 @@ import (
 
 type CredentialsProvider interface {
 	AddCredentials(req *http.Request, c Client) error
+	Reset()
 }
 
 type nonAuth struct{}
@@ -24,6 +25,8 @@ func NonAuth() CredentialsProvider {
 func (n *nonAuth) AddCredentials(req *http.Request, c Client) error {
 	return nil
 }
+
+func (n *nonAuth) Reset() {}
 
 type cookiesAuth struct {
 	LeetcodeSession string
@@ -40,6 +43,8 @@ func (c *cookiesAuth) AddCredentials(req *http.Request, ct Client) error {
 	req.Header.Add("x-csrftoken", c.CsrfToken)
 	return nil
 }
+
+func (c *cookiesAuth) Reset() {}
 
 func (c *cookiesAuth) hasAuth() bool {
 	return c.LeetcodeSession != "" && c.CsrfToken != ""
@@ -78,6 +83,11 @@ func (p *passwordAuth) AddCredentials(req *http.Request, c Client) error {
 	return p.cookiesAuth.AddCredentials(req, c)
 }
 
+func (p *passwordAuth) Reset() {
+	p.LeetcodeSession = ""
+	p.CsrfToken = ""
+}
+
 type browserAuth struct {
 	browsers []string
 	cookiesAuth
@@ -89,10 +99,10 @@ func NewBrowserAuth(browsers ...string) CredentialsProvider {
 
 func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
 	if !b.hasAuth() {
-		hclog.L().Info("reading credentials from browser")
-		site := string(config.Get().LeetCode.Site)
-		u, _ := url.Parse(site)
+		// FIXME 这里的 c 是 cnClient，暂时不知道怎么解决
+		u, _ := url.Parse(c.BaseURI())
 		domain := u.Host
+		hclog.L().Info("reading credentials from browser", "domain", domain)
 		session := kooky.ReadCookies(
 			kooky.Valid,
 			kooky.DomainContains(domain),
@@ -108,9 +118,15 @@ func (b *browserAuth) AddCredentials(req *http.Request, c Client) error {
 		}
 		b.LeetcodeSession = session[0].Value
 		b.CsrfToken = csrfToken[0].Value
+		hclog.L().Debug("found credentials in browser")
 	}
 
 	return b.cookiesAuth.AddCredentials(req, c)
+}
+
+func (b *browserAuth) Reset() {
+	b.LeetcodeSession = ""
+	b.CsrfToken = ""
 }
 
 func CredentialsFromConfig() CredentialsProvider {
