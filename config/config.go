@@ -43,8 +43,8 @@ type Config struct {
 	dir         string
 	projectRoot string
 	Author      string         `yaml:"author" mapstructure:"author" comment:"Your name"`
-	Gen         string         `yaml:"gen" mapstructure:"gen" comment:"Generate code for questions, go, python, ... (will be override by project config and flag --gen)"`
-	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the questions, zh or en"`
+	Lang        string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)"`
+	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the question description: zh or en"`
 	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
 	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
@@ -155,7 +155,7 @@ func Default() *Config {
 	return &Config{
 		dir:      configDir,
 		Author:   author,
-		Gen:      "go",
+		Lang:     "go",
 		Language: ZH,
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
@@ -224,8 +224,8 @@ func Verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid language: %s", c.Language)
 	}
-	if c.Gen == "" {
-		return fmt.Errorf("gen is empty")
+	if c.Lang == "" {
+		return fmt.Errorf("lang is empty")
 	}
 	if c.Cache != "json" && c.Cache != "sqlite" {
 		return fmt.Errorf("invalid cache: %s", c.Cache)

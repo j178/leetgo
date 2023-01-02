@@ -84,10 +84,10 @@ Available Commands:
   completion              Generate the autocompletion script for the specified shell
 
 Flags:
-  -v, --version      version for leetgo
-  -g, --gen string   language to generate: cpp, go, python ...
-  -y, --yes          answer yes to all prompts
-  -h, --help         help for leetgo
+  -v, --version       version for leetgo
+  -l, --lang string   language of code to generate: cpp, go, python ...
+  -y, --yes           answer yes to all prompts
+  -h, --help          help for leetgo
 
 Use "leetgo [command] --help" for more information about a command.
 ```
@@ -110,9 +110,9 @@ It is generally recommended to use the global configuration as the default confi
 ```yaml
 # Your name
 author: Bob
-# Generate code for questions, go, python, ... (will be override by project config and flag --gen)
-gen: go
-# Language of the questions, zh or en
+# Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)
+lang: go
+# Language of the question description: zh or en
 language: zh
 # LeetCode configuration
 leetcode:

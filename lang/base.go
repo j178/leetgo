@@ -129,7 +129,7 @@ type FileOutput struct {
 
 func GetGenerator(gen string) Generator {
 	gen = strings.ToLower(gen)
-	for _, l := range SupportedLanguages {
+	for _, l := range SupportedLangs {
 		if strings.HasPrefix(l.ShortName(), gen) || strings.HasPrefix(l.Slug(), gen) {
 			return l
 		}
@@ -139,14 +139,14 @@ func GetGenerator(gen string) Generator {
 
 func Generate(q *leetcode.QuestionData) ([]string, error) {
 	cfg := config.Get()
-	gen := GetGenerator(cfg.Gen)
+	gen := GetGenerator(cfg.Lang)
 	if gen == nil {
-		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
+		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Lang)
 	}
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
-		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Gen, q.TitleSlug)
+		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Lang, q.TitleSlug)
 	}
 
 	if !gen.CheckLibrary() {
@@ -161,9 +161,9 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 		return nil, err
 	}
 
-	dir := viper.GetString(cfg.Gen + ".out_dir")
+	dir := viper.GetString(cfg.Lang + ".out_dir")
 	if dir == "" {
-		dir = cfg.Gen
+		dir = cfg.Lang
 	}
 
 	var generated []string

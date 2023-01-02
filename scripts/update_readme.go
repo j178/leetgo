@@ -53,7 +53,7 @@ func updateConfig(readme []byte) []byte {
 func updateSupportMatrix(readme []byte) []byte {
 	w := table.NewWriter()
 	w.AppendHeader(table.Row{"", "Generate", "Local Test"})
-	for _, l := range lang.SupportedLanguages {
+	for _, l := range lang.SupportedLangs {
 		localTest := ":white_check_mark:"
 		if !l.SupportTest() {
 			localTest = ":x:"

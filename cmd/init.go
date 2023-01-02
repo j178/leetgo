@@ -20,7 +20,7 @@ var (
 var initCmd = &cobra.Command{
 	Use:     "init [DIR]",
 	Short:   "Init a leetcode workspace",
-	Example: "leetgo init -t us -g cpp",
+	Example: "leetgo init -t us -l cpp",
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := "."
@@ -105,7 +105,7 @@ func createConfigFiles(dir string) error {
 	}
 	tmpl := `# leetgo project level config, global config is at %s
 language: %s
-gen: %s
+lang: %s
 leetcode:
   site: %s
   credentials:
@@ -116,7 +116,7 @@ leetcode:
 			tmpl,
 			globalFile,
 			language,
-			cfg.Gen,
+			cfg.Lang,
 			site,
 			cfg.LeetCode.Credentials.ReadFromBrowser,
 		),
@@ -140,9 +140,9 @@ func createQuestionDB() error {
 
 func createLibrary(dir string) error {
 	cfg := config.Get()
-	gen := lang.GetGenerator(cfg.Gen)
+	gen := lang.GetGenerator(cfg.Lang)
 	if gen == nil {
-		return fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Gen)
+		return fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Lang)
 	}
 	if gen.CheckLibrary() {
 		return nil
