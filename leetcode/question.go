@@ -9,6 +9,7 @@ import (
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/JohannesKaufmann/html-to-markdown/plugin"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -263,11 +264,26 @@ func (q *QuestionData) GetContent() string {
 }
 
 func (q *QuestionData) GetFormattedContent() string {
-	// TODO 处理上标、下标
 	content := q.GetContent()
 	content = strings.ReplaceAll(content, "&nbsp;", "")
+
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
+	replaceSub := md.Rule{
+		Filter: []string{"sub"},
+		Replacement: func(content string, selec *goquery.Selection, opt *md.Options) *string {
+			selec.SetText(utils.ReplaceSubscript(content))
+			return nil
+		},
+	}
+	replaceSup := md.Rule{
+		Filter: []string{"sup"},
+		Replacement: func(content string, selec *goquery.Selection, opt *md.Options) *string {
+			selec.SetText(utils.ReplaceSuperscript(content))
+			return nil
+		},
+	}
+	converter.AddRules(replaceSub, replaceSup)
 	content, err := converter.ConvertString(content)
 	if err != nil {
 		return content
