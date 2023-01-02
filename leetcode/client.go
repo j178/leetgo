@@ -84,6 +84,11 @@ func NewClient(options ...ClientOption) Client {
 		c.http.Base(c.BaseURI())
 		c.http.Add("Referer", c.BaseURI())
 		c.http.Add("Origin", string(config.LeetCodeCN))
+
+		if cred, ok := opts.cred.(NeedClient); ok {
+			cred.SetClient(c)
+		}
+
 		return c
 	} else {
 		c := &usClient{
@@ -95,6 +100,11 @@ func NewClient(options ...ClientOption) Client {
 		c.http.Base(c.BaseURI())
 		c.http.Add("Referer", c.BaseURI())
 		c.http.Add("Origin", string(config.LeetCodeUS))
+
+		if cred, ok := opts.cred.(NeedClient); ok {
+			cred.SetClient(c)
+		}
+
 		return c
 	}
 }
@@ -115,7 +125,7 @@ const (
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
 	if c.opt.cred != nil {
-		err := c.opt.cred.AddCredentials(req, c)
+		err := c.opt.cred.AddCredentials(req)
 		if err != nil {
 			return nil, err
 		}
