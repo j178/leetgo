@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod tidy
+    - ./scripts/completions.sh
 builds:
   - env:
       - CGO_ENABLED=0
@@ -35,6 +36,11 @@ archives:
     format_overrides:
     - goos: windows
       format: zip
+    files:
+      - LICENSE
+      - README*
+      - CHANGELOG*
+      - completions/*
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -56,6 +62,12 @@ brews:
   description: >-
     leetgo is a command line tool for leetcode.com. It can help you to login,
     submit, test, and view your submissions.
+  license: MIT
+  install: |-
+    bin.install "leetgo"
+    bash_completion.install "completions/leetgo.bash" => "leetgo"
+    zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
+    fish_completion.install "completions/leetgo.fish"
 
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
