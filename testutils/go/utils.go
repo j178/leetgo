@@ -56,14 +56,14 @@ func trimSpaceAndNewLine(s string) string {
 	return strings.Join(lines, "")
 }
 
-// 移除多余空行和左右空格
-func splitAndRemoveEmptyLine(s string) (res []string) {
+func parseTestCases(s string) (res []string) {
 	lines := strings.Split(s, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line != "" {
-			res = append(res, line)
+		if line == "" || strings.HasPrefix(line, "input:") || strings.HasPrefix(line, "output:") {
+			continue
 		}
+		res = append(res, line)
 	}
 	return
 }
