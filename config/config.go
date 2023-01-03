@@ -62,25 +62,26 @@ type Editor struct {
 }
 
 type CodeConfig struct {
-	Lang          string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
-	CodeBeginMark string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
-	CodeEndMark   string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
-	Go            GoConfig       `yaml:"go" mapstructure:"go"`
-	Python        BaseLangConfig `yaml:"python" mapstructure:"python"`
-	Cpp           BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java          BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust          BaseLangConfig `yaml:"rust" mapstructure:"rust"`
+	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
+	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
+	CodeBeginMark    string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
+	CodeEndMark      string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
+	Go               GoConfig       `yaml:"go" mapstructure:"go"`
+	Python           BaseLangConfig `yaml:"python" mapstructure:"python"`
+	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java             BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust             BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
 }
 
 type BaseLangConfig struct {
-	OutDir string `yaml:"out_dir" mapstructure:"out_dir"`
+	OutDir           string `yaml:"out_dir" mapstructure:"out_dir"`
+	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
 }
 
 type GoConfig struct {
-	BaseLangConfig   `yaml:",inline" mapstructure:",squash"`
-	SeparatePackage  bool   `yaml:"separate_package" mapstructure:"separate_package" comment:"Generate separate package for each question"`
-	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Filename template for Go files"`
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+	GoModPath      string `yaml:"go_mod_path" mapstructure:"go_mod_path" comment:"Go module path for the generated code"`
 }
 
 type Credentials struct {
@@ -157,13 +158,12 @@ func Default() *Config {
 		Author:   author,
 		Language: ZH,
 		Code: CodeConfig{
-			Lang:          "go",
-			CodeBeginMark: codeBeginMark,
-			CodeEndMark:   codeEndMark,
+			Lang:             "go",
+			CodeBeginMark:    codeBeginMark,
+			CodeEndMark:      codeEndMark,
+			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug | toUnderscore }}{{ end }}`,
 			Go: GoConfig{
-				BaseLangConfig:   BaseLangConfig{OutDir: "go"},
-				SeparatePackage:  true,
-				FilenameTemplate: ``,
+				BaseLangConfig: BaseLangConfig{OutDir: "go"},
 			},
 			Python: BaseLangConfig{OutDir: "python"},
 			Cpp:    BaseLangConfig{OutDir: "cpp"},

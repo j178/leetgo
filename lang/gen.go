@@ -117,14 +117,34 @@ func removeComments(code string, q *leetcode.QuestionData) string {
 	return code
 }
 
+func prepend(s string) Modifier {
+	return func(code string, q *leetcode.QuestionData) string {
+		return s + code
+	}
+}
+
+func getFilenameTemplate(gen Generator) string {
+	res := config.Get().Code.FilenameTemplate
+	if res != "" {
+		return res
+	}
+	res = viper.GetString("code." + gen.Slug() + ".filename_template")
+	return res
+}
+
 func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	comment := l.generateComments(q)
 	code := l.generateCode(q, addCodeMark(l.lineComment))
 	content := comment + "\n" + code + "\n"
 
+	filenameTmpl := getFilenameTemplate(l)
+	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
+	if err != nil {
+		return nil, err
+	}
+
 	files := FileOutput{
-		// TODO filename template
-		Path:    fmt.Sprintf("%s%s", q.TitleSlug, l.extension),
+		Path:    baseFilename + "." + l.extension,
 		Content: content,
 	}
 	return []FileOutput{files}, nil

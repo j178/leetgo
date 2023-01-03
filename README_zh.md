@@ -76,7 +76,7 @@ Available Commands:
   submit                  Submit solution
   contest                 Generate contest questions
   cache                   Manage local questions cache
-  config                  Show leetgo configurations
+  config                  Show configurations
   encrypt                 Encrypt a sensitive string to be used in config file
   help                    Help about any command
 
@@ -112,24 +112,36 @@ code:
   # Language of code generated for questions: go, python, ... 
   # (will be override by project config and flag --lang)
   lang: go
+  # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
+  # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
+  # Available functions: lower, upper, trim, padWithZero, toUnderscore
+  filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug | toUnderscore }}{{ end }}'
   # The mark to indicate the beginning of the code
   code_begin_mark: '@lc code=start'
   # The mark to indicate the end of the code
   code_end_mark: '@lc code=end'
   go:
     out_dir: go
-    # Generate separate package for each question
-    separate_package: true
-    # Filename template for Go files
+    # Overrides the default code.filename_template
     filename_template: ""
+    # Go module path for the generated code
+    go_mod_path: ""
   python:
     out_dir: python
+    # Overrides the default code.filename_template
+    filename_template: ""
   cpp:
     out_dir: cpp
+    # Overrides the default code.filename_template
+    filename_template: ""
   java:
     out_dir: java
+    # Overrides the default code.filename_template
+    filename_template: ""
   rust:
     out_dir: rust
+    # Overrides the default code.filename_template
+    filename_template: ""
 # LeetCode configuration
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn

@@ -1,11 +1,14 @@
 package leetcode
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"text/template"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/JohannesKaufmann/html-to-markdown/plugin"
@@ -339,6 +342,72 @@ func (q *QuestionData) GetCodeSnippet(slug string) string {
 		}
 	}
 	return ""
+}
+
+type FilenameTemplateData struct {
+	Id               string
+	Slug             string
+	Title            string
+	Difficulty       string
+	Lang             string
+	SlugIsMeaningful bool
+}
+
+func (q *QuestionData) formatQuestionId() (string, bool) {
+	slugValid := true
+	id := q.QuestionFrontendId
+	switch {
+	case strings.HasPrefix(id, "剑指 Offer"):
+		slugValid = false
+		cid := strings.TrimSpace(id[len("剑指 Offer")+1:])
+		cid = strings.ReplaceAll(cid, " ", "-")
+		cid = strings.ReplaceAll(cid, "---", "-")
+		id = "剑指Offer-" + cid
+	case strings.HasPrefix(id, "面试题"):
+		slugValid = false
+		id = strings.ReplaceAll(id, " ", "-")
+	case strings.HasPrefix(id, "LCP"), strings.HasPrefix(id, "LCS"):
+		slugValid = false
+		id = strings.ReplaceAll(id, " ", "-")
+	}
+	return id, slugValid
+}
+
+func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string) (string, error) {
+	id, slugValid := q.formatQuestionId()
+	data := &FilenameTemplateData{
+		Id:               id,
+		Slug:             q.TitleSlug,
+		Title:            q.GetTitle(),
+		Difficulty:       q.Difficulty,
+		Lang:             lang,
+		SlugIsMeaningful: slugValid,
+	}
+	tmpl := template.New("filename")
+	tmpl.Funcs(
+		template.FuncMap{
+			"lower": strings.ToLower,
+			"upper": strings.ToUpper,
+			"trim":  strings.TrimSpace,
+			"padWithZero": func(n int, s string) string {
+				return fmt.Sprintf("%0"+strconv.Itoa(n)+"s", s)
+			},
+			"toUnderscore": func(s string) string {
+				return strings.ReplaceAll(s, "-", "_")
+			},
+		},
+	)
+	tmpl, err := tmpl.Parse(filenameTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func QuestionBySlug(slug string, c Client) (*QuestionData, error) {

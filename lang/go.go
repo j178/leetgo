@@ -46,14 +46,21 @@ func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	)
 	content := comment + "\n" + code + "\n"
 
+	filenameTmpl := getFilenameTemplate(g)
+	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
+	if err != nil {
+		return nil, err
+	}
+	codeFile := filepath.Join(baseFilename, "solution.go")
+	testFile := filepath.Join(baseFilename, "solution_test.go")
+
 	files := []FileOutput{
 		{
-			// TODO filename template
-			Path:    q.TitleSlug + ".go",
+			Path:    codeFile,
 			Content: content,
 		},
 		{
-			Path:    q.TitleSlug + "_test.go",
+			Path:    testFile,
 			Content: "",
 		},
 	}
