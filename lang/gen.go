@@ -25,14 +25,16 @@ type Generator interface {
 	Name() string
 	ShortName() string
 	Slug() string
-	// SupportTest returns true if the language supports local test.
-	SupportTest() bool
-	// CheckLibrary checks if the library is installed. Return false if not installed.
-	CheckLibrary(projectRoot string) bool
-	// GenerateLibrary copies necessary supporting library files to project.
-	GenerateLibrary(projectRoot string) error
 	// Generate generates code files for the question.
 	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
+}
+
+type Testable interface {
+	// CheckLibrary checks if the library is installed. Return false if not installed.
+	CheckLibrary() bool
+	// GenerateLibrary copies necessary supporting library files to project.
+	GenerateLibrary() error
+	RunTest(q *leetcode.QuestionData) error
 }
 
 type baseLang struct {
@@ -55,18 +57,6 @@ func (l baseLang) Slug() string {
 
 func (l baseLang) ShortName() string {
 	return l.shortName
-}
-
-func (l baseLang) SupportTest() bool {
-	return false
-}
-
-func (l baseLang) CheckLibrary(projectRoot string) bool {
-	return true
-}
-
-func (l baseLang) GenerateLibrary(projectRoot string) error {
-	return nil
 }
 
 // TODO use template
@@ -179,8 +169,8 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	if !gen.CheckLibrary(cfg.ProjectRoot()) {
-		err := gen.GenerateLibrary(cfg.ProjectRoot())
+	if gen, ok := gen.(Testable); ok && !gen.CheckLibrary() {
+		err := gen.GenerateLibrary()
 		if err != nil {
 			return nil, err
 		}

@@ -1,17 +1,17 @@
 package lang
 
 import (
+	"path/filepath"
+
 	"github.com/j178/leetgo/leetcode"
+)
+
+var (
+	testutilsModPath = "github.com/j178/leetgo/testutils/go"
 )
 
 type golang struct {
 	baseLang
-}
-
-func prepend(s string) Modifier {
-	return func(code string, q *leetcode.QuestionData) string {
-		return s + code
-	}
 }
 
 func addNamedReturn(code string, q *leetcode.QuestionData) string {
@@ -22,16 +22,19 @@ func changeReceiverName(code string, q *leetcode.QuestionData) string {
 	return code
 }
 
-func (g golang) CheckLibrary(projectRoot string) bool {
+func (g golang) CheckLibrary() bool {
+	// 执行 go list -m json 查看是否有 github.com/j178/leetgo/testutils/go 的依赖
+	// go list -m -json github.com/j178/leetgo/testutils/go => not a known dependency
 	return true
 }
 
-func (g golang) GenerateLibrary(projectRoot string) error {
+func (g golang) GenerateLibrary() error {
+	// 执行 go mod init & go get
 	return nil
 }
 
-func (g golang) SupportTest() bool {
-	return true
+func (g golang) RunTest(q *leetcode.QuestionData) error {
+	return nil
 }
 
 func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {

@@ -55,7 +55,7 @@ func updateSupportMatrix(readme []byte) []byte {
 	w.AppendHeader(table.Row{"", "Generate", "Local Test"})
 	for _, l := range lang.SupportedLangs {
 		localTest := ":white_check_mark:"
-		if !l.SupportTest() {
+		if _, ok := l.(lang.Testable); !ok {
 			localTest = ":x:"
 		}
 		w.AppendRow(
