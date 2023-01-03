@@ -158,7 +158,11 @@ contest:
   out_dir: ""
 # The editor to open generated files
 editor:
-  command: vim
+  # Use a predefined editor: vim, vscode, goland, set to none to disable opening files after generation
+  use: none
+  # Custom command to open files
+  command: ""
+  # Arguments to the command
   args: []
 # Cache type, json or sqlite
 cache: json
