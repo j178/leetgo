@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/j178/leetgo/config"
 	"github.com/spf13/cobra"
@@ -10,7 +8,7 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Show leetgo configurations",
+	Short: "Show configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Get()
 		cmd.Println("Global config dir:", cfg.ConfigDir())
@@ -38,8 +36,8 @@ var encryptCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Println()
-		fmt.Println(encrypted)
+		cmd.Println()
+		cmd.Println(encrypted)
 		return nil
 	},
 }
