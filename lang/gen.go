@@ -88,6 +88,10 @@ func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) 
 	return code
 }
 
+func needsDefinition(code string) bool {
+	return strings.Contains(code, "Definition for")
+}
+
 func getFilenameTemplate(gen Generator) string {
 	res := config.Get().Code.FilenameTemplate
 	if res != "" {

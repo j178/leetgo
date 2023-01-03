@@ -154,13 +154,18 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 
 func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	comment := g.generateComments(q)
-	code := g.generateCode(
+	code := q.GetCodeSnippet(g.Slug())
+	preCode := "package main\n\n"
+	if needsDefinition(code) {
+		preCode += fmt.Sprintf("import . \"%s\"\n\n", testutilsModPath)
+	}
+	code = g.generateCode(
 		q,
 		removeComments,
 		addNamedReturn,
 		changeReceiverName,
 		addCodeMark(g.lineComment),
-		prepend("package main\n\n"),
+		prepend(preCode),
 	)
 	codeContent := comment + "\n" + code + "\n"
 

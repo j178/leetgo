@@ -270,8 +270,8 @@ func (q *QuestionData) GetFormattedContent() string {
 	content := q.GetContent()
 
 	// Remove &nbsp; characters
-	content = strings.ReplaceAll(content, "&nbsp;", "")
-	content = strings.ReplaceAll(content, "\u00A0", "")
+	content = strings.ReplaceAll(content, "&nbsp;", " ")
+	content = strings.ReplaceAll(content, "\u00A0", " ")
 
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
@@ -436,7 +436,7 @@ func Question(s string, c Client) (*QuestionData, error) {
 	if s == "today" {
 		return c.GetTodayQuestion()
 	}
-	q := GetCache().GetById(s)
+	q := GetCache().GetById(strings.TrimLeft(s, "0"))
 	if q != nil {
 		return QuestionBySlug(q.Slug, c)
 	}
