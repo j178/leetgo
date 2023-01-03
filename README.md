@@ -223,6 +223,8 @@ and you can also check out some [help wanted](https://github.com/j178/leetgo/iss
 
 ## Credits
 
+Here are some awesome projects that inspired me to create this project:
+
 - https://github.com/EndlessCheng/codeforces-go
 - https://github.com/clearloop/leetcode-cli
 - https://github.com/budougumi0617/leetgode
