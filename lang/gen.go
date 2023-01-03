@@ -99,15 +99,15 @@ func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) 
 	return code
 }
 
-func addCodeMark(comment string) Modifier {
+func addCodeMark(commentMark string) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
 		cfg := config.Get()
 		return fmt.Sprintf(
 			"%s %s\n\n%s\n\n%s %s",
-			comment,
+			commentMark,
 			cfg.Code.CodeBeginMark,
 			s,
-			comment,
+			commentMark,
 			cfg.Code.CodeEndMark,
 		)
 	}
@@ -131,8 +131,10 @@ func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 }
 
 type FileOutput struct {
-	Path    string
-	Content string
+	Path      string
+	Content   string
+	Created   bool
+	Generator Generator
 }
 
 func GetGenerator(gen string) Generator {
@@ -145,7 +147,7 @@ func GetGenerator(gen string) Generator {
 	return nil
 }
 
-func Generate(q *leetcode.QuestionData) ([]string, error) {
+func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
@@ -174,17 +176,16 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 		dir = cfg.Code.Lang
 	}
 
-	var generated []string
 	for i := range files {
 		path := filepath.Join(cfg.ProjectRoot(), dir, files[i].Path)
+		files[i].Path = path
+		files[i].Generator = gen
 		written, err := tryWrite(path, files[i].Content)
 		if err != nil {
 			hclog.L().Error("failed to write file", "path", path, "err", err)
 			continue
 		}
-		if written {
-			generated = append(generated, path)
-		}
+		files[i].Created = written
 	}
 
 	state := config.LoadState()
@@ -195,7 +196,7 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 	}
 	config.SaveState(state)
 
-	return generated, nil
+	return files, nil
 }
 
 func tryWrite(file string, content string) (bool, error) {
