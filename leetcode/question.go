@@ -290,7 +290,13 @@ func (q *QuestionData) GetFormattedContent() string {
 			return nil
 		},
 	}
-	converter.AddRules(replaceSub, replaceSup)
+	replaceEm := md.Rule{
+		Filter: []string{"em"},
+		Replacement: func(content string, selec *goquery.Selection, options *md.Options) *string {
+			return md.String(content)
+		},
+	}
+	converter.AddRules(replaceSub, replaceSup, replaceEm)
 	content, err := converter.ConvertString(content)
 	if err != nil {
 		return content
