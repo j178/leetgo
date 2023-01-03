@@ -328,7 +328,7 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
 	for _, f := range found {
-		result = append(result, strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>"))
+		result = append(result, strings.ReplaceAll(strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>"), ", ", ","))
 	}
 	return result
 }
