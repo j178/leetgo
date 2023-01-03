@@ -42,15 +42,17 @@ type golang struct {
 	baseLang
 }
 
+// TODO: implement
 func addNamedReturn(code string, q *leetcode.QuestionData) string {
 	return code
 }
 
+// TODO: implement
 func changeReceiverName(code string, q *leetcode.QuestionData) string {
 	return code
 }
 
-func (g golang) CheckLibrary(outDir string) (bool, error) {
+func (g golang) Initialized(outDir string) (bool, error) {
 	cmd := exec.Command("go", "list", "-m", "-json", testutilsModPath)
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
@@ -65,7 +67,7 @@ func (g golang) CheckLibrary(outDir string) (bool, error) {
 	return true, nil
 }
 
-func (g golang) GenerateLibrary(outDir string) error {
+func (g golang) Init(outDir string) error {
 	err := utils.RemoveIfExist(filepath.Join(outDir, "go.mod"))
 	if err != nil {
 		return err

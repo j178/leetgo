@@ -29,11 +29,13 @@ type Generator interface {
 	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
 }
 
-type Testable interface {
-	// CheckLibrary checks if the library is installed. Return false if not installed.
-	CheckLibrary(dir string) (bool, error)
-	// GenerateLibrary copies necessary supporting library files to project.
-	GenerateLibrary(dir string) error
+type Initializer interface {
+	Initialized(dir string) (bool, error)
+	Init(dir string) error
+}
+
+type LocalTester interface {
+	Initializer
 	RunTest(q *leetcode.QuestionData) error
 }
 
@@ -59,7 +61,6 @@ func (l baseLang) ShortName() string {
 	return l.shortName
 }
 
-// TODO use template
 func (l baseLang) generateComments(q *leetcode.QuestionData) string {
 	var content []string
 	cfg := config.Get()
@@ -79,38 +80,12 @@ func (l baseLang) generateComments(q *leetcode.QuestionData) string {
 	return strings.Join(content, "\n")
 }
 
-type Modifier func(string, *leetcode.QuestionData) string
-
 func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) string {
 	code := q.GetCodeSnippet(l.Slug())
 	for _, m := range modifiers {
 		code = m(code, q)
 	}
 	return code
-}
-
-func addCodeMark(commentMark string) Modifier {
-	return func(s string, q *leetcode.QuestionData) string {
-		cfg := config.Get()
-		return fmt.Sprintf(
-			"%s %s\n\n%s\n\n%s %s",
-			commentMark,
-			cfg.Code.CodeBeginMark,
-			s,
-			commentMark,
-			cfg.Code.CodeEndMark,
-		)
-	}
-}
-
-func removeComments(code string, q *leetcode.QuestionData) string {
-	return code
-}
-
-func prepend(s string) Modifier {
-	return func(code string, q *leetcode.QuestionData) string {
-		return s + code
-	}
 }
 
 func getFilenameTemplate(gen Generator) string {
@@ -204,10 +179,10 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	}
 
 	// Check and generate necessary library files.
-	if t, ok := gen.(Testable); ok {
-		ok, err := t.CheckLibrary(outDir)
+	if t, ok := gen.(Initializer); ok {
+		ok, err := t.Initialized(outDir)
 		if err == nil && !ok {
-			err = t.GenerateLibrary(outDir)
+			err = t.Init(outDir)
 			if err != nil {
 				return nil, err
 			}
@@ -241,7 +216,7 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 
 	// Update last generated state
 	state := config.LoadState()
-	state.LastGenerated = config.LastGeneratedQuestion{
+	state.LastQuestion = config.LastQuestion{
 		Slug:       q.TitleSlug,
 		FrontendID: q.QuestionFrontendId,
 		Gen:        gen.Slug(),
