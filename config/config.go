@@ -203,7 +203,7 @@ func Verify(c *Config) error {
 		return fmt.Errorf("username/password authentication is not supported for leetcode.com")
 	}
 	if c.LeetCode.Credentials.Password != "" && !strings.HasPrefix(c.LeetCode.Credentials.Password, vaultHeader) {
-		return fmt.Errorf("password is not encrypted, you need to run `leetgo encrypt` before put it in config file")
+		return fmt.Errorf("password is not encrypted, you need to run `leetgo config encrypt` before put it in config file")
 	}
 	pw := c.LeetCode.Credentials.Password
 	if pw != "" {

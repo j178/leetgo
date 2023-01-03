@@ -195,7 +195,7 @@ There are three ways to provide cookies to `leetgo`:
 
 - Provide username and password in config file.
 
-  You need to run `leetgo encrypt` to encrypt your password first, plain text password is **not allowed**.
+  You need to run `leetgo config encrypt` to encrypt your password first, plain text password is **not allowed**.
 
   ```yaml
   leetcode:
