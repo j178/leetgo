@@ -132,7 +132,7 @@ func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	}
 
 	files := FileOutput{
-		Path:    baseFilename + "." + l.extension,
+		Path:    baseFilename + l.extension,
 		Content: content,
 	}
 	return []FileOutput{files}, nil
@@ -148,7 +148,12 @@ type FileOutput struct {
 func GetGenerator(gen string) Generator {
 	gen = strings.ToLower(gen)
 	for _, l := range SupportedLangs {
-		if strings.HasPrefix(l.ShortName(), gen) || strings.HasPrefix(l.Slug(), gen) {
+		if l.Slug() == gen {
+			return l
+		}
+	}
+	for _, l := range SupportedLangs {
+		if strings.HasPrefix(strings.ToLower(l.Name()), gen) {
 			return l
 		}
 	}

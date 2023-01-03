@@ -124,7 +124,7 @@ func initCommands() {
 	rootCmd.PersistentFlags().StringP("lang", "l", "", "language of code to generate: cpp, go, python ...")
 	rootCmd.PersistentFlags().BoolP("yes", "y", false, "answer yes to all prompts")
 	rootCmd.InitDefaultHelpFlag()
-	_ = viper.BindPFlag("lang", rootCmd.PersistentFlags().Lookup("lang"))
+	_ = viper.BindPFlag("code.lang", rootCmd.PersistentFlags().Lookup("lang"))
 	_ = viper.BindPFlag("yes", rootCmd.PersistentFlags().Lookup("yes"))
 
 	commands := []*cobra.Command{
