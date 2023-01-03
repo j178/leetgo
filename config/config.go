@@ -56,8 +56,9 @@ type ContestConfig struct {
 }
 
 type Editor struct {
-	Command string   `yaml:"command" mapstructure:"command"`
-	Args    []string `yaml:"args" mapstructure:"args"`
+	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland, set to none to disable opening files after generation"`
+	Command string   `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
+	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command"`
 }
 
 type CodeConfig struct {
@@ -177,8 +178,7 @@ func Default() *Config {
 			},
 		},
 		Editor: Editor{
-			Command: "vim",
-			Args:    nil,
+			Use: "none",
 		},
 		Cache: "json",
 	}
@@ -213,7 +213,6 @@ func Verify(c *Config) error {
 			return err
 		}
 	}
-
 	if c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
 		return fmt.Errorf("invalid leetcode.credentials.read_from_browser: %s", c.LeetCode.Credentials.ReadFromBrowser)
 	}

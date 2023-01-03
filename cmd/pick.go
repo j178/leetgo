@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/go-hclog"
+	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
@@ -31,8 +30,8 @@ var pickCmd = &cobra.Command{
 				hclog.L().Error("failed to generate", "question", p, "error", err)
 				continue
 			}
-			// TODO how editor/opener step in?
-			fmt.Println("Generated files:", files)
+			err = editor.Open(files)
+			return err
 		}
 		return nil
 	},

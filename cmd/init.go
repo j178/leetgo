@@ -107,6 +107,8 @@ func createConfigFiles(dir string) error {
 language: %s
 code:
   lang: %s
+editor:
+  use: none
 leetcode:
   site: %s
   credentials:
