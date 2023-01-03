@@ -42,6 +42,14 @@ func CreateIfNotExists(path string, isDir bool) error {
 	return nil
 }
 
+func RemoveIfExist(path string) error {
+	err := os.Remove(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
 func Truncate(filename string) error {
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
@@ -51,4 +59,16 @@ func Truncate(filename string) error {
 		return err
 	}
 	return nil
+}
+
+func RelToCwd(path string) string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return path
+	}
+	relPath, err := filepath.Rel(wd, path)
+	if err != nil {
+		relPath = path
+	}
+	return relPath
 }

@@ -31,9 +31,9 @@ type Generator interface {
 
 type Testable interface {
 	// CheckLibrary checks if the library is installed. Return false if not installed.
-	CheckLibrary() bool
+	CheckLibrary(dir string) (bool, error)
 	// GenerateLibrary copies necessary supporting library files to project.
-	GenerateLibrary() error
+	GenerateLibrary(dir string) error
 	RunTest(q *leetcode.QuestionData) error
 }
 
@@ -166,7 +166,7 @@ func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 type FileOutput struct {
 	Path      string
 	Content   string
-	Created   bool
+	Overwrite bool
 	Generator Generator
 }
 
@@ -192,35 +192,54 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	if gen, ok := gen.(Testable); ok && !gen.CheckLibrary() {
-		err := gen.GenerateLibrary()
+	outDir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
+	if outDir == "" {
+		outDir = cfg.Code.Lang
+	}
+	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
+
+	err := utils.CreateIfNotExists(outDir, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check and generate necessary library files.
+	if t, ok := gen.(Testable); ok {
+		ok, err := t.CheckLibrary(outDir)
+		if err == nil && !ok {
+			err = t.GenerateLibrary(outDir)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if err != nil {
-			return nil, err
+			hclog.L().Error(
+				"check library failed, skip library generation",
+				"lang", gen.Slug(),
+				"err", err,
+			)
 		}
 	}
 
+	// Generate files
 	files, err := gen.Generate(q)
 	if err != nil {
 		return nil, err
 	}
 
-	dir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
-	if dir == "" {
-		dir = cfg.Code.Lang
-	}
-
+	// Write files
 	for i := range files {
-		path := filepath.Join(cfg.ProjectRoot(), dir, files[i].Path)
+		path := filepath.Join(outDir, files[i].Path)
 		files[i].Path = path
-		files[i].Generator = gen
 		written, err := tryWrite(path, files[i].Content)
 		if err != nil {
 			hclog.L().Error("failed to write file", "path", path, "err", err)
 			continue
 		}
-		files[i].Created = written
+		files[i].Overwrite = written
 	}
 
+	// Update last generated state
 	state := config.LoadState()
 	state.LastGenerated = config.LastGeneratedQuestion{
 		Slug:       q.TitleSlug,
@@ -234,9 +253,10 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 
 func tryWrite(file string, content string) (bool, error) {
 	write := true
+	relPath := utils.RelToCwd(file)
 	if utils.IsExist(file) {
 		if !viper.GetBool("yes") {
-			prompt := &survey.Confirm{Message: fmt.Sprintf("File \"%s\" already exists, overwrite?", file)}
+			prompt := &survey.Confirm{Message: fmt.Sprintf("File \"%s\" already exists, overwrite?", relPath)}
 			err := survey.AskOne(prompt, &write)
 			if err != nil {
 				return false, err
@@ -255,6 +275,6 @@ func tryWrite(file string, content string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	hclog.L().Info("generated", "file", file)
+	hclog.L().Info("generated", "file", relPath)
 	return true, nil
 }

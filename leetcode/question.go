@@ -15,7 +15,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
-	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/mitchellh/go-wordwrap"
 )
 
 type TopicTag struct {
@@ -297,7 +297,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	}
 
 	// Wrap and remove blank lines
-	content = text.WrapText(content, 100)
+	content = wordwrap.WrapString(content, 100)
 	content = utils.RemoveEmptyLine(content)
 	return content
 }
