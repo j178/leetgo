@@ -60,7 +60,7 @@ func SaveState(s State) {
 		return
 	}
 	enc := json.NewEncoder(f)
-	err = enc.Encode(s)
+	err = enc.Encode(states)
 	if err != nil {
 		hclog.L().Error("failed to save state", "err", err)
 	}

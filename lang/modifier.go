@@ -2,6 +2,7 @@ package lang
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
@@ -23,9 +24,26 @@ func addCodeMark(commentMark string) Modifier {
 	}
 }
 
-// TODO: implement
 func removeComments(code string, q *leetcode.QuestionData) string {
-	return code
+	lines := strings.Split(code, "\n")
+	var newLines []string
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if strings.HasPrefix(line, "/**") && (strings.Contains(
+			lines[i+1],
+			"object will be instantiated and called",
+		) || strings.Contains(lines[i+1], "Definition for")) {
+			for {
+				i++
+				if strings.HasSuffix(lines[i], "*/") {
+					break
+				}
+			}
+			continue
+		}
+		newLines = append(newLines, line)
+	}
+	return strings.Join(newLines, "\n")
 }
 
 func prepend(s string) Modifier {

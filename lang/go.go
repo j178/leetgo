@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
@@ -42,14 +43,50 @@ type golang struct {
 	baseLang
 }
 
-// TODO: implement
 func addNamedReturn(code string, q *leetcode.QuestionData) string {
-	return code
+	lines := strings.Split(code, "\n")
+	var newLines []string
+	skipNext := 0
+	for _, line := range lines {
+		if skipNext > 0 {
+			skipNext--
+			continue
+		}
+		if strings.HasPrefix(line, "func ") {
+			rightBrace := strings.LastIndex(line, ")")
+			returnType := strings.TrimSpace(line[rightBrace+1 : strings.LastIndex(line, "{")])
+			if returnType != "" {
+				if returnType == "bool" || returnType == "string" {
+					newLines = append(newLines, line)
+				} else if q.MetaData.SystemDesign && strings.Contains(line, "func Constructor") {
+					newLines = append(newLines, line)
+					newLines = append(newLines, "\n\treturn "+returnType+"{}")
+					skipNext = 1
+				} else {
+					newLines = append(newLines, line[:rightBrace+1]+" (ans "+returnType+") {")
+					newLines = append(newLines, "\n\treturn")
+					skipNext = 1
+				}
+			} else {
+				newLines = append(newLines, line)
+			}
+		} else {
+			newLines = append(newLines, line)
+		}
+	}
+	return strings.Join(newLines, "\n")
 }
 
-// TODO: implement
 func changeReceiverName(code string, q *leetcode.QuestionData) string {
-	return code
+	lines := strings.Split(code, "\n")
+	for i, line := range lines {
+		if strings.HasPrefix(line, "func (this *") {
+			n := len("func (this *")
+			prefix := strings.ToLower(line[n : n+1])
+			lines[i] = strings.Replace(line, "this", prefix, 1)
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func (g golang) Initialized(outDir string) (bool, error) {
@@ -98,7 +135,7 @@ func (g golang) Init(outDir string) error {
 }
 
 func (g golang) RunTest(q *leetcode.QuestionData) error {
-	// run go test
+	// TODO run go test
 	return nil
 }
 
@@ -119,10 +156,10 @@ func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	comment := g.generateComments(q)
 	code := g.generateCode(
 		q,
-		addCodeMark(g.lineComment),
 		removeComments,
 		addNamedReturn,
 		changeReceiverName,
+		addCodeMark(g.lineComment),
 		prepend("package main\n\n"),
 	)
 	codeContent := comment + "\n" + code + "\n"
