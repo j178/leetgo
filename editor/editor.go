@@ -87,6 +87,6 @@ func runCmd(command string, args []string, files ...string) error {
 	cmd.Args = append(cmd.Args, files...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	os.Stderr = os.Stderr
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
