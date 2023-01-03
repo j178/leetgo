@@ -5,10 +5,11 @@ go 1.19
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/JohannesKaufmann/html-to-markdown v1.3.6
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/briandowns/spinner v1.20.0
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.13.0
-	github.com/hashicorp/go-hclog v1.2.0
+	github.com/hashicorp/go-hclog v1.4.0
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/jedib0t/go-pretty/v6 v6.4.3
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -23,7 +24,6 @@ require (
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/danieljoos/wincred v1.1.0 // indirect
