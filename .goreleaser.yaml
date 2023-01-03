@@ -69,6 +69,20 @@ brews:
     zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
     fish_completion.install "completions/leetgo.fish"
 
+scoop:
+    bucket:
+      owner: j178
+      name: scoop-bucket
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    folder: bucket
+    homepage: https://github.com/j178/leetgo
+    description: >-
+      leetgo is a command line tool for leetcode.com. It can help you to login,
+      submit, test, and view your submissions.
+    license: MIT
+
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json

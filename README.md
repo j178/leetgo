@@ -67,7 +67,8 @@ brew install j178/tap/leetgo
 ### Install via `scoop`
 
 ```shell
-scoop install leetgo
+scoop bucket add j178 https://github.com/j178/scoop-bucket.git
+scoop install j178/leetgo
 ```
 
 ## Usage
