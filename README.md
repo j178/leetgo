@@ -174,7 +174,7 @@ There are three ways to provide cookies to `leetgo`:
 
 - Read cookies from browser automatically.
   
- *currently only chrome is supported, if you want to support other browsers, please let us know!*
+  Currently only chrome is supported, if you want to support other browsers, please let us know!
 
   ```yaml
   leetcode:
@@ -195,7 +195,7 @@ There are three ways to provide cookies to `leetgo`:
 
 - Provide username and password in config file.
 
- *you need to run `leetgo encrypt` to encrypt your password first, plain text password is not allowed*
+  You need to run `leetgo encrypt` to encrypt your password first, plain text password is **not allowed**.
 
   ```yaml
   leetcode:
