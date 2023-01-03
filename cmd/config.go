@@ -10,9 +10,14 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Show leetgo config dir",
+	Short: "Show leetgo configurations",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(config.Get().ConfigDir())
+		cfg := config.Get()
+		cmd.Println("Global config dir:", cfg.ConfigDir())
+		cmd.Println("Global config file:", cfg.GlobalConfigFile())
+		cmd.Println("Project config file:", cfg.ProjectConfigFile())
+		cmd.Println("Full configurations:\n")
+		_ = cfg.Write(cmd.OutOrStdout())
 	},
 }
 

@@ -61,7 +61,7 @@ type Editor struct {
 }
 
 type CodeConfig struct {
-	Lang          string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)"`
+	Lang          string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	CodeBeginMark string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
 	CodeEndMark   string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
 	Go            GoConfig       `yaml:"go" mapstructure:"go"`

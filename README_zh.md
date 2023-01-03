@@ -76,7 +76,7 @@ Available Commands:
   submit                  Submit solution
   contest                 Generate contest questions
   cache                   Manage local questions cache
-  config                  Show leetgo config dir
+  config                  Show leetgo configurations
   encrypt                 Encrypt a sensitive string to be used in config file
   help                    Help about any command
 
@@ -109,7 +109,8 @@ author: Bob
 language: zh
 # Code configuration
 code:
-  # Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)
+  # Language of code generated for questions: go, python, ... 
+  # (will be override by project config and flag --lang)
   lang: go
   # The mark to indicate the beginning of the code
   code_begin_mark: '@lc code=start'
