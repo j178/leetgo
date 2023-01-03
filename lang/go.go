@@ -22,11 +22,11 @@ func changeReceiverName(code string, q *leetcode.QuestionData) string {
 	return code
 }
 
-func (g golang) CheckLibrary() bool {
+func (g golang) CheckLibrary(projectRoot string) bool {
 	return true
 }
 
-func (g golang) GenerateLibrary() error {
+func (g golang) GenerateLibrary(projectRoot string) error {
 	return nil
 }
 

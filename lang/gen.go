@@ -28,9 +28,9 @@ type Generator interface {
 	// SupportTest returns true if the language supports local test.
 	SupportTest() bool
 	// CheckLibrary checks if the library is installed. Return false if not installed.
-	CheckLibrary() bool
+	CheckLibrary(projectRoot string) bool
 	// GenerateLibrary copies necessary supporting library files to project.
-	GenerateLibrary() error
+	GenerateLibrary(projectRoot string) error
 	// Generate generates code files for the question.
 	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
 }
@@ -61,11 +61,11 @@ func (l baseLang) SupportTest() bool {
 	return false
 }
 
-func (l baseLang) CheckLibrary() bool {
+func (l baseLang) CheckLibrary(projectRoot string) bool {
 	return true
 }
 
-func (l baseLang) GenerateLibrary() error {
+func (l baseLang) GenerateLibrary(projectRoot string) error {
 	return nil
 }
 
@@ -105,10 +105,10 @@ func addCodeMark(comment string) Modifier {
 		return fmt.Sprintf(
 			"%s %s\n\n%s\n\n%s %s",
 			comment,
-			cfg.Editor.CodeBeginMark,
+			cfg.Code.CodeBeginMark,
 			s,
 			comment,
-			cfg.Editor.CodeEndMark,
+			cfg.Code.CodeEndMark,
 		)
 	}
 }
@@ -147,18 +147,18 @@ func GetGenerator(gen string) Generator {
 
 func Generate(q *leetcode.QuestionData) ([]string, error) {
 	cfg := config.Get()
-	gen := GetGenerator(cfg.Lang)
+	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
-		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Lang)
+		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
 	}
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
-		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Lang, q.TitleSlug)
+		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	if !gen.CheckLibrary() {
-		err := gen.GenerateLibrary()
+	if !gen.CheckLibrary(cfg.ProjectRoot()) {
+		err := gen.GenerateLibrary(cfg.ProjectRoot())
 		if err != nil {
 			return nil, err
 		}
@@ -169,9 +169,9 @@ func Generate(q *leetcode.QuestionData) ([]string, error) {
 		return nil, err
 	}
 
-	dir := viper.GetString(cfg.Lang + ".out_dir")
+	dir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
 	if dir == "" {
-		dir = cfg.Lang
+		dir = cfg.Code.Lang
 	}
 
 	var generated []string

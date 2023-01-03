@@ -43,25 +43,12 @@ type Config struct {
 	dir         string
 	projectRoot string
 	Author      string         `yaml:"author" mapstructure:"author" comment:"Your name"`
-	Lang        string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)"`
 	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the question description: zh or en"`
+	Code        CodeConfig     `yaml:"code" mapstructure:"code" comment:"Code configuration"`
 	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
 	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
 	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
-	Go          GoConfig       `yaml:"go" mapstructure:"go"`
-	Python      BaseLangConfig `yaml:"python" mapstructure:"python"`
-	Cpp         BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java        BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust        BaseLangConfig `yaml:"rust" mapstructure:"rust"`
-	C           BaseLangConfig `yaml:"c" mapstructure:"c"`
-	CSharp      BaseLangConfig `yaml:"csharp" mapstructure:"csharp"`
-	JavaScript  BaseLangConfig `yaml:"javascript" mapstructure:"javascript"`
-	Ruby        BaseLangConfig `yaml:"ruby" mapstructure:"ruby"`
-	Swift       BaseLangConfig `yaml:"swift" mapstructure:"swift"`
-	Kotlin      BaseLangConfig `yaml:"kotlin" mapstructure:"kotlin"`
-	PHP         BaseLangConfig `yaml:"php" mapstructure:"php"`
-	// Add more languages here
 }
 
 type ContestConfig struct {
@@ -69,10 +56,20 @@ type ContestConfig struct {
 }
 
 type Editor struct {
-	CodeBeginMark string   `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
-	CodeEndMark   string   `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
-	Command       string   `yaml:"command" mapstructure:"command"`
-	Args          []string `yaml:"args" mapstructure:"args"`
+	Command string   `yaml:"command" mapstructure:"command"`
+	Args    []string `yaml:"args" mapstructure:"args"`
+}
+
+type CodeConfig struct {
+	Lang          string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)"`
+	CodeBeginMark string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
+	CodeEndMark   string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
+	Go            GoConfig       `yaml:"go" mapstructure:"go"`
+	Python        BaseLangConfig `yaml:"python" mapstructure:"python"`
+	Cpp           BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java          BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust          BaseLangConfig `yaml:"rust" mapstructure:"rust"`
+	// Add more languages here
 }
 
 type BaseLangConfig struct {
@@ -157,8 +154,22 @@ func Default() *Config {
 	return &Config{
 		dir:      configDir,
 		Author:   author,
-		Lang:     "go",
 		Language: ZH,
+		Code: CodeConfig{
+			Lang:          "go",
+			CodeBeginMark: codeBeginMark,
+			CodeEndMark:   codeEndMark,
+			Go: GoConfig{
+				BaseLangConfig:   BaseLangConfig{OutDir: "go"},
+				SeparatePackage:  true,
+				FilenameTemplate: ``,
+			},
+			Python: BaseLangConfig{OutDir: "python"},
+			Cpp:    BaseLangConfig{OutDir: "cpp"},
+			Java:   BaseLangConfig{OutDir: "java"},
+			Rust:   BaseLangConfig{OutDir: "rust"},
+			// Add more languages here
+		},
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 			Credentials: Credentials{
@@ -166,29 +177,10 @@ func Default() *Config {
 			},
 		},
 		Editor: Editor{
-			CodeBeginMark: codeBeginMark,
-			CodeEndMark:   codeEndMark,
-			Command:       "vim",
-			Args:          nil,
+			Command: "vim",
+			Args:    nil,
 		},
 		Cache: "json",
-		Go: GoConfig{
-			BaseLangConfig:   BaseLangConfig{OutDir: "go"},
-			SeparatePackage:  true,
-			FilenameTemplate: ``,
-		},
-		Python:     BaseLangConfig{OutDir: "python"},
-		Cpp:        BaseLangConfig{OutDir: "cpp"},
-		Java:       BaseLangConfig{OutDir: "java"},
-		Rust:       BaseLangConfig{OutDir: "rust"},
-		C:          BaseLangConfig{OutDir: "c"},
-		CSharp:     BaseLangConfig{OutDir: "csharp"},
-		JavaScript: BaseLangConfig{OutDir: "javascript"},
-		Ruby:       BaseLangConfig{OutDir: "ruby"},
-		Swift:      BaseLangConfig{OutDir: "swift"},
-		Kotlin:     BaseLangConfig{OutDir: "kotlin"},
-		PHP:        BaseLangConfig{OutDir: "php"},
-		// Add more languages here
 	}
 }
 
@@ -228,8 +220,8 @@ func Verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid language: %s", c.Language)
 	}
-	if c.Lang == "" {
-		return fmt.Errorf("lang is empty")
+	if c.Code.Lang == "" {
+		return fmt.Errorf("code.lang is empty")
 	}
 	if c.Cache != "json" && c.Cache != "sqlite" {
 		return fmt.Errorf("invalid cache: %s", c.Cache)

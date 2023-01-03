@@ -105,7 +105,8 @@ func createConfigFiles(dir string) error {
 	}
 	tmpl := `# leetgo project level config, global config is at %s
 language: %s
-lang: %s
+code:
+  lang: %s
 leetcode:
   site: %s
   credentials:
@@ -116,7 +117,7 @@ leetcode:
 			tmpl,
 			globalFile,
 			language,
-			cfg.Lang,
+			cfg.Code.Lang,
 			site,
 			cfg.LeetCode.Credentials.ReadFromBrowser,
 		),
@@ -140,12 +141,12 @@ func createQuestionDB() error {
 
 func createLibrary(dir string) error {
 	cfg := config.Get()
-	gen := lang.GetGenerator(cfg.Lang)
+	gen := lang.GetGenerator(cfg.Code.Lang)
 	if gen == nil {
-		return fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Lang)
+		return fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
 	}
-	if gen.CheckLibrary() {
+	if gen.CheckLibrary(dir) {
 		return nil
 	}
-	return gen.GenerateLibrary()
+	return gen.GenerateLibrary(dir)
 }

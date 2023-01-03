@@ -106,10 +106,30 @@ You can tweak the configuration to your liking.
 ```yaml
 # Your name
 author: Bob
-# Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)
-lang: go
 # Language of the question description: zh or en
 language: zh
+# Code configuration
+code:
+  # Language of code generated for questions: go, python, ... (will be override by project config and flag --lang)
+  lang: go
+  # The mark to indicate the beginning of the code
+  code_begin_mark: '@lc code=start'
+  # The mark to indicate the end of the code
+  code_end_mark: '@lc code=end'
+  go:
+    out_dir: go
+    # Generate separate package for each question
+    separate_package: true
+    # Filename template for Go files
+    filename_template: ""
+  python:
+    out_dir: python
+  cpp:
+    out_dir: cpp
+  java:
+    out_dir: java
+  rust:
+    out_dir: rust
 # LeetCode configuration
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
@@ -123,42 +143,10 @@ contest:
   out_dir: ""
 # The editor to open generated files
 editor:
-  # The mark to indicate the beginning of the code
-  code_begin_mark: '@lc code=start'
-  # The mark to indicate the end of the code
-  code_end_mark: '@lc code=end'
   command: vim
   args: []
 # Cache type, json or sqlite
 cache: json
-go:
-  out_dir: go
-  # Generate separate package for each question
-  separate_package: true
-  # Filename template for Go files
-  filename_template: ""
-python:
-  out_dir: python
-cpp:
-  out_dir: cpp
-java:
-  out_dir: java
-rust:
-  out_dir: rust
-c:
-  out_dir: c
-csharp:
-  out_dir: csharp
-javascript:
-  out_dir: javascript
-ruby:
-  out_dir: ruby
-swift:
-  out_dir: swift
-kotlin:
-  out_dir: kotlin
-php:
-  out_dir: php
 ```
 <!-- END CONFIG -->
 
