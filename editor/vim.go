@@ -11,7 +11,7 @@ type vim struct{}
 
 func (e *vim) args(file lang.FileOutput) []string {
 	codeBeginMark := config.Get().Code.CodeBeginMark
-	var args []string
+	args := []string{"-p"}
 	if codeBeginMark != "" {
 		args = append(args, fmt.Sprintf("+/%s", codeBeginMark))
 	}
