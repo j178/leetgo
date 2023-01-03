@@ -30,7 +30,12 @@ And `leetgo` also supports real-time generation of **contest questions**, so you
 
 ## Language support
 
-Currently, `leetgo` supports generating code and local test for the following languages:
+`leetgo` supports generating code for most languages, and local test skeleton for some languages.
+
+Local test means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
+
+Local test requires more work to implement for each language, so not all languages are supported.
+
 <!-- BEGIN MATRIX -->
 |  | Generate | Local Test |
 | --- | --- | --- |
@@ -103,8 +108,10 @@ Use "leetgo [command] --help" for more information about a command.
 ## Configuration
 
 Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
+
 These configuration files are generated during the `leetgo init` process. 
 The local configuration file in the project will override the global configuration. 
+
 It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
 
 Here is the demonstration of full configurations:
@@ -161,11 +168,12 @@ cache: json
 
 Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
 
-Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
+`leetgo` uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
 
 There are three ways to provide cookies to `leetgo`:
 
-- Read cookies from browser automatically, currently only chrome is supported.
+- Read cookies from browser automatically
+  (*currently only chrome is supported, if you want to support other browsers, please let us know!*)
   ```yaml
   leetcode:
     credentials:
