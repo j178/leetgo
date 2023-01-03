@@ -21,6 +21,11 @@ var (
 	NotImplemented = errors.New("not implemented")
 )
 
+const (
+	inputMark  = "input:"
+	outputMark = "output:"
+)
+
 type Generator interface {
 	Name() string
 	ShortName() string
@@ -118,7 +123,7 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 		}
 		caseAndOutputs = append(
 			caseAndOutputs,
-			fmt.Sprintf("input:\n%s\noutput:\n%s", c, outputs[i]),
+			fmt.Sprintf("%s\n%s\n%s\n%s", inputMark, c, outputMark, outputs[i]),
 		)
 	}
 	return strings.Join(caseAndOutputs, "\n\n")
