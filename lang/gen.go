@@ -122,6 +122,29 @@ func getFilenameTemplate(gen Generator) string {
 	return res
 }
 
+func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
+	var cases []string
+	outputs := q.ParseExampleOutputs()
+	var caseAndOutputs []string
+	if len(q.JsonExampleTestcases) > 0 {
+		cases = q.JsonExampleTestcases
+	} else if q.ExampleTestcases != "" {
+		cases = strings.Split(q.ExampleTestcases, "\n")
+	} else {
+		cases = strings.Split(q.SampleTestCase, "\n")
+	}
+	for i, c := range cases {
+		if i >= len(outputs) {
+			break
+		}
+		caseAndOutputs = append(
+			caseAndOutputs,
+			fmt.Sprintf("input:\n%s\noutput:\n%s", c, outputs[i]),
+		)
+	}
+	return strings.Join(caseAndOutputs, "\n\n")
+}
+
 func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	comment := l.generateComments(q)
 	code := l.generateCode(q, addCodeMark(l.lineComment))

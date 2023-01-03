@@ -303,8 +303,8 @@ func (q *QuestionData) GetFormattedContent() string {
 }
 
 var (
-	enPat = regexp.MustCompile(`<strong>Output[:：]?</strong>\s?\n?\s*(.+)`)
-	zhPat = regexp.MustCompile(`<strong>输出[:：]?</strong>\s?\n?\s*(.+)`)
+	enPat = regexp.MustCompile(`<strong>Output[:：]?\s?</strong>\s?\n?\s*(.+)`)
+	zhPat = regexp.MustCompile(`<strong>输出[:：]?\s?</strong>\s?\n?\s*(.+)`)
 )
 
 // ParseExampleOutputs parses example output from content and translatedContent.
@@ -322,7 +322,7 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
 	for _, f := range found {
-		result = append(result, strings.TrimSuffix(f[1], "</pre>"))
+		result = append(result, strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>"))
 	}
 	return result
 }
