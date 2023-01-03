@@ -265,8 +265,12 @@ func (q *QuestionData) GetContent() string {
 
 func (q *QuestionData) GetFormattedContent() string {
 	content := q.GetContent()
-	content = strings.ReplaceAll(content, "&nbsp;", "")
 
+	// Remove &nbsp; characters
+	content = strings.ReplaceAll(content, "&nbsp;", "")
+	content = strings.ReplaceAll(content, "\u00A0", "")
+
+	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
 	replaceSub := md.Rule{
@@ -288,14 +292,16 @@ func (q *QuestionData) GetFormattedContent() string {
 	if err != nil {
 		return content
 	}
+
+	// Wrap and remove blank lines
 	content = text.WrapText(content, 100)
 	content = utils.RemoveEmptyLine(content)
 	return content
 }
 
-// GetExampleOutputs parses example output from content and translatedContent.
+// ParseExampleOutputs parses example output from content and translatedContent.
 // We can also get correct example outputs by submitting example inputs to judge server.
-func (q *QuestionData) GetExampleOutputs() []string {
+func (q *QuestionData) ParseExampleOutputs() []string {
 	pat := ""
 	content := ""
 	if q.Content != "" && !strings.Contains(q.Content, "English description is not available for the problem.") {
