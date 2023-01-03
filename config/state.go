@@ -9,18 +9,21 @@ import (
 
 // Small project state management.
 
-type LastGeneratedQuestion struct {
+type LastQuestion struct {
 	FrontendID string `json:"frontend_id"`
 	Slug       string `json:"slug"`
 	Gen        string `json:"gen"`
 }
 
 type State struct {
-	LastGenerated LastGeneratedQuestion `json:"last_generated"`
+	LastQuestion LastQuestion `json:"last_question"`
+	LastContest  string       `json:"last_contest"`
 }
 
-func LoadState() State {
-	var s State
+type States map[string]State
+
+func loadStates() States {
+	s := make(States)
 
 	file := Get().StateFile()
 	f, err := os.Open(file)
@@ -39,8 +42,18 @@ func LoadState() State {
 	return s
 }
 
+func LoadState() State {
+	s := loadStates()
+	projectRoot := Get().ProjectRoot()
+	return s[projectRoot]
+}
+
 func SaveState(s State) {
+	projectRoot := Get().ProjectRoot()
 	file := Get().StateFile()
+	states := loadStates()
+	states[projectRoot] = s
+
 	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		hclog.L().Error("failed to create state file", "err", err)
