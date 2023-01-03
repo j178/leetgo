@@ -172,15 +172,20 @@ Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under d
 
 There are three ways to provide cookies to `leetgo`:
 
-- Read cookies from browser automatically
-  (*currently only chrome is supported, if you want to support other browsers, please let us know!*)
+- Read cookies from browser automatically.
+  
+ *currently only chrome is supported, if you want to support other browsers, please let us know!*
+
   ```yaml
   leetcode:
     credentials:
       read_from_browser: chrome
   ```
 
-- Provide cookies in config file
+- Provide cookies in config file.
+  
+  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools.
+
   ```yaml
   leetcode:
     credentials:
@@ -188,8 +193,10 @@ There are three ways to provide cookies to `leetgo`:
       csrftoken: xx
   ```
 
-- Provide username and password in config file
-  (*you need to run `leetgo encrypt` to encrypt your password first, plain text password is not allowed*)
+- Provide username and password in config file.
+
+ *you need to run `leetgo encrypt` to encrypt your password first, plain text password is not allowed*
+
   ```yaml
   leetcode:
     credentials:
