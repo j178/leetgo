@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-ps"
-	C "golang.org/x/exp/constraints"
 )
 
 // IsDebugging will return true if the process was launched from Delve or the
