@@ -89,7 +89,6 @@ Available Commands:
   config                  Show leetgo config dir
   encrypt                 Encrypt a sensitive string to be used in config file
   help                    Help about any command
-  completion              Generate the autocompletion script for the specified shell
 
 Flags:
   -v, --version       version for leetgo
@@ -101,18 +100,14 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
-## LeetCode Support
-
-Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. You need to provide your LeetCode session ID to authenticate.
-
-Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
-
 ## Configuration
 
 Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
 These configuration files are generated during the `leetgo init` process. 
 The local configuration file in the project will override the global configuration. 
 It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
+
+Here is the demonstration of full configurations:
 
 <!-- BEGIN CONFIG -->
 ```yaml
@@ -146,8 +141,8 @@ code:
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
-  # Credential to access LeetCode
-  credential:
+  # Credentials to access LeetCode
+  credentials:
     # Read leetcode cookie from browser, currently only chrome is supported.
     read_from_browser: chrome
 contest:
@@ -161,6 +156,46 @@ editor:
 cache: json
 ```
 <!-- END CONFIG -->
+
+## LeetCode Support
+
+Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
+
+Leetgo uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
+
+There are three ways to provide cookies to `leetgo`:
+
+- Read cookies from browser automatically, currently only chrome is supported.
+  ```yaml
+  leetcode:
+    credentials:
+      read_from_browser: chrome
+  ```
+
+- Provide cookies in config file
+  ```yaml
+  leetcode:
+    credentials:
+      session: xxx
+      csrftoken: xx
+  ```
+
+- Provide username and password in config file
+  (*you need to run `leetgo encrypt` to encrypt your password first, plain text password is not allowed*)
+  ```yaml
+  leetcode:
+    credentials:
+      username: xxx
+      password: |
+        $LEETGO_VAULT;1.1;AES256
+        61393232326161303064373437376538646432623336363563623935333863653666623633376466
+        3836633339643934383061363239333833333634373137620a303466626335633332393336326564
+        31633231333934323165376362646630643132626130626136326163333133663762356264353564
+        6562653462396335300a313761363531363961656364366634666562663061633161366463393339
+        3963
+  ```
+
+**Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
 
 ## Troubleshooting
 

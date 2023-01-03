@@ -79,7 +79,6 @@ Available Commands:
   config                  Show leetgo config dir
   encrypt                 Encrypt a sensitive string to be used in config file
   help                    Help about any command
-  completion              Generate the autocompletion script for the specified shell
 
 Flags:
   -v, --version       version for leetgo
@@ -134,8 +133,8 @@ code:
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
-  # Credential to access LeetCode
-  credential:
+  # Credentials to access LeetCode
+  credentials:
     # Read leetcode cookie from browser, currently only chrome is supported.
     read_from_browser: chrome
 contest:

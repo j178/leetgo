@@ -143,7 +143,6 @@ func initCommands() {
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.InitDefaultHelpCmd()
-	rootCmd.InitDefaultCompletionCmd()
 
 	cc.Init(
 		&cc.Config{
