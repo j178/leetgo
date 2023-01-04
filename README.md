@@ -105,6 +105,21 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
+### Question Identifier
+
+Many `leetgo` commands rely on `qid` to locate the leetcode question. `qid` is a simplified question 
+identifier defined by leetgo, which includes the following forms (using the two-sum problem as an example):
+
+```shell
+leetgo pick two-sum          # by question slug
+leetgo pick 1                # by question id
+leetgo pick today            # daily question
+leetgo test last             # the last generated question
+leetgo test weekly100/1      # the first question of weekly contest 100
+leetgo submit b100/2         # the second question of bi-weekly contest 100
+leetgo submit w99            # all questions of biweekly contest 99
+```
+
 ## Configuration
 
 Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
