@@ -3,14 +3,15 @@ package lang
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/j178/leetgo/utils"
 )
 
 const (
@@ -105,28 +106,21 @@ func (g golang) Initialized(outDir string) (bool, error) {
 }
 
 func (g golang) Init(outDir string) error {
-	err := utils.RemoveIfExist(filepath.Join(outDir, "go.mod"))
-	if err != nil {
-		return err
-	}
-	err = utils.RemoveIfExist(filepath.Join(outDir, "go.sum"))
-	if err != nil {
-		return err
-	}
 	modPath := config.Get().Code.Go.GoModPath
 	if modPath == "" {
 		modPath = "leetcode-solutions"
+		hclog.L().Warn("GoModPath path is not set, use default path", "mod_path", modPath)
 	}
+	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
 	cmd.Dir = outDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+	err := cmd.Run()
+	if err != nil && !bytes.Contains(stderr.Bytes(), []byte("go.mod already exists")) {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", testutilsModPath)
+	cmd = exec.Command("go", "get", "-u", testutilsModPath)
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
