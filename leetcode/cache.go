@@ -7,13 +7,14 @@ import (
 type QuestionsCache interface {
 	GetBySlug(slug string) *QuestionData
 	GetById(id string) *QuestionData
+	GetCacheFile() string
 	Update(client Client) error
 }
 
 func GetCache() QuestionsCache {
 	if lazyCache == nil {
 		cfg := config.Get()
-		lazyCache = newCache(cfg.LeetCodeCacheFile())
+		lazyCache = newCache(cfg.LeetCodeCacheBaseName())
 	}
 
 	return lazyCache

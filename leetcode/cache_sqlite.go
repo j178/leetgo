@@ -60,11 +60,15 @@ func newCache(path string) QuestionsCache {
 	return &sqliteCache{path: path}
 }
 
+func (c *sqliteCache) GetCacheFile() string {
+	return c.path + ".db"
+}
+
 func (c *sqliteCache) load() {
 	c.once.Do(
 		func() {
 			var err error
-			c.db, err = sql.Open("sqlite3", c.path)
+			c.db, err = sql.Open("sqlite3", c.GetCacheFile())
 			if err != nil {
 				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
 				return
@@ -198,11 +202,11 @@ func (c *sqliteCache) GetById(id string) *QuestionData {
 }
 
 func (c *sqliteCache) createTable() error {
-	err := utils.Truncate(c.path)
+	err := utils.Truncate(c.GetCacheFile())
 	if err != nil {
 		return err
 	}
-	c.db, err = sql.Open("sqlite3", c.path)
+	c.db, err = sql.Open("sqlite3", c.GetCacheFile())
 	if err != nil {
 		return err
 	}
@@ -245,7 +249,7 @@ func (c *sqliteCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.path)
+	hclog.L().Info("cache updated", "path", c.GetCacheFile())
 	return nil
 }
 

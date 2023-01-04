@@ -24,26 +24,30 @@ func newCache(path string) QuestionsCache {
 	return &jsonCache{path: path}
 }
 
+func (c *jsonCache) GetCacheFile() string {
+	return c.path + ".json"
+}
+
 func (c *jsonCache) doLoad() error {
 	c.slugs = make(map[string]*QuestionData)
 	c.frontIds = make(map[string]*QuestionData)
 
-	var records []QuestionData
-	if _, err := os.Stat(c.path); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(c.GetCacheFile()); errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	s, err := os.ReadFile(c.path)
+	s, err := os.ReadFile(c.GetCacheFile())
 	if err != nil {
 		return err
 	}
+
+	var records []*QuestionData
 	err = json.Unmarshal(s, &records)
 	if err != nil {
 		return err
 	}
 	for _, r := range records {
-		r := r
-		c.slugs[r.TitleSlug] = &r
-		c.frontIds[r.QuestionFrontendId] = &r
+		c.slugs[r.TitleSlug] = r
+		c.frontIds[r.QuestionFrontendId] = r
 	}
 	return nil
 }
@@ -53,7 +57,7 @@ func (c *jsonCache) load() {
 		func() {
 			err := c.doLoad()
 			if err != nil {
-				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
+				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`", "err", err)
 				return
 			}
 			c.checkUpdateTime()
@@ -62,7 +66,7 @@ func (c *jsonCache) load() {
 }
 
 func (c *jsonCache) checkUpdateTime() {
-	stat, err := os.Stat(c.path)
+	stat, err := os.Stat(c.GetCacheFile())
 	if os.IsNotExist(err) {
 		return
 	}
@@ -72,7 +76,7 @@ func (c *jsonCache) checkUpdateTime() {
 }
 
 func (c *jsonCache) Update(client Client) error {
-	err := utils.CreateIfNotExists(c.path, false)
+	err := utils.CreateIfNotExists(c.GetCacheFile(), false)
 	if err != nil {
 		return err
 	}
@@ -81,7 +85,7 @@ func (c *jsonCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(c.path)
+	f, err := os.Create(c.GetCacheFile())
 	if err != nil {
 		return err
 	}
@@ -91,7 +95,7 @@ func (c *jsonCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.path)
+	hclog.L().Info("cache updated", "path", c.GetCacheFile())
 	return nil
 }
 

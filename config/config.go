@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	CmdName               = "leetgo"
-	globalConfigFile      = "config.yaml"
-	projectConfigFilename = CmdName + ".yaml"
-	leetcodeCacheFile     = "cache/leetcode-questions.db"
-	stateFile             = "cache/state.json"
-	codeBeginMark         = "@lc code=start"
-	codeEndMark           = "@lc code=end"
+	CmdName                   = "leetgo"
+	globalConfigFile          = "config.yaml"
+	projectConfigFilename     = CmdName + ".yaml"
+	leetcodeCacheFileBaseName = "cache/leetcode-questions"
+	stateFile                 = "cache/state.json"
+	codeBeginMark             = "@lc code=start"
+	codeEndMark               = "@lc code=end"
 )
 
 var (
@@ -136,8 +136,8 @@ func (c *Config) StateFile() string {
 	return filepath.Join(c.dir, stateFile)
 }
 
-func (c *Config) LeetCodeCacheFile() string {
-	return filepath.Join(c.dir, leetcodeCacheFile)
+func (c *Config) LeetCodeCacheBaseName() string {
+	return filepath.Join(c.dir, leetcodeCacheFileBaseName)
 }
 
 func (c *Config) Write(w io.Writer) error {
