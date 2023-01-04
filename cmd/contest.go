@@ -8,8 +8,9 @@ import (
 )
 
 var contestCmd = &cobra.Command{
-	Use:   "contest",
-	Short: "Generate contest questions",
+	Use:     "contest",
+	Short:   "Generate contest questions",
+	Aliases: []string{"c"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		spin := spinner.New(
 			spinner.CharSets[9],

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -9,9 +8,13 @@ import (
 )
 
 var pickCmd = &cobra.Command{
-	Use:     "pick [SLUG_OR_ID...]",
-	Short:   "Generate a new question",
-	Example: "leetgo pick today\nleetgo pick 549\nleetgo pick two-sum",
+	Use:   "pick [qid]",
+	Short: "Generate a new question",
+	Example: `leetgo pick  # show a list of questions to pick
+leetgo pick today
+leetgo pick 549`,
+	Args:    cobra.MaximumNArgs(1),
+	Aliases: []string{"p"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		if len(args) == 0 {
@@ -19,20 +22,16 @@ var pickCmd = &cobra.Command{
 			//   looks like https://leetcode.cn/problemset/all/
 			args = append(args, "two-sum")
 		}
-		for _, p := range args {
-			q, err := leetcode.Question(p, c)
-			if err != nil {
-				hclog.L().Error("failed to get question", "question", p, "error", err)
-				continue
-			}
-			files, err := lang.Generate(q)
-			if err != nil {
-				hclog.L().Error("failed to generate", "question", p, "error", err)
-				continue
-			}
-			err = editor.Open(files)
+		qid := args[0]
+		q, err := leetcode.Question(qid, c)
+		if err != nil {
 			return err
 		}
-		return nil
+		files, err := lang.Generate(q)
+		if err != nil {
+			return err
+		}
+		err = editor.Open(files)
+		return err
 	},
 }

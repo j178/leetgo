@@ -160,7 +160,7 @@ func Default() *Config {
 			Lang:             "go",
 			CodeBeginMark:    codeBeginMark,
 			CodeEndMark:      codeEndMark,
-			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug | toUnderscore }}{{ end }}`,
+			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
 			Go: GoConfig{
 				BaseLangConfig: BaseLangConfig{OutDir: "go"},
 			},

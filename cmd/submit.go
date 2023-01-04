@@ -8,8 +8,10 @@ import (
 )
 
 var submitCmd = &cobra.Command{
-	Use:   "submit SLUG_OR_ID",
-	Short: "Submit solution",
+	Use:     "submit qid",
+	Short:   "Submit solution",
+	Aliases: []string{"s"},
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
