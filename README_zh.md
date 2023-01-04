@@ -161,8 +161,6 @@ editor:
   command: ""
   # Arguments to the command
   args: []
-# Cache type, json or sqlite
-cache: json
 ```
 <!-- END CONFIG -->
 
