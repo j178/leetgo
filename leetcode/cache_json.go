@@ -14,8 +14,8 @@ import (
 type jsonCache struct {
 	path     string
 	once     sync.Once
-	slugs    map[string]*questionRecord
-	frontIds map[string]*questionRecord
+	slugs    map[string]*QuestionData
+	frontIds map[string]*QuestionData
 }
 
 func newJsonCache(path string) QuestionsCache {
@@ -23,10 +23,10 @@ func newJsonCache(path string) QuestionsCache {
 }
 
 func (c *jsonCache) doLoad() error {
-	c.slugs = make(map[string]*questionRecord)
-	c.frontIds = make(map[string]*questionRecord)
+	c.slugs = make(map[string]*QuestionData)
+	c.frontIds = make(map[string]*QuestionData)
 
-	var records []questionRecord
+	var records []QuestionData
 	if _, err := os.Stat(c.path); errors.Is(err, os.ErrNotExist) {
 		return err
 	}
@@ -40,8 +40,8 @@ func (c *jsonCache) doLoad() error {
 	}
 	for _, r := range records {
 		r := r
-		c.slugs[r.Slug] = &r
-		c.frontIds[r.FrontendId] = &r
+		c.slugs[r.TitleSlug] = &r
+		c.frontIds[r.QuestionFrontendId] = &r
 	}
 	return nil
 }
@@ -79,32 +79,13 @@ func (c *jsonCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	questions := make([]questionRecord, 0, len(all))
-	for _, q := range all {
-		tags := make([]string, 0, len(q.TopicTags))
-		for _, t := range q.TopicTags {
-			tags = append(tags, t.Slug)
-		}
-		questions = append(
-			questions, questionRecord{
-				FrontendId: q.QuestionFrontendId,
-				Slug:       q.TitleSlug,
-				Title:      q.Title,
-				CnTitle:    q.TranslatedTitle,
-				Difficulty: q.Difficulty,
-				Tags:       tags,
-				PaidOnly:   q.IsPaidOnly,
-			},
-		)
-	}
 	f, err := os.Create(c.path)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = f.Close() }()
 	enc := json.NewEncoder(f)
-	enc.SetIndent("", "\t")
-	err = enc.Encode(questions)
+	err = enc.Encode(all)
 	if err != nil {
 		return err
 	}
@@ -112,12 +93,12 @@ func (c *jsonCache) Update(client Client) error {
 	return nil
 }
 
-func (c *jsonCache) GetBySlug(slug string) *questionRecord {
+func (c *jsonCache) GetBySlug(slug string) *QuestionData {
 	c.load()
 	return c.slugs[slug]
 }
 
-func (c *jsonCache) GetById(id string) *questionRecord {
+func (c *jsonCache) GetById(id string) *QuestionData {
 	c.load()
 	return c.frontIds[id]
 }

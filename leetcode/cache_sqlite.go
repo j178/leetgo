@@ -2,6 +2,7 @@ package leetcode
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -10,6 +11,41 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/utils"
 	_ "github.com/mattn/go-sqlite3"
+)
+
+const (
+	ddl = `
+create table questions (
+    titleSlug text not null,
+	questionId text not null,
+	questionFrontendId text not null,
+	categoryTitle text not null,
+	title text not null,
+	translatedTitle text not null,
+	difficulty text not null,
+	topicTags text not null,
+	isPaidOnly tinyint not null,
+	content text not null,
+	translatedContent text not null,
+	status text not null,
+	stats text not null,
+	hints text not null,
+	similarQuestions text not null,
+	sampleTestCase text not null,
+	exampleTestcases text not null,
+	jsonExampleTestcases text not null,
+	metaData text not null,
+	codeSnippets text not null
+);
+
+create table lastUpdate (
+    timestamp bigint not null
+);
+
+insert into lastUpdate values (0);
+`
+	columns = "titleSlug,questionId,questionFrontendId,categoryTitle,title,translatedTitle,difficulty,topicTags,isPaidOnly," +
+		"content,translatedContent,status,stats,hints,similarQuestions,sampleTestCase,exampleTestcases,jsonExampleTestcases,metaData,codeSnippets"
 )
 
 type sqliteCache struct {
@@ -63,48 +99,100 @@ func (c *sqliteCache) updateTime() error {
 	return err
 }
 
-func (c *sqliteCache) GetBySlug(slug string) *questionRecord {
-	c.load()
-	if c.db == nil {
-		return nil
-	}
-	st, err := c.db.Prepare("select frontendId,slug,title,cnTitle,difficulty,tags,paidOnly from questions where slug = ?")
+func (c *sqliteCache) unmarshal(row *sql.Row) (*QuestionData, error) {
+	var q QuestionData
+	var (
+		topicTagsStr            []byte
+		statsStr                []byte
+		hintsStr                []byte
+		similarQuestionsStr     []byte
+		jsonExampleTestcasesStr []byte
+		metaDataStr             []byte
+		codeSnippetsStr         []byte
+	)
+	err := row.Scan(
+		&q.TitleSlug, &q.QuestionId, &q.QuestionFrontendId, &q.CategoryTitle, &q.Title, &q.TranslatedTitle,
+		&q.Difficulty, &topicTagsStr, &q.IsPaidOnly, &q.Content, &q.TranslatedContent, &q.Status, &statsStr, &hintsStr,
+		&similarQuestionsStr, &q.SampleTestCase, &q.ExampleTestcases, &jsonExampleTestcasesStr, &metaDataStr,
+		&codeSnippetsStr,
+	)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	var q questionRecord
-	var tagsStr string
-	err = st.QueryRow(slug).Scan(&q.FrontendId, &q.Slug, &q.Title, &q.CnTitle, &q.Difficulty, &tagsStr, &q.PaidOnly)
-	if err != nil {
-		return nil
-	}
-	q.Tags = strings.Split(tagsStr, ",")
-	if err != nil {
-		return nil
-	}
-	return &q
+	err = json.Unmarshal(topicTagsStr, &q.TopicTags)
+	err = json.Unmarshal(statsStr, &q.Stats)
+	err = json.Unmarshal(hintsStr, &q.Hints)
+	err = json.Unmarshal(similarQuestionsStr, &q.SimilarQuestions)
+	err = json.Unmarshal(jsonExampleTestcasesStr, &q.JsonExampleTestcases)
+	err = json.Unmarshal(metaDataStr, &q.MetaData)
+	err = json.Unmarshal(codeSnippetsStr, &q.CodeSnippets)
+	return &q, nil
 }
 
-func (c *sqliteCache) GetById(id string) *questionRecord {
+func (c *sqliteCache) marshal(q *QuestionData) []any {
+	topicTagsStr, _ := json.Marshal(q.TopicTags)
+	statsStr, _ := json.Marshal(q.Stats)
+	hintsStr, _ := json.Marshal(q.Hints)
+	similarQuestionsStr, _ := json.Marshal(q.SimilarQuestions)
+	jsonExampleTestcasesStr, _ := json.Marshal(q.JsonExampleTestcases)
+	metaDataStr, _ := json.Marshal(q.MetaData)
+	codeSnippetsStr, _ := json.Marshal(q.CodeSnippets)
+	return []any{
+		q.TitleSlug,
+		q.QuestionId,
+		q.QuestionFrontendId,
+		q.CategoryTitle,
+		q.Title,
+		q.TranslatedTitle,
+		q.Difficulty,
+		topicTagsStr,
+		q.IsPaidOnly,
+		q.Content,
+		q.TranslatedContent,
+		q.Status,
+		statsStr,
+		hintsStr,
+		similarQuestionsStr,
+		q.SampleTestCase,
+		q.ExampleTestcases,
+		jsonExampleTestcasesStr,
+		metaDataStr,
+		codeSnippetsStr,
+	}
+}
+
+func (c *sqliteCache) GetBySlug(slug string) *QuestionData {
 	c.load()
 	if c.db == nil {
 		return nil
 	}
-	st, err := c.db.Prepare("select frontendId,slug,title,cnTitle,difficulty,tags,paidOnly from questions where frontendId = ?")
+	st, err := c.db.Prepare("select * from questions where titleSlug = ?")
 	if err != nil {
 		return nil
 	}
-	var q questionRecord
-	var tagsStr string
-	err = st.QueryRow(id).Scan(&q.FrontendId, &q.Slug, &q.Title, &q.CnTitle, &q.Difficulty, &tagsStr, &q.PaidOnly)
+	row := st.QueryRow(slug)
+	q, err := c.unmarshal(row)
 	if err != nil {
 		return nil
 	}
-	q.Tags = strings.Split(tagsStr, ",")
+	return q
+}
+
+func (c *sqliteCache) GetById(id string) *QuestionData {
+	c.load()
+	if c.db == nil {
+		return nil
+	}
+	st, err := c.db.Prepare("select * from questions where questionFrontendId = ?")
 	if err != nil {
 		return nil
 	}
-	return &q
+	row := st.QueryRow(id)
+	q, err := c.unmarshal(row)
+	if err != nil {
+		return nil
+	}
+	return q
 }
 
 func (c *sqliteCache) createTable() error {
@@ -116,25 +204,7 @@ func (c *sqliteCache) createTable() error {
 	if err != nil {
 		return err
 	}
-	_, err = c.db.Exec(
-		`
-create table questions (
-    frontendId varchar(128) unique not null,
-    slug varchar(128) primary key not null,
-    title varchar(128) not null,
-    cnTitle varchar(128) not null,
-    difficulty varchar(16) not null,
-    tags varchar(128) not null,
-    paidOnly tinyint not null
-);
-
-create table lastUpdate (
-    timestamp bigint not null
-);
-
-insert into lastUpdate values (0);
-`,
-	)
+	_, err = c.db.Exec(ddl)
 	return err
 }
 
@@ -147,37 +217,39 @@ func (c *sqliteCache) Update(client Client) error {
 	if err != nil {
 		return err
 	}
-	questions := make([]any, 0, len(all))
-	questionsStr := make([]string, 0, len(all))
-	for _, q := range all {
-		tags := make([]string, 0, len(q.TopicTags))
-		for _, t := range q.TopicTags {
-			tags = append(tags, t.Slug)
+	placeholder := "(" + strings.Repeat("?,", 19) + "?)"
+	batch := 100
+	for len(all) > 0 {
+		size := min(batch, len(all))
+		questions := make([]any, 0, size*20)
+		questionsStr := make([]string, 0, size)
+		for i := 0; i < size; i++ {
+			questionsStr = append(questionsStr, placeholder)
+			questions = append(questions, c.marshal(all[i])...)
 		}
-		questionsStr = append(questionsStr, "(?, ?, ?, ?, ?, ?, ?)")
-		questions = append(
-			questions,
-			q.QuestionFrontendId,
-			q.TitleSlug,
-			q.Title,
-			q.TranslatedTitle,
-			q.Difficulty,
-			strings.Join(tags, ","),
-			q.IsPaidOnly,
+		stmt := fmt.Sprintf(
+			"insert into questions (%s) values %s",
+			columns,
+			strings.Join(questionsStr, ","),
 		)
+		_, err = c.db.Exec(stmt, questions...)
+		if err != nil {
+			return err
+		}
+		all = all[size:]
 	}
-	stmt := fmt.Sprintf(
-		"insert into questions (frontendId, slug, title, cnTitle, difficulty, tags, paidOnly) values %s",
-		strings.Join(questionsStr, ","),
-	)
-	_, err = c.db.Exec(stmt, questions...)
-	if err != nil {
-		return err
-	}
+
 	err = c.updateTime()
 	if err != nil {
 		return err
 	}
 	hclog.L().Info("cache updated", "path", c.path)
 	return nil
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

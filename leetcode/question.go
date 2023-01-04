@@ -42,7 +42,7 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 	// Cannot use `var v Stats` here, because it will cause infinite recursion.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
-		return err
+		unquoted = utils.BytesToString(data)
 	}
 	type alias Stats
 	var v alias
@@ -156,9 +156,10 @@ type MetaData struct {
 }
 
 func (m *MetaData) UnmarshalJSON(data []byte) error {
+	// Ignore error, when we loads from sqlite, no need to unquote it.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
-		return err
+		unquoted = utils.BytesToString(data)
 	}
 	type alias MetaData
 	var v alias
@@ -174,7 +175,7 @@ type JsonExampleTestCases []string
 func (j *JsonExampleTestCases) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
-		return err
+		unquoted = utils.BytesToString(data)
 	}
 	var v []any
 	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
@@ -198,7 +199,7 @@ type SimilarQuestions []SimilarQuestion
 func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
-		return err
+		unquoted = utils.BytesToString(data)
 	}
 	type alias SimilarQuestions
 	var v alias
@@ -427,7 +428,7 @@ func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
 func QuestionById(id string, c Client) (*QuestionData, error) {
 	q := GetCache().GetById(id)
 	if q != nil {
-		return QuestionBySlug(q.Slug, c)
+		return QuestionBySlug(q.TitleSlug, c)
 	}
 	return nil, errors.New("no such question")
 }
@@ -438,7 +439,9 @@ func Question(s string, c Client) (*QuestionData, error) {
 	}
 	q := GetCache().GetById(strings.TrimLeft(s, "0"))
 	if q != nil {
-		return QuestionBySlug(q.Slug, c)
+		// Default online mode, query api to get the latest data
+		// Maybe we can support offline mode using only local cache in the future.
+		return QuestionBySlug(q.TitleSlug, c)
 	}
 	return QuestionBySlug(s, c)
 }

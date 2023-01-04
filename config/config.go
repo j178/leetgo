@@ -48,7 +48,7 @@ type Config struct {
 	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
 	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
 	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
-	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite"`
+	Cache       string         `yaml:"cache" mapstructure:"cache" comment:"Cache type, json or sqlite, sqlite requires build with CGO_ENABLED=1"`
 }
 
 type ContestConfig struct {
