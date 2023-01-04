@@ -95,12 +95,10 @@ func (g golang) Initialized(outDir string) (bool, error) {
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
-			return false, err
+		if bytes.Contains(output, []byte("not a known dependency")) {
+			return false, nil
 		}
-	}
-	if bytes.Contains(output, []byte("not a known dependency")) {
-		return false, nil
+		return false, fmt.Errorf("go list failed: %w", err)
 	}
 	return true, nil
 }
@@ -130,6 +128,7 @@ func (g golang) Init(outDir string) error {
 
 func (g golang) RunTest(q *leetcode.QuestionData) error {
 	// TODO run go test
+	// Need go list -m json to get mod path
 	return nil
 }
 
