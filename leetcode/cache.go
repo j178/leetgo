@@ -2,7 +2,10 @@ package leetcode
 
 import (
 	"github.com/j178/leetgo/config"
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type QuestionsCache interface {
 	GetBySlug(slug string) *QuestionData

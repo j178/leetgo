@@ -1,11 +1,13 @@
 package config
 
 import (
-	"encoding/json"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Small project state management.
 

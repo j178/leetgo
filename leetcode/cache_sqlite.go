@@ -4,7 +4,6 @@ package leetcode
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"

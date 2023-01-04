@@ -2,7 +2,6 @@ package leetcode
 
 import (
 	"compress/gzip"
-	"encoding/json"
 	"io"
 	"net/http"
 	"reflect"
