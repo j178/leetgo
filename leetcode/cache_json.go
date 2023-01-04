@@ -1,3 +1,5 @@
+//go:build !cgo
+
 package leetcode
 
 import (
@@ -18,7 +20,7 @@ type jsonCache struct {
 	frontIds map[string]*QuestionData
 }
 
-func newJsonCache(path string) QuestionsCache {
+func newCache(path string) QuestionsCache {
 	return &jsonCache{path: path}
 }
 

@@ -1,3 +1,5 @@
+//go:build cgo
+
 package leetcode
 
 import (
@@ -54,7 +56,7 @@ type sqliteCache struct {
 	db   *sql.DB
 }
 
-func newSqliteCache(path string) QuestionsCache {
+func newCache(path string) QuestionsCache {
 	return &sqliteCache{path: path}
 }
 
@@ -119,13 +121,13 @@ func (c *sqliteCache) unmarshal(row *sql.Row) (*QuestionData, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(topicTagsStr, &q.TopicTags)
-	err = json.Unmarshal(statsStr, &q.Stats)
-	err = json.Unmarshal(hintsStr, &q.Hints)
-	err = json.Unmarshal(similarQuestionsStr, &q.SimilarQuestions)
-	err = json.Unmarshal(jsonExampleTestcasesStr, &q.JsonExampleTestcases)
-	err = json.Unmarshal(metaDataStr, &q.MetaData)
-	err = json.Unmarshal(codeSnippetsStr, &q.CodeSnippets)
+	_ = json.Unmarshal(topicTagsStr, &q.TopicTags)
+	_ = json.Unmarshal(statsStr, &q.Stats)
+	_ = json.Unmarshal(hintsStr, &q.Hints)
+	_ = json.Unmarshal(similarQuestionsStr, &q.SimilarQuestions)
+	_ = json.Unmarshal(jsonExampleTestcasesStr, &q.JsonExampleTestcases)
+	_ = json.Unmarshal(metaDataStr, &q.MetaData)
+	_ = json.Unmarshal(codeSnippetsStr, &q.CodeSnippets)
 	return &q, nil
 }
 

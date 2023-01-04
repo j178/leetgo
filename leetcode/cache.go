@@ -13,11 +13,7 @@ type QuestionsCache interface {
 func GetCache() QuestionsCache {
 	if lazyCache == nil {
 		cfg := config.Get()
-		if cfg.Cache == "json" {
-			lazyCache = newJsonCache(config.Get().LeetCodeCacheFile())
-		} else {
-			lazyCache = newSqliteCache(config.Get().LeetCodeCacheFile())
-		}
+		lazyCache = newCache(cfg.LeetCodeCacheFile())
 	}
 
 	return lazyCache
