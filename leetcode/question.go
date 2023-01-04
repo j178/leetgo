@@ -254,21 +254,21 @@ func (q *QuestionData) GetTitle() string {
 	return q.Title
 }
 
-func (q *QuestionData) GetContent() string {
+func (q *QuestionData) GetContent() (string, config.Language) {
 	if config.Get().Language == config.ZH && q.TranslatedContent != "" {
-		return q.TranslatedContent
+		return q.TranslatedContent, config.ZH
 	}
 	if config.Get().Language == config.EN && (q.Content == "" || strings.Contains(
 		q.Content,
 		"English description is not available for the problem.",
 	)) {
-		return q.TranslatedContent
+		return q.TranslatedContent, config.ZH
 	}
-	return q.Content
+	return q.Content, config.EN
 }
 
 func (q *QuestionData) GetFormattedContent() string {
-	content := q.GetContent()
+	content, lang := q.GetContent()
 
 	// Remove &nbsp; characters
 	content = strings.ReplaceAll(content, "&nbsp;", " ")
@@ -304,7 +304,11 @@ func (q *QuestionData) GetFormattedContent() string {
 	}
 
 	// Wrap and remove blank lines
-	content = wordwrap.WrapString(content, 100)
+	maxWidth := uint(100)
+	if lang == config.ZH {
+		maxWidth = 60
+	}
+	content = wordwrap.WrapString(content, maxWidth)
 	content = utils.RemoveEmptyLine(content)
 	return content
 }
