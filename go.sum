@@ -171,6 +171,8 @@ github.com/inconshreveable/mousetrap v1.0.1 h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7P
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLfbgNxrN4=
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
+github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37 h1:0Jubdyhw34xefyQNimXsfhPe1nwqYMYmLp83UyI1/NA=
+github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37/go.mod h1:1HwdQrib6jLeThohjFWjBnZbsuPekrRlHi43dL1ZmB8=
 github.com/jedib0t/go-pretty/v6 v6.4.3 h1:2n9BZ0YQiXGESUSR+6FLg0WWWE80u+mIz35f0uHWcIE=
 github.com/jedib0t/go-pretty/v6 v6.4.3/go.mod h1:MgmISkTWDSFu0xOqiZ0mKNntMQ2mDgOcwOkwBEkMDJI=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
@@ -283,8 +285,6 @@ github.com/yuin/goldmark v1.4.14 h1:jwww1XQfhJN7Zm+/a1ZA/3WUiEBEroYFNTiV3dKwM8U=
 github.com/yuin/goldmark v1.4.14/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zalando/go-keyring v0.2.1 h1:MBRN/Z8H4U5wEKXiD67YbDAr5cj/DOStmSga70/2qKc=
 github.com/zalando/go-keyring v0.2.1/go.mod h1:g63M2PPn0w5vjmEbwAX3ib5I+41zdm4esSETOn9Y6Dw=
-github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db h1:GiYcv6tEo8yme647CfG3tUydWi7LQG55oNb5bZ2ZeUM=
-github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db/go.mod h1:6JjIozsIKDJ2H0S0ePLIoVbhhBvI15a/oFlMYsfIsSA=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=

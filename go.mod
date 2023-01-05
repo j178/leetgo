@@ -25,6 +25,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37
+
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
