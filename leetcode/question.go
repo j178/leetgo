@@ -289,8 +289,8 @@ func (q *QuestionData) GetFormattedContent() string {
 	content, lang := q.GetContent()
 
 	// Remove &nbsp; characters
-	content = strings.ReplaceAll(content, "&nbsp;", " ")
-	content = strings.ReplaceAll(content, "\u00A0", " ")
+	replacer := strings.NewReplacer("&nbsp;", " ", "\u00A0", " ", "\u200B", "")
+	content = replacer.Replace(content)
 
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
