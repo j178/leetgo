@@ -63,7 +63,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 }
 
 func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
-	if len(qid) <= 3 {
+	if len(qid) < 3 {
 		return nil, errors.New("invalid contest qid")
 	}
 	if strings.Count(qid, "/") != 1 {
@@ -77,7 +77,7 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 		q           *QuestionData
 		qs          []*QuestionData
 	)
-	contestPat := regexp.MustCompile("([wb])[^0-9]*([0-9]+)")
+	contestPat := regexp.MustCompile(`(?i)([wb])\D*(\d+)`)
 	parts := strings.SplitN(qid, "/", 2)
 	matches := contestPat.FindStringSubmatch(parts[0])
 	if matches == nil {
@@ -90,7 +90,7 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 			contestSlug = state.LastContest
 		}
 	} else {
-		if matches[1][0] == 'w' {
+		if matches[1][0] == 'w' || matches[1][0] == 'W' {
 			contestSlug = "weekly-contest-" + matches[2]
 		} else {
 			contestSlug = "biweekly-contest-" + matches[2]

@@ -92,7 +92,6 @@ Available Commands:
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations
-  encrypt                 Encrypt a sensitive string to be used in config file
   help                    Help about any command
 
 Flags:
