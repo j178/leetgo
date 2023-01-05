@@ -247,23 +247,21 @@ func (q *QuestionData) IsContest() bool {
 }
 
 func (q *QuestionData) Fulfill(c Client) error {
-	if q.partial {
+	if !q.partial {
 		return nil
 	}
-	q.partial = false
+	var q1 *QuestionData
+	var err error
 	if q.IsContest() {
-		q1, err := c.GetContestQuestionData(q.contestSlug, q.TitleSlug)
-		if err != nil {
-			return err
-		}
-		*q = *q1
-		return nil
+		q1, err = c.GetContestQuestionData(q.contestSlug, q.TitleSlug)
+	} else {
+		q1, err = c.GetQuestionData(q.TitleSlug)
 	}
-	q1, err := c.GetQuestionData(q.TitleSlug)
 	if err != nil {
 		return err
 	}
 	*q = *q1
+	q.partial = false
 	return nil
 }
 
