@@ -71,7 +71,7 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 	}
 
 	var (
-		contestSlug = ""
+		contestSlug string
 		questionNum = -1
 		err         error
 		q           *QuestionData
