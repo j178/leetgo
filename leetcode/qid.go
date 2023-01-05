@@ -10,20 +10,29 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
-func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
-	q, err := c.GetQuestionData(slug)
-	if err != nil {
-		return nil, err
-	}
-	return q, nil
-}
-
-func QuestionById(id string, c Client) (*QuestionData, error) {
-	q := GetCache().GetById(id)
+func QuestionFromCacheBySlug(slug string) (*QuestionData, error) {
+	q := GetCache().GetBySlug(slug)
 	if q != nil {
-		return QuestionBySlug(q.TitleSlug, c)
+		return q, nil
 	}
 	return nil, errors.New("no such question")
+}
+
+func QuestionFromCacheByID(id string) (*QuestionData, error) {
+	q := GetCache().GetById(id)
+	if q != nil {
+		return q, nil
+	}
+	return nil, errors.New("no such question")
+}
+
+// QuestionBySlug loads question data from cache first, if not found, fetch from leetcode.com
+func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
+	q, err := QuestionFromCacheBySlug(slug)
+	if err != nil {
+		q, err = c.GetQuestionData(slug)
+	}
+	return q, err
 }
 
 func ParseQID(qid string, c Client) ([]*QuestionData, error) {
@@ -34,7 +43,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	)
 	switch {
 	case isNumber(qid):
-		q, err = QuestionById(qid, c)
+		q, err = QuestionFromCacheByID(qid)
 	case qid == "last":
 		state := config.LoadState()
 		if state.LastQuestion.Slug != "" {
