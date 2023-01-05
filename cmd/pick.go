@@ -33,11 +33,11 @@ leetgo pick 549`,
 			return fmt.Errorf("multiple questions found")
 		}
 
-		files, err := lang.Generate(qs[0])
+		result, err := lang.Generate(qs[0])
 		if err != nil {
 			return err
 		}
-		err = editor.Open(files)
+		err = editor.Open(result.Files)
 		return err
 	},
 }

@@ -4,22 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
 
 type Modifier func(string, *leetcode.QuestionData) string
 
-func addCodeMark(commentMark string) Modifier {
+func addCodeMark(l Generator) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
-		cfg := config.Get()
 		return fmt.Sprintf(
-			"%s %s\n\n%s\n\n%s %s",
-			commentMark,
-			cfg.Code.CodeBeginMark,
+			"%s\n\n%s\n\n%s",
+			l.CodeBeginLine(),
 			s,
-			commentMark,
-			cfg.Code.CodeEndMark,
+			l.CodeEndLine(),
 		)
 	}
 }

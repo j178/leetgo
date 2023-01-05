@@ -336,6 +336,18 @@ var (
 	zhPat = regexp.MustCompile(`<strong>输出[:：]?\s?</strong>\s?\n?\s*(.+)`)
 )
 
+func (q *QuestionData) GetTestCases() []string {
+	var cases []string
+	if len(q.JsonExampleTestcases) > 0 {
+		cases = q.JsonExampleTestcases
+	} else if q.ExampleTestcases != "" {
+		cases = strings.Split(q.ExampleTestcases, "\n")
+	} else if q.SampleTestCase != "" {
+		cases = strings.Split(q.SampleTestCase, "\n")
+	}
+	return cases
+}
+
 // ParseExampleOutputs parses example output from content and translatedContent.
 // We can also get correct example outputs by submitting example inputs to judge server.
 func (q *QuestionData) ParseExampleOutputs() []string {

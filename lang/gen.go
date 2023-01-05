@@ -26,12 +26,36 @@ const (
 	outputMark = "output:"
 )
 
+type GenerateResult struct {
+	Generator Generator
+	Files     []FileOutput
+}
+
+type FileOutput struct {
+	Path    string
+	Content string
+	Written bool
+	Type    FileType
+}
+
+type FileType int
+
+const (
+	CodeFile FileType = iota
+	TestFile
+	DocFile
+	OtherFile
+)
+
 type Generator interface {
 	Name() string
 	ShortName() string
 	Slug() string
 	// Generate generates code files for the question.
-	Generate(q *leetcode.QuestionData) ([]FileOutput, error)
+	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
+	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
+	CodeBeginLine() string
+	CodeEndLine() string
 }
 
 type Initializer interface {
@@ -64,6 +88,14 @@ func (l baseLang) Slug() string {
 
 func (l baseLang) ShortName() string {
 	return l.shortName
+}
+
+func (l baseLang) CodeBeginLine() string {
+	return l.lineComment + " " + config.Get().Code.CodeBeginMark
+}
+
+func (l baseLang) CodeEndLine() string {
+	return l.lineComment + " " + config.Get().Code.CodeEndMark
 }
 
 func (l baseLang) generateComments(q *leetcode.QuestionData) string {
@@ -107,16 +139,10 @@ func getFilenameTemplate(gen Generator) string {
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
-	var cases []string
+	cases := q.GetTestCases()
 	outputs := q.ParseExampleOutputs()
+
 	var caseAndOutputs []string
-	if len(q.JsonExampleTestcases) > 0 {
-		cases = q.JsonExampleTestcases
-	} else if q.ExampleTestcases != "" {
-		cases = strings.Split(q.ExampleTestcases, "\n")
-	} else {
-		cases = strings.Split(q.SampleTestCase, "\n")
-	}
 	for i, c := range cases {
 		if i >= len(outputs) {
 			break
@@ -129,9 +155,26 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 	return strings.Join(caseAndOutputs, "\n\n")
 }
 
-func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
+	filenameTmpl := getFilenameTemplate(l)
+	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
+	if err != nil {
+		return nil, err
+	}
+
+	file := FileOutput{
+		Path: baseFilename + l.extension,
+		Type: CodeFile,
+	}
+	return &GenerateResult{
+		Generator: l,
+		Files:     []FileOutput{file},
+	}, nil
+}
+
+func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	comment := l.generateComments(q)
-	code := l.generateCode(q, addCodeMark(l.lineComment))
+	code := l.generateCode(q, addCodeMark(l))
 	content := comment + "\n" + code + "\n"
 
 	filenameTmpl := getFilenameTemplate(l)
@@ -140,18 +183,15 @@ func (l baseLang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		return nil, err
 	}
 
-	files := FileOutput{
+	file := FileOutput{
 		Path:    baseFilename + l.extension,
 		Content: content,
+		Type:    CodeFile,
 	}
-	return []FileOutput{files}, nil
-}
-
-type FileOutput struct {
-	Path      string
-	Content   string
-	Overwrite bool
-	Generator Generator
+	return &GenerateResult{
+		Generator: l,
+		Files:     []FileOutput{file},
+	}, nil
 }
 
 func GetGenerator(gen string) Generator {
@@ -169,7 +209,7 @@ func GetGenerator(gen string) Generator {
 	return nil
 }
 
-func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
@@ -216,21 +256,21 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	}
 
 	// Generate files
-	files, err := gen.Generate(q)
+	result, err := gen.Generate(q)
 	if err != nil {
 		return nil, err
 	}
 
 	// Write files
-	for i := range files {
-		path := filepath.Join(outDir, files[i].Path)
-		files[i].Path = path
-		written, err := tryWrite(path, files[i].Content)
+	for i := range result.Files {
+		path := filepath.Join(outDir, result.Files[i].Path)
+		result.Files[i].Path = path
+		written, err := tryWrite(path, result.Files[i].Content)
 		if err != nil {
 			hclog.L().Error("failed to write file", "path", path, "err", err)
 			continue
 		}
-		files[i].Overwrite = written
+		result.Files[i].Written = written
 	}
 
 	// Update last generated state
@@ -242,7 +282,7 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	}
 	config.SaveState(state)
 
-	return files, nil
+	return result, nil
 }
 
 func tryWrite(file string, content string) (bool, error) {
@@ -271,4 +311,78 @@ func tryWrite(file string, content string) (bool, error) {
 	}
 	hclog.L().Info("generated", "file", relPath)
 	return true, nil
+}
+
+// GenerateDryRun runs generate process but does not generate real content.
+func GenerateDryRun(q *leetcode.QuestionData) (*GenerateResult, error) {
+	cfg := config.Get()
+	gen := GetGenerator(cfg.Code.Lang)
+	if gen == nil {
+		return nil, fmt.Errorf("language %s is not supported", cfg.Code.Lang)
+	}
+
+	outDir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
+	if outDir == "" {
+		outDir = cfg.Code.Lang
+	}
+	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
+
+	result, err := gen.GeneratePaths(q)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range result.Files {
+		path := filepath.Join(outDir, result.Files[i].Path)
+		result.Files[i].Path = path
+	}
+
+	return result, nil
+}
+
+func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
+	result, err := GenerateDryRun(q)
+	if err != nil {
+		return "", err
+	}
+	codeFile := ""
+	for _, f := range result.Files {
+		if f.Type == CodeFile {
+			codeFile = f.Path
+			break
+		}
+	}
+	if codeFile == "" {
+		return "", fmt.Errorf("no code file generated")
+	}
+	if !utils.IsExist(codeFile) {
+		return "", fmt.Errorf("code file %s does not exist", codeFile)
+	}
+	code, err := os.ReadFile(codeFile)
+	if err != nil {
+		return "", err
+	}
+
+	gen := result.Generator
+	codeLines := strings.Split(string(code), "\n")
+	var codeLinesToKeep []string
+	inCode := false
+	for _, line := range codeLines {
+		if !inCode && strings.Contains(line, gen.CodeBeginLine()) {
+			inCode = true
+			continue
+		}
+		if inCode && strings.Contains(line, gen.CodeEndLine()) {
+			break
+		}
+		if inCode {
+			codeLinesToKeep = append(codeLinesToKeep, line)
+		}
+	}
+
+	if len(codeLinesToKeep) == 0 {
+		return "", fmt.Errorf("no code found in %s", codeFile)
+	}
+
+	return strings.Join(codeLinesToKeep, "\n"), nil
 }

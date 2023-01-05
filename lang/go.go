@@ -145,7 +145,33 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 	return content
 }
 
-func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
+func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
+	filenameTmpl := getFilenameTemplate(g)
+	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
+	if err != nil {
+		return nil, err
+	}
+	codeFile := filepath.Join(baseFilename, "solution.go")
+	testFile := filepath.Join(baseFilename, "solution_test.go")
+
+	files := []FileOutput{
+		{
+			Path: codeFile,
+			Type: CodeFile,
+		},
+		{
+			Path: testFile,
+			Type: TestFile,
+		},
+	}
+
+	return &GenerateResult{
+		Generator: g,
+		Files:     files,
+	}, nil
+}
+
+func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	comment := g.generateComments(q)
 	code := q.GetCodeSnippet(g.Slug())
 	preCode := "package main\n\n"
@@ -157,7 +183,7 @@ func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		removeComments,
 		addNamedReturn,
 		changeReceiverName,
-		addCodeMark(g.lineComment),
+		addCodeMark(g),
 		prepend(preCode),
 	)
 	codeContent := comment + "\n" + code + "\n"
@@ -175,16 +201,19 @@ func (g golang) Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 
 	files := []FileOutput{
 		{
-			Path:      codeFile,
-			Content:   codeContent,
-			Generator: g,
+			Path:    codeFile,
+			Content: codeContent,
+			Type:    CodeFile,
 		},
 		{
-			Path:      testFile,
-			Content:   testContent,
-			Generator: g,
+			Path:    testFile,
+			Content: testContent,
+			Type:    TestFile,
 		},
 	}
 
-	return files, nil
+	return &GenerateResult{
+		Generator: g,
+		Files:     files,
+	}, nil
 }

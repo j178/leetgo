@@ -6,6 +6,6 @@ type python struct {
 	baseLang
 }
 
-func (python) Generate(*leetcode.QuestionData) ([]FileOutput, error) {
+func (python) Generate(*leetcode.QuestionData) (*GenerateResult, error) {
 	return nil, NotImplemented
 }
