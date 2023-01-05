@@ -1,6 +1,8 @@
 package leetcode
 
 import (
+	"sync"
+
 	"github.com/j178/leetgo/config"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -15,14 +17,16 @@ type QuestionsCache interface {
 }
 
 func GetCache() QuestionsCache {
-	if lazyCache == nil {
-		cfg := config.Get()
-		lazyCache = newCache(cfg.LeetCodeCacheBaseName())
-	}
-
+	once.Do(
+		func() {
+			cfg := config.Get()
+			lazyCache = newCache(cfg.LeetCodeCacheBaseName())
+		},
+	)
 	return lazyCache
 }
 
 var (
 	lazyCache QuestionsCache
+	once      sync.Once
 )

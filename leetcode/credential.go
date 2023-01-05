@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
@@ -59,6 +60,7 @@ func (c *cookiesAuth) hasAuth() bool {
 
 type passwordAuth struct {
 	cookiesAuth
+	mu       sync.Mutex
 	c        Client
 	username string
 	password string
@@ -73,6 +75,9 @@ func (p *passwordAuth) SetClient(c Client) {
 }
 
 func (p *passwordAuth) AddCredentials(req *http.Request) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	if !p.hasAuth() {
 		hclog.L().Info("logging in with username and password")
 		resp, err := p.c.Login(p.username, p.password)
@@ -96,14 +101,17 @@ func (p *passwordAuth) AddCredentials(req *http.Request) error {
 }
 
 func (p *passwordAuth) Reset() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.LeetcodeSession = ""
 	p.CsrfToken = ""
 }
 
 type browserAuth struct {
+	cookiesAuth
+	mu       sync.Mutex
 	browsers []string
 	c        Client
-	cookiesAuth
 }
 
 func NewBrowserAuth(browsers ...string) CredentialsProvider {
@@ -115,6 +123,9 @@ func (b *browserAuth) SetClient(c Client) {
 }
 
 func (b *browserAuth) AddCredentials(req *http.Request) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
@@ -141,6 +152,8 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 }
 
 func (b *browserAuth) Reset() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	b.LeetcodeSession = ""
 	b.CsrfToken = ""
 }

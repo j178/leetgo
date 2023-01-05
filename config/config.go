@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-homedir"
@@ -24,6 +25,7 @@ const (
 
 var (
 	cfg   *Config
+	once  sync.Once
 	Debug = os.Getenv("DEBUG") != ""
 )
 
@@ -190,7 +192,11 @@ func Get() *Config {
 }
 
 func Set(c Config) {
-	cfg = &c
+	once.Do(
+		func() {
+			cfg = &c
+		},
+	)
 }
 
 func Verify(c *Config) error {

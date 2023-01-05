@@ -33,7 +33,7 @@ type Client interface {
 		*InterpretSolutionResult,
 		error,
 	)
-	CheckSubmissionResult(submissionId string) (*SubmissionCheckResult, error)
+	CheckSubmissionResult(submissionId string) (*TestCheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
 }
 
@@ -463,18 +463,18 @@ func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, 
 	return &resp, err
 }
 
-func (c *cnClient) CheckSubmissionResult(submissionId string) (*SubmissionCheckResult, error) {
+func (c *cnClient) CheckSubmissionResult(submissionId string) (*TestCheckResult, error) {
 	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), submissionId)
-	var resp SubmissionCheckResult
+	var resp TestCheckResult
 	_, err := c.jsonGet(url, nil, &resp, nil)
 	return &resp, err
 }
 
-// TODO 处理提交频繁的问题
+// TODO 处理提交频繁的问题: status_code: 429, detail: "You have submitted too frequently. Please submit again later."
 
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
 	url := fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)
-	var resp string
+	var resp gjson.Result
 	_, err := c.jsonPost(
 		url, map[string]any{
 			"lang":         lang,
@@ -483,5 +483,5 @@ func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, er
 			"typed_code":   code,
 		}, &resp, nil,
 	)
-	return resp, err
+	return resp.Get("submission_id").String(), err
 }

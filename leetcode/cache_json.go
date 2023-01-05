@@ -45,7 +45,7 @@ func (c *jsonCache) doLoad() error {
 		return err
 	}
 	for _, r := range records {
-		r.partial = true
+		r.partial = 1
 		c.slugs[r.TitleSlug] = r
 		c.frontIds[r.QuestionFrontendId] = r
 	}

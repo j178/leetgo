@@ -12,88 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var testCmd = &cobra.Command{
-	Use:     "test qid",
-	Aliases: []string{"t"},
-	Args:    cobra.ExactArgs(1),
-	Short:   "Run question test cases",
-	Example: `leetgo test 244`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if mode != "auto" && mode != "local" && mode != "remote" {
-			return fmt.Errorf("invalid test mode: %s", mode)
-		}
-		cfg := config.Get()
-		cred := leetcode.CredentialsFromConfig()
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		qs, err := leetcode.ParseQID(args[0], c)
-		if err != nil {
-			return err
-		}
-
-		gen := lang.GetGenerator(cfg.Code.Lang)
-		for _, q := range qs {
-			if mode == "auto" || mode == "local" {
-				if gen, ok := gen.(lang.LocalTester); ok {
-					hclog.L().Info("running local test")
-					return gen.RunTest(q)
-				}
-			}
-			if mode == "local" {
-				return nil
-			}
-
-			solution, err := lang.GetSolutionCode(q)
-			if err != nil {
-				hclog.L().Error("failed to get solution code", "question", q.TitleSlug, "err", err)
-				continue
-			}
-			err = q.Fulfill()
-			if err != nil {
-				hclog.L().Error("failed to fetch question", "question", q.TitleSlug, "err", err)
-				continue
-			}
-			cases := q.GetTestCases()
-			cases = append(cases, customCases...)
-			if len(cases) == 0 {
-				hclog.L().Warn("no test cases found", "question", q.TitleSlug)
-				continue
-			}
-			casesStr := strings.Join(cases, "\n")
-			hclog.L().Info("running remote test")
-			interResult, err := c.InterpretSolution(q, gen.Slug(), solution, casesStr)
-			if err != nil {
-				hclog.L().Error("failed to interpret solution", "question", q.TitleSlug, "err", err)
-				continue
-			}
-			testResult, err := waitResult(c, interResult.InterpretId)
-			if err != nil {
-				hclog.L().Error("failed to wait test result", "question", q.TitleSlug, "err", err)
-				continue
-			}
-			fmt.Printf("%+v", testResult)
-		}
-		return nil
-	},
-}
-
-func waitResult(c leetcode.Client, submissionId string) (*leetcode.SubmissionCheckResult, error) {
-	for {
-		result, err := c.CheckSubmissionResult(submissionId)
-		if err != nil {
-			hclog.L().Error("failed to get submission result", "submissionId", submissionId, "err", err)
-			return nil, err
-		}
-		fmt.Println(result)
-		if result.State == "SUCCESS" {
-			return result, nil
-		}
-		time.Sleep(2 * time.Second)
-	}
-}
-
 var (
 	mode        string
-	submit      bool
+	autoSubmit  bool
 	customCases []string
 )
 
@@ -102,9 +23,144 @@ func init() {
 		&mode,
 		"mode",
 		"m",
-		"auto",
-		"test mode, one of: [auto, local, remote]. `auto` mode will try to run test locally, if not supported then submit to Leetcode to test.",
+		"both",
+		"test mode, one of: [local, remote, both]",
 	)
-	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "custom test customCases")
-	testCmd.Flags().BoolVarP(&submit, "submit", "s", false, "auto submit if all tests passed")
+	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "custom test cases")
+	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
+}
+
+var testCmd = &cobra.Command{
+	Use:     "test qid",
+	Aliases: []string{"t"},
+	Args:    cobra.ExactArgs(1),
+	Short:   "Run question test cases",
+	Example: `leetgo test 244`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if mode != "both" && mode != "local" && mode != "remote" {
+			return fmt.Errorf("invalid test mode: %s", mode)
+		}
+
+		cfg := config.Get()
+		gen := lang.GetGenerator(cfg.Code.Lang)
+		cred := leetcode.CredentialsFromConfig()
+		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		qs, err := leetcode.ParseQID(args[0], c)
+		if err != nil {
+			return err
+		}
+
+		localTestRunner, supportLocalTest := gen.(lang.LocalTester)
+		runLocally := mode == "local" || (mode == "both" && supportLocalTest)
+		runRemotely := mode == "remote" || mode == "both"
+		if mode == "local" && !supportLocalTest {
+			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
+		}
+
+		for _, q := range qs {
+			passed := false
+			if runLocally {
+				hclog.L().Info("running test locally", "question", q.TitleSlug)
+				err = localTestRunner.RunTest(q)
+				if err != nil {
+					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
+				} else {
+					passed = true
+				}
+			}
+			if runRemotely {
+				result, err := runTestRemotely(q, c, gen)
+				if err != nil {
+					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
+				} else {
+					showTestResult(result, q)
+					passed = result.CorrectAnswer
+				}
+			}
+
+			if passed && autoSubmit {
+				result, err := submitSolution(q, c, gen)
+				if err != nil {
+					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+				} else {
+					showTestResult(result, q)
+				}
+			}
+		}
+		return nil
+	},
+}
+
+func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
+	*leetcode.TestCheckResult,
+	error,
+) {
+	solution, err := lang.GetSolutionCode(q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get solution code: %w", err)
+	}
+	err = q.Fulfill()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch question: %s", err)
+	}
+	cases := q.GetTestCases()
+	cases = append(cases, customCases...)
+	if len(cases) == 0 {
+		return nil, fmt.Errorf("no test cases found")
+	}
+
+	casesStr := strings.Join(cases, "\n")
+	hclog.L().Info("running remote test", "question", q.TitleSlug)
+	interResult, err := c.InterpretSolution(q, gen.Slug(), solution, casesStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to interpret solution: %w", err)
+	}
+
+	testResult, err := waitResult(c, interResult.InterpretId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to wait test result: %w", err)
+	}
+	return testResult, nil
+}
+
+func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
+	*leetcode.TestCheckResult,
+	error,
+) {
+	solution, err := lang.GetSolutionCode(q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get solution code: %w", err)
+	}
+	hclog.L().Info("submitting solution", "question", q.TitleSlug)
+	submissionId, err := c.Submit(q, gen.Slug(), solution)
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit solution: %w", err)
+	}
+
+	testResult, err := waitResult(c, submissionId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to wait submit result: %w", err)
+	}
+	return testResult, nil
+}
+
+func waitResult(c leetcode.Client, submissionId string) (*leetcode.TestCheckResult, error) {
+	for {
+		result, err := c.CheckSubmissionResult(submissionId)
+		if err != nil {
+			return nil, err
+		}
+		if result.State == "SUCCESS" {
+			return result, nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func showTestResult(result *leetcode.TestCheckResult, q *leetcode.QuestionData) {
+	if result.CorrectAnswer {
+		hclog.L().Info(result.StatusMsg, "question", q.TitleSlug)
+	} else {
+		hclog.L().Error(result.StatusMsg, "question", q.TitleSlug, "compare", result.CompareResult)
+	}
 }

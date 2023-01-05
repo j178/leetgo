@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"text/template"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
@@ -211,7 +212,7 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 type QuestionData struct {
 	client               Client
 	contestSlug          string
-	partial              bool
+	partial              int32
 	TitleSlug            string               `json:"titleSlug"`
 	QuestionId           string               `json:"questionId"`
 	QuestionFrontendId   string               `json:"questionFrontendId"`
@@ -247,7 +248,7 @@ func (q *QuestionData) IsContest() bool {
 }
 
 func (q *QuestionData) Fulfill() error {
-	if !q.partial {
+	if atomic.LoadInt32(&q.partial) == 0 {
 		return nil
 	}
 	var q1 *QuestionData
@@ -261,7 +262,7 @@ func (q *QuestionData) Fulfill() error {
 		return err
 	}
 	*q = *q1
-	q.partial = false
+	atomic.StoreInt32(&q.partial, 0)
 	return nil
 }
 
