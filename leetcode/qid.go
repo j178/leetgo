@@ -34,7 +34,9 @@ func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
 	if err != nil {
 		q, err = c.GetQuestionData(slug)
 	}
-	q.client = c
+	if q != nil {
+		q.client = c
+	}
 	return q, err
 }
 
@@ -45,6 +47,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		err error
 	)
 	switch {
+	// Will there be a slug full of digits?
 	case isNumber(qid):
 		q, err = QuestionFromCacheByID(qid, c)
 	case qid == "last":
@@ -111,7 +114,7 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 	if len(parts[1]) > 0 {
 		questionNum, err = strconv.Atoi(parts[1])
 		if err != nil {
-			return nil, fmt.Errorf("invalid qid %s: %s is not a number", qid, parts[1])
+			return nil, fmt.Errorf("%s is not a number", parts[1])
 		}
 	}
 	contest, err := c.GetContest(contestSlug)

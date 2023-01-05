@@ -434,7 +434,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 }
 
 func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
-	return nil, nil
+	return &Contest{TitleSlug: contestSlug}, nil
 }
 
 func (c *cnClient) GetContestQuestionData(contestSlug, slug string) (*QuestionData, error) {
