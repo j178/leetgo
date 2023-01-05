@@ -13,18 +13,18 @@ import (
 )
 
 var (
-	mode        string
+	runLocally  bool
 	autoSubmit  bool
 	customCases []string
 )
 
 func init() {
-	testCmd.Flags().StringVarP(
-		&mode,
+	testCmd.Flags().BoolVarP(
+		&runLocally,
 		"mode",
 		"m",
-		"both",
-		"test mode, one of: [local, remote, both]",
+		false,
+		"run test locally",
 	)
 	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "custom test cases")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
@@ -37,10 +37,6 @@ var testCmd = &cobra.Command{
 	Short:   "Run question test cases",
 	Example: `leetgo test 244`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if mode != "both" && mode != "local" && mode != "remote" {
-			return fmt.Errorf("invalid test mode: %s", mode)
-		}
-
 		cfg := config.Get()
 		gen := lang.GetGenerator(cfg.Code.Lang)
 		cred := leetcode.CredentialsFromConfig()
@@ -51,9 +47,7 @@ var testCmd = &cobra.Command{
 		}
 
 		localTestRunner, supportLocalTest := gen.(lang.LocalTester)
-		runLocally := mode == "local" || (mode == "both" && supportLocalTest)
-		runRemotely := mode == "remote" || mode == "both"
-		if mode == "local" && !supportLocalTest {
+		if runLocally && !supportLocalTest {
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
 
@@ -67,8 +61,7 @@ var testCmd = &cobra.Command{
 				} else {
 					passed = true
 				}
-			}
-			if runRemotely {
+			} else {
 				result, err := runTestRemotely(q, c, gen)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
@@ -83,7 +76,7 @@ var testCmd = &cobra.Command{
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
-					showTestResult(result, q)
+					showSubmitResult(result, q)
 				}
 			}
 		}
@@ -92,7 +85,7 @@ var testCmd = &cobra.Command{
 }
 
 func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
-	*leetcode.TestCheckResult,
+	*leetcode.SubmitCheckResult,
 	error,
 ) {
 	solution, err := lang.GetSolutionCode(q)
@@ -124,7 +117,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Gener
 }
 
 func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
-	*leetcode.TestCheckResult,
+	*leetcode.SubmitCheckResult,
 	error,
 ) {
 	solution, err := lang.GetSolutionCode(q)
@@ -144,7 +137,7 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Genera
 	return testResult, nil
 }
 
-func waitResult(c leetcode.Client, submissionId string) (*leetcode.TestCheckResult, error) {
+func waitResult(c leetcode.Client, submissionId string) (*leetcode.SubmitCheckResult, error) {
 	for {
 		result, err := c.CheckSubmissionResult(submissionId)
 		if err != nil {
@@ -157,10 +150,18 @@ func waitResult(c leetcode.Client, submissionId string) (*leetcode.TestCheckResu
 	}
 }
 
-func showTestResult(result *leetcode.TestCheckResult, q *leetcode.QuestionData) {
+func showTestResult(result *leetcode.SubmitCheckResult, q *leetcode.QuestionData) {
 	if result.CorrectAnswer {
 		hclog.L().Info(result.StatusMsg, "question", q.TitleSlug)
 	} else {
 		hclog.L().Error(result.StatusMsg, "question", q.TitleSlug, "compare", result.CompareResult)
+	}
+}
+
+func showSubmitResult(result *leetcode.SubmitCheckResult, q *leetcode.QuestionData) {
+	if result.State == "SUCCESS" {
+		hclog.L().Info("solution submitted", "question", q.TitleSlug, "status", result.State)
+	} else {
+		hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "status", result.State)
 	}
 }

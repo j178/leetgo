@@ -46,7 +46,7 @@ func (c *usClient) InterpretSolution(
 	panic("implement me")
 }
 
-func (c *usClient) CheckSubmissionResult(submissionId string) (*TestCheckResult, error) {
+func (c *usClient) CheckSubmissionResult(submissionId string) (*SubmitCheckResult, error) {
 	// TODO implement me
 	panic("implement me")
 }

@@ -33,7 +33,7 @@ type Client interface {
 		*InterpretSolutionResult,
 		error,
 	)
-	CheckSubmissionResult(submissionId string) (*TestCheckResult, error)
+	CheckSubmissionResult(submissionId string) (*SubmitCheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
 }
 
@@ -463,9 +463,9 @@ func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, 
 	return &resp, err
 }
 
-func (c *cnClient) CheckSubmissionResult(submissionId string) (*TestCheckResult, error) {
+func (c *cnClient) CheckSubmissionResult(submissionId string) (*SubmitCheckResult, error) {
 	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), submissionId)
-	var resp TestCheckResult
+	var resp SubmitCheckResult
 	_, err := c.jsonGet(url, nil, &resp, nil)
 	return &resp, err
 }

@@ -47,6 +47,15 @@ const (
 	OtherFile
 )
 
+func (r *GenerateResult) GetCodeFile() *FileOutput {
+	for _, f := range r.Files {
+		if f.Type == CodeFile {
+			return &f
+		}
+	}
+	return nil
+}
+
 type Generator interface {
 	Name() string
 	ShortName() string
@@ -345,20 +354,14 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	codeFile := ""
-	for _, f := range result.Files {
-		if f.Type == CodeFile {
-			codeFile = f.Path
-			break
-		}
-	}
-	if codeFile == "" {
+	codeFile := result.GetCodeFile()
+	if codeFile == nil {
 		return "", fmt.Errorf("no code file generated")
 	}
-	if !utils.IsExist(codeFile) {
-		return "", fmt.Errorf("code file %s does not exist", codeFile)
+	if !utils.IsExist(codeFile.Path) {
+		return "", fmt.Errorf("code file %s does not exist", codeFile.Path)
 	}
-	code, err := os.ReadFile(codeFile)
+	code, err := os.ReadFile(codeFile.Path)
 	if err != nil {
 		return "", err
 	}
