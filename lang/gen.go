@@ -176,6 +176,11 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
 	}
 
+	err := q.Fulfill()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get question data: %w", err)
+	}
+
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
@@ -187,7 +192,7 @@ func Generate(q *leetcode.QuestionData) ([]FileOutput, error) {
 	}
 	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
 
-	err := utils.CreateIfNotExists(outDir, true)
+	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
 		return nil, err
 	}

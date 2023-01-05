@@ -10,17 +10,19 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
-func QuestionFromCacheBySlug(slug string) (*QuestionData, error) {
+func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 	q := GetCache().GetBySlug(slug)
 	if q != nil {
+		q.client = c
 		return q, nil
 	}
 	return nil, errors.New("no such question")
 }
 
-func QuestionFromCacheByID(id string) (*QuestionData, error) {
+func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
 	q := GetCache().GetById(id)
 	if q != nil {
+		q.client = c
 		return q, nil
 	}
 	return nil, errors.New("no such question")
@@ -28,10 +30,11 @@ func QuestionFromCacheByID(id string) (*QuestionData, error) {
 
 // QuestionBySlug loads question data from cache first, if not found, fetch from leetcode.com
 func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
-	q, err := QuestionFromCacheBySlug(slug)
+	q, err := QuestionFromCacheBySlug(slug, c)
 	if err != nil {
 		q, err = c.GetQuestionData(slug)
 	}
+	q.client = c
 	return q, err
 }
 
@@ -43,7 +46,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	)
 	switch {
 	case isNumber(qid):
-		q, err = QuestionFromCacheByID(qid)
+		q, err = QuestionFromCacheByID(qid, c)
 	case qid == "last":
 		state := config.LoadState()
 		if state.LastQuestion.Slug != "" {
