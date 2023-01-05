@@ -384,7 +384,7 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	}
 
 	if len(codeLinesToKeep) == 0 {
-		return "", fmt.Errorf("no code found in %s", codeFile)
+		return "", fmt.Errorf("no code found in %s", codeFile.Path)
 	}
 
 	return strings.Join(codeLinesToKeep, "\n"), nil
