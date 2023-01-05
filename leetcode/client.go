@@ -25,6 +25,8 @@ type Client interface {
 	Login(username, password string) (*http.Response, error)
 	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
+	GetContest(contestSlug string) (*Contest, error)
+	GetContestQuestionData(contestSlug, slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
 	InterpretSolution(q *QuestionData, lang string, code string, dataInput string) (
@@ -429,6 +431,14 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	}
 	slug := resp.Get("data.todayRecord.0.question.titleSlug").Str
 	return c.GetQuestionData(slug)
+}
+
+func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
+	return nil, nil
+}
+
+func (c *cnClient) GetContestQuestionData(contestSlug, slug string) (*QuestionData, error) {
+	return nil, nil
 }
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。

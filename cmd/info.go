@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -21,13 +22,17 @@ var infoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		var questions []*leetcode.QuestionData
-		for _, s := range args {
-			q, err := leetcode.Question(s, c)
+
+		for _, qid := range args {
+			qs, err := leetcode.ParseQID(qid, c)
 			if err != nil {
-				hclog.L().Error("failed to get question", "slug", s, "err", err)
+				hclog.L().Error("failed to get question", "qid", qid, "err", err)
 				continue
 			}
-			questions = append(questions, q)
+			questions = append(questions, qs...)
+		}
+		if len(questions) == 0 {
+			return errors.New("no questions found")
 		}
 
 		w := table.NewWriter()

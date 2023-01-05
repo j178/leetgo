@@ -2,7 +2,6 @@ package leetcode
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -212,6 +211,7 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 type QuestionData struct {
 	client               Client
 	contestSlug          string
+	partial              bool
 	TitleSlug            string               `json:"titleSlug"`
 	QuestionId           string               `json:"questionId"`
 	QuestionFrontendId   string               `json:"questionFrontendId"`
@@ -244,6 +244,27 @@ func (q *QuestionData) ContestUrl() string {
 
 func (q *QuestionData) IsContest() bool {
 	return q.contestSlug != ""
+}
+
+func (q *QuestionData) Fulfill(c Client) error {
+	if q.partial {
+		return nil
+	}
+	q.partial = false
+	if q.IsContest() {
+		q1, err := c.GetContestQuestionData(q.contestSlug, q.TitleSlug)
+		if err != nil {
+			return err
+		}
+		*q = *q1
+		return nil
+	}
+	q1, err := c.GetQuestionData(q.TitleSlug)
+	if err != nil {
+		return err
+	}
+	*q = *q1
+	return nil
 }
 
 func (q *QuestionData) GetTitle() string {
@@ -418,33 +439,4 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func QuestionBySlug(slug string, c Client) (*QuestionData, error) {
-	q, err := c.GetQuestionData(slug)
-	if err != nil {
-		return nil, err
-	}
-	return q, nil
-}
-
-func QuestionById(id string, c Client) (*QuestionData, error) {
-	q := GetCache().GetById(id)
-	if q != nil {
-		return QuestionBySlug(q.TitleSlug, c)
-	}
-	return nil, errors.New("no such question")
-}
-
-func Question(s string, c Client) (*QuestionData, error) {
-	if s == "today" {
-		return c.GetTodayQuestion()
-	}
-	q := GetCache().GetById(strings.TrimLeft(s, "0"))
-	if q != nil {
-		// Default online mode, query api to get the latest data
-		// Maybe we can support offline mode using only local cache in the future.
-		return QuestionBySlug(q.TitleSlug, c)
-	}
-	return QuestionBySlug(s, c)
 }

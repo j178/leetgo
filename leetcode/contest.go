@@ -7,6 +7,10 @@ type Contest struct {
 	Questions []*QuestionData
 }
 
-func ContestBySlug(slug string, c Client) *Contest {
-	return nil
+func (ct *Contest) GetQuestionByNumber(num int, c Client) (*QuestionData, error) {
+	return nil, nil
+}
+
+func (ct *Contest) GetAllQuestions(c Client) ([]*QuestionData, error) {
+	return nil, nil
 }

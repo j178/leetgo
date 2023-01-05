@@ -117,7 +117,9 @@ leetgo pick today            # daily question
 leetgo test last             # the last generated question
 leetgo test weekly100/1      # the first question of weekly contest 100
 leetgo submit b100/2         # the second question of bi-weekly contest 100
-leetgo submit w99            # all questions of biweekly contest 99
+leetgo submit w99/           # all questions of biweekly contest 99 (must keep the trailing slash)
+leetgo test last/1           # the first question of the last generated contest
+leetgo test last/            # all questions of the last generated contest (must keep the trailing slash)
 ```
 
 ## Configuration

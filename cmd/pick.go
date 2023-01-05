@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -23,11 +25,15 @@ leetgo pick 549`,
 			args = append(args, "two-sum")
 		}
 		qid := args[0]
-		q, err := leetcode.Question(qid, c)
+		qs, err := leetcode.ParseQID(qid, c)
 		if err != nil {
 			return err
 		}
-		files, err := lang.Generate(q)
+		if len(qs) > 1 {
+			return fmt.Errorf("multiple questions found")
+		}
+
+		files, err := lang.Generate(qs[0])
 		if err != nil {
 			return err
 		}

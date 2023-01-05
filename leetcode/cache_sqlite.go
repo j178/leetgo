@@ -105,7 +105,7 @@ func (c *sqliteCache) updateTime() error {
 }
 
 func (c *sqliteCache) unmarshal(row *sql.Row) (*QuestionData, error) {
-	var q QuestionData
+	q := QuestionData{partial: true}
 	var (
 		topicTagsStr            []byte
 		statsStr                []byte
