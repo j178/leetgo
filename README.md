@@ -58,19 +58,19 @@ and many other languages are in plan. (help wanted, contributions welcome!)
 
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
-### Install via `go`
+### Install via go
  
 ```shell
 go install github.com/j178/leetgo@latest
 ```
 
-### Install via `brew`
+### Install via [brew](https://brew.sh/)
 
 ```shell
 brew install j178/tap/leetgo
 ```
 
-### Install via `scoop`
+### Install via [scoop](https://scoop.sh/)
 
 ```shell
 scoop bucket add j178 https://github.com/j178/scoop-bucket.git
