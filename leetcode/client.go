@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	PaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
+	ErrPaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
+	ErrTooManyRequests  = errors.New("you have submitted too frequently, please submit again later")
 )
 
 type Client interface {
@@ -33,8 +34,7 @@ type Client interface {
 		*InterpretSolutionResult,
 		error,
 	)
-	CheckTestResult(interpretId string) (*TestCheckResult, error)
-	CheckSubmitResult(submissionId string) (*SubmitCheckResult, error)
+	CheckResult(interpretId string) (CheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
 }
 
@@ -355,7 +355,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 		return nil, errors.New("question not found")
 	}
 	if q.IsPaidOnly && q.Content == "" {
-		return nil, PaidOnlyQuestion
+		return nil, ErrPaidOnlyQuestion
 	}
 	q.client = c
 	return &q, nil
@@ -464,21 +464,25 @@ func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, 
 	return &resp, err
 }
 
-func (c *cnClient) CheckTestResult(interpretId string) (*TestCheckResult, error) {
-	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), interpretId)
-	var resp TestCheckResult
-	_, err := c.jsonGet(url, nil, &resp, nil)
-	return &resp, err
-}
-
-func (c *cnClient) CheckSubmitResult(submissionId string) (*SubmitCheckResult, error) {
+func (c *cnClient) CheckResult(submissionId string) (
+	CheckResult,
+	error,
+) {
 	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), submissionId)
-	var resp SubmitCheckResult
-	_, err := c.jsonGet(url, nil, &resp, nil)
-	return &resp, err
+	var result gjson.Result
+	_, err := c.jsonGet(url, nil, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result.Get("question_id").Exists() {
+		var r SubmitCheckResult
+		err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
+		return &r, err
+	}
+	var r RunCheckResult
+	err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
+	return &r, err
 }
-
-// TODO 处理提交频繁的问题: status_code: 429, detail: "You have submitted too frequently. Please submit again later."
 
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
 	url := fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)

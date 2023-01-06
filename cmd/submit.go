@@ -31,7 +31,7 @@ var submitCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("failed to submit solution: %w", err)
 		}
-		showSubmitResult(result, qs[0])
+		cmd.Print(result.Display(qs[0]))
 		return nil
 	},
 }

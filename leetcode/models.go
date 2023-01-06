@@ -1,5 +1,12 @@
 package leetcode
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/fatih/color"
+)
+
 type UserStatus struct {
 	Username        string `json:"username"`
 	UserSlug        string `json:"userSlug"`
@@ -16,8 +23,25 @@ type InterpretSolutionResult struct {
 	TestCase            string `json:"test_case"`
 }
 
+type CheckResult interface {
+	Display(q *QuestionData) string
+	GetState() string
+}
+
+type StatusCode int
+
+const (
+	Accepted            StatusCode = 10
+	WrongAnswer         StatusCode = 11 // submit only
+	MemoryLimitExceeded StatusCode = 12 // submit only?
+	OutputLimitExceeded StatusCode = 13
+	TimeLimitExceeded   StatusCode = 14
+	RuntimeError        StatusCode = 15
+	CompileError        StatusCode = 20
+)
+
 type SubmitCheckResult struct {
-	CodeOutput        string  `json:"code_output"`
+	CodeOutput        string  `json:"code_output"` // answers of our code
 	CompareResult     string  `json:"compare_result"`
 	ElapsedTime       int     `json:"elapsed_time"`
 	ExpectedOutput    string  `json:"expected_output"`
@@ -47,7 +71,16 @@ type SubmitCheckResult struct {
 	FullRuntimeError  string  `json:"full_runtime_error"`
 }
 
-type TestCheckResult struct {
+func (r *SubmitCheckResult) Display(q *QuestionData) string {
+	return fmt.Sprintf("%v", r)
+}
+
+func (r *SubmitCheckResult) GetState() string {
+	return r.State
+}
+
+type RunCheckResult struct {
+	InputData              string
 	State                  string   `json:"state"` // STARTED, SUCCESS
 	StatusCode             int      `json:"status_code"`
 	StatusMsg              string   `json:"status_msg"`         // Accepted, Wrong Answer, Time Limit Exceeded, Memory Limit Exceeded, Runtime Error, Compile Error, Output Limit Exceeded, Unknown Error
@@ -67,8 +100,8 @@ type TestCheckResult struct {
 	CodeOutput             []string `json:"code_output"`     // output to stdout of our code
 	StdOutputList          []string `json:"std_output_list"` // list of output to stdout, same as code_output
 	TaskName               string   `json:"task_name"`
-	TotalCorrect           int      `json:"total_correct"`   // 通过测试用例
-	TotalTestcases         int      `json:"total_testcases"` // 总测试用例
+	TotalCorrect           int      `json:"total_correct"`   // number of correct answers
+	TotalTestcases         int      `json:"total_testcases"` // number of test cases
 	ElapsedTime            int      `json:"elapsed_time"`
 	TaskFinishTime         int      `json:"task_finish_time"`
 	RunSuccess             bool     `json:"run_success"` // true if run success
@@ -86,4 +119,60 @@ type TestCheckResult struct {
 	ExpectedStdOutputList  []string `json:"expected_std_output_list"`
 	ExpectedTaskFinishTime int      `json:"expected_task_finish_time"`
 	ExpectedTaskName       string   `json:"expected_task_name"`
+}
+
+var (
+	colorGreen  = color.New(color.FgHiGreen, color.Bold)
+	colorYellow = color.New(color.FgHiYellow, color.Bold)
+	colorFaint  = color.New(color.Faint)
+	colorRed    = color.New(color.FgHiRed, color.Bold)
+)
+
+func (r *RunCheckResult) Display(q *QuestionData) string {
+	stdout := ""
+	if len(r.CodeOutput) > 1 {
+		stdout = "\nStdout:        " + strings.Join(r.CodeOutput, "↩ ")
+	}
+	switch StatusCode(r.StatusCode) {
+	case Accepted:
+		if r.CorrectAnswer {
+			return fmt.Sprintf(
+				"\n%s\n%s%s%s%s\n",
+				colorGreen.Sprintf("√ %s", r.StatusMsg),
+				fmt.Sprintf("\nYour input:    %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
+				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
+				stdout,
+				fmt.Sprintf("\nExpected:      %s", strings.Join(r.ExpectedCodeAnswer, "↩ ")),
+			)
+		} else {
+			return fmt.Sprintf(
+				"\n%s\n%s%s%s%s\n",
+				colorRed.Sprint(" × Wrong Answer"),
+				fmt.Sprintf("\nYour input:    %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
+				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
+				stdout,
+				fmt.Sprintf("\nExpected:      %s", strings.Join(r.ExpectedCodeAnswer, "↩ ")),
+			)
+		}
+	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
+		return colorYellow.Sprintf("\n × %s\n", r.StatusMsg)
+	case RuntimeError:
+		return fmt.Sprintf(
+			"\n%s:\n\n%s\n",
+			colorRed.Sprintf(" × %s", r.StatusMsg),
+			colorFaint.Sprint(r.FullRuntimeError),
+		)
+	case CompileError:
+		return fmt.Sprintf(
+			"\n%s:\n\n%s\n",
+			colorRed.Sprintf(" × %s", r.StatusMsg),
+			colorFaint.Sprint(r.FullCompileError),
+		)
+	default:
+		return fmt.Sprintf("\n%s\n", colorRed.Sprintf(" × %s", r.StatusMsg))
+	}
+}
+
+func (r *RunCheckResult) GetState() string {
+	return r.State
 }

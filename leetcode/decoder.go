@@ -29,7 +29,18 @@ type smartDecoder struct {
 
 func headerString(h http.Header) string {
 	w := &strings.Builder{}
-	_ = h.Write(w)
+	_ = h.WriteSubset(
+		w, map[string]bool{
+			"Content-Security-Policy":          true,
+			"Set-Cookie":                       true,
+			"X-Frame-Options":                  true,
+			"Vary":                             true,
+			"Strict-Transport-Security":        true,
+			"Date":                             true,
+			"Access-Control-Allow-Credentials": true,
+			"Access-Control-Allow-Origin":      true,
+		},
+	)
 	return w.String()
 }
 
@@ -63,6 +74,10 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 			"headers", headerString(resp.Header),
 			"data", dataStr,
 		)
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return ErrTooManyRequests
 	}
 
 	ty := reflect.TypeOf(v)

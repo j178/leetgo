@@ -66,7 +66,7 @@ var testCmd = &cobra.Command{
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 				} else {
-					showTestResult(result, q)
+					cmd.Print(result.Display(q))
 					passed = result.CorrectAnswer
 				}
 			}
@@ -76,7 +76,7 @@ var testCmd = &cobra.Command{
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
-					showSubmitResult(result, q)
+					cmd.Print(result.Display(q))
 				}
 			}
 		}
@@ -85,7 +85,7 @@ var testCmd = &cobra.Command{
 }
 
 func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
-	*leetcode.TestCheckResult,
+	*leetcode.RunCheckResult,
 	error,
 ) {
 	solution, err := lang.GetSolutionCode(q)
@@ -109,11 +109,13 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Gener
 		return nil, fmt.Errorf("failed to interpret solution: %w", err)
 	}
 
-	testResult, err := waitTestResult(c, interResult.InterpretId)
+	testResult, err := waitResult(c, interResult.InterpretId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to wait test result: %w", err)
 	}
-	return testResult, nil
+	r := testResult.(*leetcode.RunCheckResult)
+	r.InputData = casesStr
+	return r, nil
 }
 
 func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
@@ -130,51 +132,25 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Genera
 		return nil, fmt.Errorf("failed to submit solution: %w", err)
 	}
 
-	testResult, err := waitSubmitResult(c, submissionId)
+	testResult, err := waitResult(c, submissionId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to wait submit result: %w", err)
 	}
-	return testResult, nil
+	return testResult.(*leetcode.SubmitCheckResult), nil
 }
 
-func waitTestResult(c leetcode.Client, submissionId string) (*leetcode.TestCheckResult, error) {
+func waitResult(c leetcode.Client, submissionId string) (
+	leetcode.CheckResult,
+	error,
+) {
 	for {
-		result, err := c.CheckTestResult(submissionId)
+		result, err := c.CheckResult(submissionId)
 		if err != nil {
 			return nil, err
 		}
-		if result.State == "SUCCESS" {
+		if result.GetState() == "SUCCESS" {
 			return result, nil
 		}
 		time.Sleep(1 * time.Second)
-	}
-}
-
-func waitSubmitResult(c leetcode.Client, submissionId string) (*leetcode.SubmitCheckResult, error) {
-	for {
-		result, err := c.CheckSubmitResult(submissionId)
-		if err != nil {
-			return nil, err
-		}
-		if result.State == "SUCCESS" {
-			return result, nil
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func showTestResult(result *leetcode.TestCheckResult, q *leetcode.QuestionData) {
-	if result.CorrectAnswer {
-		hclog.L().Info(result.StatusMsg, "question", q.TitleSlug)
-	} else {
-		hclog.L().Error(result.StatusMsg, "question", q.TitleSlug, "compare", result.CompareResult)
-	}
-}
-
-func showSubmitResult(result *leetcode.SubmitCheckResult, q *leetcode.QuestionData) {
-	if result.State == "SUCCESS" {
-		hclog.L().Info("solution submitted", "question", q.TitleSlug, "status", result.State)
-	} else {
-		hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "status", result.State)
 	}
 }
