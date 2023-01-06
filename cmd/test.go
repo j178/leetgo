@@ -164,6 +164,6 @@ func waitResult(c leetcode.Client, submissionId string) (
 		if result.GetState() == "SUCCESS" {
 			return result, nil
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 }

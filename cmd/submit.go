@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
+	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -24,14 +24,28 @@ var submitCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if len(qs) > 1 {
-			return errors.New("multiple questions found")
+
+		limitC := make(chan struct{})
+		defer func() { close(limitC) }()
+		go func() {
+			for {
+				if _, ok := <-limitC; !ok {
+					return
+				}
+				time.Sleep(2 * time.Second)
+			}
+		}()
+
+		for _, q := range qs {
+			limitC <- struct{}{}
+			result, err := submitSolution(q, c, gen)
+			if err != nil {
+				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+				continue
+			}
+			cmd.Print(result.Display(qs[0]))
 		}
-		result, err := submitSolution(qs[0], c, gen)
-		if err != nil {
-			return fmt.Errorf("failed to submit solution: %w", err)
-		}
-		cmd.Print(result.Display(qs[0]))
+
 		return nil
 	},
 }
