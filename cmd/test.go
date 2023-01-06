@@ -19,9 +19,10 @@ var (
 )
 
 func init() {
-	testCmd.Flags().BoolVar(
+	testCmd.Flags().BoolVarP(
 		&runLocally,
 		"local",
+		"L",
 		false,
 		"run test locally",
 	)
