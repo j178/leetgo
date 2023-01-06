@@ -114,7 +114,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Gener
 		return nil, fmt.Errorf("failed to wait test result: %w", err)
 	}
 	r := testResult.(*leetcode.RunCheckResult)
-	r.InputData = casesStr
+	r.InputData = interResult.TestCase
 	return r, nil
 }
 

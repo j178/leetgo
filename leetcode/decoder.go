@@ -76,10 +76,6 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 		)
 	}
 
-	if resp.StatusCode == http.StatusTooManyRequests {
-		return ErrTooManyRequests
-	}
-
 	ty := reflect.TypeOf(v)
 	ele := reflect.ValueOf(v).Elem()
 	switch ty.Elem() {

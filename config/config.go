@@ -217,7 +217,7 @@ func Verify(c *Config) error {
 			return err
 		}
 	}
-	if c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
+	if c.LeetCode.Credentials.ReadFromBrowser != "" && c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
 		return fmt.Errorf("invalid leetcode.credentials.read_from_browser: %s", c.LeetCode.Credentials.ReadFromBrowser)
 	}
 	if c.Language != ZH && c.Language != EN {

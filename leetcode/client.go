@@ -126,6 +126,8 @@ const (
 	nojGoPath   = "/graphql/noj-go"
 )
 
+type defaultErrorHandler string
+
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
 	if c.opt.cred != nil {
 		err := c.opt.cred.AddCredentials(req)
@@ -142,18 +144,23 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 		hclog.L().Trace("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
 	}
 
-	if failure != nil {
-		return c.http.Do(req, result, failure)
+	if failure == nil {
+		failure = defaultErrorHandler("")
 	}
 
 	// default error detection
-	var failureV string
-	resp, err := c.http.Do(req, result, &failureV)
+	resp, err := c.http.Do(req, result, failure)
 	if err != nil {
 		return resp, err
 	}
-	if len(failureV) > 0 {
-		return resp, errors.New("request failed: " + failureV)
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return resp, ErrTooManyRequests
+	}
+	if resp.StatusCode != http.StatusOK {
+		return resp, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	if fail, ok := failure.(defaultErrorHandler); ok && fail != "" {
+		return resp, fmt.Errorf("request failed: %s", string(fail))
 	}
 	return nil, err
 }
@@ -192,17 +199,11 @@ func (c *cnClient) jsonGet(url string, query any, result any, failure any) (*htt
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	return c.send(r, result, failure)
 }
 
 func (c *cnClient) jsonPost(url string, json any, result any, failure any) (*http.Response, error) {
 	r, err := c.http.New().Post(url).BodyJSON(json).Request()
-	if err != nil {
-		return nil, err
-	}
 	if err != nil {
 		return nil, err
 	}
