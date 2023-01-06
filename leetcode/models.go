@@ -89,8 +89,8 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 			"\n%s\n%s%s%s\n",
 			colorGreen.Sprintf("√ %s", r.StatusMsg),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
-			fmt.Sprintf("\nRuntime:       %s, better than %.2f%%", r.StatusRuntime, r.RuntimePercentile),
-			fmt.Sprintf("\nMemory:        %s, better than %.2f%%", r.StatusMemory, r.RuntimePercentile),
+			fmt.Sprintf("\nRuntime:       %s, better than %.0f%%", r.StatusRuntime, r.RuntimePercentile),
+			fmt.Sprintf("\nMemory:        %s, better than %.0f%%", r.StatusMemory, r.RuntimePercentile),
 		)
 	case WrongAnswer:
 		return fmt.Sprintf(

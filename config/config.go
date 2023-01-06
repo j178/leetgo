@@ -88,7 +88,7 @@ type GoConfig struct {
 type Credentials struct {
 	ReadFromBrowser string `yaml:"read_from_browser" mapstructure:"read_from_browser" comment:"Read leetcode cookie from browser, currently only chrome is supported."`
 	Session         string `yaml:"session,omitempty" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
-	CsrfToken       string `yaml:"csrf_token,omitempty" mapstructure:"csrf_token" comment:"LeetCode cookie: csrftoken"`
+	CsrfToken       string `yaml:"csrftoken,omitempty" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
 	Username        string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
 	Password        string `yaml:"password,omitempty" mapstructure:"password" comment:"Encrypted LeetCode password"`
 }

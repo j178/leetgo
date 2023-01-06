@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	gjsonType  = reflect.TypeOf(gjson.Result{})
-	bytesType  = reflect.TypeOf([]byte{})
-	stringType = reflect.TypeOf("")
+	gjsonType      = reflect.TypeOf(gjson.Result{})
+	bytesType      = reflect.TypeOf([]byte{})
+	stringType     = reflect.TypeOf("")
+	errHandlerType = reflect.TypeOf(&defaultErrorHandler{})
 )
 
 type smartDecoder struct {
@@ -89,6 +90,8 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 		ele.SetBytes(data)
 	case stringType:
 		ele.SetString(utils.BytesToString(data))
+	case errHandlerType:
+		ele.Set(reflect.ValueOf(&defaultErrorHandler{utils.BytesToString(data)}))
 	default:
 		return json.Unmarshal(data, v)
 	}

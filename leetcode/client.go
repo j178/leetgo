@@ -126,7 +126,9 @@ const (
 	nojGoPath   = "/graphql/noj-go"
 )
 
-type defaultErrorHandler string
+type defaultErrorHandler struct {
+	msg string
+}
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
 	if c.opt.cred != nil {
@@ -145,7 +147,7 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	}
 
 	if failure == nil {
-		failure = defaultErrorHandler("")
+		failure = &defaultErrorHandler{"<default>"}
 	}
 
 	// default error detection
@@ -159,8 +161,8 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	if resp.StatusCode != http.StatusOK {
 		return resp, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	if fail, ok := failure.(defaultErrorHandler); ok && fail != "" {
-		return resp, fmt.Errorf("request failed: %s", string(fail))
+	if e, ok := failure.(*defaultErrorHandler); ok && e.msg != "<default>" {
+		return resp, fmt.Errorf("request failed: %s", e.msg)
 	}
 	return nil, err
 }
