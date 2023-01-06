@@ -84,7 +84,7 @@ var testCmd = &cobra.Command{
 }
 
 func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
-	*leetcode.SubmitCheckResult,
+	*leetcode.TestCheckResult,
 	error,
 ) {
 	solution, err := lang.GetSolutionCode(q)
@@ -108,7 +108,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Gener
 		return nil, fmt.Errorf("failed to interpret solution: %w", err)
 	}
 
-	testResult, err := waitResult(c, interResult.InterpretId)
+	testResult, err := waitTestResult(c, interResult.InterpretId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to wait test result: %w", err)
 	}
@@ -129,16 +129,16 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Genera
 		return nil, fmt.Errorf("failed to submit solution: %w", err)
 	}
 
-	testResult, err := waitResult(c, submissionId)
+	testResult, err := waitSubmitResult(c, submissionId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to wait submit result: %w", err)
 	}
 	return testResult, nil
 }
 
-func waitResult(c leetcode.Client, submissionId string) (*leetcode.SubmitCheckResult, error) {
+func waitTestResult(c leetcode.Client, submissionId string) (*leetcode.TestCheckResult, error) {
 	for {
-		result, err := c.CheckSubmissionResult(submissionId)
+		result, err := c.CheckTestResult(submissionId)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,20 @@ func waitResult(c leetcode.Client, submissionId string) (*leetcode.SubmitCheckRe
 	}
 }
 
-func showTestResult(result *leetcode.SubmitCheckResult, q *leetcode.QuestionData) {
+func waitSubmitResult(c leetcode.Client, submissionId string) (*leetcode.SubmitCheckResult, error) {
+	for {
+		result, err := c.CheckSubmitResult(submissionId)
+		if err != nil {
+			return nil, err
+		}
+		if result.State == "SUCCESS" {
+			return result, nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func showTestResult(result *leetcode.TestCheckResult, q *leetcode.QuestionData) {
 	if result.CorrectAnswer {
 		hclog.L().Info(result.StatusMsg, "question", q.TitleSlug)
 	} else {

@@ -17,8 +17,37 @@ type InterpretSolutionResult struct {
 }
 
 type SubmitCheckResult struct {
-	SubmissionId           string   `json:"submission_id"`
-	QuestionId             int      `json:"question_id"`
+	CodeOutput        string  `json:"code_output"`
+	CompareResult     string  `json:"compare_result"`
+	ElapsedTime       int     `json:"elapsed_time"`
+	ExpectedOutput    string  `json:"expected_output"`
+	FastSubmit        bool    `json:"fast_submit"`
+	Finished          bool    `json:"finished"`
+	Lang              string  `json:"lang"`
+	LastTestcase      string  `json:"last_testcase"`
+	Memory            int     `json:"memory"`
+	MemoryPercentile  float64 `json:"memory_percentile"`
+	PrettyLang        string  `json:"pretty_lang"`
+	QuestionId        string  `json:"question_id"`
+	RunSuccess        bool    `json:"run_success"`
+	RuntimePercentile float64 `json:"runtime_percentile"`
+	State             string  `json:"state"`
+	StatusCode        int     `json:"status_code"`
+	StatusMemory      string  `json:"status_memory"`
+	StatusMsg         string  `json:"status_msg"`
+	StatusRuntime     string  `json:"status_runtime"`
+	StdOutput         string  `json:"std_output"`
+	SubmissionId      string  `json:"submission_id"`
+	TaskFinishTime    int     `json:"task_finish_time"`
+	TaskName          string  `json:"task_name"`
+	TotalCorrect      int     `json:"total_correct"`
+	TotalTestcases    int     `json:"total_testcases"`
+	CompileError      string  `json:"compile_error"`
+	FullCompileError  string  `json:"full_compile_error"`
+	FullRuntimeError  string  `json:"full_runtime_error"`
+}
+
+type TestCheckResult struct {
 	State                  string   `json:"state"` // STARTED, SUCCESS
 	StatusCode             int      `json:"status_code"`
 	StatusMsg              string   `json:"status_msg"`         // Accepted, Wrong Answer, Time Limit Exceeded, Memory Limit Exceeded, Runtime Error, Compile Error, Output Limit Exceeded, Unknown Error
@@ -33,10 +62,9 @@ type SubmitCheckResult struct {
 	CompileError           string   `json:"compile_error"` //
 	FullCompileError       string   `json:"full_compile_error"`
 	FullRuntimeError       string   `json:"full_runtime_error"`
-	CompareResult          string   `json:"compare_result"` // "111", 1 means correct, 0 means wrong
-	CorrectAnswer          bool     `json:"correct_answer"` // true means all passed
-	CodeOutput             []string `json:"code_output"`    // list of output to stdout of our code
-	StdOutput              string   `json:"std_output"`
+	CompareResult          string   `json:"compare_result"`  // "111", 1 means correct, 0 means wrong
+	CorrectAnswer          bool     `json:"correct_answer"`  // true means all passed
+	CodeOutput             []string `json:"code_output"`     // output to stdout of our code
 	StdOutputList          []string `json:"std_output_list"` // list of output to stdout, same as code_output
 	TaskName               string   `json:"task_name"`
 	TotalCorrect           int      `json:"total_correct"`   // 通过测试用例
@@ -46,9 +74,6 @@ type SubmitCheckResult struct {
 	RunSuccess             bool     `json:"run_success"` // true if run success
 	FastSubmit             bool     `json:"fast_submit"`
 	Finished               bool     `json:"finished"`
-	InputFormatted         string   `json:"input_formatted"`
-	Input                  string   `json:"input"`
-	LastTestCase           string   `json:"last_testcase"`
 	ExpectedOutput         string   `json:"expected_output"`
 	ExpectedCodeAnswer     []string `json:"expected_code_answer"`
 	ExpectedCodeOutput     []string `json:"expected_code_output"`
