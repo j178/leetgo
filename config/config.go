@@ -150,6 +150,12 @@ func (c *Config) Write(w io.Writer) error {
 	return err
 }
 
+func Empty() *Config {
+	home, _ := homedir.Dir()
+	configDir := filepath.Join(home, ".config", CmdName)
+	return &Config{dir: configDir}
+}
+
 func Default() *Config {
 	home, _ := homedir.Dir()
 	author := "Bob"

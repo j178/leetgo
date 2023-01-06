@@ -39,9 +39,10 @@ func buildVersion(version, commit, date string) string {
 
 func loadConfig(cmd *cobra.Command, args []string) error {
 	// load global configuration
-	cfg := config.Default()
-	viper.SetConfigFile(cfg.GlobalConfigFile())
-	err := viper.ReadInConfig()
+	cfg := config.Empty()
+	rootViper := viper.New()
+	rootViper.SetConfigFile(cfg.GlobalConfigFile())
+	err := rootViper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
 			if cmd != initCmd {
@@ -55,9 +56,11 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
+
+	projectViper := viper.New()
 	// load project configuration
-	viper.SetConfigFile(cfg.ProjectConfigFile())
-	err = viper.MergeInConfig()
+	projectViper.SetConfigFile(cfg.ProjectConfigFile())
+	err = projectViper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
 			hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
@@ -65,6 +68,21 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
+
+	rootSettings := rootViper.AllSettings()
+	// Override global config with project config, instead of merging them
+	if projectViper.IsSet("editor") {
+		delete(rootSettings, "editor")
+	}
+	if projectViper.IsSet("leetcode.credentials") {
+		lc := rootSettings["leetcode"].(map[string]any)
+		delete(lc, "credentials")
+		rootSettings["leetcode"] = lc
+	}
+
+	_ = viper.MergeConfigMap(rootSettings)
+	_ = viper.MergeConfigMap(projectViper.AllSettings())
+
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
 		return err
