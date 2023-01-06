@@ -51,6 +51,17 @@ var testCmd = &cobra.Command{
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
 
+		limitC := make(chan struct{})
+		defer func() { close(limitC) }()
+		go func() {
+			for {
+				if _, ok := <-limitC; !ok {
+					return
+				}
+				time.Sleep(2 * time.Second)
+			}
+		}()
+
 		for _, q := range qs {
 			passed := false
 			if runLocally {
@@ -62,6 +73,7 @@ var testCmd = &cobra.Command{
 					passed = true
 				}
 			} else {
+				limitC <- struct{}{}
 				result, err := runTestRemotely(q, c, gen)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
@@ -72,6 +84,7 @@ var testCmd = &cobra.Command{
 			}
 
 			if passed && autoSubmit {
+				limitC <- struct{}{}
 				result, err := submitSolution(q, c, gen)
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)

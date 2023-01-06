@@ -58,7 +58,6 @@ func loadConfig(cmd *cobra.Command, args []string) error {
 	}
 
 	rootSettings := rootViper.AllSettings()
-
 	projectViper := viper.New()
 	// Don't read project config if we are running `init` command
 	if cmd != initCmd {
