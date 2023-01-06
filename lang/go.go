@@ -127,8 +127,31 @@ func (g golang) Init(outDir string) error {
 }
 
 func (g golang) RunTest(q *leetcode.QuestionData) error {
-	// TODO run go test
-	// Need go list -m json to get mod path
+	outDir := GetOutDir(g.shortName)
+	cmd := exec.Command("go", "list", "-m")
+	cmd.Dir = outDir
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("go list failed: %w", err)
+	}
+	modPath := strings.TrimSpace(string(output))
+	if modPath == "" {
+		return fmt.Errorf("go mod path is empty")
+	}
+
+	genResult, err := g.GeneratePaths(q)
+	if err != nil {
+		return fmt.Errorf("generate paths failed: %w", err)
+	}
+	path := genResult.Files[0].Path
+	basePath := filepath.Clean(filepath.Dir(path))
+
+	cmd = exec.Command("go", "test", "-v", modPath+"/"+basePath)
+	cmd.Dir = outDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	_ = cmd.Run()
+
 	return nil
 }
 

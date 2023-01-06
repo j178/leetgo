@@ -218,6 +218,16 @@ func GetGenerator(gen string) Generator {
 	return nil
 }
 
+func GetOutDir(lang string) string {
+	cfg := config.Get()
+	outDir := viper.GetString("code." + lang + ".out_dir")
+	if outDir == "" {
+		outDir = lang
+	}
+	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
+	return outDir
+}
+
 func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
@@ -235,12 +245,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	outDir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
-	if outDir == "" {
-		outDir = cfg.Code.Lang
-	}
-	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
-
+	outDir := GetOutDir(cfg.Code.Lang)
 	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
 		return nil, err
@@ -314,7 +319,7 @@ func tryWrite(file string, content string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(file, []byte(content), 0644)
+	err = os.WriteFile(file, utils.StringToBytes(content), 0644)
 	if err != nil {
 		return false, err
 	}
@@ -330,17 +335,12 @@ func GenerateDryRun(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, fmt.Errorf("language %s is not supported", cfg.Code.Lang)
 	}
 
-	outDir := viper.GetString("code." + cfg.Code.Lang + ".out_dir")
-	if outDir == "" {
-		outDir = cfg.Code.Lang
-	}
-	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
-
 	result, err := gen.GeneratePaths(q)
 	if err != nil {
 		return nil, err
 	}
 
+	outDir := GetOutDir(cfg.Code.Lang)
 	for i := range result.Files {
 		path := filepath.Join(outDir, result.Files[i].Path)
 		result.Files[i].Path = path
