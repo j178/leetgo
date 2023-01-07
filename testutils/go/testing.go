@@ -279,12 +279,12 @@ func RunTests(t *testing.T, f interface{}, examples [][]string, targetCaseNum in
 					if AssertOutput && rawActualOut != rawExpectedOuts[i] {
 						t.Errorf(
 							"Not equal\n"+
-								"expected:\n%s\n"+
-								"actual  :\n%s\n"+
-								"input   :\n%s",
-							rawExpectedOuts[i],
-							rawActualOut,
-							inputInfo,
+								"input:     %s\n"+
+								"output:    %s\n"+
+								"expected:  %s\n",
+							strings.ReplaceAll(inputInfo, "\n", "↩ "),
+							strings.ReplaceAll(rawActualOut, "\n", "↩ "),
+							strings.ReplaceAll(rawExpectedOuts[i], "\n", "↩ "),
 						)
 						passed = false
 					}
@@ -474,10 +474,10 @@ func RunClassTests(t *testing.T, constructor interface{}, examples [][3]string, 
 				if AssertOutput && rawExpectedOut != rawActualOut.String() {
 					t.Errorf(
 						"Not equal\n"+
-							"expected:\n%s\n"+
-							"actual  :\n%s\n",
-						rawExpectedOut,
-						rawActualOut.String(),
+							"output:     %s\n"+
+							"expected:   %s\n",
+						strings.ReplaceAll(rawExpectedOut, "\n", "↩ "),
+						strings.ReplaceAll(rawActualOut.String(), "\n", "↩ "),
 					)
 					passed = false
 				}
