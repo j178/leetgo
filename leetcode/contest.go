@@ -3,10 +3,20 @@ package leetcode
 import "github.com/hashicorp/go-hclog"
 
 type Contest struct {
+	client    Client
 	TitleSlug string `json:"titleSlug"`
 	Title     string `json:"title"`
 	StartTime string `json:"startTime"`
 	Questions []*QuestionData
+}
+
+func (ct *Contest) GetQuestion(slug string) (*QuestionData, error) {
+	for _, q := range ct.Questions {
+		if q.TitleSlug == slug {
+			return q, nil
+		}
+	}
+	return nil, nil
 }
 
 func (ct *Contest) GetQuestionByNumber(num int, c Client) (*QuestionData, error) {

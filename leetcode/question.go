@@ -211,7 +211,7 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 
 type QuestionData struct {
 	client               Client
-	contestSlug          string
+	contest              *Contest
 	partial              int32
 	TitleSlug            string               `json:"titleSlug"`
 	QuestionId           string               `json:"questionId"`
@@ -240,11 +240,11 @@ func (q *QuestionData) Url() string {
 }
 
 func (q *QuestionData) ContestUrl() string {
-	return q.client.BaseURI() + "contest/" + q.contestSlug + "/problems/" + q.TitleSlug + "/"
+	return q.client.BaseURI() + "contest/" + q.contest.TitleSlug + "/problems/" + q.TitleSlug + "/"
 }
 
 func (q *QuestionData) IsContest() bool {
-	return q.contestSlug != ""
+	return q.contest != nil
 }
 
 func (q *QuestionData) Fulfill() error {
@@ -254,7 +254,7 @@ func (q *QuestionData) Fulfill() error {
 	var q1 *QuestionData
 	var err error
 	if q.IsContest() {
-		q1, err = q.client.GetContestQuestionData(q.contestSlug, q.TitleSlug)
+		q1, err = q.contest.GetQuestion(q.TitleSlug)
 	} else {
 		q1, err = q.client.GetQuestionData(q.TitleSlug)
 	}
