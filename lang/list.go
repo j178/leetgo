@@ -12,10 +12,10 @@ var (
 			blockCommentEnd:   "*/",
 		},
 	}
-	pythonGen = python{
+	python3Gen = python{
 		baseLang{
 			name:              "Python",
-			slug:              "python",
+			slug:              "python3",
 			shortName:         "py",
 			extension:         ".py",
 			lineComment:       "#",
@@ -116,7 +116,7 @@ var (
 	// TODO scala, typescript, erlang, dart, racket
 	SupportedLangs = []Generator{
 		golangGen,
-		pythonGen,
+		python3Gen,
 		cppGen,
 		rustGen,
 		javaGen,
