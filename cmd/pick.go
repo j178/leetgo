@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -19,21 +20,32 @@ leetgo pick 549`,
 	Aliases: []string{"p"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		if len(args) == 0 {
-			// 	TODO Start tea TUI to pick a question
-			//   looks like https://leetcode.cn/problemset/all/
-			args = append(args, "two-sum")
-		}
-		qid := args[0]
-		qs, err := leetcode.ParseQID(qid, c)
-		if err != nil {
-			return err
-		}
-		if len(qs) > 1 {
-			return fmt.Errorf("multiple questions found")
-		}
+		var q *leetcode.QuestionData
 
-		result, err := lang.Generate(qs[0])
+		if len(args) > 0 {
+			qid := args[0]
+			qs, err := leetcode.ParseQID(qid, c)
+			if err != nil {
+				return err
+			}
+			if len(qs) > 1 {
+				return fmt.Errorf("multiple questions found")
+			}
+			q = qs[0]
+		} else {
+			cache := leetcode.GetCache()
+			m := initialModel(cache)
+			p := tea.NewProgram(m)
+			if _, err := p.Run(); err != nil {
+				return err
+			}
+			if m.Selected() == nil {
+				return nil
+			}
+			q = m.Selected()
+		}
+		
+		result, err := lang.Generate(q)
 		if err != nil {
 			return err
 		}
