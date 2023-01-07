@@ -126,8 +126,7 @@ func (g golang) Init(outDir string) error {
 	return err
 }
 
-func (g golang) RunTest(q *leetcode.QuestionData) error {
-	outDir := GetOutDir(g.shortName)
+func (g golang) RunTest(q *leetcode.QuestionData, outDir string) error {
 	cmd := exec.Command("go", "list", "-m")
 	cmd.Dir = outDir
 	output, err := cmd.Output()

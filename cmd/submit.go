@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -48,4 +49,25 @@ var submitCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
+	*leetcode.SubmitCheckResult,
+	error,
+) {
+	solution, err := lang.GetSolutionCode(q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get solution code: %w", err)
+	}
+	hclog.L().Info("submitting solution", "question", q.TitleSlug)
+	submissionId, err := c.Submit(q, gen.Slug(), solution)
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit solution: %w", err)
+	}
+
+	testResult, err := waitResult(c, submissionId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to wait submit result: %w", err)
+	}
+	return testResult.(*leetcode.SubmitCheckResult), nil
 }

@@ -46,7 +46,7 @@ var testCmd = &cobra.Command{
 			return err
 		}
 
-		localTestRunner, supportLocalTest := gen.(lang.LocalTester)
+		_, supportLocalTest := gen.(lang.LocalTester)
 		if runLocally && !supportLocalTest {
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
@@ -66,7 +66,7 @@ var testCmd = &cobra.Command{
 			passed := false
 			if runLocally {
 				hclog.L().Info("running test locally", "question", q.TitleSlug)
-				err = localTestRunner.RunTest(q)
+				err = lang.RunTest(q)
 				if err != nil {
 					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
 				} else {
@@ -129,27 +129,6 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Gener
 	r := testResult.(*leetcode.RunCheckResult)
 	r.InputData = interResult.TestCase
 	return r, nil
-}
-
-func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
-	*leetcode.SubmitCheckResult,
-	error,
-) {
-	solution, err := lang.GetSolutionCode(q)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get solution code: %w", err)
-	}
-	hclog.L().Info("submitting solution", "question", q.TitleSlug)
-	submissionId, err := c.Submit(q, gen.Slug(), solution)
-	if err != nil {
-		return nil, fmt.Errorf("failed to submit solution: %w", err)
-	}
-
-	testResult, err := waitResult(c, submissionId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to wait submit result: %w", err)
-	}
-	return testResult.(*leetcode.SubmitCheckResult), nil
 }
 
 func waitResult(c leetcode.Client, submissionId string) (

@@ -68,7 +68,7 @@ type CodeConfig struct {
 	CodeBeginMark    string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
 	CodeEndMark      string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
 	Go               GoConfig       `yaml:"go" mapstructure:"go"`
-	Python           BaseLangConfig `yaml:"python" mapstructure:"python"`
+	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
 	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
 	Java             BaseLangConfig `yaml:"java" mapstructure:"java"`
 	Rust             BaseLangConfig `yaml:"rust" mapstructure:"rust"`

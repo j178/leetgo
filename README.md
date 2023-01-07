@@ -157,7 +157,7 @@ code:
     filename_template: ""
     # Go module path for the generated code
     go_mod_path: ""
-  python:
+  python3:
     out_dir: python
     # Overrides the default code.filename_template
     filename_template: ""

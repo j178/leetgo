@@ -74,7 +74,7 @@ type Initializer interface {
 
 type LocalTester interface {
 	Initializer
-	RunTest(q *leetcode.QuestionData) error
+	RunTest(q *leetcode.QuestionData, dir string) error
 }
 
 type baseLang struct {
@@ -211,6 +211,11 @@ func GetGenerator(gen string) Generator {
 		}
 	}
 	for _, l := range SupportedLangs {
+		if l.ShortName() == gen {
+			return l
+		}
+	}
+	for _, l := range SupportedLangs {
 		if strings.HasPrefix(strings.ToLower(l.Name()), gen) {
 			return l
 		}
@@ -218,11 +223,14 @@ func GetGenerator(gen string) Generator {
 	return nil
 }
 
-func GetOutDir(lang string) string {
+func GetOutDir(gen Generator) string {
 	cfg := config.Get()
-	outDir := viper.GetString("code." + lang + ".out_dir")
+	outDir := viper.GetString("code." + gen.Slug() + ".out_dir")
 	if outDir == "" {
-		outDir = lang
+		outDir = viper.GetString("code." + gen.ShortName() + ".out_dir")
+	}
+	if outDir == "" {
+		outDir = gen.Slug()
 	}
 	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
 	return outDir
@@ -245,7 +253,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	outDir := GetOutDir(cfg.Code.Lang)
+	outDir := GetOutDir(gen)
 	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
 		return nil, err
@@ -340,7 +348,7 @@ func GenerateDryRun(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, err
 	}
 
-	outDir := GetOutDir(cfg.Code.Lang)
+	outDir := GetOutDir(gen)
 	for i := range result.Files {
 		path := filepath.Join(outDir, result.Files[i].Path)
 		result.Files[i].Path = path
@@ -388,4 +396,24 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	}
 
 	return strings.Join(codeLinesToKeep, "\n"), nil
+}
+
+func RunTest(q *leetcode.QuestionData) error {
+	cfg := config.Get()
+	gen := GetGenerator(cfg.Code.Lang)
+	if gen == nil {
+		return fmt.Errorf("language %s is not supported", cfg.Code.Lang)
+	}
+
+	tester, ok := gen.(LocalTester)
+	if !ok {
+		return fmt.Errorf("language %s does not support local test", gen.Slug())
+	}
+
+	outDir := GetOutDir(gen)
+	if !utils.IsExist(outDir) {
+		return fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
+	}
+
+	return tester.RunTest(q, outDir)
 }
