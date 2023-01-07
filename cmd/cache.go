@@ -15,7 +15,7 @@ var cacheUpdateCmd = &cobra.Command{
 	Short: "Update local questions cache",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		return leetcode.GetCache().Update(c)
+		return leetcode.GetCache(c).Update()
 	},
 }
 

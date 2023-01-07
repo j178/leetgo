@@ -11,7 +11,7 @@ import (
 )
 
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
-	q := GetCache().GetBySlug(slug)
+	q := GetCache(c).GetBySlug(slug)
 	if q != nil {
 		q.client = c
 		return q, nil
@@ -20,7 +20,7 @@ func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 }
 
 func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
-	q := GetCache().GetById(id)
+	q := GetCache(c).GetById(id)
 	if q != nil {
 		q.client = c
 		return q, nil

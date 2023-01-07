@@ -12,15 +12,16 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 type QuestionsCache interface {
 	GetBySlug(slug string) *QuestionData
 	GetById(id string) *QuestionData
+	GetAllQuestions() []*QuestionData
 	GetCacheFile() string
-	Update(client Client) error
+	Update() error
 }
 
-func GetCache() QuestionsCache {
+func GetCache(c Client) QuestionsCache {
 	once.Do(
 		func() {
 			cfg := config.Get()
-			lazyCache = newCache(cfg.LeetCodeCacheBaseName())
+			lazyCache = newCache(cfg.LeetCodeCacheBaseName(), c)
 		},
 	)
 	return lazyCache

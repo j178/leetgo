@@ -14,13 +14,14 @@ import (
 
 type jsonCache struct {
 	path     string
+	client   Client
 	once     sync.Once
 	slugs    map[string]*QuestionData
 	frontIds map[string]*QuestionData
 }
 
-func newCache(path string) QuestionsCache {
-	return &jsonCache{path: path}
+func newCache(path string, c Client) QuestionsCache {
+	return &jsonCache{path: path, client: c}
 }
 
 func (c *jsonCache) GetCacheFile() string {
@@ -46,6 +47,7 @@ func (c *jsonCache) doLoad() error {
 	}
 	for _, r := range records {
 		r.partial = 1
+		r.client = c.client
 		c.slugs[r.TitleSlug] = r
 		c.frontIds[r.QuestionFrontendId] = r
 	}
@@ -75,13 +77,13 @@ func (c *jsonCache) checkUpdateTime() {
 	}
 }
 
-func (c *jsonCache) Update(client Client) error {
+func (c *jsonCache) Update() error {
 	err := utils.CreateIfNotExists(c.GetCacheFile(), false)
 	if err != nil {
 		return err
 	}
 
-	all, err := client.GetAllQuestions()
+	all, err := c.client.GetAllQuestions()
 	if err != nil {
 		return err
 	}
@@ -107,4 +109,13 @@ func (c *jsonCache) GetBySlug(slug string) *QuestionData {
 func (c *jsonCache) GetById(id string) *QuestionData {
 	c.load()
 	return c.frontIds[id]
+}
+
+func (c *jsonCache) GetAllQuestions() []*QuestionData {
+	c.load()
+	all := make([]*QuestionData, 0, len(c.slugs))
+	for _, q := range c.slugs {
+		all = append(all, q)
+	}
+	return all
 }
