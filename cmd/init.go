@@ -125,12 +125,12 @@ leetcode:
 }
 
 func createQuestionDB() error {
-	cache := leetcode.GetCache()
+	c := leetcode.NewClient()
+	cache := leetcode.GetCache(c)
 	if utils.IsExist(cache.GetCacheFile()) {
 		return nil
 	}
-	c := leetcode.NewClient()
-	err := cache.Update(c)
+	err := cache.Update()
 	if err != nil {
 		return err
 	}

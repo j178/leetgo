@@ -33,8 +33,8 @@ leetgo pick 549`,
 			}
 			q = qs[0]
 		} else {
-			cache := leetcode.GetCache()
-			m := initialModel(cache)
+			cache := leetcode.GetCache(c)
+			m := newTuiModel(cache)
 			p := tea.NewProgram(m)
 			if _, err := p.Run(); err != nil {
 				return err
@@ -44,7 +44,7 @@ leetgo pick 549`,
 			}
 			q = m.Selected()
 		}
-		
+
 		result, err := lang.Generate(q)
 		if err != nil {
 			return err
