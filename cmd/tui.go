@@ -16,7 +16,7 @@ var (
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = lipgloss.NewStyle().PaddingLeft(4).PaddingBottom(1)
-	textStyle         = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	// textStyle         = lipgloss.NewStyle().Margin(1, 0, 2, 4)
 )
 
 type rowDelegate struct{}

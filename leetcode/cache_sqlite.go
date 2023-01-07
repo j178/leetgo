@@ -50,13 +50,14 @@ insert into lastUpdate values (0);
 )
 
 type sqliteCache struct {
-	path string
-	once sync.Once
-	db   *sql.DB
+	path   string
+	client Client
+	once   sync.Once
+	db     *sql.DB
 }
 
-func newCache(path string) QuestionsCache {
-	return &sqliteCache{path: path}
+func newCache(path string, c Client) QuestionsCache {
+	return &sqliteCache{path: path, client: c}
 }
 
 func (c *sqliteCache) GetCacheFile() string {
@@ -104,34 +105,59 @@ func (c *sqliteCache) updateTime() error {
 	return err
 }
 
-func (c *sqliteCache) unmarshal(row *sql.Row) (*QuestionData, error) {
-	q := QuestionData{partial: 1}
-	var (
-		topicTagsStr            []byte
-		statsStr                []byte
-		hintsStr                []byte
-		similarQuestionsStr     []byte
-		jsonExampleTestcasesStr []byte
-		metaDataStr             []byte
-		codeSnippetsStr         []byte
-	)
-	err := row.Scan(
-		&q.TitleSlug, &q.QuestionId, &q.QuestionFrontendId, &q.CategoryTitle, &q.Title, &q.TranslatedTitle,
-		&q.Difficulty, &topicTagsStr, &q.IsPaidOnly, &q.Content, &q.TranslatedContent, &q.Status, &statsStr, &hintsStr,
-		&similarQuestionsStr, &q.SampleTestCase, &q.ExampleTestcases, &jsonExampleTestcasesStr, &metaDataStr,
-		&codeSnippetsStr,
-	)
-	if err != nil {
-		return nil, err
+func (c *sqliteCache) unmarshal(rows *sql.Rows) ([]*QuestionData, error) {
+	result := make([]*QuestionData, 0)
+	for rows.Next() {
+		q := QuestionData{
+			partial: 1,
+			client:  c.client,
+		}
+		var (
+			topicTagsStr            []byte
+			statsStr                []byte
+			hintsStr                []byte
+			similarQuestionsStr     []byte
+			jsonExampleTestcasesStr []byte
+			metaDataStr             []byte
+			codeSnippetsStr         []byte
+		)
+		err := rows.Scan(
+			&q.TitleSlug,
+			&q.QuestionId,
+			&q.QuestionFrontendId,
+			&q.CategoryTitle,
+			&q.Title,
+			&q.TranslatedTitle,
+			&q.Difficulty,
+			&topicTagsStr,
+			&q.IsPaidOnly,
+			&q.Content,
+			&q.TranslatedContent,
+			&q.Status,
+			&statsStr,
+			&hintsStr,
+			&similarQuestionsStr,
+			&q.SampleTestCase,
+			&q.ExampleTestcases,
+			&jsonExampleTestcasesStr,
+			&metaDataStr,
+			&codeSnippetsStr,
+		)
+		if err != nil {
+			return nil, err
+		}
+		_ = json.Unmarshal(topicTagsStr, &q.TopicTags)
+		_ = json.Unmarshal(statsStr, &q.Stats)
+		_ = json.Unmarshal(hintsStr, &q.Hints)
+		_ = json.Unmarshal(similarQuestionsStr, &q.SimilarQuestions)
+		_ = json.Unmarshal(jsonExampleTestcasesStr, &q.JsonExampleTestcases)
+		_ = json.Unmarshal(metaDataStr, &q.MetaData)
+		_ = json.Unmarshal(codeSnippetsStr, &q.CodeSnippets)
+
+		result = append(result, &q)
 	}
-	_ = json.Unmarshal(topicTagsStr, &q.TopicTags)
-	_ = json.Unmarshal(statsStr, &q.Stats)
-	_ = json.Unmarshal(hintsStr, &q.Hints)
-	_ = json.Unmarshal(similarQuestionsStr, &q.SimilarQuestions)
-	_ = json.Unmarshal(jsonExampleTestcasesStr, &q.JsonExampleTestcases)
-	_ = json.Unmarshal(metaDataStr, &q.MetaData)
-	_ = json.Unmarshal(codeSnippetsStr, &q.CodeSnippets)
-	return &q, nil
+
+	return result, nil
 }
 
 func (c *sqliteCache) marshal(q *QuestionData) []any {
@@ -175,12 +201,15 @@ func (c *sqliteCache) GetBySlug(slug string) *QuestionData {
 	if err != nil {
 		return nil
 	}
-	row := st.QueryRow(slug)
-	q, err := c.unmarshal(row)
+	rows, err := st.Query(slug)
 	if err != nil {
 		return nil
 	}
-	return q
+	q, err := c.unmarshal(rows)
+	if err != nil {
+		return nil
+	}
+	return q[0]
 }
 
 func (c *sqliteCache) GetById(id string) *QuestionData {
@@ -192,12 +221,35 @@ func (c *sqliteCache) GetById(id string) *QuestionData {
 	if err != nil {
 		return nil
 	}
-	row := st.QueryRow(id)
-	q, err := c.unmarshal(row)
+	rows, err := st.Query(id)
 	if err != nil {
 		return nil
 	}
-	return q
+	q, err := c.unmarshal(rows)
+	if err != nil {
+		return nil
+	}
+	return q[0]
+}
+
+func (c *sqliteCache) GetAllQuestions() []*QuestionData {
+	c.load()
+	if c.db == nil {
+		return nil
+	}
+	st, err := c.db.Prepare("select * from questions")
+	if err != nil {
+		return nil
+	}
+	rows, err := st.Query()
+	if err != nil {
+		return nil
+	}
+	qs, err := c.unmarshal(rows)
+	if err != nil {
+		return nil
+	}
+	return qs
 }
 
 func (c *sqliteCache) createTable() error {
@@ -213,12 +265,12 @@ func (c *sqliteCache) createTable() error {
 	return err
 }
 
-func (c *sqliteCache) Update(client Client) error {
+func (c *sqliteCache) Update() error {
 	err := c.createTable()
 	if err != nil {
 		return err
 	}
-	all, err := client.GetAllQuestions()
+	all, err := c.client.GetAllQuestions()
 	if err != nil {
 		return err
 	}
