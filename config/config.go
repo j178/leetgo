@@ -57,7 +57,7 @@ type ContestConfig struct {
 }
 
 type Editor struct {
-	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland, set to none to disable opening files after generation"`
+	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
 	Command string   `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
 	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command"`
 }
@@ -86,11 +86,11 @@ type GoConfig struct {
 }
 
 type Credentials struct {
-	ReadFromBrowser string `yaml:"read_from_browser,omitempty" mapstructure:"read_from_browser" comment:"Read leetcode cookie from browser, currently only chrome is supported."`
-	Session         string `yaml:"session,omitempty" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
-	CsrfToken       string `yaml:"csrftoken,omitempty" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
-	Username        string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
-	Password        string `yaml:"password,omitempty" mapstructure:"password" comment:"Encrypted LeetCode password"`
+	From      string `yaml:"from" mapstructure:"use" comment:"How to provide credentials: browser, cookies, password or none"`
+	Session   string `yaml:"session" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
+	CsrfToken string `yaml:"csrftoken" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
+	Username  string `yaml:"username" mapstructure:"username" comment:"LeetCode username"`
+	Password  string `yaml:"password" mapstructure:"password" comment:"Encrypted LeetCode password"`
 }
 
 type LeetCodeConfig struct {
@@ -181,7 +181,7 @@ func Default() *Config {
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 			Credentials: Credentials{
-				ReadFromBrowser: "chrome",
+				From: "browser",
 			},
 		},
 		Editor: Editor{
@@ -201,32 +201,60 @@ func Get() *Config {
 }
 
 func verify(c *Config) error {
-	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
-		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
-	}
-	if c.LeetCode.Site == LeetCodeUS && c.LeetCode.Credentials.Password != "" {
-		return fmt.Errorf("username/password authentication is not supported for leetcode.com")
-	}
-	if c.LeetCode.Credentials.Password != "" && !strings.HasPrefix(c.LeetCode.Credentials.Password, vaultHeader) {
-		return fmt.Errorf("password is not encrypted, you need to run `leetgo config encrypt` before put it in config file")
-	}
-	pw := c.LeetCode.Credentials.Password
-	if pw != "" {
-		var err error
-		c.LeetCode.Credentials.Password, err = Decrypt(pw)
-		if err != nil {
-			return err
-		}
-	}
-	if c.LeetCode.Credentials.ReadFromBrowser != "" && c.LeetCode.Credentials.ReadFromBrowser != "chrome" {
-		return fmt.Errorf("invalid leetcode.credentials.read_from_browser: %s", c.LeetCode.Credentials.ReadFromBrowser)
-	}
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid language: %s", c.Language)
 	}
 	if c.Code.Lang == "" {
 		return fmt.Errorf("code.lang is empty")
 	}
+	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
+		return fmt.Errorf("invalid leetcode.site: %s", c.LeetCode.Site)
+	}
+	credentialFrom := map[string]bool{
+		"browser":  true,
+		"cookies":  true,
+		"password": true,
+		"none":     true,
+	}
+	if !credentialFrom[c.LeetCode.Credentials.From] {
+		return fmt.Errorf("invalid leetcode.credentials.from: %s", c.LeetCode.Credentials.From)
+	}
+
+	if c.LeetCode.Credentials.From == "cookies" {
+		if c.LeetCode.Credentials.Session == "" {
+			return fmt.Errorf("leetcode.credentials.session is empty")
+		}
+		if c.LeetCode.Credentials.CsrfToken == "" {
+			return fmt.Errorf("leetcode.credentials.csrftoken is empty")
+		}
+	}
+
+	if c.LeetCode.Credentials.From == "password" {
+		if c.LeetCode.Site == LeetCodeUS {
+			return fmt.Errorf("username/password authentication is not supported for leetcode.com")
+		}
+		if c.LeetCode.Credentials.Username == "" {
+			return fmt.Errorf("leetcode.credentials.username is empty")
+		}
+		if c.LeetCode.Credentials.Password == "" {
+			return fmt.Errorf("leetcode.credentials.password is empty")
+		}
+		if !strings.HasPrefix(
+			c.LeetCode.Credentials.Password,
+			vaultHeader,
+		) {
+			return fmt.Errorf("password is not encrypted, you need to run `leetgo config encrypt` before put it in config file")
+		}
+		pw := c.LeetCode.Credentials.Password
+		if pw != "" {
+			var err error
+			c.LeetCode.Credentials.Password, err = Decrypt(pw)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -238,9 +266,8 @@ func Load(init bool) error {
 	// load global configuration
 	cfg := &Config{}
 
-	rootViper := viper.New()
-	rootViper.SetConfigFile(cfg.GlobalConfigFile())
-	err := rootViper.ReadInConfig()
+	viper.SetConfigFile(cfg.GlobalConfigFile())
+	err := viper.ReadInConfig()
 	if err != nil {
 		if os.IsNotExist(err) {
 			if !init {
@@ -255,13 +282,11 @@ func Load(init bool) error {
 		return err
 	}
 
-	rootSettings := rootViper.AllSettings()
-	projectViper := viper.New()
 	// Don't read project config if we are running `init` command
 	if !init {
 		// load project configuration
-		projectViper.SetConfigFile(cfg.ProjectConfigFile())
-		err = projectViper.ReadInConfig()
+		viper.SetConfigFile(cfg.ProjectConfigFile())
+		err = viper.MergeInConfig()
 		if err != nil {
 			if os.IsNotExist(err) {
 				hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
@@ -269,20 +294,7 @@ func Load(init bool) error {
 				return err
 			}
 		}
-
-		// Override global config with project config, instead of merging them
-		if projectViper.IsSet("editor") {
-			delete(rootSettings, "editor")
-		}
-		if projectViper.IsSet("leetcode.credentials") {
-			lc := rootSettings["leetcode"].(map[string]any)
-			delete(lc, "credentials")
-			rootSettings["leetcode"] = lc
-		}
 	}
-
-	_ = viper.MergeConfigMap(rootSettings)
-	_ = viper.MergeConfigMap(projectViper.AllSettings())
 
 	err = viper.Unmarshal(&cfg)
 	if err != nil {

@@ -21,6 +21,7 @@ type MultiOpener interface {
 
 var editors = map[string]Opener{
 	"none":   &noneEditor{},
+	"custom": &customEditor{},
 	"vim":    &vim{},
 	"vscode": &commonMultiEditor{commonEditor{command: "code"}},
 	"goland": &commonEditor{command: "goland"},
@@ -45,6 +46,18 @@ func (e *commonEditor) Open(file lang.FileOutput) error {
 	return runCmd(e.command, e.args, file.Path)
 }
 
+type customEditor struct{}
+
+func (e *customEditor) Open(file lang.FileOutput) error {
+	cfg := config.Get()
+	if cfg.Editor.Command == "" {
+		hclog.L().Warn("editor.command is empty, skip opening files")
+		return nil
+	}
+
+	return runCmd(cfg.Editor.Command, cfg.Editor.Args, file.Path)
+}
+
 func (e *commonMultiEditor) OpenMulti(files ...lang.FileOutput) error {
 	paths := make([]string, len(files))
 	for i, f := range files {
@@ -63,28 +76,17 @@ func Open(paths []lang.FileOutput) error {
 	}
 	cfg := config.Get()
 
-	if cfg.Editor.Use != "" {
-		ed := Get(cfg.Editor.Use)
-		if ed == nil {
-			return fmt.Errorf(
-				"editor not supported: %s, you can use `editor.command` to customize the command",
-				cfg.Editor.Use,
-			)
-		}
-		if ed, ok := ed.(MultiOpener); ok {
-			return ed.OpenMulti(paths...)
-		}
-		return ed.Open(paths[0])
+	ed := Get(cfg.Editor.Use)
+	if ed == nil {
+		return fmt.Errorf(
+			"editor not supported: %s, you can use `editor.command` to customize the command",
+			cfg.Editor.Use,
+		)
 	}
-
-	if cfg.Editor.Command == "" {
-		hclog.L().Info("no editor configured, skip opening files")
-		return nil
+	if ed, ok := ed.(MultiOpener); ok {
+		return ed.OpenMulti(paths...)
 	}
-
-	// Custom command does not support multiple files
-	err := runCmd(cfg.Editor.Command, cfg.Editor.Args, paths[0].Path)
-	return err
+	return ed.Open(paths[0])
 }
 
 func runCmd(command string, args []string, files ...string) error {

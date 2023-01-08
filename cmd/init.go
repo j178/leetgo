@@ -26,7 +26,7 @@ var initCmd = &cobra.Command{
 		if len(args) > 0 {
 			dir = args[0]
 		}
-		if initTemplate != "us" && initTemplate != "cn" {
+		if initTemplate != "" && initTemplate != "us" && initTemplate != "cn" {
 			return fmt.Errorf("invalid template %s, only us or cn is supported", initTemplate)
 		}
 		err := utils.CreateIfNotExists(dir, true)
@@ -48,7 +48,6 @@ var initCmd = &cobra.Command{
 
 func init() {
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "us", "template to use, cn or us")
-	_ = initCmd.MarkFlagRequired("template")
 }
 
 func createConfigDir() error {
@@ -66,12 +65,12 @@ func createConfigDir() error {
 
 func createConfigFiles(dir string) error {
 	cfg := config.Get()
-	var site config.LeetcodeSite
-	var language config.Language
+	site := cfg.LeetCode.Site
+	language := cfg.Language
 	if initTemplate == "us" {
 		site = config.LeetCodeUS
 		language = config.EN
-	} else {
+	} else if initTemplate == "cn" {
 		site = config.LeetCodeCN
 		language = config.ZH
 	}
@@ -98,16 +97,18 @@ func createConfigFiles(dir string) error {
 	if err != nil {
 		return err
 	}
+
 	tmpl := `# leetgo project level config, global config is at %s
+# for more details, please refer to https://github.com/j178/leetgo
 language: %s
 code:
   lang: %s
-editor:
-  use: none
 leetcode:
   site: %s
-  credentials:
-    read_from_browser: %s
+#   credentials:
+#     from: browser
+# editor:
+#   use: none
 `
 	_, _ = f.WriteString(
 		fmt.Sprintf(
@@ -116,7 +117,6 @@ leetcode:
 			language,
 			cfg.Code.Lang,
 			site,
-			cfg.LeetCode.Credentials.ReadFromBrowser,
 		),
 	)
 	hclog.L().Info("project config file created", "file", projectFile)

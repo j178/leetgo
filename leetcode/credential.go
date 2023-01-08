@@ -160,14 +160,14 @@ func (b *browserAuth) Reset() {
 
 func CredentialsFromConfig() CredentialsProvider {
 	cfg := config.Get()
-	if cfg.LeetCode.Credentials.ReadFromBrowser != "" {
-		return NewBrowserAuth(cfg.LeetCode.Credentials.ReadFromBrowser)
-	}
-	if cfg.LeetCode.Credentials.Session != "" {
-		return NewCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken)
-	}
-	if cfg.LeetCode.Credentials.Username != "" {
+	switch cfg.LeetCode.Credentials.From {
+	case "browser":
+		return NewBrowserAuth("chrome")
+	case "password":
 		return NewPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password)
+	case "cookies":
+		return NewCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken)
+	default:
+		return NonAuth()
 	}
-	return NonAuth()
 }

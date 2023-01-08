@@ -147,14 +147,23 @@ leetcode:
   site: https://leetcode.cn
   # Credentials to access LeetCode
   credentials:
-    # Read leetcode cookie from browser, currently only chrome is supported.
-    read_from_browser: chrome
+    # How to provide credentials: browser, cookies, password or none
+    from: browser
+    # LeetCode cookie: LEETCODE_SESSION
+    session: ""
+    # LeetCode cookie: csrftoken
+    csrftoken: ""
+    # LeetCode username
+    username: ""
+    # Encrypted LeetCode password
+    password: ""
 contest:
   # Base dir to put generated contest questions
-  out_dir: ""
+  out_dir: contest
 # The editor to open generated files
 editor:
-  # Use a predefined editor: vim, vscode, goland, set to none to disable opening files after generation
+  # Use a predefined editor: vim, vscode, goland
+  # Set to 'none' to disable, set to 'custom' to provide your own command
   use: none
   # Custom command to open files
   command: ""
