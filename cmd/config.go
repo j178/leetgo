@@ -16,7 +16,7 @@ var configCmd = &cobra.Command{
 		cmd.Println("Project config file:", cfg.ProjectConfigFile())
 		cmd.Println("Full configurations:")
 		cmd.Println()
-		_ = cfg.Write(cmd.OutOrStdout())
+		_ = cfg.Write(cmd.OutOrStdout(), false)
 	},
 }
 

@@ -86,7 +86,7 @@ func createConfigFiles(dir string) error {
 		cfg.LeetCode.Site = site
 		cfg.Language = language
 
-		err = cfg.Write(f)
+		err = cfg.Write(f, true)
 		if err != nil {
 			return err
 		}

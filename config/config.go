@@ -6,10 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -24,9 +25,8 @@ const (
 )
 
 var (
-	cfg   *Config
-	once  sync.Once
-	Debug = os.Getenv("DEBUG") != ""
+	globalCfg *Config
+	Debug     = os.Getenv("DEBUG") != ""
 )
 
 type (
@@ -86,7 +86,7 @@ type GoConfig struct {
 }
 
 type Credentials struct {
-	ReadFromBrowser string `yaml:"read_from_browser" mapstructure:"read_from_browser" comment:"Read leetcode cookie from browser, currently only chrome is supported."`
+	ReadFromBrowser string `yaml:"read_from_browser,omitempty" mapstructure:"read_from_browser" comment:"Read leetcode cookie from browser, currently only chrome is supported."`
 	Session         string `yaml:"session,omitempty" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
 	CsrfToken       string `yaml:"csrftoken,omitempty" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
 	Username        string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
@@ -99,11 +99,15 @@ type LeetCodeConfig struct {
 }
 
 func (c *Config) ConfigDir() string {
+	if c.dir == "" {
+		home, _ := homedir.Dir()
+		c.dir = filepath.Join(home, ".config", CmdName)
+	}
 	return c.dir
 }
 
 func (c *Config) GlobalConfigFile() string {
-	return filepath.Join(c.dir, globalConfigFile)
+	return filepath.Join(c.ConfigDir(), globalConfigFile)
 }
 
 func (c *Config) ProjectRoot() string {
@@ -115,12 +119,12 @@ func (c *Config) ProjectRoot() string {
 				c.projectRoot = dir
 				break
 			}
-			dir1 := filepath.Dir(dir)
+			parent := filepath.Dir(dir)
 			// Reached root.
-			if dir1 == dir {
+			if parent == dir {
 				break
 			}
-			dir = dir1
+			dir = parent
 		}
 	}
 	return c.projectRoot
@@ -135,34 +139,30 @@ func (c *Config) ProjectConfigFilename() string {
 }
 
 func (c *Config) StateFile() string {
-	return filepath.Join(c.dir, stateFile)
+	return filepath.Join(c.ConfigDir(), stateFile)
 }
 
 func (c *Config) LeetCodeCacheBaseName() string {
-	return filepath.Join(c.dir, leetcodeCacheFileBaseName)
+	return filepath.Join(c.ConfigDir(), leetcodeCacheFileBaseName)
 }
 
-func (c *Config) Write(w io.Writer) error {
+func (c *Config) Write(w io.Writer, withComments bool) error {
 	enc := yaml.NewEncoder(w)
 	enc.SetIndent(2)
-	node, _ := toYamlNode(c)
-	err := enc.Encode(node)
+	var err error
+	if withComments {
+		node, _ := toYamlNode(c)
+		err = enc.Encode(node)
+	} else {
+		err = enc.Encode(c)
+	}
+
 	return err
 }
 
-func Empty() *Config {
-	home, _ := homedir.Dir()
-	configDir := filepath.Join(home, ".config", CmdName)
-	return &Config{dir: configDir}
-}
-
 func Default() *Config {
-	home, _ := homedir.Dir()
-	author := "Bob"
-	configDir := filepath.Join(home, ".config", CmdName)
 	return &Config{
-		dir:      configDir,
-		Author:   author,
+		Author:   "Bob",
 		Language: ZH,
 		Code: CodeConfig{
 			Lang:             "go",
@@ -187,25 +187,20 @@ func Default() *Config {
 		Editor: Editor{
 			Use: "none",
 		},
+		Contest: ContestConfig{
+			OutDir: "contest",
+		},
 	}
 }
 
 func Get() *Config {
-	if cfg == nil {
+	if globalCfg == nil {
 		return Default()
 	}
-	return cfg
+	return globalCfg
 }
 
-func Set(c Config) {
-	once.Do(
-		func() {
-			cfg = &c
-		},
-	)
-}
-
-func Verify(c *Config) error {
+func verify(c *Config) error {
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
 		return fmt.Errorf("invalid site: %s", c.LeetCode.Site)
 	}
@@ -232,5 +227,71 @@ func Verify(c *Config) error {
 	if c.Code.Lang == "" {
 		return fmt.Errorf("code.lang is empty")
 	}
+	return nil
+}
+
+func Load(init bool) error {
+	if globalCfg != nil {
+		return nil
+	}
+
+	// load global configuration
+	cfg := &Config{}
+
+	rootViper := viper.New()
+	rootViper.SetConfigFile(cfg.GlobalConfigFile())
+	err := rootViper.ReadInConfig()
+	if err != nil {
+		if os.IsNotExist(err) {
+			if !init {
+				hclog.L().Warn(
+					"global config file not found, have you ran `leetgo init`?",
+					"file",
+					cfg.GlobalConfigFile(),
+				)
+			}
+			return nil
+		}
+		return err
+	}
+
+	rootSettings := rootViper.AllSettings()
+	projectViper := viper.New()
+	// Don't read project config if we are running `init` command
+	if !init {
+		// load project configuration
+		projectViper.SetConfigFile(cfg.ProjectConfigFile())
+		err = projectViper.ReadInConfig()
+		if err != nil {
+			if os.IsNotExist(err) {
+				hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
+			} else {
+				return err
+			}
+		}
+
+		// Override global config with project config, instead of merging them
+		if projectViper.IsSet("editor") {
+			delete(rootSettings, "editor")
+		}
+		if projectViper.IsSet("leetcode.credentials") {
+			lc := rootSettings["leetcode"].(map[string]any)
+			delete(lc, "credentials")
+			rootSettings["leetcode"] = lc
+		}
+	}
+
+	_ = viper.MergeConfigMap(rootSettings)
+	_ = viper.MergeConfigMap(projectViper.AllSettings())
+
+	err = viper.Unmarshal(&cfg)
+	if err != nil {
+		return err
+	}
+	if err = verify(cfg); err != nil {
+		return fmt.Errorf("config file is invalid: %w", err)
+	}
+
+	globalCfg = cfg
 	return nil
 }

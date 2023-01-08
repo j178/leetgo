@@ -37,67 +37,6 @@ func buildVersion(version, commit, date string) string {
 	return result + "\n\n" + website
 }
 
-func loadConfig(cmd *cobra.Command, args []string) error {
-	// load global configuration
-	cfg := config.Empty()
-	rootViper := viper.New()
-	rootViper.SetConfigFile(cfg.GlobalConfigFile())
-	err := rootViper.ReadInConfig()
-	if err != nil {
-		if os.IsNotExist(err) {
-			if cmd != initCmd {
-				hclog.L().Warn(
-					"global config file not found, have you ran `leetgo init`?",
-					"file",
-					cfg.GlobalConfigFile(),
-				)
-			}
-			return nil
-		}
-		return err
-	}
-
-	rootSettings := rootViper.AllSettings()
-	projectViper := viper.New()
-	// Don't read project config if we are running `init` command
-	if cmd != initCmd {
-		// load project configuration
-		projectViper.SetConfigFile(cfg.ProjectConfigFile())
-		err = projectViper.ReadInConfig()
-		if err != nil {
-			if os.IsNotExist(err) {
-				hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
-			} else {
-				return err
-			}
-		}
-
-		// Override global config with project config, instead of merging them
-		if projectViper.IsSet("editor") {
-			delete(rootSettings, "editor")
-		}
-		if projectViper.IsSet("leetcode.credentials") {
-			lc := rootSettings["leetcode"].(map[string]any)
-			delete(lc, "credentials")
-			rootSettings["leetcode"] = lc
-		}
-	}
-
-	_ = viper.MergeConfigMap(rootSettings)
-	_ = viper.MergeConfigMap(projectViper.AllSettings())
-
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
-		return err
-	}
-	if err = config.Verify(cfg); err != nil {
-		return fmt.Errorf("config file is invalid: %w", err)
-	}
-
-	config.Set(*cfg)
-	return err
-}
-
 var rootCmd = &cobra.Command{
 	Use:           config.CmdName,
 	Short:         "Leetcode",
@@ -107,7 +46,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		initLogger()
-		return loadConfig(cmd, args)
+		return config.Load(cmd == initCmd)
 	},
 }
 
