@@ -74,6 +74,7 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
+  edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations

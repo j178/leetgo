@@ -94,6 +94,7 @@ func initCommands() {
 		infoCmd,
 		testCmd,
 		submitCmd,
+		editCmd,
 		contestCmd,
 		cacheCmd,
 		configCmd,
