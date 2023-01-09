@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -24,6 +25,7 @@ var (
 
 type Client interface {
 	BaseURI() string
+	Inspect(typ string) (map[string]any, error)
 	Login(username, password string) (*http.Response, error)
 	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
@@ -170,13 +172,20 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 
 //nolint:unused
 func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*http.Response, error) {
-	r, err := c.http.New().Get(req.path).QueryStruct(
-		map[string]any{
-			"query":         req.query,
-			"operationName": req.operationName,
-			"variables":     req.variables,
-		},
-	).Request()
+	type params struct {
+		Query         string `url:"query"`
+		OperationName string `url:"operationName"`
+		Variables     string `url:"variables"`
+	}
+	p := params{Query: req.query}
+	if req.operationName != "" {
+		p.OperationName = req.operationName
+	}
+	if req.variables != nil {
+		v, _ := json.Marshal(req.variables)
+		p.Variables = string(v)
+	}
+	r, err := c.http.New().Get(req.path).QueryStruct(p).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +224,51 @@ func (c *cnClient) jsonPost(url string, json any, result any, failure any) (*htt
 
 func (c *cnClient) BaseURI() string {
 	return string(config.LeetCodeCN) + "/"
+}
+
+func (c *cnClient) Inspect(typ string) (map[string]any, error) {
+	query := `
+query a {
+  __type(name: "$type") {
+    name 
+    fields {
+      name 
+      args {
+        name 
+        description 
+        defaultValue 
+        type {
+          name 
+          kind 
+          ofType {
+            name 
+            kind 
+          }
+        }
+      }
+      type {
+        name 
+        kind 
+        ofType {
+          name 
+          kind 
+        }
+      }
+    }
+  }
+}
+`
+	query = strings.ReplaceAll(query, "$type", typ)
+	var resp map[string]any
+	_, err := c.graphqlGet(
+		graphqlRequest{
+			path:  graphQLPath,
+			query: query,
+		},
+		&resp,
+		nil,
+	)
+	return resp, err
 }
 
 func (c *cnClient) Login(username, password string) (*http.Response, error) {
