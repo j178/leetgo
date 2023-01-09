@@ -67,6 +67,9 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	// Try slug as last resort
 	if q == nil && len(qs) == 0 {
 		q, err = QuestionBySlug(qid, c)
+		if err != nil {
+			return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
+		}
 	}
 	if q != nil {
 		qs = []*QuestionData{q}
