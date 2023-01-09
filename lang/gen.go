@@ -139,12 +139,11 @@ func needsDefinition(code string) bool {
 }
 
 func getFilenameTemplate(gen Generator) string {
-	res := config.Get().Code.FilenameTemplate
-	if res != "" {
-		return res
+	ans := getCodeConfig(gen, "filename_template")
+	if ans != "" {
+		return ans
 	}
-	res = viper.GetString("code." + gen.Slug() + ".filename_template")
-	return res
+	return config.Get().Code.FilenameTemplate
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
@@ -223,12 +222,17 @@ func GetGenerator(gen string) Generator {
 	return nil
 }
 
+func getCodeConfig(gen Generator, key string) string {
+	ans := viper.GetString("code." + gen.Slug() + "." + key)
+	if ans != "" {
+		return ans
+	}
+	return viper.GetString("code." + gen.ShortName() + "." + key)
+}
+
 func GetOutDir(gen Generator) string {
 	cfg := config.Get()
-	outDir := viper.GetString("code." + gen.Slug() + ".out_dir")
-	if outDir == "" {
-		outDir = viper.GetString("code." + gen.ShortName() + ".out_dir")
-	}
+	outDir := getCodeConfig(gen, "out_dir")
 	if outDir == "" {
 		outDir = gen.Slug()
 	}

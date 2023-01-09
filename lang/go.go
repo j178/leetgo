@@ -118,7 +118,7 @@ func (g golang) Init(outDir string) error {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", "-u", testutilsModPath)
+	cmd = exec.Command("go", "get", testutilsModPath)
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
