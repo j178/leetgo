@@ -10,21 +10,13 @@ import (
 
 type Modifier func(string, *leetcode.QuestionData) string
 
-func codeBeginLine(l Lang) string {
-	return l.LineComment() + " " + config.Get().Code.CodeBeginMark
-}
-
-func codeEndLine(l Lang) string {
-	return l.LineComment() + " " + config.Get().Code.CodeEndMark
-}
-
 func addCodeMark(l Lang) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"%s\n\n%s\n\n%s",
-			codeBeginLine(l),
+			l.LineComment()+" "+config.Get().Code.CodeBeginMark,
 			s,
-			codeEndLine(l),
+			l.LineComment()+" "+config.Get().Code.CodeEndMark,
 		)
 	}
 }

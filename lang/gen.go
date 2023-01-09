@@ -371,16 +371,16 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		return "", err
 	}
 
-	l := result.Lang
+	cfg := config.Get()
 	codeLines := strings.Split(string(code), "\n")
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
-		if !inCode && strings.Contains(line, codeBeginLine(l)) {
+		if !inCode && strings.Contains(line, cfg.Code.CodeBeginMark) {
 			inCode = true
 			continue
 		}
-		if inCode && strings.Contains(line, codeEndLine(l)) {
+		if inCode && strings.Contains(line, cfg.Code.CodeEndMark) {
 			break
 		}
 		if inCode {
