@@ -47,7 +47,6 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		err error
 	)
 	switch {
-	// Will there be a slug full of digits?
 	case isNumber(qid):
 		q, err = QuestionFromCacheByID(qid, c)
 	case qid == "last":
@@ -61,12 +60,13 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		q, err = c.GetTodayQuestion()
 	case strings.Contains(qid, "/"):
 		qs, err = parseContestQID(qid, c)
-	default:
-		q, err = QuestionBySlug(qid, c)
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
+	}
+	// Try slug as last resort
+	if q == nil && len(qs) == 0 {
+		q, err = QuestionBySlug(qid, c)
 	}
 	if q != nil {
 		qs = []*QuestionData{q}
