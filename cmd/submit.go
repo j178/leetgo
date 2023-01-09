@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
@@ -41,8 +42,7 @@ var submitCmd = &cobra.Command{
 		}()
 
 		for _, q := range qs {
-			limitC <- struct{}{}
-			result, err := submitSolution(q, c, gen)
+			result, err := submitSolution(q, c, gen, limitC)
 			if err != nil {
 				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				continue
@@ -54,7 +54,7 @@ var submitCmd = &cobra.Command{
 	},
 }
 
-func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang) (
+func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, wait chan<- struct{}) (
 	*leetcode.SubmitCheckResult,
 	error,
 ) {
@@ -62,7 +62,12 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
 	}
-	hclog.L().Info("submitting solution", "question", q.TitleSlug)
+
+	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Submitting solution..."))
+	spin.Start()
+	defer spin.Stop()
+
+	wait <- struct{}{}
 	submissionId, err := c.Submit(q, gen.Slug(), solution)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit solution: %w", err)

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
@@ -76,8 +77,7 @@ var testCmd = &cobra.Command{
 					passed = true
 				}
 			} else {
-				limitC <- struct{}{}
-				result, err := runTestRemotely(q, c, gen)
+				result, err := runTestRemotely(q, c, gen, limitC)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 				} else {
@@ -87,8 +87,7 @@ var testCmd = &cobra.Command{
 			}
 
 			if passed && autoSubmit {
-				limitC <- struct{}{}
-				result, err := submitSolution(q, c, gen)
+				result, err := submitSolution(q, c, gen, limitC)
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
@@ -100,7 +99,7 @@ var testCmd = &cobra.Command{
 	},
 }
 
-func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang) (
+func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, wait chan<- struct{}) (
 	*leetcode.RunCheckResult,
 	error,
 ) {
@@ -117,9 +116,14 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang)
 	if len(cases) == 0 {
 		return nil, fmt.Errorf("no test cases found")
 	}
-
 	casesStr := strings.Join(cases, "\n")
-	hclog.L().Info("running remote test", "question", q.TitleSlug)
+
+	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Running test..."))
+	spin.Start()
+	defer spin.Stop()
+
+	wait <- struct{}{}
+
 	interResult, err := c.InterpretSolution(q, gen.Slug(), solution, casesStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to interpret solution: %w", err)

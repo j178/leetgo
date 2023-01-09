@@ -30,6 +30,7 @@ var editors = map[string]Opener{
 type noneEditor struct{}
 
 func (e *noneEditor) Open(file lang.FileOutput) error {
+	hclog.L().Info("none editor is used, skip opening files")
 	return nil
 }
 
