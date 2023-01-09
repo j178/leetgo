@@ -80,6 +80,7 @@ func initLogger() {
 func initCommands() {
 	cobra.EnableCommandSorting = false
 
+	rootCmd.SetOut(os.Stdout)
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().StringP("lang", "l", "", "language of code to generate: cpp, go, python ...")
