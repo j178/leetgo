@@ -65,11 +65,10 @@ type Lang interface {
 	Name() string
 	ShortName() string
 	Slug() string
+	LineComment() string
 	// Generate generates code files for the question.
 	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
 	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
-	CodeBeginLine() string
-	CodeEndLine() string
 }
 
 type NeedInitialization interface {
@@ -103,12 +102,8 @@ func (l baseLang) ShortName() string {
 	return l.shortName
 }
 
-func (l baseLang) CodeBeginLine() string {
-	return l.lineComment + " " + config.Get().Code.CodeBeginMark
-}
-
-func (l baseLang) CodeEndLine() string {
-	return l.lineComment + " " + config.Get().Code.CodeEndMark
+func (l baseLang) LineComment() string {
+	return l.lineComment
 }
 
 func (l baseLang) generateComments(q *leetcode.QuestionData) string {
@@ -136,18 +131,6 @@ func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) 
 		code = m(code, q)
 	}
 	return code
-}
-
-func needsDefinition(code string) bool {
-	return strings.Contains(code, "Definition for")
-}
-
-func getFilenameTemplate(gen Lang) string {
-	ans := getCodeConfig(gen, "filename_template")
-	if ans != "" {
-		return ans
-	}
-	return config.Get().Code.FilenameTemplate
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
@@ -232,6 +215,18 @@ func getCodeConfig(lang Lang, key string) string {
 		return ans
 	}
 	return viper.GetString("code." + lang.ShortName() + "." + key)
+}
+
+func needsDefinition(code string) bool {
+	return strings.Contains(code, "Definition for")
+}
+
+func getFilenameTemplate(gen Lang) string {
+	ans := getCodeConfig(gen, "filename_template")
+	if ans != "" {
+		return ans
+	}
+	return config.Get().Code.FilenameTemplate
 }
 
 func getOutDir(lang Lang) string {
@@ -376,16 +371,16 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		return "", err
 	}
 
-	gen := result.Lang
+	l := result.Lang
 	codeLines := strings.Split(string(code), "\n")
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
-		if !inCode && strings.Contains(line, gen.CodeBeginLine()) {
+		if !inCode && strings.Contains(line, codeBeginLine(l)) {
 			inCode = true
 			continue
 		}
-		if inCode && strings.Contains(line, gen.CodeEndLine()) {
+		if inCode && strings.Contains(line, codeEndLine(l)) {
 			break
 		}
 		if inCode {

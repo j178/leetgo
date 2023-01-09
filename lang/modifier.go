@@ -4,18 +4,27 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
 
 type Modifier func(string, *leetcode.QuestionData) string
 
+func codeBeginLine(l Lang) string {
+	return l.LineComment() + " " + config.Get().Code.CodeBeginMark
+}
+
+func codeEndLine(l Lang) string {
+	return l.LineComment() + " " + config.Get().Code.CodeEndMark
+}
+
 func addCodeMark(l Lang) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"%s\n\n%s\n\n%s",
-			l.CodeBeginLine(),
+			codeBeginLine(l),
 			s,
-			l.CodeEndLine(),
+			codeEndLine(l),
 		)
 	}
 }
