@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/utils"
 	_ "github.com/mattn/go-sqlite3"
@@ -67,6 +68,9 @@ func (c *sqliteCache) GetCacheFile() string {
 func (c *sqliteCache) load() {
 	c.once.Do(
 		func() {
+			defer func(now time.Time) {
+				hclog.L().Trace("cache loaded", "path", c.GetCacheFile(), "time", time.Since(now))
+			}(time.Now())
 			var err error
 			c.db, err = sql.Open("sqlite3", c.GetCacheFile())
 			if err != nil {

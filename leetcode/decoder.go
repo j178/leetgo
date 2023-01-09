@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dghubble/sling"
+	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/utils"
 	"github.com/jedib0t/go-pretty/v6/progress"

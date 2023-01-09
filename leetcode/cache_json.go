@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/utils"
 )
@@ -57,6 +58,9 @@ func (c *jsonCache) doLoad() error {
 func (c *jsonCache) load() {
 	c.once.Do(
 		func() {
+			defer func(now time.Time) {
+				hclog.L().Trace("cache loaded", "path", c.GetCacheFile(), "time", time.Since(now))
+			}(time.Now())
 			err := c.doLoad()
 			if err != nil {
 				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`", "err", err)

@@ -12,6 +12,7 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/JohannesKaufmann/html-to-markdown/plugin"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/goccy/go-json"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-wordwrap"
