@@ -9,9 +9,10 @@ import (
 )
 
 var inspectCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Inspect LeetCode API, developer only",
-	Args:  cobra.ExactArgs(1),
+	Use:    "inspect",
+	Short:  "Inspect LeetCode API, developer only",
+	Args:   cobra.ExactArgs(1),
+	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		resp, err := c.Inspect(args[0])
