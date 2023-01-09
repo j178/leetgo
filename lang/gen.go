@@ -17,18 +17,17 @@ import (
 )
 
 var (
-	NotSupported   = errors.New("not supported")
-	NotImplemented = errors.New("not implemented")
+	NotSupported = errors.New("not supported")
 )
 
 const (
-	inputMark  = "input:"
-	outputMark = "output:"
+	testCaseInputMark  = "input:"
+	testCaseOutputMark = "output:"
 )
 
 type GenerateResult struct {
-	Generator Generator
-	Files     []FileOutput
+	Lang  Lang
+	Files []FileOutput
 }
 
 type FileOutput struct {
@@ -56,7 +55,13 @@ func (r *GenerateResult) GetCodeFile() *FileOutput {
 	return nil
 }
 
-type Generator interface {
+func (r *GenerateResult) PrependPath(dir string) {
+	for i, f := range r.Files {
+		r.Files[i].Path = filepath.Join(dir, f.Path)
+	}
+}
+
+type Lang interface {
 	Name() string
 	ShortName() string
 	Slug() string
@@ -67,14 +72,13 @@ type Generator interface {
 	CodeEndLine() string
 }
 
-type Initializer interface {
-	Initialized(dir string) (bool, error)
-	Init(dir string) error
+type NeedInitialization interface {
+	HasInitialized(dir string) (bool, error)
+	Initialize(dir string) error
 }
 
-type LocalTester interface {
-	Initializer
-	RunTest(q *leetcode.QuestionData, dir string) error
+type LocalTestable interface {
+	RunLocalTest(q *leetcode.QuestionData, dir string) error
 }
 
 type baseLang struct {
@@ -138,7 +142,7 @@ func needsDefinition(code string) bool {
 	return strings.Contains(code, "Definition for")
 }
 
-func getFilenameTemplate(gen Generator) string {
+func getFilenameTemplate(gen Lang) string {
 	ans := getCodeConfig(gen, "filename_template")
 	if ans != "" {
 		return ans
@@ -157,7 +161,7 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 		}
 		caseAndOutputs = append(
 			caseAndOutputs,
-			fmt.Sprintf("%s\n%s\n%s\n%s", inputMark, c, outputMark, outputs[i]),
+			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, c, testCaseOutputMark, outputs[i]),
 		)
 	}
 	return strings.Join(caseAndOutputs, "\n\n")
@@ -175,8 +179,8 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 		Type: CodeFile,
 	}
 	return &GenerateResult{
-		Generator: l,
-		Files:     []FileOutput{file},
+		Lang:  l,
+		Files: []FileOutput{file},
 	}, nil
 }
 
@@ -197,44 +201,44 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		Type:    CodeFile,
 	}
 	return &GenerateResult{
-		Generator: l,
-		Files:     []FileOutput{file},
+		Lang:  l,
+		Files: []FileOutput{file},
 	}, nil
 }
 
-func GetGenerator(gen string) Generator {
-	gen = strings.ToLower(gen)
+func GetGenerator(lang string) Lang {
+	lang = strings.ToLower(lang)
 	for _, l := range SupportedLangs {
-		if l.Slug() == gen {
+		if l.Slug() == lang {
 			return l
 		}
 	}
 	for _, l := range SupportedLangs {
-		if l.ShortName() == gen {
+		if l.ShortName() == lang {
 			return l
 		}
 	}
 	for _, l := range SupportedLangs {
-		if strings.HasPrefix(strings.ToLower(l.Name()), gen) {
+		if strings.HasPrefix(strings.ToLower(l.Name()), lang) {
 			return l
 		}
 	}
 	return nil
 }
 
-func getCodeConfig(gen Generator, key string) string {
-	ans := viper.GetString("code." + gen.Slug() + "." + key)
+func getCodeConfig(lang Lang, key string) string {
+	ans := viper.GetString("code." + lang.Slug() + "." + key)
 	if ans != "" {
 		return ans
 	}
-	return viper.GetString("code." + gen.ShortName() + "." + key)
+	return viper.GetString("code." + lang.ShortName() + "." + key)
 }
 
-func GetOutDir(gen Generator) string {
+func GetOutDir(lang Lang) string {
 	cfg := config.Get()
-	outDir := getCodeConfig(gen, "out_dir")
+	outDir := getCodeConfig(lang, "out_dir")
 	if outDir == "" {
-		outDir = gen.Slug()
+		outDir = lang.Slug()
 	}
 	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
 	return outDir
@@ -264,17 +268,17 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	// Check and generate necessary library files.
-	if t, ok := gen.(Initializer); ok {
-		ok, err := t.Initialized(outDir)
+	if t, ok := gen.(NeedInitialization); ok {
+		ok, err := t.HasInitialized(outDir)
 		if err == nil && !ok {
-			err = t.Init(outDir)
+			err = t.Initialize(outDir)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if err != nil {
 			hclog.L().Error(
-				"check library failed, skip library generation",
+				"check initialization failed, skip initialization",
 				"lang", gen.Slug(),
 				"err", err,
 			)
@@ -286,14 +290,12 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	result.PrependPath(outDir)
 	// Write files
-	for i := range result.Files {
-		path := filepath.Join(outDir, result.Files[i].Path)
-		result.Files[i].Path = path
-		written, err := tryWrite(path, result.Files[i].Content)
+	for i, file := range result.Files {
+		written, err := tryWrite(file.Path, file.Content)
 		if err != nil {
-			hclog.L().Error("failed to write file", "path", path, "err", err)
+			hclog.L().Error("failed to write file", "path", file.Path, "err", err)
 			continue
 		}
 		result.Files[i].Written = written
@@ -339,8 +341,8 @@ func tryWrite(file string, content string) (bool, error) {
 	return true, nil
 }
 
-// GenerateDryRun runs generate process but does not generate real content.
-func GenerateDryRun(q *leetcode.QuestionData) (*GenerateResult, error) {
+// GeneratePathsOnly runs generate process but does not generate real content.
+func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
@@ -353,16 +355,12 @@ func GenerateDryRun(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	outDir := GetOutDir(gen)
-	for i := range result.Files {
-		path := filepath.Join(outDir, result.Files[i].Path)
-		result.Files[i].Path = path
-	}
-
+	result.PrependPath(outDir)
 	return result, nil
 }
 
 func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
-	result, err := GenerateDryRun(q)
+	result, err := GeneratePathsOnly(q)
 	if err != nil {
 		return "", err
 	}
@@ -378,7 +376,7 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		return "", err
 	}
 
-	gen := result.Generator
+	gen := result.Lang
 	codeLines := strings.Split(string(code), "\n")
 	var codeLinesToKeep []string
 	inCode := false
@@ -402,14 +400,14 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	return strings.Join(codeLinesToKeep, "\n"), nil
 }
 
-func RunTest(q *leetcode.QuestionData) error {
+func RunLocalTest(q *leetcode.QuestionData) error {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
 		return fmt.Errorf("language %s is not supported", cfg.Code.Lang)
 	}
 
-	tester, ok := gen.(LocalTester)
+	tester, ok := gen.(LocalTestable)
 	if !ok {
 		return fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
@@ -419,5 +417,5 @@ func RunTest(q *leetcode.QuestionData) error {
 		return fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
 	}
 
-	return tester.RunTest(q, outDir)
+	return tester.RunLocalTest(q, outDir)
 }

@@ -86,7 +86,7 @@ type GoConfig struct {
 }
 
 type Credentials struct {
-	From      string `yaml:"from" mapstructure:"use" comment:"How to provide credentials: browser, cookies, password or none"`
+	From      string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
 	Session   string `yaml:"session" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
 	CsrfToken string `yaml:"csrftoken" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
 	Username  string `yaml:"username" mapstructure:"username" comment:"LeetCode username"`
@@ -264,7 +264,7 @@ func Load(init bool) error {
 	}
 
 	// load global configuration
-	cfg := &Config{}
+	cfg := Get()
 
 	viper.SetConfigFile(cfg.GlobalConfigFile())
 	err := viper.ReadInConfig()
@@ -296,7 +296,7 @@ func Load(init bool) error {
 		}
 	}
 
-	err = viper.Unmarshal(&cfg)
+	err = viper.Unmarshal(cfg)
 	if err != nil {
 		return err
 	}

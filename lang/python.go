@@ -7,5 +7,5 @@ type python struct {
 }
 
 func (python) Generate(*leetcode.QuestionData) (*GenerateResult, error) {
-	return nil, NotImplemented
+	return nil, NotSupported
 }

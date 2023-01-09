@@ -90,7 +90,7 @@ func changeReceiverName(code string, q *leetcode.QuestionData) string {
 	return strings.Join(lines, "\n")
 }
 
-func (g golang) Initialized(outDir string) (bool, error) {
+func (g golang) HasInitialized(outDir string) (bool, error) {
 	cmd := exec.Command("go", "list", "-m", "-json", testutilsModPath)
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
@@ -103,7 +103,7 @@ func (g golang) Initialized(outDir string) (bool, error) {
 	return true, nil
 }
 
-func (g golang) Init(outDir string) error {
+func (g golang) Initialize(outDir string) error {
 	modPath := config.Get().Code.Go.GoModPath
 	if modPath == "" {
 		modPath = "leetcode-solutions"
@@ -126,7 +126,7 @@ func (g golang) Init(outDir string) error {
 	return err
 }
 
-func (g golang) RunTest(q *leetcode.QuestionData, outDir string) error {
+func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) error {
 	cmd := exec.Command("go", "list", "-m")
 	cmd.Dir = outDir
 	output, err := cmd.Output()
@@ -188,8 +188,8 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	}
 
 	return &GenerateResult{
-		Generator: g,
-		Files:     files,
+		Lang:  g,
+		Files: files,
 	}, nil
 }
 
@@ -235,7 +235,7 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	return &GenerateResult{
-		Generator: g,
-		Files:     files,
+		Lang:  g,
+		Files: files,
 	}, nil
 }

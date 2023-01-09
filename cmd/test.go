@@ -46,7 +46,7 @@ var testCmd = &cobra.Command{
 			return err
 		}
 
-		_, supportLocalTest := gen.(lang.LocalTester)
+		_, supportLocalTest := gen.(lang.LocalTestable)
 		if runLocally && !supportLocalTest {
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
@@ -66,7 +66,7 @@ var testCmd = &cobra.Command{
 			passed := false
 			if runLocally {
 				hclog.L().Info("running test locally", "question", q.TitleSlug)
-				err = lang.RunTest(q)
+				err = lang.RunLocalTest(q)
 				if err != nil {
 					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
 				} else {
@@ -97,7 +97,7 @@ var testCmd = &cobra.Command{
 	},
 }
 
-func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
+func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang) (
 	*leetcode.RunCheckResult,
 	error,
 ) {

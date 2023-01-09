@@ -51,7 +51,7 @@ var submitCmd = &cobra.Command{
 	},
 }
 
-func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Generator) (
+func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang) (
 	*leetcode.SubmitCheckResult,
 	error,
 ) {

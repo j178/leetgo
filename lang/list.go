@@ -114,7 +114,7 @@ var (
 		blockCommentEnd:   "*/",
 	}
 	// TODO scala, typescript, erlang, dart, racket
-	SupportedLangs = []Generator{
+	SupportedLangs = []Lang{
 		golangGen,
 		python3Gen,
 		cppGen,
