@@ -38,7 +38,6 @@ var testCmd = &cobra.Command{
 	Example: `leetgo test 244`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Get()
-		gen := lang.GetGenerator(cfg.Code.Lang)
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		qs, err := leetcode.ParseQID(args[0], c)
@@ -46,6 +45,10 @@ var testCmd = &cobra.Command{
 			return err
 		}
 
+		gen := lang.GetGenerator(cfg.Code.Lang)
+		if gen == nil {
+			return fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
+		}
 		_, supportLocalTest := gen.(lang.LocalTestable)
 		if runLocally && !supportLocalTest {
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)

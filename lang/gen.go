@@ -234,7 +234,7 @@ func getCodeConfig(lang Lang, key string) string {
 	return viper.GetString("code." + lang.ShortName() + "." + key)
 }
 
-func GetOutDir(lang Lang) string {
+func getOutDir(lang Lang) string {
 	cfg := config.Get()
 	outDir := getCodeConfig(lang, "out_dir")
 	if outDir == "" {
@@ -261,7 +261,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	outDir := GetOutDir(gen)
+	outDir := getOutDir(gen)
 	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
 		return nil, err
@@ -346,7 +346,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
-		return nil, fmt.Errorf("language %s is not supported", cfg.Code.Lang)
+		return nil, fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
 	}
 
 	result, err := gen.GeneratePaths(q)
@@ -354,7 +354,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, err
 	}
 
-	outDir := GetOutDir(gen)
+	outDir := getOutDir(gen)
 	result.PrependPath(outDir)
 	return result, nil
 }
@@ -412,7 +412,7 @@ func RunLocalTest(q *leetcode.QuestionData) error {
 		return fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
 
-	outDir := GetOutDir(gen)
+	outDir := getOutDir(gen)
 	if !utils.IsExist(outDir) {
 		return fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
 	}
