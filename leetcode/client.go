@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dghubble/sling"
+	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
