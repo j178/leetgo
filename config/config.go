@@ -53,7 +53,8 @@ type Config struct {
 }
 
 type ContestConfig struct {
-	OutDir string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base dir to put generated contest questions"`
+	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base dir to put generated contest questions"`
+	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Template to generate filename of the question"`
 }
 
 type Editor struct {
@@ -188,7 +189,8 @@ func Default() *Config {
 			Use: "none",
 		},
 		Contest: ContestConfig{
-			OutDir: "contest",
+			OutDir:           "contest",
+			FilenameTemplate: `{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
 		},
 	}
 }

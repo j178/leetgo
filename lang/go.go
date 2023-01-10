@@ -168,7 +168,7 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 }
 
 func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
-	filenameTmpl := getFilenameTemplate(g)
+	filenameTmpl := getFilenameTemplate(q, g)
 	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	testcaseStr := g.generateTestCases(q)
 	testContent := g.generateTest(q, testcaseStr)
 
-	filenameTmpl := getFilenameTemplate(g)
+	filenameTmpl := getFilenameTemplate(q, g)
 	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
 	if err != nil {
 		return nil, err

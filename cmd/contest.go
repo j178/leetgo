@@ -75,12 +75,9 @@ var unregisterCmd = &cobra.Command{
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 
-		// todo list joined contests to select
 		var contestSlug string
 		if len(args) == 0 {
-			// get upcoming contest
-			// select to register / unregister
-			// register then wait for contest to start
+			// todo list joined contests to select
 			contestSlug = "weekly-contest-328"
 		} else {
 			contestSlug = args[0]

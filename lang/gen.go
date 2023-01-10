@@ -152,7 +152,7 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 }
 
 func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
-	filenameTmpl := getFilenameTemplate(l)
+	filenameTmpl := getFilenameTemplate(q, l)
 	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	code := l.generateCode(q, addCodeMark(l))
 	content := comment + "\n" + code + "\n"
 
-	filenameTmpl := getFilenameTemplate(l)
+	filenameTmpl := getFilenameTemplate(q, l)
 	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,10 @@ func needsDefinition(code string) bool {
 	return strings.Contains(code, "Definition for")
 }
 
-func getFilenameTemplate(gen Lang) string {
+func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
+	if q.IsContest() {
+		return config.Get().Contest.FilenameTemplate
+	}
 	ans := getCodeConfig(gen, "filename_template")
 	if ans != "" {
 		return ans
@@ -232,7 +235,10 @@ func getFilenameTemplate(gen Lang) string {
 	return config.Get().Code.FilenameTemplate
 }
 
-func getOutDir(lang Lang) string {
+func getOutDir(q *leetcode.QuestionData, lang Lang) string {
+	if q.IsContest() {
+		return config.Get().Contest.OutDir
+	}
 	cfg := config.Get()
 	outDir := getCodeConfig(lang, "out_dir")
 	if outDir == "" {
@@ -259,7 +265,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
-	outDir := getOutDir(gen)
+	outDir := getOutDir(q, gen)
 	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
 		return nil, err
@@ -352,7 +358,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, err
 	}
 
-	outDir := getOutDir(gen)
+	outDir := getOutDir(q, gen)
 	result.PrependPath(outDir)
 	return result, nil
 }
@@ -410,7 +416,7 @@ func RunLocalTest(q *leetcode.QuestionData) error {
 		return fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
 
-	outDir := getOutDir(gen)
+	outDir := getOutDir(q, gen)
 	if !utils.IsExist(outDir) {
 		return fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
 	}
