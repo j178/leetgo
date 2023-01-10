@@ -1,30 +1,48 @@
 package leetcode
 
-import "github.com/hashicorp/go-hclog"
+import (
+	"errors"
+	"time"
+)
 
 type Contest struct {
-	client    Client
-	TitleSlug string `json:"titleSlug"`
-	Title     string `json:"title"`
-	StartTime string `json:"startTime"`
-	Questions []*QuestionData
+	client          Client
+	Id              int
+	TitleSlug       string
+	Title           string
+	StartTime       int64
+	OriginStartTime int64
+	Duration        int
+	Description     string
+	Questions       []*QuestionData
+	Registered      bool
+	ContainsPremium bool
+	IsVirtual       bool
 }
 
-func (ct *Contest) GetQuestion(slug string) (*QuestionData, error) {
+func (ct *Contest) HasStarted() bool {
+	return time.Unix(ct.StartTime, 0).Before(time.Now())
+}
+
+func (ct *Contest) HasFinished() bool {
+	return time.Unix(ct.StartTime, 0).Add(time.Duration(ct.Duration) * time.Second).Before(time.Now())
+}
+
+func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
+	if num < 1 || num > len(ct.Questions) {
+		return nil, errors.New("invalid question number")
+	}
+	q := ct.Questions[num-1]
+	err := q.Fulfill()
+	return q, err
+}
+
+func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	for _, q := range ct.Questions {
-		if q.TitleSlug == slug {
-			return q, nil
+		err := q.Fulfill()
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil, nil
-}
-
-func (ct *Contest) GetQuestionByNumber(num int, c Client) (*QuestionData, error) {
-	hclog.L().Info("get question by number", "contest", ct.TitleSlug, "num", num)
-	return nil, nil
-}
-
-func (ct *Contest) GetAllQuestions(c Client) ([]*QuestionData, error) {
-	hclog.L().Info("get all questions", "contest", ct.TitleSlug)
-	return nil, nil
+	return ct.Questions, nil
 }

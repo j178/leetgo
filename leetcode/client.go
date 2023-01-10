@@ -30,7 +30,6 @@ type Client interface {
 	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
 	GetContest(contestSlug string) (*Contest, error)
-	GetContestQuestionData(contestSlug, slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
 	InterpretSolution(q *QuestionData, lang string, code string, dataInput string) (
@@ -493,11 +492,38 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 }
 
 func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
-	return &Contest{client: c, TitleSlug: contestSlug}, nil
-}
+	url := fmt.Sprintf("%scontest/api/info/%s/", c.BaseURI(), contestSlug)
+	var resp gjson.Result
+	_, err := c.jsonGet(url, nil, &resp, nil)
+	if err != nil {
+		return nil, err
+	}
+	contestInfo := resp.Get("contest")
+	contest := &Contest{
+		client:          c,
+		Id:              int(contestInfo.Get("id").Int()),
+		TitleSlug:       contestSlug,
+		Title:           contestInfo.Get("title").Str,
+		StartTime:       contestInfo.Get("start_time").Int(),
+		OriginStartTime: contestInfo.Get("origin_start_time").Int(),
+		Duration:        int(contestInfo.Get("duration").Int()),
+		IsVirtual:       contestInfo.Get("is_virtual").Bool(),
+		Description:     contestInfo.Get("description").Str,
+		ContainsPremium: resp.Get("containsPremium").Bool(),
+		Registered:      resp.Get("registered").Bool(),
+		Questions:       make([]*QuestionData, 0, 4),
+	}
+	for _, q := range resp.Get("questions").Array() {
+		question := &QuestionData{
+			client:    c,
+			partial:   1,
+			contest:   contest,
+			TitleSlug: q.Get("title_slug").Str,
+		}
+		contest.Questions = append(contest.Questions, question)
+	}
 
-func (c *cnClient) GetContestQuestionData(contestSlug, slug string) (*QuestionData, error) {
-	return nil, nil
+	return contest, nil
 }
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。

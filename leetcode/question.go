@@ -253,13 +253,9 @@ func (q *QuestionData) Fulfill() error {
 	if atomic.LoadInt32(&q.partial) == 0 {
 		return nil
 	}
-	var q1 *QuestionData
-	var err error
-	if q.IsContest() {
-		q1, err = q.contest.GetQuestion(q.TitleSlug)
-	} else {
-		q1, err = q.client.GetQuestionData(q.TitleSlug)
-	}
+
+	// TODO 为 contest 适配
+	q1, err := q.client.GetQuestionData(q.TitleSlug)
 	if err != nil {
 		return err
 	}
