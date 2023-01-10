@@ -31,11 +31,19 @@ func (ct *Contest) HasFinished() bool {
 }
 
 func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
+	if !ct.HasStarted() {
+		return nil, ErrContestNotStarted
+	}
+	err := ct.fetchQuestions()
+	if err != nil {
+		return nil, err
+	}
 	if num < 1 || num > len(ct.Questions) {
 		return nil, errors.New("invalid question number")
 	}
+
 	q := ct.Questions[num-1]
-	err := q.Fulfill()
+	err = q.Fulfill()
 	return q, err
 }
 
@@ -43,12 +51,11 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	if !ct.HasStarted() {
 		return nil, ErrContestNotStarted
 	}
-
-	err := ct.refresh()
+	err := ct.fetchQuestions()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, q := range ct.Questions {
 		err := q.Fulfill()
 		if err != nil {
@@ -58,11 +65,17 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	return ct.Questions, nil
 }
 
-func (ct *Contest) refresh() error {
+func (ct *Contest) fetchQuestions() error {
+	if len(ct.Questions) > 0 {
+		return nil
+	}
 	contest, err := ct.client.GetContest(ct.TitleSlug)
 	if err != nil {
 		return err
 	}
-	*ct = *contest
+	if len(contest.Questions) == 0 {
+		return errors.New("no questions in contest")
+	}
+	ct.Questions = contest.Questions
 	return nil
 }
