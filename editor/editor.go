@@ -44,6 +44,7 @@ type commonMultiEditor struct {
 }
 
 func (e *commonEditor) Open(file lang.FileOutput) error {
+	hclog.L().Info("opening files with command", "command", e.command)
 	return runCmd(e.command, e.args, file.Path)
 }
 
@@ -55,7 +56,7 @@ func (e *customEditor) Open(file lang.FileOutput) error {
 		hclog.L().Warn("editor.command is empty, skip opening files")
 		return nil
 	}
-
+	hclog.L().Info("opening files with custom command", "command", cfg.Editor.Command)
 	return runCmd(cfg.Editor.Command, cfg.Editor.Args, file.Path)
 }
 
