@@ -59,7 +59,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	case qid == "today":
 		q, err = c.GetTodayQuestion()
 	case strings.Contains(qid, "/"):
-		qs, err = parseContestQID(qid, c)
+		_, qs, err = ParseContestQID(qid, c, true)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
@@ -80,12 +80,12 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	return qs, nil
 }
 
-func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
+func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*QuestionData, error) {
 	if len(qid) < 3 {
-		return nil, errors.New("invalid contest qid")
+		return nil, nil, errors.New("invalid contest qid")
 	}
 	if strings.Count(qid, "/") != 1 {
-		return nil, errors.New("invalid contest qid")
+		return nil, nil, errors.New("invalid contest qid")
 	}
 
 	var (
@@ -103,7 +103,7 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 		if contestSlug == "last" {
 			state := config.LoadState()
 			if state.LastContest == "" {
-				return nil, errors.New("no last generated contest")
+				return nil, nil, errors.New("no last generated contest")
 			}
 			contestSlug = state.LastContest
 		}
@@ -117,30 +117,33 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 	if len(parts[1]) > 0 {
 		questionNum, err = strconv.Atoi(parts[1])
 		if err != nil {
-			return nil, fmt.Errorf("%s is not a number", parts[1])
+			return nil, nil, fmt.Errorf("%s is not a number", parts[1])
 		}
 	}
 	contest, err := c.GetContest(contestSlug)
 	if err != nil {
-		return nil, fmt.Errorf("contest not found %s: %w", contestSlug, err)
-	}
-	if questionNum > 0 {
-		q, err = contest.GetQuestionByNumber(questionNum)
-	} else {
-		qs, err = contest.GetAllQuestions()
-	}
-	if err != nil {
-		questionName := "<all>"
-		if questionNum > 0 {
-			questionName = strconv.Itoa(questionNum)
-		}
-		return nil, fmt.Errorf("get contest question failed %s: %w", questionName, err)
+		return nil, nil, fmt.Errorf("contest not found %s: %w", contestSlug, err)
 	}
 
-	if q != nil {
-		qs = []*QuestionData{q}
+	if withQuestions {
+		if questionNum > 0 {
+			q, err = contest.GetQuestionByNumber(questionNum)
+		} else {
+			qs, err = contest.GetAllQuestions()
+		}
+		if err != nil {
+			questionName := "<all>"
+			if questionNum > 0 {
+				questionName = strconv.Itoa(questionNum)
+			}
+			return contest, nil, fmt.Errorf("get contest question failed %s: %w", questionName, err)
+		}
+		if q != nil {
+			qs = []*QuestionData{q}
+		}
 	}
-	return qs, nil
+
+	return contest, qs, nil
 }
 
 func isNumber(s string) bool {
