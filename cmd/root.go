@@ -99,6 +99,7 @@ func initCommands() {
 		contestCmd,
 		cacheCmd,
 		configCmd,
+		gitCmd,
 		inspectCmd,
 	}
 	for _, cmd := range commands {

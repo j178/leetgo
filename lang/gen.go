@@ -26,8 +26,9 @@ const (
 )
 
 type GenerateResult struct {
-	Lang  Lang
-	Files []FileOutput
+	Question *leetcode.QuestionData
+	Lang     Lang
+	Files    []FileOutput
 }
 
 type FileOutput struct {
@@ -162,8 +163,9 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 		Type: CodeFile,
 	}
 	return &GenerateResult{
-		Lang:  l,
-		Files: []FileOutput{file},
+		Question: q,
+		Lang:     l,
+		Files:    []FileOutput{file},
 	}, nil
 }
 
@@ -184,8 +186,9 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		Type:    CodeFile,
 	}
 	return &GenerateResult{
-		Lang:  l,
-		Files: []FileOutput{file},
+		Question: q,
+		Lang:     l,
+		Files:    []FileOutput{file},
 	}, nil
 }
 

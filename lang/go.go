@@ -188,8 +188,9 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	}
 
 	return &GenerateResult{
-		Lang:  g,
-		Files: files,
+		Question: q,
+		Lang:     g,
+		Files:    files,
 	}, nil
 }
 
@@ -235,7 +236,8 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	return &GenerateResult{
-		Lang:  g,
-		Files: files,
+		Question: q,
+		Lang:     g,
+		Files:    files,
 	}, nil
 }
