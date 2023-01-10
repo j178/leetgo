@@ -23,13 +23,21 @@ var (
 	ErrTooManyRequests  = errors.New("you have submitted too frequently, please submit again later")
 )
 
+type unexpectedStatusCode struct {
+	Code int
+	Resp *http.Response
+}
+
+func (e unexpectedStatusCode) Error() string {
+	return fmt.Sprintf("unexpected status code: %d", e.Code)
+}
+
 type Client interface {
 	BaseURI() string
 	Inspect(typ string) (map[string]any, error)
 	Login(username, password string) (*http.Response, error)
 	GetUserStatus() (*UserStatus, error)
 	GetQuestionData(slug string) (*QuestionData, error)
-	GetContest(contestSlug string) (*Contest, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
 	InterpretSolution(q *QuestionData, lang string, code string, dataInput string) (
@@ -38,6 +46,9 @@ type Client interface {
 	)
 	CheckResult(interpretId string) (CheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
+	GetContest(contestSlug string) (*Contest, error)
+	RegisterContest(slug string) error
+	UnregisterContest(slug string) error
 }
 
 type cnClient struct {
@@ -79,6 +90,11 @@ func NewClient(options ...ClientOption) Client {
 			LogLimit:    10 * 1024,
 		},
 	)
+	httpClient.Client(
+		&http.Client{
+			CheckRedirect: nonFollowRedirect,
+		},
+	)
 
 	cfg := config.Get()
 	if cfg.LeetCode.Site == config.LeetCodeCN {
@@ -114,6 +130,10 @@ func NewClient(options ...ClientOption) Client {
 	}
 }
 
+func nonFollowRedirect(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
+}
+
 type variables map[string]string
 
 type graphqlRequest struct {
@@ -127,10 +147,6 @@ const (
 	graphQLPath = "/graphql"
 	nojGoPath   = "/graphql/noj-go"
 )
-
-type defaultErrorHandler struct {
-	msg string
-}
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
 	if c.opt.cred != nil {
@@ -148,10 +164,6 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 		hclog.L().Trace("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
 	}
 
-	if failure == nil {
-		failure = &defaultErrorHandler{"<default>"}
-	}
-
 	// default error detection
 	resp, err := c.http.Do(req, result, failure)
 	if err != nil {
@@ -160,12 +172,11 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	if resp.StatusCode == http.StatusTooManyRequests {
 		return resp, ErrTooManyRequests
 	}
-	if resp.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+
+	if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
+		return resp, unexpectedStatusCode{Code: resp.StatusCode, Resp: resp}
 	}
-	if e, ok := failure.(*defaultErrorHandler); ok && e.msg != "<default>" {
-		return resp, fmt.Errorf("request failed: %s", e.msg)
-	}
+
 	return nil, err
 }
 
@@ -295,25 +306,16 @@ func (c *cnClient) Login(username, password string) (*http.Response, error) {
 		return nil, errors.New("csrf token not found")
 	}
 
-	cc := c.http.New()
-	// Disable redirect
-	httpClient := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	cc.Client(httpClient)
-
 	body := struct {
 		Login               string `url:"login"`
 		Password            string `url:"password"`
 		CsrfMiddlewareToken string `url:"csrfmiddlewaretoken"`
 	}{username, password, csrfToken}
-	req, err = cc.Post("/accounts/login/").BodyForm(body).Request()
+	req, err = c.http.New().Post("/accounts/login/").BodyForm(body).Request()
 	if err != nil {
 		return nil, err
 	}
-	resp, err = cc.Do(req, nil, nil)
+	resp, err = c.http.Do(req, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -580,4 +582,20 @@ func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, er
 		}, &resp, nil,
 	)
 	return resp.Get("submission_id").String(), err
+}
+
+func (c *cnClient) RegisterContest(slug string) error {
+	url := fmt.Sprintf("%scontest/api/%s/register", c.BaseURI(), slug)
+	_, err := c.jsonPost(url, nil, nil, nil)
+	if e, ok := err.(unexpectedStatusCode); ok && e.Code == http.StatusFound {
+		err = nil
+	}
+	return err
+}
+
+func (c *cnClient) UnregisterContest(slug string) error {
+	url := fmt.Sprintf("%scontest/api/%s/register", c.BaseURI(), slug)
+	req, _ := c.http.New().Delete(url).Request()
+	_, err := c.send(req, nil, nil)
+	return err
 }
