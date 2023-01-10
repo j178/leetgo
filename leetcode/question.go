@@ -291,10 +291,6 @@ func (q *QuestionData) GetContent() (string, config.Language) {
 func (q *QuestionData) GetFormattedContent() string {
 	content, lang := q.GetContent()
 
-	// Remove &nbsp; characters
-	replacer := strings.NewReplacer("&nbsp;", " ", "\u00A0", " ", "\u200B", "")
-	content = replacer.Replace(content)
-
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
@@ -323,6 +319,10 @@ func (q *QuestionData) GetFormattedContent() string {
 	if err != nil {
 		return content
 	}
+
+	// Remove special HTML entities characters
+	replacer := strings.NewReplacer("\u00A0", " ", "\u200B", "")
+	content = replacer.Replace(content)
 
 	// Wrap and remove blank lines
 	maxWidth := uint(100)
