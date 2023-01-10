@@ -125,9 +125,9 @@ func parseContestQID(qid string, c Client) ([]*QuestionData, error) {
 		return nil, fmt.Errorf("contest not found %s: %w", contestSlug, err)
 	}
 	if questionNum > 0 {
-		q, err = contest.GetQuestionByNumber(questionNum, c)
+		q, err = contest.GetQuestionByNumber(questionNum)
 	} else {
-		qs, err = contest.GetAllQuestions(c)
+		qs, err = contest.GetAllQuestions()
 	}
 	if err != nil {
 		questionName := "<all>"

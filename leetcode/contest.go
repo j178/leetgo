@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var ErrContestNotStarted = errors.New("contest has not started")
+
 type Contest struct {
 	client          Client
 	Id              int
@@ -38,6 +40,15 @@ func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
 }
 
 func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
+	if !ct.HasStarted() {
+		return nil, ErrContestNotStarted
+	}
+
+	err := ct.refresh()
+	if err != nil {
+		return nil, err
+	}
+	
 	for _, q := range ct.Questions {
 		err := q.Fulfill()
 		if err != nil {
@@ -45,4 +56,13 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 		}
 	}
 	return ct.Questions, nil
+}
+
+func (ct *Contest) refresh() error {
+	contest, err := ct.client.GetContest(ct.TitleSlug)
+	if err != nil {
+		return err
+	}
+	*ct = *contest
+	return nil
 }
