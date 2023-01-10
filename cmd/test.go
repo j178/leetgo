@@ -112,7 +112,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 		return nil, fmt.Errorf("failed to fetch question: %s", err)
 	}
 	cases := q.GetTestCases()
-	cases = append(cases, customCases...)
+	cases = append(cases, getCustomCases()...)
 	if len(cases) == 0 {
 		return nil, fmt.Errorf("no test cases found")
 	}
@@ -136,6 +136,14 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 	r := testResult.(*leetcode.RunCheckResult)
 	r.InputData = interResult.TestCase
 	return r, nil
+}
+
+func getCustomCases() []string {
+	cases := make([]string, len(customCases))
+	for i, c := range customCases {
+		cases[i] = strings.ReplaceAll(c, `\n`, "\n")
+	}
+	return cases
 }
 
 func waitResult(c leetcode.Client, submissionId string) (
