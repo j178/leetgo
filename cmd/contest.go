@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hashicorp/go-hclog"
@@ -16,6 +17,9 @@ var contestCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cred := leetcode.CredentialsFromConfig()
+		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+
 		var contestSlug string
 		if len(args) == 0 {
 			// get upcoming contest
@@ -25,13 +29,14 @@ var contestCmd = &cobra.Command{
 		} else {
 			contestSlug = args[0]
 		}
-		cred := leetcode.CredentialsFromConfig()
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		contest, err := c.GetContest(contestSlug)
+		if !strings.HasSuffix(contestSlug, "/") {
+			contestSlug += "/"
+		}
+
+		contest, _, err := leetcode.ParseContestQID(contestSlug, c, false)
 		if err != nil {
 			return err
 		}
-
 		if !contest.HasFinished() && !contest.Registered {
 			register := true
 			if !viper.GetBool("yes") {
@@ -63,13 +68,14 @@ var contestCmd = &cobra.Command{
 }
 
 var unregisterCmd = &cobra.Command{
-	Use:   "left",
+	Use:   "left [qid]",
 	Short: "Unregister from contest",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// list joined contests to select
-		// confirm unregister
-		// unregister
+		cred := leetcode.CredentialsFromConfig()
+		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+
+		// todo list joined contests to select
 		var contestSlug string
 		if len(args) == 0 {
 			// get upcoming contest
@@ -79,9 +85,8 @@ var unregisterCmd = &cobra.Command{
 		} else {
 			contestSlug = args[0]
 		}
-		cred := leetcode.CredentialsFromConfig()
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		contest, err := c.GetContest(contestSlug)
+
+		contest, _, err := leetcode.ParseContestQID(contestSlug, c, false)
 		if err != nil {
 			return err
 		}
