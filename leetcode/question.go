@@ -15,6 +15,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
+	"github.com/k3a/html2text"
 	"github.com/mitchellh/go-wordwrap"
 )
 
@@ -365,7 +366,10 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
 	for _, f := range found {
-		result = append(result, strings.ReplaceAll(strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>"), ", ", ","))
+		output := strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>")
+		output = html2text.HTMLEntitiesToText(output)
+		output = strings.ReplaceAll(output, ", ", ",")
+		result = append(result, output)
 	}
 	return result
 }
