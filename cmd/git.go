@@ -67,11 +67,14 @@ func gitAddCommitPush(genResult *lang.GenerateResult) error {
 			genResult.Question.GetTitle(),
 		),
 		AppendDefault: true,
+		HideDefault:   true,
 	}
 	err = survey.AskOne(prompt, &msg)
 	if err != nil {
 		return fmt.Errorf("git commit message: %w", err)
 	}
+
+	msg = stripComments(msg)
 	msg = strings.TrimSpace(msg)
 	if msg == "" {
 		return errors.New("git commit message: empty message")
@@ -85,6 +88,17 @@ func gitAddCommitPush(genResult *lang.GenerateResult) error {
 		return fmt.Errorf("git push: %w", err)
 	}
 	return nil
+}
+
+func stripComments(s string) string {
+	lines := strings.Split(s, "\n")
+	result := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if !strings.HasPrefix(line, "#") {
+			result = append(result, line)
+		}
+	}
+	return strings.Join(result, "\n")
 }
 
 func runCmd(command string, subcommand string, args ...string) error {
