@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/j178/leetgo/lang"
@@ -21,10 +22,14 @@ var gitCmd = &cobra.Command{
 var gitPushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Add, commit and push your code to remote repository",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		qs, err := leetcode.ParseQID(args[0], c)
+		qid := "today"
+		if len(args) > 0 {
+			qid = args[0]
+		}
+		qs, err := leetcode.ParseQID(qid, c)
 		if err != nil {
 			return err
 		}
@@ -61,11 +66,13 @@ func gitAddCommitPush(genResult *lang.GenerateResult) error {
 			genResult.Question.QuestionFrontendId,
 			genResult.Question.GetTitle(),
 		),
+		AppendDefault: true,
 	}
 	err = survey.AskOne(prompt, &msg)
 	if err != nil {
 		return fmt.Errorf("git commit message: %w", err)
 	}
+	msg = strings.TrimSpace(msg)
 	if msg == "" {
 		return errors.New("git commit message: empty message")
 	}
