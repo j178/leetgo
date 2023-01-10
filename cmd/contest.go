@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var contestCmd = &cobra.Command{
@@ -32,13 +33,15 @@ var contestCmd = &cobra.Command{
 		}
 
 		if !contest.HasFinished() && !contest.Registered {
-			prompt := survey.Confirm{
-				Message: fmt.Sprintf("Register for %s?", contest.Title),
-			}
-			var register bool
-			err := survey.AskOne(&prompt, &register)
-			if err != nil {
-				return err
+			register := true
+			if !viper.GetBool("yes") {
+				prompt := survey.Confirm{
+					Message: fmt.Sprintf("Register for %s?", contest.Title),
+				}
+				err := survey.AskOne(&prompt, &register)
+				if err != nil {
+					return err
+				}
 			}
 			if register {
 				hclog.L().Info("registering for contest", "contest", contest.Title)
@@ -88,13 +91,15 @@ var unregisterCmd = &cobra.Command{
 		if contest.HasFinished() {
 			return fmt.Errorf("contest %s has finished", contest.Title)
 		}
-		prompt := survey.Confirm{
-			Message: fmt.Sprintf("Unregister from %s?", contest.Title),
-		}
-		var unregister bool
-		err = survey.AskOne(&prompt, &unregister)
-		if err != nil {
-			return err
+		unregister := true
+		if !viper.GetBool("yes") {
+			prompt := survey.Confirm{
+				Message: fmt.Sprintf("Unregister from %s?", contest.Title),
+			}
+			err = survey.AskOne(&prompt, &unregister)
+			if err != nil {
+				return err
+			}
 		}
 		if unregister {
 			hclog.L().Info("unregistering from contest", "contest", contest.Title)
