@@ -20,6 +20,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-wordwrap v1.0.1
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sosedoff/ansible-vault-go v0.1.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0

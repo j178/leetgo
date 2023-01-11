@@ -30,13 +30,20 @@ func (ct *Contest) HasFinished() bool {
 	return time.Unix(ct.StartTime, 0).Add(time.Duration(ct.Duration) * time.Second).Before(time.Now())
 }
 
+func (ct *Contest) TimeTillStart() time.Duration {
+	return time.Until(time.Unix(ct.StartTime, 0))
+}
+
 func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
 	if !ct.HasStarted() {
 		return nil, ErrContestNotStarted
 	}
-	err := ct.fetchQuestions()
+	err := ct.Refresh()
 	if err != nil {
 		return nil, err
+	}
+	if len(ct.Questions) == 0 {
+		return nil, errors.New("no questions in contest")
 	}
 	if num < 1 || num > len(ct.Questions) {
 		return nil, errors.New("invalid question number")
@@ -51,9 +58,12 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	if !ct.HasStarted() {
 		return nil, ErrContestNotStarted
 	}
-	err := ct.fetchQuestions()
+	err := ct.Refresh()
 	if err != nil {
 		return nil, err
+	}
+	if len(ct.Questions) == 0 {
+		return nil, errors.New("no questions in contest")
 	}
 
 	for _, q := range ct.Questions {
@@ -65,7 +75,7 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	return ct.Questions, nil
 }
 
-func (ct *Contest) fetchQuestions() error {
+func (ct *Contest) Refresh() error {
 	if len(ct.Questions) > 0 {
 		return nil
 	}
@@ -73,9 +83,6 @@ func (ct *Contest) fetchQuestions() error {
 	if err != nil {
 		return err
 	}
-	if len(contest.Questions) == 0 {
-		return errors.New("no questions in contest")
-	}
-	ct.Questions = contest.Questions
+	*ct = *contest
 	return nil
 }

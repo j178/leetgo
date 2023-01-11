@@ -96,3 +96,7 @@ func ReplaceSubscript(s string) string {
 func ReplaceSuperscript(s string) string {
 	return supReplace.Replace(s)
 }
+
+func PtrTo[T any](v T) *T {
+	return &v
+}

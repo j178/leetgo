@@ -193,6 +193,10 @@ leetcode:
 contest:
   # Base dir to put generated contest questions
   out_dir: contest
+  # Template to generate filename of the question
+  filename_template: '{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  # Open the contest page in browser after generating
+  open_in_browser: true
 # The editor to open generated files
 editor:
   # Use a predefined editor: vim, vscode, goland
