@@ -118,15 +118,17 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 	}
 	casesStr := strings.Join(cases, "\n")
 
+	hclog.L().Info("running test remotely", "question", q.TitleSlug)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Running test..."))
 	spin.Start()
 	defer spin.Stop()
 
 	wait <- struct{}{}
 
+	// TODO: if contest, use contest test
 	interResult, err := c.Test(q, gen.Slug(), solution, casesStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to interpret solution: %w", err)
+		return nil, fmt.Errorf("failed to run test: %w", err)
 	}
 
 	testResult, err := waitResult(c, interResult.InterpretId)

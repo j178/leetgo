@@ -11,6 +11,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/pkg/browser"
@@ -52,8 +53,11 @@ func selectUpcomingContest(c leetcode.Client) (string, error) {
 }
 
 func waitContestStart(ct *leetcode.Contest) error {
-	var mu sync.Mutex
+	if ct.HasStarted() {
+		return nil
+	}
 
+	var mu sync.Mutex
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond)
 	spin.PreUpdate = func(s *spinner.Spinner) {
 		mu.Lock()
@@ -139,29 +143,17 @@ var contestCmd = &cobra.Command{
 			return err
 		}
 
-		qs, err := contest.GetAllQuestions()
+		generated, err := lang.GenerateContest(contest)
 		if err != nil {
 			return err
-		}
-		var generated []*lang.GenerateResult
-		for _, q := range qs {
-			result, err := lang.Generate(q)
-			if err != nil {
-				hclog.L().Error("failed to generate", "question", q.TitleSlug, "err", err)
-				continue
-			}
-			generated = append(generated, result)
-		}
-		if len(generated) == 0 {
-			return fmt.Errorf("no question generated")
 		}
 		if cfg.Contest.OpenInBrowser {
 			for _, r := range generated {
 				_ = browser.OpenURL(r.Question.ContestUrl())
 			}
 		}
-
-		return nil
+		err = editor.Open(generated[0].Files)
+		return err
 	},
 }
 

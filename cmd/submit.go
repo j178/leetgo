@@ -63,11 +63,13 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
 	}
 
+	hclog.L().Info("submitting solution", "question", q.TitleSlug)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Submitting solution..."))
 	spin.Start()
 	defer spin.Stop()
 
 	wait <- struct{}{}
+	// TODO: if contest, use contest submit
 	submissionId, err := c.Submit(q, gen.Slug(), solution)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit solution: %w", err)

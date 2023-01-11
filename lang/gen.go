@@ -248,27 +248,27 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	return outDir
 }
 
-func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
+func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
-		return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
+		return nil, nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
 	}
 
 	err := q.Fulfill()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get question data: %w", err)
+		return nil, nil, fmt.Errorf("failed to get question data: %w", err)
 	}
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
-		return nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
+		return nil, nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
 	}
 
 	outDir := getOutDir(q, gen)
 	err = utils.CreateIfNotExists(outDir, true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Check and generate necessary library files.
@@ -277,7 +277,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		if err == nil && !ok {
 			err = t.Initialize(outDir)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 		if err != nil {
@@ -292,7 +292,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	// Generate files
 	result, err := gen.Generate(q)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	result.PrependPath(outDir)
 	// Write files
@@ -304,8 +304,15 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		}
 		result.Files[i].Written = written
 	}
+	return gen, result, nil
+}
 
-	// Update last generated state
+func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
+	gen, result, err := generate(q)
+	if err != nil {
+		return nil, err
+	}
+
 	state := config.LoadState()
 	state.LastQuestion = config.LastQuestion{
 		Slug:       q.TitleSlug,
@@ -315,6 +322,31 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	config.SaveState(state)
 
 	return result, nil
+}
+
+func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
+	qs, err := ct.GetAllQuestions()
+	if err != nil {
+		return nil, err
+	}
+	var generated []*GenerateResult
+	for _, q := range qs {
+		_, result, err := generate(q)
+		if err != nil {
+			hclog.L().Error("failed to generate", "question", q.TitleSlug, "err", err)
+			continue
+		}
+		generated = append(generated, result)
+	}
+	if len(generated) == 0 {
+		return nil, fmt.Errorf("no question generated")
+	}
+
+	state := config.LoadState()
+	state.LastContest = ct.TitleSlug
+	config.SaveState(state)
+
+	return generated, nil
 }
 
 func tryWrite(file string, content string) (bool, error) {

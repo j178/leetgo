@@ -34,6 +34,21 @@ func (e unexpectedStatusCode) Error() string {
 	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(body))
 }
 
+type errorResponse struct {
+	ErrorMsg *string `json:"error"`
+}
+
+func (e errorResponse) Ok() bool {
+	return e.ErrorMsg == nil
+}
+
+func (e errorResponse) Error() string {
+	if e.ErrorMsg != nil {
+		return *e.ErrorMsg
+	}
+	return ""
+}
+
 type Client interface {
 	BaseURI() string
 	Inspect(typ string) (map[string]any, error)
@@ -142,7 +157,7 @@ type variables map[string]string
 type graphqlRequest struct {
 	path          string
 	query         string
-	operationName *string
+	operationName string
 	variables     variables
 }
 
@@ -191,8 +206,8 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 		Variables     string `url:"variables"`
 	}
 	p := params{Query: req.query}
-	if req.operationName != nil {
-		p.OperationName = *req.operationName
+	if req.operationName != "" {
+		p.OperationName = req.operationName
 	}
 	if req.variables != nil {
 		v, _ := json.Marshal(req.variables)
@@ -353,7 +368,7 @@ query userStatusGlobal {
 		graphqlRequest{
 			path:          nojGoPath,
 			query:         query,
-			operationName: utils.PtrTo("userStatusGlobal"),
+			operationName: "userStatusGlobal",
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -408,7 +423,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: utils.PtrTo("questionData"),
+			operationName: "questionData",
 			variables:     variables{"titleSlug": slug},
 		}, &resp, nil,
 	)
@@ -439,7 +454,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: utils.PtrTo("AllQuestionUrls"),
+			operationName: "AllQuestionUrls",
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -488,7 +503,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: utils.PtrTo("questionOfToday"),
+			operationName: "questionOfToday",
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -505,6 +520,9 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	_, err := c.jsonGet(url, nil, &resp, nil)
 	if err != nil {
 		return nil, err
+	}
+	if resp.Get("error").Exists() {
+		return nil, errors.New(resp.Get("error").Str)
 	}
 	contestInfo := resp.Get("contest")
 	contest := &Contest{

@@ -6,3 +6,4 @@ leetgo.yaml
 completions/
 dist/
 /go/
+/contest/

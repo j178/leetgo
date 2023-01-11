@@ -254,10 +254,13 @@ func (q *QuestionData) Fulfill() error {
 		return nil
 	}
 
-	// TODO 为 contest 适配
+	// TODO 为 contest 适配: frontend-id 替换为问题序号
 	q1, err := q.client.GetQuestionData(q.TitleSlug)
 	if err != nil {
 		return err
+	}
+	if q.IsContest() {
+		q1.contest = q.contest
 	}
 	*q = *q1
 	atomic.StoreInt32(&q.partial, 0)
