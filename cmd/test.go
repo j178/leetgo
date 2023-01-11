@@ -124,7 +124,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 
 	wait <- struct{}{}
 
-	interResult, err := c.InterpretSolution(q, gen.Slug(), solution, casesStr)
+	interResult, err := c.Test(q, gen.Slug(), solution, casesStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to interpret solution: %w", err)
 	}
