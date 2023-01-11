@@ -36,7 +36,7 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	panic("implement me")
 }
 
-func (c *usClient) InterpretSolution(
+func (c *usClient) Test(
 	q *QuestionData,
 	lang string,
 	code string,

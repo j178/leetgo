@@ -40,7 +40,7 @@ type Client interface {
 	GetQuestionData(slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
-	InterpretSolution(q *QuestionData, lang string, code string, dataInput string) (
+	Test(q *QuestionData, lang string, code string, dataInput string) (
 		*InterpretSolutionResult,
 		error,
 	)
@@ -530,7 +530,7 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
 
-func (c *cnClient) InterpretSolution(q *QuestionData, lang string, code string, dataInput string) (
+func (c *cnClient) Test(q *QuestionData, lang string, code string, dataInput string) (
 	*InterpretSolutionResult,
 	error,
 ) {
@@ -584,6 +584,10 @@ func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, er
 	return resp.Get("submission_id").String(), err
 }
 
+func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
+	return nil, nil
+}
+
 func (c *cnClient) RegisterContest(slug string) error {
 	url := fmt.Sprintf("%scontest/api/%s/register", c.BaseURI(), slug)
 	_, err := c.jsonPost(url, nil, nil, nil)
@@ -598,4 +602,16 @@ func (c *cnClient) UnregisterContest(slug string) error {
 	req, _ := c.http.New().Delete(url).Request()
 	_, err := c.send(req, nil, nil)
 	return err
+}
+
+func (c *cnClient) ContestTest() error {
+	return nil
+}
+
+func (c *cnClient) ContestSubmit() error {
+
+}
+
+func (c *cnClient) ContestCheckResult() error {
+
 }
