@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -29,7 +30,8 @@ type unexpectedStatusCode struct {
 }
 
 func (e unexpectedStatusCode) Error() string {
-	return fmt.Sprintf("unexpected status code: %d", e.Code)
+	body, _ := io.ReadAll(e.Resp.Body)
+	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(body))
 }
 
 type Client interface {
@@ -46,6 +48,7 @@ type Client interface {
 	)
 	CheckResult(interpretId string) (CheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
+	GetUpcomingContests() ([]*Contest, error)
 	GetContest(contestSlug string) (*Contest, error)
 	RegisterContest(slug string) error
 	UnregisterContest(slug string) error
@@ -139,7 +142,7 @@ type variables map[string]string
 type graphqlRequest struct {
 	path          string
 	query         string
-	operationName string
+	operationName *string
 	variables     variables
 }
 
@@ -188,8 +191,8 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 		Variables     string `url:"variables"`
 	}
 	p := params{Query: req.query}
-	if req.operationName != "" {
-		p.OperationName = req.operationName
+	if req.operationName != nil {
+		p.OperationName = *req.operationName
 	}
 	if req.variables != nil {
 		v, _ := json.Marshal(req.variables)
@@ -203,13 +206,16 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 }
 
 func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) (*http.Response, error) {
-	r, err := c.http.New().Post(req.path).BodyJSON(
-		map[string]any{
-			"query":         req.query,
-			"operationName": req.operationName,
-			"variables":     req.variables,
-		},
-	).Request()
+	v := req.variables
+	if v == nil {
+		v = make(variables)
+	}
+	body := map[string]any{
+		"query":         req.query,
+		"operationName": req.operationName,
+		"variables":     v,
+	}
+	r, err := c.http.New().Post(req.path).BodyJSON(body).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +353,7 @@ query userStatusGlobal {
 		graphqlRequest{
 			path:          nojGoPath,
 			query:         query,
-			operationName: "userStatusGlobal",
+			operationName: utils.PtrTo("userStatusGlobal"),
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -402,7 +408,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: "questionData",
+			operationName: utils.PtrTo("questionData"),
 			variables:     variables{"titleSlug": slug},
 		}, &resp, nil,
 	)
@@ -433,7 +439,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: "AllQuestionUrls",
+			operationName: utils.PtrTo("AllQuestionUrls"),
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -482,7 +488,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 		graphqlRequest{
 			path:          graphQLPath,
 			query:         query,
-			operationName: "questionOfToday",
+			operationName: utils.PtrTo("questionOfToday"),
 			variables:     nil,
 		}, &resp, nil,
 	)
@@ -585,7 +591,54 @@ func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, er
 }
 
 func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
-	return nil, nil
+	query := `
+{
+    contestUpcomingContests {
+        containsPremium
+        title
+        titleSlug
+        description
+        startTime
+        duration
+        originStartTime
+        isVirtual
+        registered
+    }
+}
+`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{
+			path:  graphQLPath,
+			query: query,
+		}, &resp, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	var contests []*Contest
+	for _, contestInfo := range resp.Get("data.contestUpcomingContests").Array() {
+		contests = append(
+			contests, &Contest{
+				client:          c,
+				Id:              int(contestInfo.Get("id").Int()),
+				TitleSlug:       contestInfo.Get("titleSlug").Str,
+				Title:           contestInfo.Get("title").Str,
+				StartTime:       contestInfo.Get("startTime").Int(),
+				OriginStartTime: contestInfo.Get("originStartTime").Int(),
+				Duration:        int(contestInfo.Get("duration").Int()),
+				IsVirtual:       contestInfo.Get("isVirtual").Bool(),
+				Description:     contestInfo.Get("description").Str,
+				Registered:      contestInfo.Get("registered").Bool(),
+			},
+		)
+	}
+	sort.Slice(
+		contests, func(i, j int) bool {
+			return contests[i].StartTime < contests[j].StartTime
+		},
+	)
+	return contests, nil
 }
 
 func (c *cnClient) RegisterContest(slug string) error {
@@ -609,9 +662,9 @@ func (c *cnClient) ContestTest() error {
 }
 
 func (c *cnClient) ContestSubmit() error {
-
+	return nil
 }
 
 func (c *cnClient) ContestCheckResult() error {
-
+	return nil
 }

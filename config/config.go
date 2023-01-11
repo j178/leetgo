@@ -55,6 +55,7 @@ type Config struct {
 type ContestConfig struct {
 	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base dir to put generated contest questions"`
 	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Template to generate filename of the question"`
+	OpenInBrowser    bool   `yaml:"open_in_browser" mapstructure:"open_in_browser" comment:"Open the contest page in browser after generating"`
 }
 
 type Editor struct {
@@ -191,6 +192,7 @@ func Default() *Config {
 		Contest: ContestConfig{
 			OutDir:           "contest",
 			FilenameTemplate: `{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			OpenInBrowser:    true,
 		},
 	}
 }
