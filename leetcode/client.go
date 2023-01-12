@@ -64,8 +64,8 @@ type Client interface {
 		*InterpretSolutionResult,
 		error,
 	)
-	CheckResult(interpretId string) (CheckResult, error)
 	Submit(q *QuestionData, lang string, code string) (string, error)
+	CheckResult(interpretId string) (CheckResult, error)
 	GetUpcomingContests() ([]*Contest, error)
 	GetContest(contestSlug string) (*Contest, error)
 	RegisterContest(slug string) error
@@ -588,26 +588,6 @@ func (c *cnClient) Test(q *QuestionData, lang string, code string, dataInput str
 	return &resp, err
 }
 
-func (c *cnClient) CheckResult(submissionId string) (
-	CheckResult,
-	error,
-) {
-	url := fmt.Sprintf("%ssubmissions/detail/%s/check/", c.BaseURI(), submissionId)
-	var result gjson.Result
-	_, err := c.jsonGet(url, nil, &result, nil)
-	if err != nil {
-		return nil, err
-	}
-	if result.Get("question_id").Exists() {
-		var r SubmitCheckResult
-		err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
-		return &r, err
-	}
-	var r RunCheckResult
-	err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
-	return &r, err
-}
-
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
 	url := ""
 	if q.IsContest() {
@@ -631,6 +611,26 @@ func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, er
 		}, &resp, nil,
 	)
 	return resp.Get("submission_id").String(), err
+}
+
+func (c *cnClient) CheckResult(submissionId string) (
+	CheckResult,
+	error,
+) {
+	url := fmt.Sprintf("%ssubmissions/detail/%s/check/", c.BaseURI(), submissionId)
+	var result gjson.Result
+	_, err := c.jsonGet(url, nil, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result.Get("question_id").Exists() {
+		var r SubmitCheckResult
+		err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
+		return &r, err
+	}
+	var r RunCheckResult
+	err = json.Unmarshal(utils.StringToBytes(result.Raw), &r)
+	return &r, err
 }
 
 func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
@@ -698,15 +698,4 @@ func (c *cnClient) UnregisterContest(slug string) error {
 	req, _ := c.http.New().Delete(url).Request()
 	_, err := c.send(req, nil, nil)
 	return err
-}
-
-func (c *cnClient) ContestTest(q *QuestionData, lang string, code string, dataInput string) (
-	*InterpretSolutionResult,
-	error,
-) {
-	return nil, nil
-}
-
-func (c *cnClient) ContestSubmit(q *QuestionData, lang string, code string) (string, error) {
-	return "", nil
 }
