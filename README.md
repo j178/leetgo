@@ -149,7 +149,7 @@ code:
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
   # The mark to indicate the beginning of the code
-  code_begin_mark: '@lc code=start'
+  code_begin_mark: '@lc code=begin'
   # The mark to indicate the end of the code
   code_end_mark: '@lc code=end'
   go:
@@ -194,7 +194,7 @@ contest:
   # Base dir to put generated contest questions
   out_dir: contest
   # Template to generate filename of the question
-  filename_template: '{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  filename_template: '{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
   # Open the contest page in browser after generating
   open_in_browser: true
 # The editor to open generated files
