@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,28 +12,62 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func askFilter() (leetcode.QuestionFilter, error) {
-	var filter leetcode.QuestionFilter
+func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
+	tags, err := c.GetQuestionTags()
+	if err != nil {
+		return
+	}
+	var tagNames []string
+	for _, t := range tags {
+		tagNames = append(tagNames, t.Name)
+	}
+
 	qs := []*survey.Question{
 		{
 			Name: "Difficulty",
 			Prompt: &survey.Select{
 				Message: "Select a difficulty level",
-				Options: []string{"Easy", "Medium", "Hard"},
+				Options: []string{"All", "Easy", "Medium", "Hard"},
+			},
+			Transform: func(ans interface{}) (newAns interface{}) {
+				opt := ans.(survey.OptionAnswer)
+				if opt.Index == 0 {
+					return survey.OptionAnswer{Value: ""}
+				}
+				opt.Value = strings.ToUpper(opt.Value)
+				return opt
 			},
 		},
 		{
 			Name: "Status",
 			Prompt: &survey.Select{
 				Message: "Select question status",
-				Options: []string{"Not Started", "Tried", "Ac"},
+				Options: []string{"All", "Not Started", "Tried", "Ac"},
+			},
+			Transform: func(ans interface{}) (newAns interface{}) {
+				opt := ans.(survey.OptionAnswer)
+				if opt.Index == 0 {
+					return survey.OptionAnswer{Value: ""}
+				}
+				opt.Value = strings.ReplaceAll(strings.ToUpper(opt.Value), " ", "_")
+				return opt
 			},
 		},
 		{
 			Name: "Tags",
 			Prompt: &survey.MultiSelect{
 				Message: "Select tags",
-				Options: []string{},
+				Options: tagNames,
+			},
+			Transform: func(ans interface{}) (newAns interface{}) {
+				opt := ans.([]survey.OptionAnswer)
+				if len(opt) == 0 {
+					return opt
+				}
+				if len(opt) == len(tagNames) {
+					return []survey.OptionAnswer{}
+				}
+				return ans
 			},
 		},
 		{
@@ -41,18 +76,12 @@ func askFilter() (leetcode.QuestionFilter, error) {
 		},
 	}
 
-	err := survey.Ask(qs, &filter)
+	err = survey.Ask(qs, &filter, survey.WithRemoveSelectAll())
 	if err != nil {
-		return filter, err
+		return
 	}
 
 	return filter, nil
-}
-
-type questionLoader struct {
-	c         leetcode.Client
-	filter    leetcode.QuestionFilter
-	questions []*leetcode.QuestionData
 }
 
 var pickCmd = &cobra.Command{
@@ -79,8 +108,11 @@ leetgo pick 549`,
 			}
 			q = qs[0]
 		} else {
-			cache := leetcode.GetCache(c)
-			m := newTuiModel(cache)
+			filter, err := askFilter(c)
+			if err != nil {
+				return err
+			}
+			m := newTuiModel(filter, c)
 			p := tea.NewProgram(m)
 			if _, err := p.Run(); err != nil {
 				return err

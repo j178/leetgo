@@ -27,11 +27,11 @@ var (
 type unexpectedStatusCode struct {
 	Code int
 	Resp *http.Response
+	Body []byte
 }
 
 func (e unexpectedStatusCode) Error() string {
-	body, _ := io.ReadAll(e.Resp.Body)
-	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(body))
+	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(e.Body))
 }
 
 // nolint: unused
@@ -60,6 +60,8 @@ type Client interface {
 	GetQuestionData(slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
+	GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error)
+	GetQuestionTags() ([]QuestionTag, error)
 	Test(q *QuestionData, lang string, code string, dataInput string) (
 		*InterpretSolutionResult,
 		error,
@@ -191,7 +193,8 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	}
 
 	if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
-		return resp, unexpectedStatusCode{Code: resp.StatusCode, Resp: resp}
+		body, _ := io.ReadAll(resp.Body)
+		return resp, unexpectedStatusCode{Code: resp.StatusCode, Resp: resp, Body: body}
 	}
 
 	return nil, err
@@ -687,7 +690,7 @@ type QuestionFilter struct {
 	SearchKeywords string   `json:"searchKeywords,omitempty"`
 }
 
-func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) ([]*QuestionData, error) {
+func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
 	query := `
 query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
   problemsetQuestionList(
@@ -728,11 +731,25 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 			variables: vars,
 		}, &resp, nil,
 	)
+	if err != nil {
+		return QuestionList{}, err
+	}
 
-	return nil, err
+	var result QuestionList
+	questionList := resp.Get("data.problemsetQuestionList")
+	err = json.Unmarshal(utils.StringToBytes(questionList.Raw), &result)
+	if err != nil {
+		return QuestionList{}, err
+	}
+	for _, q := range result.Questions {
+		q.client = c
+		q.partial = 1
+	}
+
+	return result, err
 }
 
-func (c *cnClient) GetQuestionTags() (*QuestionData, error) {
+func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 	query := `
 query questionTagTypeWithTags {
     questionTagTypeWithTags {
@@ -750,6 +767,27 @@ query questionTagTypeWithTags {
     }
 }
 `
-	_ = query
-	return nil, nil
+	var resp gjson.Result
+	_, err := c.graphqlPost(graphqlRequest{query: query}, &resp, nil)
+	if err != nil {
+		return nil, err
+	}
+	var tags []QuestionTag
+	for _, tagType := range resp.Get("data.questionTagTypeWithTags").Array() {
+		tagTypeName := tagType.Get("name").Str
+		tagTypeTransName := tagType.Get("transName").Str
+		for _, tagInfo := range tagType.Get("tagRelation").Array() {
+			tag := QuestionTag{
+				TypeName:       tagTypeName,
+				TypeTransName:  tagTypeTransName,
+				Id:             tagInfo.Get("tag.id").Str,
+				Name:           tagInfo.Get("tag.name").Str,
+				NameTranslated: tagInfo.Get("tag.nameTranslated").Str,
+				Slug:           tagInfo.Get("tag.slug").Str,
+			}
+			tags = append(tags, tag)
+		}
+	}
+
+	return tags, nil
 }

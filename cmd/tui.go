@@ -40,6 +40,7 @@ func (d rowDelegate) Render(w io.Writer, m list.Model, index int, listItem list.
 	}
 	q := (*leetcode.QuestionData)(i)
 
+	// TODO improve display
 	str := q.GetTitle()
 	if index == m.Index() {
 		str = selectedItemStyle.Render("> " + str)
@@ -58,12 +59,16 @@ func (i *item) FilterValue() string {
 }
 
 type tui struct {
-	cache    leetcode.QuestionsCache
+	filter   leetcode.QuestionFilter
+	client   leetcode.Client
+	idx      int
+	total    int
+	hasMore  bool
 	list     *list.Model
 	selected *leetcode.QuestionData
 }
 
-func newTuiModel(cache leetcode.QuestionsCache) *tui {
+func newTuiModel(filter leetcode.QuestionFilter, c leetcode.Client) *tui {
 	l := list.New(nil, rowDelegate{}, 60, 60)
 	l.Title = "Select a question"
 	l.SetShowStatusBar(true)
@@ -72,9 +77,11 @@ func newTuiModel(cache leetcode.QuestionsCache) *tui {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
+	// TODO Implement a loading list
 	return &tui{
-		cache: cache,
-		list:  &l,
+		filter: filter,
+		client: c,
+		list:   &l,
 	}
 }
 
@@ -84,8 +91,13 @@ func (m *tui) Selected() *leetcode.QuestionData {
 
 func (m *tui) Init() tea.Cmd {
 	return func() tea.Msg {
-		qs := m.cache.GetAllQuestions()
-		return qsMsg(qs)
+		qs, err := m.client.GetQuestionsByFilter(m.filter, 100, 0)
+		if err != nil {
+			return nil
+		}
+		m.total = qs.Total
+		m.hasMore = qs.HasMore
+		return qsMsg(qs.Questions)
 	}
 }
 

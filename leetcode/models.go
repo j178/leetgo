@@ -236,3 +236,18 @@ func (r *RunCheckResult) Display(q *QuestionData) string {
 func (r *RunCheckResult) GetState() string {
 	return r.State
 }
+
+type QuestionList struct {
+	Questions []*QuestionData `json:"questions"`
+	HasMore   bool            `json:"hasMore"`
+	Total     int             `json:"total"`
+}
+
+type QuestionTag struct {
+	Id             string `json:"id"`
+	Name           string `json:"name"`
+	NameTranslated string `json:"nameTranslated"`
+	Slug           string `json:"slug"`
+	TypeName       string `json:"typeName"`
+	TypeTransName  string `json:"typeTransName"`
+}
