@@ -34,14 +34,17 @@ func (e unexpectedStatusCode) Error() string {
 	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(body))
 }
 
+// nolint: unused
 type errorResponse struct {
 	ErrorMsg *string `json:"error"`
 }
 
+// nolint: unused
 func (e errorResponse) Ok() bool {
 	return e.ErrorMsg == nil
 }
 
+// nolint: unused
 func (e errorResponse) Error() string {
 	if e.ErrorMsg != nil {
 		return *e.ErrorMsg
