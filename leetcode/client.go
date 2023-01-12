@@ -155,18 +155,14 @@ func nonFollowRedirect(req *http.Request, via []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
-type variables map[string]string
-
 type graphqlRequest struct {
-	path          string
 	query         string
 	operationName string
-	variables     variables
+	variables     map[string]any
 }
 
 const (
 	graphQLPath = "/graphql"
-	nojGoPath   = "/graphql/noj-go"
 )
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
@@ -216,7 +212,7 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 		v, _ := json.Marshal(req.variables)
 		p.Variables = string(v)
 	}
-	r, err := c.http.New().Get(req.path).QueryStruct(p).Request()
+	r, err := c.http.New().Get(graphQLPath).QueryStruct(p).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -226,14 +222,14 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) (*http.Response, error) {
 	v := req.variables
 	if v == nil {
-		v = make(variables)
+		v = make(map[string]any)
 	}
 	body := map[string]any{
 		"query":         req.query,
 		"operationName": req.operationName,
 		"variables":     v,
 	}
-	r, err := c.http.New().Post(req.path).BodyJSON(body).Request()
+	r, err := c.http.New().Post(graphQLPath).BodyJSON(body).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -295,10 +291,7 @@ query a {
 	query = strings.ReplaceAll(query, "$type", typ)
 	var resp map[string]any
 	_, err := c.graphqlGet(
-		graphqlRequest{
-			path:  graphQLPath,
-			query: query,
-		},
+		graphqlRequest{query: query},
 		&resp,
 		nil,
 	)
@@ -351,7 +344,7 @@ func (c *cnClient) Login(username, password string) (*http.Response, error) {
 
 func (c *cnClient) GetUserStatus() (*UserStatus, error) {
 	query := `
-query userStatusGlobal {
+query globalData {
   userStatus {
     isSignedIn
     username
@@ -368,12 +361,7 @@ query userStatusGlobal {
 		} `json:"data"`
 	}
 	_, err := c.graphqlPost(
-		graphqlRequest{
-			path:          nojGoPath,
-			query:         query,
-			operationName: "userStatusGlobal",
-			variables:     nil,
-		}, &resp, nil,
+		graphqlRequest{query: query}, &resp, nil,
 	)
 	if err != nil {
 		return nil, err
@@ -424,10 +412,9 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	}
 	_, err := c.graphqlPost(
 		graphqlRequest{
-			path:          graphQLPath,
 			query:         query,
 			operationName: "questionData",
-			variables:     variables{"titleSlug": slug},
+			variables:     map[string]any{"titleSlug": slug},
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -455,10 +442,8 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	var resp gjson.Result
 	_, err := c.graphqlPost(
 		graphqlRequest{
-			path:          graphQLPath,
 			query:         query,
 			operationName: "AllQuestionUrls",
-			variables:     nil,
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -504,10 +489,8 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	var resp gjson.Result
 	_, err := c.graphqlPost(
 		graphqlRequest{
-			path:          graphQLPath,
 			query:         query,
 			operationName: "questionOfToday",
-			variables:     nil,
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -651,10 +634,7 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 `
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{
-			path:  graphQLPath,
-			query: query,
-		}, &resp, nil,
+		graphqlRequest{query: query}, &resp, nil,
 	)
 	if err != nil {
 		return nil, err
@@ -698,4 +678,78 @@ func (c *cnClient) UnregisterContest(slug string) error {
 	req, _ := c.http.New().Delete(url).Request()
 	_, err := c.send(req, nil, nil)
 	return err
+}
+
+type QuestionFilter struct {
+	Difficulty     string   `json:"difficulty,omitempty"`
+	Tags           []string `json:"tags,omitempty"`
+	Status         string   `json:"status,omitempty"`
+	SearchKeywords string   `json:"searchKeywords,omitempty"`
+}
+
+func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) ([]*QuestionData, error) {
+	query := `
+query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+  problemsetQuestionList(
+    categorySlug: $categorySlug
+    limit: $limit
+    skip: $skip
+    filters: $filters
+  ) {
+    hasMore
+    total
+    questions {
+      difficulty
+      frontendQuestionId
+      status
+      title
+      titleCn
+      titleSlug
+      topicTags {
+        name
+        nameTranslated
+        id
+        slug
+      }
+    }
+  }
+}
+`
+	vars := map[string]any{
+		"categorySlug": "algorithms",
+		"limit":        limit,
+		"skip":         skip,
+		"filters":      f,
+	}
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{
+			query:     query,
+			variables: vars,
+		}, &resp, nil,
+	)
+
+	return nil, err
+}
+
+func (c *cnClient) GetQuestionTags() (*QuestionData, error) {
+	query := `
+query questionTagTypeWithTags {
+    questionTagTypeWithTags {
+        name
+        transName
+        tagRelation {
+            questionNum
+            tag {
+                name
+                id
+                nameTranslated
+                slug
+            }
+        }
+    }
+}
+`
+	_ = query
+	return nil, nil
 }
