@@ -65,13 +65,6 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	if len(ct.Questions) == 0 {
 		return nil, errors.New("no questions in contest")
 	}
-
-	for _, q := range ct.Questions {
-		err := q.Fulfill()
-		if err != nil {
-			return nil, err
-		}
-	}
 	return ct.Questions, nil
 }
 

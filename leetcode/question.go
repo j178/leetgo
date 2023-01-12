@@ -249,6 +249,10 @@ func (q *QuestionData) IsContest() bool {
 	return q.contest != nil
 }
 
+func (q *QuestionData) Contest() *Contest {
+	return q.contest
+}
+
 func (q *QuestionData) Fulfill() error {
 	if atomic.LoadInt32(&q.partial) == 0 {
 		return nil
@@ -397,6 +401,10 @@ type FilenameTemplateData struct {
 	Difficulty       string
 	Lang             string
 	SlugIsMeaningful bool
+	IsContest        bool
+	ContestTitle     string
+	ContestShortSlug string
+	ContestSlug      string
 }
 
 func (q *QuestionData) formatQuestionId() (string, bool) {
@@ -419,6 +427,10 @@ func (q *QuestionData) formatQuestionId() (string, bool) {
 	return id, slugValid
 }
 
+func contestShortSlug(contestSlug string) string {
+	return strings.Replace(contestSlug, "-contest-", "-", 1)
+}
+
 func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string) (string, error) {
 	id, slugValid := q.formatQuestionId()
 	data := &FilenameTemplateData{
@@ -428,6 +440,12 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 		Difficulty:       q.Difficulty,
 		Lang:             lang,
 		SlugIsMeaningful: slugValid,
+	}
+	if q.IsContest() {
+		data.IsContest = q.IsContest()
+		data.ContestSlug = q.contest.TitleSlug
+		data.ContestTitle = q.contest.Title
+		data.ContestShortSlug = contestShortSlug(q.contest.TitleSlug)
 	}
 	tmpl := template.New("filename")
 	tmpl.Funcs(

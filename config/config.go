@@ -20,7 +20,7 @@ const (
 	projectConfigFilename     = CmdName + ".yaml"
 	leetcodeCacheFileBaseName = "cache/leetcode-questions"
 	stateFile                 = "cache/state.json"
-	codeBeginMark             = "@lc code=start"
+	codeBeginMark             = "@lc code=begin"
 	codeEndMark               = "@lc code=end"
 )
 
@@ -191,7 +191,7 @@ func Default() *Config {
 		},
 		Contest: ContestConfig{
 			OutDir:           "contest",
-			FilenameTemplate: `{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			FilenameTemplate: `{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
 			OpenInBrowser:    true,
 		},
 	}

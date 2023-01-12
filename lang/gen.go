@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -248,7 +249,7 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	return outDir
 }
 
-func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
+func generate(q *leetcode.QuestionData, overrideQuestionId string) (Lang, *GenerateResult, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
@@ -258,6 +259,10 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	err := q.Fulfill()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get question data: %w", err)
+	}
+	// Overwrite contest question frontend id to 1, 2, 3...
+	if overrideQuestionId != "" {
+		q.QuestionFrontendId = overrideQuestionId
 	}
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
@@ -308,7 +313,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 }
 
 func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	gen, result, err := generate(q)
+	gen, result, err := generate(q, "")
 	if err != nil {
 		return nil, err
 	}
@@ -329,16 +334,17 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	var generated []*GenerateResult
-	for _, q := range qs {
-		_, result, err := generate(q)
+
+	var results []*GenerateResult
+	for i, q := range qs {
+		_, result, err := generate(q, strconv.Itoa(i+1))
 		if err != nil {
 			hclog.L().Error("failed to generate", "question", q.TitleSlug, "err", err)
 			continue
 		}
-		generated = append(generated, result)
+		results = append(results, result)
 	}
-	if len(generated) == 0 {
+	if len(results) == 0 {
 		return nil, fmt.Errorf("no question generated")
 	}
 
@@ -346,7 +352,7 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	state.LastContest = ct.TitleSlug
 	config.SaveState(state)
 
-	return generated, nil
+	return results, nil
 }
 
 func tryWrite(file string, content string) (bool, error) {
