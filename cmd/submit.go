@@ -9,6 +9,7 @@ import (
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -30,19 +31,11 @@ var submitCmd = &cobra.Command{
 			return fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
 		}
 
-		limitC := make(chan struct{})
-		defer func() { close(limitC) }()
-		go func() {
-			for {
-				if _, ok := <-limitC; !ok {
-					return
-				}
-				time.Sleep(2 * time.Second)
-			}
-		}()
+		limiter := utils.NewRateLimiter(10 * time.Second)
+		defer limiter.Stop()
 
 		for _, q := range qs {
-			result, err := submitSolution(q, c, gen, limitC)
+			result, err := submitSolution(q, c, gen, limiter)
 			if err != nil {
 				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				continue
@@ -54,7 +47,7 @@ var submitCmd = &cobra.Command{
 	},
 }
 
-func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, wait chan<- struct{}) (
+func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, limiter *utils.RateLimiter) (
 	*leetcode.SubmitCheckResult,
 	error,
 ) {
@@ -65,10 +58,13 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 
 	hclog.L().Info("submitting solution", "question", q.TitleSlug)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Submitting solution..."))
+	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
 
-	wait <- struct{}{}
+	limiter.Wait()
+	spin.Reverse()
+
 	submissionId, err := c.Submit(q, gen.Slug(), solution)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit solution: %w", err)

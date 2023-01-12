@@ -70,10 +70,6 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 				return ans
 			},
 		},
-		{
-			Name:   "SearchKeywords",
-			Prompt: &survey.Input{Message: "Keyword to search"},
-		},
 	}
 
 	err = survey.Ask(qs, &filter, survey.WithRemoveSelectAll())

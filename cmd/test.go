@@ -10,6 +10,7 @@ import (
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -55,16 +56,10 @@ var testCmd = &cobra.Command{
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
 
-		limitC := make(chan struct{})
-		defer func() { close(limitC) }()
-		go func() {
-			for {
-				if _, ok := <-limitC; !ok {
-					return
-				}
-				time.Sleep(2 * time.Second)
-			}
-		}()
+		testLimiter := utils.NewRateLimiter(10 * time.Second)
+		submitLimiter := utils.NewRateLimiter(10 * time.Second)
+		defer testLimiter.Stop()
+		defer submitLimiter.Stop()
 
 		for _, q := range qs {
 			passed := false
@@ -77,7 +72,7 @@ var testCmd = &cobra.Command{
 					passed = true
 				}
 			} else {
-				result, err := runTestRemotely(q, c, gen, limitC)
+				result, err := runTestRemotely(q, c, gen, testLimiter)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 				} else {
@@ -87,7 +82,7 @@ var testCmd = &cobra.Command{
 			}
 
 			if passed && autoSubmit {
-				result, err := submitSolution(q, c, gen, limitC)
+				result, err := submitSolution(q, c, gen, submitLimiter)
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
@@ -99,7 +94,7 @@ var testCmd = &cobra.Command{
 	},
 }
 
-func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, wait chan<- struct{}) (
+func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, limiter *utils.RateLimiter) (
 	*leetcode.RunCheckResult,
 	error,
 ) {
@@ -120,10 +115,12 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 
 	hclog.L().Info("running test remotely", "question", q.TitleSlug)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Running test..."))
+	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
 
-	wait <- struct{}{}
+	limiter.Wait()
+	spin.Reverse()
 
 	interResult, err := c.Test(q, gen.Slug(), solution, casesStr)
 	if err != nil {
