@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -24,14 +25,29 @@ var (
 	checkDuration = 10 * time.Second
 )
 
-func selectUpcomingContest(c leetcode.Client) (string, error) {
+func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, error) {
 	contestList, err := c.GetUpcomingContests()
 	if err != nil {
 		return "", err
 	}
-	if len(contestList) == 0 {
-		return "", fmt.Errorf("no upcoming contest")
+	if registeredOnly {
+		var list []*leetcode.Contest
+		for _, ct := range contestList {
+			if ct.Registered {
+				list = append(list, ct)
+			}
+		}
+		contestList = list
 	}
+
+	if len(contestList) == 0 {
+		msg := "no upcoming contest"
+		if registeredOnly {
+			msg = "no registered contest"
+		}
+		return "", errors.New(msg)
+	}
+
 	contestNames := make([]string, len(contestList))
 	for i, ct := range contestList {
 		mark := " "
@@ -100,7 +116,7 @@ var contestCmd = &cobra.Command{
 		var contestSlug string
 		var err error
 		if len(args) == 0 {
-			contestSlug, err = selectUpcomingContest(c)
+			contestSlug, err = selectUpcomingContest(c, false)
 			if err != nil {
 				return err
 			}
@@ -169,7 +185,7 @@ var unregisterCmd = &cobra.Command{
 		var contestSlug string
 		var err error
 		if len(args) == 0 {
-			contestSlug, err = selectUpcomingContest(c)
+			contestSlug, err = selectUpcomingContest(c, true)
 			if err != nil {
 				return err
 			}
