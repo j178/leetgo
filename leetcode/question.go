@@ -258,7 +258,7 @@ func (q *QuestionData) Fulfill() error {
 		return nil
 	}
 
-	// TODO 为 contest 适配: frontend-id 替换为问题序号
+	// TODO 为 contest 适配，确认是否有数据问题
 	q1, err := q.client.GetQuestionData(q.TitleSlug)
 	if err != nil {
 		return err
@@ -440,9 +440,15 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 		Difficulty:       q.Difficulty,
 		Lang:             lang,
 		SlugIsMeaningful: slugValid,
+		IsContest:        q.IsContest(),
 	}
 	if q.IsContest() {
-		data.IsContest = q.IsContest()
+		// Override id with contest question number
+		id, err := q.contest.GetQuestionNumber(q.TitleSlug)
+		if err != nil {
+			panic(fmt.Errorf("failed to get question number for %s: %w", q.TitleSlug, err))
+		}
+		data.Id = strconv.Itoa(id)
 		data.ContestSlug = q.contest.TitleSlug
 		data.ContestTitle = q.contest.Title
 		data.ContestShortSlug = contestShortSlug(q.contest.TitleSlug)

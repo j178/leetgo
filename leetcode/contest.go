@@ -34,16 +34,37 @@ func (ct *Contest) TimeTillStart() time.Duration {
 	return time.Until(time.Unix(ct.StartTime, 0))
 }
 
-func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
+func (ct *Contest) checkAccessQuestions() error {
 	if !ct.HasStarted() {
-		return nil, ErrContestNotStarted
+		return ErrContestNotStarted
 	}
 	err := ct.Refresh()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if len(ct.Questions) == 0 {
-		return nil, errors.New("no questions in contest")
+		return errors.New("no questions in contest")
+	}
+	return nil
+}
+
+func (ct *Contest) GetQuestionNumber(slug string) (int, error) {
+	err := ct.checkAccessQuestions()
+	if err != nil {
+		return 0, err
+	}
+	for i, q2 := range ct.Questions {
+		if q2.TitleSlug == slug {
+			return i + 1, nil
+		}
+	}
+	return 0, errors.New("question not found")
+}
+
+func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
+	err := ct.checkAccessQuestions()
+	if err != nil {
+		return nil, err
 	}
 	if num < 1 || num > len(ct.Questions) {
 		return nil, errors.New("invalid question number")
@@ -55,15 +76,9 @@ func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
 }
 
 func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
-	if !ct.HasStarted() {
-		return nil, ErrContestNotStarted
-	}
-	err := ct.Refresh()
+	err := ct.checkAccessQuestions()
 	if err != nil {
 		return nil, err
-	}
-	if len(ct.Questions) == 0 {
-		return nil, errors.New("no questions in contest")
 	}
 	return ct.Questions, nil
 }

@@ -69,7 +69,6 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 	defer spin.Stop()
 
 	wait <- struct{}{}
-	// TODO: if contest, use contest submit
 	submissionId, err := c.Submit(q, gen.Slug(), solution)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit solution: %w", err)

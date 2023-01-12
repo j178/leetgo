@@ -561,7 +561,18 @@ func (c *cnClient) Test(q *QuestionData, lang string, code string, dataInput str
 	*InterpretSolutionResult,
 	error,
 ) {
-	url := fmt.Sprintf("%sproblems/%s/interpret_solution/", c.BaseURI(), q.TitleSlug)
+	url := ""
+	if q.IsContest() {
+		url = fmt.Sprintf(
+			"%scontest/api/%s/problems/%s/interpret_solution/",
+			c.BaseURI(),
+			q.contest.TitleSlug,
+			q.TitleSlug,
+		)
+	} else {
+		url = fmt.Sprintf("%sproblems/%s/interpret_solution/", c.BaseURI(), q.TitleSlug)
+	}
+
 	var resp InterpretSolutionResult
 	_, err := c.jsonPost(
 		url, map[string]any{
@@ -581,7 +592,7 @@ func (c *cnClient) CheckResult(submissionId string) (
 	CheckResult,
 	error,
 ) {
-	url := fmt.Sprintf("%s/submissions/detail/%s/check/", c.BaseURI(), submissionId)
+	url := fmt.Sprintf("%ssubmissions/detail/%s/check/", c.BaseURI(), submissionId)
 	var result gjson.Result
 	_, err := c.jsonGet(url, nil, &result, nil)
 	if err != nil {
@@ -598,7 +609,18 @@ func (c *cnClient) CheckResult(submissionId string) (
 }
 
 func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
-	url := fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)
+	url := ""
+	if q.IsContest() {
+		url = fmt.Sprintf(
+			"%scontest/api/%s/problems/%s/submit/",
+			c.BaseURI(),
+			q.contest.TitleSlug,
+			q.TitleSlug,
+		)
+	} else {
+		url = fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)
+	}
+
 	var resp gjson.Result
 	_, err := c.jsonPost(
 		url, map[string]any{
@@ -678,14 +700,13 @@ func (c *cnClient) UnregisterContest(slug string) error {
 	return err
 }
 
-func (c *cnClient) ContestTest() error {
-	return nil
+func (c *cnClient) ContestTest(q *QuestionData, lang string, code string, dataInput string) (
+	*InterpretSolutionResult,
+	error,
+) {
+	return nil, nil
 }
 
-func (c *cnClient) ContestSubmit() error {
-	return nil
-}
-
-func (c *cnClient) ContestCheckResult() error {
-	return nil
+func (c *cnClient) ContestSubmit(q *QuestionData, lang string, code string) (string, error) {
+	return "", nil
 }

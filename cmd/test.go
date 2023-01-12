@@ -125,7 +125,6 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 
 	wait <- struct{}{}
 
-	// TODO: if contest, use contest test
 	interResult, err := c.Test(q, gen.Slug(), solution, casesStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
