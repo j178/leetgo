@@ -61,7 +61,7 @@ func (i *item) FilterValue() string {
 type tui struct {
 	filter   leetcode.QuestionFilter
 	client   leetcode.Client
-	idx      int
+	idx      int // nolint: unused
 	total    int
 	hasMore  bool
 	list     *list.Model

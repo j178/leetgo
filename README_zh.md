@@ -10,7 +10,9 @@
 **中文 | [English](./README.md)**
 
 `leetgo` 是一个命令行工具，帮助你管理 LeetCode 代码、简化常用的 LeetCode 操作，让解题更轻松~
-`leetgo` 可以为你生成题目描述、样例代码，最特别的是还可以生成测试代码，让你的代码可以在本地运行、测试，你可以使用你喜欢的 Debugger 来调试代码中的问题。
+
+`leetgo` 可以自动生成题目描述、样例代码，最特别的是还可以生成测试代码，让你的代码可以在本地运行、测试，你可以使用喜欢的 Debugger 来调试代码中的问题。
+
 `leetgo` 还支持竞赛模式，自动等待比赛的开始时间，第一时间为你生成所有比赛题目，并且可以一键提交所有题目，让你的排名更进一步。
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
@@ -22,7 +24,7 @@
 - 为题目生成描述、样例代码、测试代码，支持本地测试
 - 自动等待并及时生成所有竞赛题目
 - (即将) 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
-- 自动从浏览器中读取 LeetCode 的 cookie，无需手动提供。
+- 自动从浏览器中读取 LeetCode 的 Cookie，无需手动提供。
 
 ## 编程语言支持
 
@@ -266,7 +268,7 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 
 ## 致谢
 
-在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，在这里向他们表达感谢 :heart:
+在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，在这里向他们表示感谢 :heart:
 
 - https://github.com/EndlessCheng/codeforces-go
 - https://github.com/clearloop/leetcode-cli
