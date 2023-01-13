@@ -40,17 +40,17 @@ Local test requires more work to implement for each language, so not all languag
 |  | Generate | Local Test |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
-| Python | :white_check_mark: | :x: |
-| C++ | :white_check_mark: | :x: |
-| Rust | :white_check_mark: | :x: |
-| Java | :white_check_mark: | :x: |
-| JavaScript | :white_check_mark: | :x: |
-| PHP | :white_check_mark: | :x: |
-| C | :white_check_mark: | :x: |
-| C# | :white_check_mark: | :x: |
-| Ruby | :white_check_mark: | :x: |
-| Swift | :white_check_mark: | :x: |
-| Kotlin | :white_check_mark: | :x: |
+| Python | :white_check_mark: | Not yet |
+| C++ | :white_check_mark: | Not yet |
+| Rust | :white_check_mark: | Not yet |
+| Java | :white_check_mark: | Not yet |
+| JavaScript | :white_check_mark: | Not yet |
+| PHP | :white_check_mark: | Not yet |
+| C | :white_check_mark: | Not yet |
+| C# | :white_check_mark: | Not yet |
+| Ruby | :white_check_mark: | Not yet |
+| Swift | :white_check_mark: | Not yet |
+| Kotlin | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
 and many other languages are in plan. (help wanted, contributions welcome!)
 
