@@ -77,7 +77,7 @@ func newTuiModel(filter leetcode.QuestionFilter, c leetcode.Client) *tui {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	// TODO Implement a loading list
+	// TODO Implement a progressive loading list
 	return &tui{
 		filter: filter,
 		client: c,

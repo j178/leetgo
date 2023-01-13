@@ -7,7 +7,7 @@
 
 *This project is still in its early development stage and many features have not yet been implemented. Everything is subject to rapid change.*
 
-[中文](./README_zh.md) | English
+**[中文](./README_zh.md) | English**
 
 `leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
 allowing you to complete all of your LeetCode exercises without leaving the terminal. 
@@ -24,8 +24,8 @@ And `leetgo` also supports real-time generation of **contest questions**, so you
 - Pick question with a simple and fancy UI.
 - Generate skeleton code and testing code for a question.
 - Run test cases on your local machine.
-- Generate contest questions just in time.
-- Support both leetcode.com and leetcode.cn
+- Wait and generate contest questions just in time.
+- (Will) Support both leetcode.com and leetcode.cn
 - Read cookies from browser automatically, no need to provide password.
 
 ## Language support
