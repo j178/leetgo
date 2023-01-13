@@ -7,10 +7,9 @@ Set Height 800
 Set Framerate 30
 Set Padding 12
 Set Shell fish
-Set TypingSpeed 200ms
+Set TypingSpeed 100ms
 
 Output misc/demo.gif
-Output misc/demo.ascii
 
 Require leetgo
 Require vim
@@ -25,14 +24,15 @@ Sleep 15s
 Show
 Sleep 500ms
 Type "tree"
+Sleep 500ms
 Enter
 
 Type "# Change config to suit your needs" Enter
 Type "vim leetgo.yaml" Enter
 Sleep 500ms
-Type "jjjjjjjjjxxjxxllllllldwavim"
+Type@200ms "jjjjjjjjjxxjxxllllllldwavim"
 Escape
-Type ":wq" Enter
+Type@200ms ":wq" Enter
 
 Type "# Generate a question" Enter
 Type "leetgo pick 1" Enter
@@ -41,3 +41,14 @@ Sleep 5s
 Show
 Sleep 500ms
 Type "tree" Enter
+Sleep 500ms
+
+Type "# Edit your code" Enter
+
+Type "# Test and submit" Enter
+Type "leetgo test last" Enter
+Sleep 3s
+Type "leetgo test last -L" Enter
+Sleep 3s
+Type "leetgo submit last" Enter
+Sleep 5s
