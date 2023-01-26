@@ -171,7 +171,7 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 
 func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	comment := l.generateComments(q)
-	code := l.generateCode(q, addCodeMark(l))
+	code := l.generateCode(q, addCodeMarker(l))
 	content := comment + "\n" + code + "\n"
 
 	filenameTmpl := getFilenameTemplate(q, l)
@@ -222,6 +222,10 @@ func getCodeConfig(lang Lang, key string) string {
 
 func needsDefinition(code string) bool {
 	return strings.Contains(code, "Definition for")
+}
+
+func needsMod(description string) bool {
+	return strings.Contains(description, "10⁹ + 7")
 }
 
 func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {

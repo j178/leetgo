@@ -10,7 +10,7 @@ import (
 
 type Modifier func(string, *leetcode.QuestionData) string
 
-func addCodeMark(l Lang) Modifier {
+func addCodeMarker(l Lang) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"%s\n\n%s\n\n%s",

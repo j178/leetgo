@@ -44,7 +44,7 @@ type golang struct {
 	baseLang
 }
 
-func addNamedReturn(code string, q *leetcode.QuestionData) string {
+func addNamedReturn(code string, q *leetcode.QuestionData, needsMod bool) string {
 	lines := strings.Split(code, "\n")
 	var newLines []string
 	skipNext := 0
@@ -65,7 +65,11 @@ func addNamedReturn(code string, q *leetcode.QuestionData) string {
 					skipNext = 1
 				} else {
 					newLines = append(newLines, line[:rightBrace+1]+" (ans "+returnType+") {")
-					newLines = append(newLines, "\n\treturn")
+					if needsMod {
+						newLines = append(newLines, "\n\tans = (ans%mod + mod) % mod\n\treturn")
+					} else {
+						newLines = append(newLines, "\n\treturn")
+					}
 					skipNext = 1
 				}
 			} else {
@@ -201,12 +205,20 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if needsDefinition(code) {
 		preCode += fmt.Sprintf("import . \"%s\"\n\n", testutilsModPath)
 	}
+	needsMod := needsMod(comment)
+	helperCode := ""
+	if needsMod {
+		helperCode += "const mod int = 1e9 + 7\n\n"
+	}
 	code = g.generateCode(
 		q,
 		removeComments,
-		addNamedReturn,
+		func(s string, data *leetcode.QuestionData) string {
+			return addNamedReturn(s, data, needsMod)
+		},
 		changeReceiverName,
-		addCodeMark(g),
+		prepend(helperCode),
+		addCodeMarker(g),
 		prepend(preCode),
 	)
 	codeContent := comment + "\n" + code + "\n"
