@@ -7,3 +7,5 @@ completions/
 dist/
 /go/
 /contest/
+misc/demo.ascii
+misc/demo.gif
