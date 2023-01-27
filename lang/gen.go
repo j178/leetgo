@@ -118,7 +118,7 @@ func (l baseLang) generateComments(q *leetcode.QuestionData) string {
 	}
 	content = append(content, "")
 	content = append(content, l.blockCommentStart)
-	content = append(content, fmt.Sprintf("%s.%s (%s)", q.QuestionFrontendId, q.GetTitle(), q.Difficulty))
+	content = append(content, fmt.Sprintf("%s. %s (%s)", q.QuestionFrontendId, q.GetTitle(), q.Difficulty))
 	content = append(content, "")
 	content = append(content, q.GetFormattedContent())
 	content = append(content, l.blockCommentEnd)

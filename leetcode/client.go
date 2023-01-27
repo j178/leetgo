@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/dghubble/sling"
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
@@ -531,10 +532,13 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	}
 	for _, q := range resp.Get("questions").Array() {
 		question := &QuestionData{
-			client:    c,
-			partial:   1,
-			contest:   contest,
-			TitleSlug: q.Get("title_slug").Str,
+			client:          c,
+			partial:         1,
+			contest:         contest,
+			TitleSlug:       q.Get("title_slug").Str,
+			QuestionId:      q.Get("question_id").Str,
+			Title:           q.Get("english_title").Str,
+			TranslatedTitle: q.Get("title").Str,
 		}
 		contest.Questions = append(contest.Questions, question)
 	}
@@ -550,7 +554,102 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	if err != nil {
 		return nil, err
 	}
-	return parseContestQuestionHtml(html)
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
+	if err != nil {
+		return nil, err
+	}
+	difficulty := strings.TrimSpace(doc.Find("span.pull-right.label.round").Text())
+	frontendId := strings.TrimSuffix(doc.Find("div.question-title h3").Get(0).FirstChild.Data, ". ")
+	translatedContent, err := doc.Find("div.question-content.default-content").Html()
+	if err != nil {
+		return nil, err
+	}
+	content, err := doc.Find("div.question-content.source-content").Html()
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		questionId         string
+		scriptText         string
+		codeDefinitionText string
+		metaDataText       string
+		title              string
+		sourceTitle        string
+		exampleTestcases   string
+		sampleTestcase     string
+	)
+	doc.Find("script").EachWithBreak(
+		func(i int, selection *goquery.Selection) bool {
+			node := selection.Get(0)
+			if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
+				scriptText = node.FirstChild.Data
+				return false
+			}
+			return true
+		},
+	)
+	if scriptText == "" {
+		return nil, errors.New("question data not found")
+	}
+	scriptLines := strings.Split(scriptText, "\n")
+	for _, line := range scriptLines {
+		switch {
+		case strings.Contains(line, "questionId: "):
+			questionId = line[4+len("questionId: '") : len(line)-2]
+		case strings.Contains(line, "questionTitle: "):
+			title = line[4+len("questionTitle: '") : len(line)-2]
+		case strings.Contains(line, "questionSourceTitle: "):
+			sourceTitle = line[4+len("questionSourceTitle: '") : len(line)-2]
+		case strings.Contains(line, "questionExampleTestcases: "):
+			exampleTestcases = line[4+len("questionExampleTestcases: '") : len(line)-2]
+			exampleTestcases = utils.DecodeRawUnicodeEscape(exampleTestcases)
+		case strings.Contains(line, "sampleTestCase: "):
+			sampleTestcase = line[4+len("sampleTestCase: '") : len(line)-2]
+			sampleTestcase = utils.DecodeRawUnicodeEscape(sampleTestcase)
+		case strings.Contains(line, "codeDefinition: "):
+			codeDefinitionText = line[4+len("codeDefinition: "):len(line)-len(",],")] + "]"
+			codeDefinitionText = strings.ReplaceAll(codeDefinitionText, "'", `"`)
+		case strings.Contains(line, "metaData: "):
+			metaDataText = line[4+len("metaData: JSON.parse('") : len(line)-len("' || '{}'),")]
+			metaDataText = utils.DecodeRawUnicodeEscape(metaDataText)
+		}
+	}
+
+	q := &QuestionData{
+		client:             c,
+		QuestionId:         questionId,
+		QuestionFrontendId: frontendId,
+		TitleSlug:          questionSlug,
+		Difficulty:         difficulty,
+		Content:            content,
+		TranslatedContent:  translatedContent,
+		Title:              sourceTitle,
+		TranslatedTitle:    title,
+		ExampleTestcases:   exampleTestcases,
+		SampleTestCase:     sampleTestcase,
+		CategoryTitle:      "Algorithms",
+	}
+	err = json.Unmarshal([]byte(metaDataText), &q.MetaData)
+	if err != nil {
+		return nil, err
+	}
+	var codeDefs []map[string]string
+	err = json.Unmarshal([]byte(codeDefinitionText), &codeDefs)
+	if err != nil {
+		return nil, err
+	}
+	for _, codeDef := range codeDefs {
+		q.CodeSnippets = append(
+			q.CodeSnippets, CodeSnippet{
+				LangSlug: codeDef["value"],
+				Lang:     codeDef["text"],
+				Code:     codeDef["defaultCode"],
+			},
+		)
+	}
+	return q, nil
 }
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。

@@ -1,13 +1,8 @@
 package leetcode
 
 import (
-	"bytes"
 	"errors"
-	"strings"
 	"time"
-
-	"github.com/PuerkitoBio/goquery"
-	"github.com/dop251/goja"
 )
 
 var ErrContestNotStarted = errors.New("contest has not started")
@@ -98,39 +93,4 @@ func (ct *Contest) Refresh() error {
 	}
 	*ct = *contest
 	return nil
-}
-
-func parseContestQuestionHtml(htmlText []byte) (*QuestionData, error) {
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlText))
-	if err != nil {
-		return nil, err
-	}
-	var scriptText string
-	doc.Find("script").EachWithBreak(
-		func(i int, selection *goquery.Selection) bool {
-			node := selection.Get(0)
-			if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
-				scriptText = node.FirstChild.Data
-				return false
-			}
-			return true
-		},
-	)
-	if scriptText == "" {
-		return nil, errors.New("question data not found")
-	}
-	vm := goja.New()
-	_, err = vm.RunString(scriptText)
-	if err != nil {
-		return nil, err
-	}
-	var q QuestionData
-
-	pageData := vm.Get("pageData").ToObject(vm)
-	q.QuestionId = pageData.Get("questionId").String()
-	q.TitleSlug = pageData.Get("questionTitleSlug").String()
-	q.Title = pageData.Get("questionTitle").String()
-	q.CategoryTitle = pageData.Get("categoryTitle").String()
-
-	return &q, nil
 }

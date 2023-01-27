@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"encoding/hex"
 	"strings"
+	"unicode/utf16"
 	"unsafe"
 )
 
@@ -99,4 +101,20 @@ func ReplaceSuperscript(s string) string {
 
 func PtrTo[T any](v T) *T {
 	return &v
+}
+
+func DecodeRawUnicodeEscape(s string) string {
+	var buf strings.Builder
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\\' && i+5 < len(s) && s[i+1] == 'u' {
+			b16, _ := hex.DecodeString(s[i+2 : i+6])
+			value := uint16(b16[0])<<8 + uint16(b16[1])
+			chr := utf16.Decode([]uint16{value})[0]
+			buf.WriteRune(chr)
+			i += 5
+		} else {
+			buf.WriteByte(s[i])
+		}
+	}
+	return buf.String()
 }
