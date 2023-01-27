@@ -28,6 +28,7 @@ require (
 	github.com/zalando/go-keyring v0.2.1
 	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 	gopkg.in/yaml.v3 v3.0.1
+	rogchap.com/v8go v0.8.0
 )
 
 replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37

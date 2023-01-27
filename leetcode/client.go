@@ -62,14 +62,15 @@ type Client interface {
 	GetTodayQuestion() (*QuestionData, error)
 	GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error)
 	GetQuestionTags() ([]QuestionTag, error)
-	Test(q *QuestionData, lang string, code string, dataInput string) (
+	RunCode(q *QuestionData, lang string, code string, dataInput string) (
 		*InterpretSolutionResult,
 		error,
 	)
-	Submit(q *QuestionData, lang string, code string) (string, error)
+	SubmitCode(q *QuestionData, lang string, code string) (string, error)
 	CheckResult(interpretId string) (CheckResult, error)
 	GetUpcomingContests() ([]*Contest, error)
 	GetContest(contestSlug string) (*Contest, error)
+	GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error)
 	RegisterContest(slug string) error
 	UnregisterContest(slug string) error
 }
@@ -541,9 +542,20 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	return contest, nil
 }
 
+func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+	url := fmt.Sprintf("%scontest/%s/problems/%s/", c.BaseURI(), contestSlug, questionSlug)
+	var html []byte
+	req, _ := c.http.New().Get(url).Request()
+	_, err := c.send(req, &html, nil)
+	if err != nil {
+		return nil, err
+	}
+	return parseContestQuestionHtml(html)
+}
+
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
 
-func (c *cnClient) Test(q *QuestionData, lang string, code string, dataInput string) (
+func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput string) (
 	*InterpretSolutionResult,
 	error,
 ) {
@@ -574,7 +586,7 @@ func (c *cnClient) Test(q *QuestionData, lang string, code string, dataInput str
 	return &resp, err
 }
 
-func (c *cnClient) Submit(q *QuestionData, lang string, code string) (string, error) {
+func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string, error) {
 	url := ""
 	if q.IsContest() {
 		url = fmt.Sprintf(

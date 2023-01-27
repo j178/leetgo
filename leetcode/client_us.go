@@ -36,7 +36,7 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	panic("implement me")
 }
 
-func (c *usClient) Test(
+func (c *usClient) RunCode(
 	q *QuestionData,
 	lang string,
 	code string,
@@ -51,7 +51,7 @@ func (c *usClient) CheckSubmissionResult(submissionId string) (*SubmitCheckResul
 	panic("implement me")
 }
 
-func (c *usClient) Submit(q *QuestionData, lang string, code string) (string, error) {
+func (c *usClient) SubmitCode(q *QuestionData, lang string, code string) (string, error) {
 	// TODO implement me
 	panic("implement me")
 }

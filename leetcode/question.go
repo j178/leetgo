@@ -253,20 +253,23 @@ func (q *QuestionData) Contest() *Contest {
 	return q.contest
 }
 
-func (q *QuestionData) Fulfill() error {
+func (q *QuestionData) Fulfill() (err error) {
 	if atomic.LoadInt32(&q.partial) == 0 {
-		return nil
+		return
 	}
 
-	// TODO 为 contest 适配，确认是否有数据问题
-	q1, err := q.client.GetQuestionData(q.TitleSlug)
-	if err != nil {
-		return err
-	}
+	contest := q.contest
+	var nq *QuestionData
 	if q.IsContest() {
-		q1.contest = q.contest
+		nq, err = q.client.GetContestQuestionData(q.contest.TitleSlug, q.TitleSlug)
+	} else {
+		nq, err = q.client.GetQuestionData(q.TitleSlug)
 	}
-	*q = *q1
+	if err != nil {
+		return
+	}
+	*q = *nq
+	q.contest = contest
 	atomic.StoreInt32(&q.partial, 0)
 	return nil
 }

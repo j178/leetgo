@@ -1,8 +1,14 @@
 package leetcode
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
+	"rogchap.com/v8go"
 )
 
 var ErrContestNotStarted = errors.New("contest has not started")
@@ -37,6 +43,9 @@ func (ct *Contest) TimeTillStart() time.Duration {
 func (ct *Contest) checkAccessQuestions() error {
 	if !ct.HasStarted() {
 		return ErrContestNotStarted
+	}
+	if len(ct.Questions) > 0 {
+		return nil
 	}
 	err := ct.Refresh()
 	if err != nil {
@@ -84,13 +93,42 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 }
 
 func (ct *Contest) Refresh() error {
-	if len(ct.Questions) > 0 {
-		return nil
-	}
 	contest, err := ct.client.GetContest(ct.TitleSlug)
 	if err != nil {
 		return err
 	}
 	*ct = *contest
 	return nil
+}
+
+func parseContestQuestionHtml(htmlText []byte) (*QuestionData, error) {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlText))
+	if err != nil {
+		return nil, err
+	}
+	var scriptText string
+	doc.Find("script").EachWithBreak(
+		func(i int, selection *goquery.Selection) bool {
+			node := selection.Get(0)
+			if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
+				scriptText = node.FirstChild.Data
+				return false
+			}
+			return true
+		},
+	)
+	if scriptText == "" {
+		return nil, errors.New("question data not found")
+	}
+	ctx := v8go.NewContext()
+	val, err := ctx.RunScript(scriptText, "script.js")
+	if err != nil {
+		return nil, err
+	}
+	questionData, err := val.AsObject()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(questionData)
+	return nil, errors.New("not implemented")
 }

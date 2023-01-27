@@ -143,7 +143,6 @@ var contestCmd = &cobra.Command{
 				}
 			}
 			if register {
-				hclog.L().Info("registering for contest", "contest", contest.Title)
 				err = c.RegisterContest(contestSlug)
 				if err != nil {
 					return err
@@ -217,7 +216,6 @@ var unregisterCmd = &cobra.Command{
 			}
 		}
 		if unregister {
-			hclog.L().Info("unregistering from contest", "contest", contest.Title)
 			err = c.UnregisterContest(contestSlug)
 			if err != nil {
 				return err

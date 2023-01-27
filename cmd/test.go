@@ -122,7 +122,7 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 	limiter.Wait()
 	spin.Reverse()
 
-	interResult, err := c.Test(q, gen.Slug(), solution, casesStr)
+	interResult, err := c.RunCode(q, gen.Slug(), solution, casesStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
 	}

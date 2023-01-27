@@ -65,7 +65,7 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 	limiter.Wait()
 	spin.Reverse()
 
-	submissionId, err := c.Submit(q, gen.Slug(), solution)
+	submissionId, err := c.SubmitCode(q, gen.Slug(), solution)
 	if err != nil {
 		return nil, fmt.Errorf("failed to submit solution: %w", err)
 	}
