@@ -11,6 +11,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/dghubble/sling v1.4.1
+	github.com/dop251/goja v0.0.0-20230122160437-8f6e415ca41e
 	github.com/fatih/color v1.13.0
 	github.com/goccy/go-json v0.10.0
 	github.com/hashicorp/go-hclog v1.4.0
@@ -28,7 +29,6 @@ require (
 	github.com/zalando/go-keyring v0.2.1
 	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 	gopkg.in/yaml.v3 v3.0.1
-	rogchap.com/v8go v0.8.0
 )
 
 replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37
@@ -40,7 +40,9 @@ require (
 	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/danieljoos/wincred v1.1.0 // indirect
+	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-sqlite/sqlite3 v0.0.0-20180313105335-53dd8e640ee7 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gonuts/binary v0.2.0 // indirect
@@ -78,7 +80,6 @@ require (
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
