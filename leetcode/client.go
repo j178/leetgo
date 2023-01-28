@@ -555,6 +555,10 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 		return nil, err
 	}
 
+	return c.parseContestHtml(html, questionSlug)
+}
+
+func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*QuestionData, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
 	if err != nil {
 		return nil, err
@@ -579,41 +583,40 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 		sourceTitle        string
 		exampleTestcases   string
 		sampleTestcase     string
+		categoryTitle      string
 	)
-	doc.Find("script").EachWithBreak(
-		func(i int, selection *goquery.Selection) bool {
-			node := selection.Get(0)
-			if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
-				scriptText = node.FirstChild.Data
-				return false
-			}
-			return true
-		},
-	)
+	for _, node := range doc.Find("script").Nodes {
+		if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
+			scriptText = node.FirstChild.Data
+			break
+		}
+	}
 	if scriptText == "" {
 		return nil, errors.New("question data not found")
 	}
 	scriptLines := strings.Split(scriptText, "\n")
 	for _, line := range scriptLines {
 		switch {
-		case strings.Contains(line, "questionId: "):
-			questionId = line[4+len("questionId: '") : len(line)-2]
-		case strings.Contains(line, "questionTitle: "):
-			title = line[4+len("questionTitle: '") : len(line)-2]
-		case strings.Contains(line, "questionSourceTitle: "):
-			sourceTitle = line[4+len("questionSourceTitle: '") : len(line)-2]
-		case strings.Contains(line, "questionExampleTestcases: "):
-			exampleTestcases = line[4+len("questionExampleTestcases: '") : len(line)-2]
+		case strings.HasPrefix(line, `    questionId: '`):
+			questionId = line[len(`    questionId: '`) : len(line)-2]
+		case strings.HasPrefix(line, `    questionTitle: '`):
+			title = line[len(`    questionTitle: '`) : len(line)-2]
+		case strings.HasPrefix(line, `    questionSourceTitle: '`):
+			sourceTitle = line[len(`    questionSourceTitle: '`) : len(line)-2]
+		case strings.HasPrefix(line, `    questionExampleTestcases: '`):
+			exampleTestcases = line[len(`    questionExampleTestcases: '`) : len(line)-2]
 			exampleTestcases = utils.DecodeRawUnicodeEscape(exampleTestcases)
-		case strings.Contains(line, "sampleTestCase: "):
-			sampleTestcase = line[4+len("sampleTestCase: '") : len(line)-2]
+		case strings.HasPrefix(line, `    sampleTestCase: '`):
+			sampleTestcase = line[len(`    sampleTestCase: '`) : len(line)-2]
 			sampleTestcase = utils.DecodeRawUnicodeEscape(sampleTestcase)
-		case strings.Contains(line, "codeDefinition: "):
-			codeDefinitionText = line[4+len("codeDefinition: "):len(line)-len(",],")] + "]"
+		case strings.HasPrefix(line, `    codeDefinition: `):
+			codeDefinitionText = line[len(`    codeDefinition: `):len(line)-len(",],")] + "]"
 			codeDefinitionText = strings.ReplaceAll(codeDefinitionText, "'", `"`)
-		case strings.Contains(line, "metaData: "):
-			metaDataText = line[4+len("metaData: JSON.parse('") : len(line)-len("' || '{}'),")]
+		case strings.HasPrefix(line, `    metaData: `):
+			metaDataText = line[len(`    metaData: JSON.parse('`) : len(line)-len("' || '{}'),")]
 			metaDataText = utils.DecodeRawUnicodeEscape(metaDataText)
+		case strings.HasPrefix(line, `    categoryTitle: '`):
+			categoryTitle = line[len(`    categoryTitle: '`) : len(line)-2]
 		}
 	}
 
@@ -629,7 +632,7 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 		TranslatedTitle:    title,
 		ExampleTestcases:   exampleTestcases,
 		SampleTestCase:     sampleTestcase,
-		CategoryTitle:      "Algorithms",
+		CategoryTitle:      categoryTitle,
 	}
 	err = json.Unmarshal([]byte(metaDataText), &q.MetaData)
 	if err != nil {
