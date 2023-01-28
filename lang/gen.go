@@ -137,15 +137,20 @@ func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 	cases := q.GetTestCases()
 	outputs := q.ParseExampleOutputs()
+	argsNum := 0
+	if q.MetaData.SystemDesign {
+		argsNum = 2
+	} else {
+		argsNum = len(q.MetaData.Params)
+	}
 
+	// Assume all questions output are single.
 	var caseAndOutputs []string
-	for i, c := range cases {
-		if i >= len(outputs) {
-			break
-		}
+	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
+		input := strings.Join(cases[i:i+argsNum], "\n")
 		caseAndOutputs = append(
 			caseAndOutputs,
-			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, c, testCaseOutputMark, outputs[i]),
+			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, input, testCaseOutputMark, outputs[i/argsNum]),
 		)
 	}
 	return strings.Join(caseAndOutputs, "\n\n")
