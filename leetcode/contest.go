@@ -3,6 +3,8 @@ package leetcode
 import (
 	"errors"
 	"time"
+
+	"github.com/hashicorp/go-hclog"
 )
 
 var ErrContestNotStarted = errors.New("contest has not started")
@@ -86,7 +88,7 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	for _, q := range ct.Questions {
 		err = q.Fulfill()
 		if err != nil {
-			return nil, err
+			hclog.L().Error("load contest question failed", "title", q.Title, "err", err)
 		}
 	}
 	return ct.Questions, nil
