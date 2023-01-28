@@ -85,7 +85,8 @@ var pickCmd = &cobra.Command{
 	Short: "Generate a new question",
 	Example: `leetgo pick  # show a list of questions to pick
 leetgo pick today
-leetgo pick 549`,
+leetgo pick 549
+leetgo pick two-sum`,
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"p"},
 	RunE: func(cmd *cobra.Command, args []string) error {

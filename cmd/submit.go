@@ -14,8 +14,14 @@ import (
 )
 
 var submitCmd = &cobra.Command{
-	Use:     "submit qid",
-	Short:   "Submit solution",
+	Use:   "submit qid",
+	Short: "Submit solution",
+	Example: `leetgo submit 1
+leetgo submit two-sum
+leetgo submit last
+leetgo submit w330/1
+leetgo submit w330/
+`,
 	Aliases: []string{"s"},
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

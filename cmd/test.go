@@ -37,7 +37,11 @@ var testCmd = &cobra.Command{
 	Aliases: []string{"t"},
 	Args:    cobra.ExactArgs(1),
 	Short:   "Run question test cases",
-	Example: `leetgo test 244`,
+	Example: `leetgo test 244
+leetgo test last
+leetgo test w330/1
+leetgo test w330/
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Get()
 		cred := leetcode.CredentialsFromConfig()

@@ -105,8 +105,12 @@ func waitContestStart(ct *leetcode.Contest) error {
 }
 
 var contestCmd = &cobra.Command{
-	Use:     "contest [qid]",
-	Short:   "Generate contest questions",
+	Use:   "contest [qid]",
+	Short: "Generate contest questions",
+	Example: `leetgo contest
+leetgo contest w330
+leetgo contest left w330
+`,
 	Aliases: []string{"c"},
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
