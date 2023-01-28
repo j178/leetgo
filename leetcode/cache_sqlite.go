@@ -213,6 +213,9 @@ func (c *sqliteCache) GetBySlug(slug string) *QuestionData {
 	if err != nil {
 		return nil
 	}
+	if len(q) == 0 {
+		return nil
+	}
 	return q[0]
 }
 
@@ -231,6 +234,9 @@ func (c *sqliteCache) GetById(id string) *QuestionData {
 	}
 	q, err := c.unmarshal(rows)
 	if err != nil {
+		return nil
+	}
+	if len(q) == 0 {
 		return nil
 	}
 	return q[0]
