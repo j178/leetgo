@@ -5,36 +5,34 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
-*This project is still in its early development stage and many features have not yet been implemented. Everything is subject to rapid change.*
+*这个项目还在早期开发阶段，有一些功能还没有实现，现有的功能也在快速变化中...*
 
-**[中文](./README_zh.md) | English**
+**中文 | [English](./README_en.md)**
 
-`leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
-allowing you to complete all of your LeetCode exercises without leaving the terminal. 
-It can automatically generate **skeleton code and test cases**, support **local testing and debugging**, 
-and you can use any IDE you like to solve problems. 
+`leetgo` 是一个命令行工具，帮助你管理 LeetCode 代码、简化常用的 LeetCode 操作，让解题更轻松~
 
-And `leetgo` also supports real-time generation of **contest questions**, so your submissions are one step ahead!
+`leetgo` 可以自动生成题目描述、样例代码，最特别的是还可以生成测试代码，让你的代码可以在本地运行、测试，你可以使用喜欢的 Debugger 来调试代码中的问题。
+
+`leetgo` 还支持竞赛模式，自动等待比赛的开始时间，第一时间为你生成所有比赛题目，并且可以一键提交所有题目，让你的排名更进一步。
 
 [![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
 
 
-## Highlight of features
+## 主要特性
 
-- Pick question with a simple and fancy UI.
-- Generate skeleton code and testing code for a question.
-- Run test cases on your local machine.
-- Wait and generate contest questions just in time.
-- (Will) Support both leetcode.com and leetcode.cn
-- Read cookies from browser automatically, no need to provide password.
+- 通过简单、漂亮的 UI 来挑选、过滤题目
+- 为题目生成描述、样例代码、测试代码，支持本地测试
+- 自动等待并及时生成所有竞赛题目
+- (即将) 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
+- 自动从浏览器中读取 LeetCode 的 Cookie，无需手动提供
 
-## Language support
+## 编程语言支持
 
-`leetgo` supports generating code for most languages, and local test skeleton for some languages.
+`leetgo` 可以为大多数语言生成样例代码，以及为部分语言生成本地测试代码。
 
-Local test means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
+本地测试意味着你可以在你的机器上运行你的代码，输入测试样例比对结果，你可以使用 Debugger 来单步调试你的代码，更容易的找出代码中的问题。
 
-Local test requires more work to implement for each language, so not all languages are supported.
+本地测试需要为每一种语言做单独的适配，所以目前仅支持部分语言(其实只支持 Go)，下表是目前的支持情况：
 
 <!-- BEGIN MATRIX -->
 |  | Generate | Local Test |
@@ -52,32 +50,32 @@ Local test requires more work to implement for each language, so not all languag
 | Swift | :white_check_mark: | Not yet |
 | Kotlin | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
-and many other languages are in plan. (help wanted, contributions welcome!)
+其他热门语言的支持都在计划中，如果你有兴趣的话，欢迎加入我们👏🏻
 
-## Installation
+## 安装
 
-You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
+你可以直接从 [release 页面](https://github.com/j178/leetgo/releases) 下载最新的可执行程序，添加可执行权限、加入 `PATH` 后使用。
 
-### Install via go
+### 使用 `go install`
  
 ```shell
 go install github.com/j178/leetgo@latest
 ```
 
-### Install via [brew](https://brew.sh/)
+### 使用 [brew](https://brew.sh/)
 
 ```shell
 brew install j178/tap/leetgo
 ```
 
-### Install via [scoop](https://scoop.sh/)
+### 使用 [scoop](https://scoop.sh/)
 
 ```shell
 scoop bucket add j178 https://github.com/j178/scoop-bucket.git
 scoop install j178/leetgo
 ```
 
-## Usage
+## 使用
 <!-- BEGIN USAGE -->
 ```
 Usage:
@@ -105,33 +103,31 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
-### Question Identifier
+### 题目标志符 `qid`
 
-Many `leetgo` commands rely on `qid` to locate the leetcode question. `qid` is a simplified question 
-identifier defined by leetgo, which includes the following forms (using the two-sum problem as an example):
+许多 `leetgo` 命令都依赖 `qid` 来定位 LeetCode 题目。`qid` 是 `leetgo` 定义的一种简化的题目标志符，目的是让指定一个题目更简单，支持多种形式：
 
 ```shell
-leetgo pick two-sum          # by question slug
-leetgo pick 1                # by question id
-leetgo pick today            # daily question
-leetgo test last             # the last generated question
-leetgo test weekly100/1      # the first question of weekly contest 100
-leetgo submit b100/2         # the second question of bi-weekly contest 100
-leetgo submit w99/           # all questions of biweekly contest 99 (must keep the trailing slash)
-leetgo test last/1           # the first question of the last generated contest
-leetgo test last/            # all questions of the last generated contest (must keep the trailing slash)
+leetgo pick two-sum          # two-sum 是题目的 slug，是最准确的 qid
+leetgo pick 1                # 1 是题目的 ID
+leetgo pick today            # today 表示今天的每日一题
+leetgo test last             # last 表示最近一个生成的题目
+leetgo test weekly100/1      # weekly100/1 表示第100场周赛的第一个题目
+leetgo submit b100/2         # b100/2 表示第100场双周赛的第二个题目
+leetgo submit w99/           # w99 表示第99场周赛的所有题目 (必须要保留末尾的斜杠，否则不会识别为周赛题目)
+leetgo test last/1           # last/1 表示最近生成的比赛的第一个题目
+leetgo test last/            # last/ 表示最近生成的比赛的所有题目 (必须要保留末尾的斜杠)
 ```
 
-## Configuration
+## 配置说明
 
-Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
+`leetgo` 使用两级配置结构：全局配置和项目配置。
 
-These configuration files are generated during the `leetgo init` process. 
-The local configuration file in the project will override the global configuration. 
+全局配置位于 `~/.config/leetgo/config.yaml`，项目配置是项目根目录中的 `leetgo.yaml` 文件。 他们都是在 `leetgo init` 初始化过程中生成的。
 
-It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
+项目配置会覆盖全局配置中的相同配置。通常使用全局配置作为默认的配置，然后在各个项目中调整 `leetgo.yaml` 来自定义项目中的配置。
 
-Here is the demonstration of full configurations:
+下面是一个完整配置的展示：
 
 <!-- BEGIN CONFIG -->
 ```yaml
@@ -209,17 +205,17 @@ editor:
 ```
 <!-- END CONFIG -->
 
-## LeetCode Support
+## LeetCode 支持情况
 
-Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
+现阶段 `leetgo` 仅支持 `leetcode.cn` (中国站)，`leetcode.com` (美国站) 的支持仍在开发中.
 
-`leetgo` uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
+`leetgo` 使用 LeetCode 的 GraphQL API 来获取题目和提交代码，`leetgo` 需要 LeetCode 的 Cookie 来代替你做这些事情。
 
-There are three ways to provide cookies to `leetgo`:
+有三种方式为 `leetgo` 提供认证:
 
-- Read cookies from browser automatically.
+- 从浏览器中直接读取。
   
-  Currently only chrome is supported, if you want to support other browsers, please let us know!
+  这是最方便的方法，也是默认的行为。目前仅支持 Chrome，如果你需要其他浏览器的支持，请告诉我们~
 
   ```yaml
   leetcode:
@@ -227,9 +223,9 @@ There are three ways to provide cookies to `leetgo`:
       from: browser
   ```
 
-- Provide cookies in config file.
+- 在配置文件中提供 Cookie
   
-  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools.
+  你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值。
 
   ```yaml
   leetcode:
@@ -239,9 +235,9 @@ There are three ways to provide cookies to `leetgo`:
       csrftoken: xx
   ```
 
-- Provide username and password in config file.
+- 在配置文件中提供 用户名和密码
 
-  You need to run `leetgo config encrypt` to encrypt your password first, plain text password is **not allowed**.
+  在配置密码前，你需要使用 `leetgo config encrypt` 来加密你的密码，`leetgo` **禁止**在配置文件中使用明文密码。
 
   ```yaml
   leetcode:
@@ -257,20 +253,22 @@ There are three ways to provide cookies to `leetgo`:
         3963
   ```
 
-**Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
+**注意**: 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.
 
 ## Troubleshooting
 
-If you encounter any problems, please run your command with `DEBUG` environment variable set to `1`, copy the command output and open an issue.
+如果你在使用中遇到了问题，可以设置环境变量 `DEBUG=1` 来启动 Debug 模式，然后再运行 `leetgo`，比如 `DEBUG=1 leetgo test last`。
 
-## Contributions welcome!
+Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并且附带 `leetgo config` 的输出，向我们提交一个 issue，这对于我们定位问题至关重要。
 
-[Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start, 
-and you can also check out some [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
+## 欢迎贡献代码
 
-## Credits
+欢迎大家参与这个项目的开发，如果你不知道如何开始，这些 [Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 是很好的起步点，
+你也可以看看这些 [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues。
 
-Here are some awesome projects that inspired me to create this project:
+## 致谢
+
+在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，在这里向他们表示感谢 :heart:
 
 - https://github.com/EndlessCheng/codeforces-go
 - https://github.com/clearloop/leetcode-cli
