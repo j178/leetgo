@@ -21,8 +21,8 @@ var (
 )
 
 const (
-	testCaseInputMark  = "input:"
-	testCaseOutputMark = "output:"
+	testCaseInputMark  = "input"
+	testCaseOutputMark = "output"
 )
 
 type GenerateResult struct {
