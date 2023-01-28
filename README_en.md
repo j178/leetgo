@@ -16,8 +16,7 @@ and you can use any IDE you like to solve problems.
 
 And `leetgo` also supports real-time generation of **contest questions**, so your submissions are one step ahead!
 
-[![asciicast](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX.svg)](https://asciinema.org/a/0sUG7psmMfgWqzy9rr57hrcnX)
-
+![demo.gif](./misc/demo.gif)
 
 ## Highlight of features
 
