@@ -114,21 +114,21 @@ var contestCmd = &cobra.Command{
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		cfg := config.Get()
 
-		var contestSlug string
+		var qid string
 		var err error
 		if len(args) == 0 {
-			contestSlug, err = selectUpcomingContest(c, false)
+			qid, err = selectUpcomingContest(c, false)
 			if err != nil {
 				return err
 			}
 		} else {
-			contestSlug = args[0]
+			qid = args[0]
 		}
-		if !strings.HasSuffix(contestSlug, "/") {
-			contestSlug += "/"
+		if !strings.HasSuffix(qid, "/") {
+			qid += "/"
 		}
 
-		contest, _, err := leetcode.ParseContestQID(contestSlug, c, false)
+		contest, _, err := leetcode.ParseContestQID(qid, c, false)
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ var contestCmd = &cobra.Command{
 				}
 			}
 			if register {
-				err = c.RegisterContest(contestSlug)
+				err = c.RegisterContest(contest.TitleSlug)
 				if err != nil {
 					return err
 				}
@@ -182,21 +182,21 @@ var unregisterCmd = &cobra.Command{
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 
-		var contestSlug string
+		var qid string
 		var err error
 		if len(args) == 0 {
-			contestSlug, err = selectUpcomingContest(c, true)
+			qid, err = selectUpcomingContest(c, true)
 			if err != nil {
 				return err
 			}
 		} else {
-			contestSlug = args[0]
+			qid = args[0]
 		}
-		if !strings.HasSuffix(contestSlug, "/") {
-			contestSlug += "/"
+		if !strings.HasSuffix(qid, "/") {
+			qid += "/"
 		}
 
-		contest, _, err := leetcode.ParseContestQID(contestSlug, c, false)
+		contest, _, err := leetcode.ParseContestQID(qid, c, false)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ var unregisterCmd = &cobra.Command{
 			}
 		}
 		if unregister {
-			err = c.UnregisterContest(contestSlug)
+			err = c.UnregisterContest(contest.TitleSlug)
 			if err != nil {
 				return err
 			}
