@@ -16,7 +16,7 @@ import (
 
 var (
 	runLocally  bool
-	runRemotely bool
+	runRemotely bool = true
 	runBoth     bool
 	autoSubmit  bool
 	customCases []string
