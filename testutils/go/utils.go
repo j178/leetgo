@@ -60,7 +60,7 @@ func parseTestCases(s string) (res []string) {
 	lines := strings.Split(s, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "input") || strings.HasPrefix(line, "output") {
+		if line == "" || strings.HasPrefix(line, "input:") || strings.HasPrefix(line, "output:") {
 			continue
 		}
 		res = append(res, line)
