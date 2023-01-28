@@ -114,7 +114,7 @@ func (g golang) Initialize(outDir string) error {
 	modPath := config.Get().Code.Go.GoModPath
 	if modPath == "" {
 		modPath = "leetcode-solutions"
-		hclog.L().Warn("GoModPath path is not set, use default path", "mod_path", modPath)
+		hclog.L().Warn("`code.go.go_mod_path` is not set, use default path", "mod_path", modPath)
 	}
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
