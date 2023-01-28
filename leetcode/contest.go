@@ -83,6 +83,12 @@ func (ct *Contest) GetAllQuestions() ([]*QuestionData, error) {
 	if err != nil {
 		return nil, err
 	}
+	for _, q := range ct.Questions {
+		err = q.Fulfill()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return ct.Questions, nil
 }
 
