@@ -23,6 +23,7 @@ import (
 var (
 	colorGreen    = color.New(color.FgHiGreen, color.Bold)
 	checkDuration = 10 * time.Second
+	noOpen        bool
 )
 
 func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, error) {
@@ -162,7 +163,7 @@ var contestCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if cfg.Contest.OpenInBrowser {
+		if !noOpen && cfg.Contest.OpenInBrowser {
 			for _, r := range generated {
 				_ = browser.OpenURL(r.Question.ContestUrl())
 			}
@@ -228,5 +229,6 @@ var unregisterCmd = &cobra.Command{
 }
 
 func init() {
+	contestCmd.Flags().BoolVarP(&noOpen, "no-open", "n", false, "do not open in browser")
 	contestCmd.AddCommand(unregisterCmd)
 }
