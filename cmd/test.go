@@ -16,6 +16,8 @@ import (
 
 var (
 	runLocally  bool
+	runRemotely bool
+	runBoth     bool
 	autoSubmit  bool
 	customCases []string
 )
@@ -27,6 +29,13 @@ func init() {
 		"L",
 		false,
 		"run test locally",
+	)
+	testCmd.Flags().BoolVarP(
+		&runBoth,
+		"both",
+		"B",
+		false,
+		"run test both locally and remotely",
 	)
 	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "custom test cases")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
@@ -40,9 +49,16 @@ var testCmd = &cobra.Command{
 	Example: `leetgo test 244
 leetgo test last
 leetgo test w330/1
-leetgo test w330/
-`,
+leetgo test w330/`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if runLocally {
+			runRemotely = false
+		}
+		if runBoth {
+			runLocally = true
+			runRemotely = true
+		}
+
 		cfg := config.Get()
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
@@ -66,26 +82,26 @@ leetgo test w330/
 		defer submitLimiter.Stop()
 
 		for _, q := range qs {
-			passed := false
+			localPassed, remotePassed := true, true
 			if runLocally {
 				hclog.L().Info("running test locally", "question", q.TitleSlug)
 				err = lang.RunLocalTest(q)
 				if err != nil {
+					localPassed = false
 					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
-				} else {
-					passed = true
 				}
-			} else {
+			}
+			if runRemotely {
 				result, err := runTestRemotely(q, c, gen, testLimiter)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 				} else {
 					cmd.Print(result.Display(q))
-					passed = result.CorrectAnswer
+					remotePassed = result.CorrectAnswer
 				}
 			}
 
-			if passed && autoSubmit {
+			if localPassed && remotePassed && autoSubmit {
 				result, err := submitSolution(q, c, gen, submitLimiter)
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
