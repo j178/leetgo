@@ -52,3 +52,7 @@ Type "leetgo test last -L" Enter
 Sleep 3s
 Type "leetgo submit last" Enter
 Sleep 5s
+
+
+# TODO: show pick ui
+# TODO: demo contest generation

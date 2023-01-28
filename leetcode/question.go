@@ -348,7 +348,9 @@ var (
 func (q *QuestionData) GetTestCases() []string {
 	var cases []string
 	if len(q.JsonExampleTestcases) > 0 {
-		cases = q.JsonExampleTestcases
+		for _, c := range q.JsonExampleTestcases {
+			cases = append(cases, strings.Split(c, "\n")...)
+		}
 	} else if q.ExampleTestcases != "" {
 		cases = strings.Split(q.ExampleTestcases, "\n")
 	} else if q.SampleTestCase != "" {

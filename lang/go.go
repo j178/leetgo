@@ -99,7 +99,10 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		if bytes.Contains(output, []byte("not a known dependency")) {
+		if bytes.Contains(output, []byte("not a known dependency")) || bytes.Contains(
+			output,
+			[]byte("go.mod file not found"),
+		) {
 			return false, nil
 		}
 		return false, fmt.Errorf("go list failed: %w", err)
