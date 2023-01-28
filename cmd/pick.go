@@ -100,7 +100,7 @@ leetgo pick 549`,
 				return err
 			}
 			if len(qs) > 1 {
-				return fmt.Errorf("multiple questions found")
+				return fmt.Errorf("`leetgo pick` cannot handle multiple contest questions, use `leetgo contest` instead.")
 			}
 			q = qs[0]
 		} else {
