@@ -5,7 +5,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
-*这个项目还在早期开发阶段，有一些功能还没有实现，现有的功能也在快速变化中...*
+*Warning: 这个项目还在早期开发阶段，有一些功能还没有实现，现有的功能也在快速变化中...*
 
 **中文 | [English](./README_en.md)**
 

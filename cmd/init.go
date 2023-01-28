@@ -105,10 +105,10 @@ code:
   lang: %s
 leetcode:
   site: %s
-#   credentials:
-#     from: browser
-# editor:
-#   use: none
+#  credentials:
+#    from: browser
+#editor:
+#  use: none
 `
 	_, _ = f.WriteString(
 		fmt.Sprintf(

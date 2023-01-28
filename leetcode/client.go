@@ -613,7 +613,7 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 			codeDefinitionText = line[len(`    codeDefinition: `):len(line)-len(",],")] + "]"
 			codeDefinitionText = strings.ReplaceAll(codeDefinitionText, "'", `"`)
 		case strings.HasPrefix(line, `    metaData: `):
-			metaDataText = line[len(`    metaData: JSON.parse('`) : len(line)-len("' || '{}'),")]
+			metaDataText = line[len(`    metaData: JSON.parse('`) : len(line)-len(`' || '{}'),`)]
 			metaDataText = utils.DecodeRawUnicodeEscape(metaDataText)
 		case strings.HasPrefix(line, `    categoryTitle: '`):
 			categoryTitle = line[len(`    categoryTitle: '`) : len(line)-2]
