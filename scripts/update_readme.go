@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	for _, f := range []string{"README.md", "README_zh.md"} {
+	for _, f := range []string{"README.md", "README_en.md"} {
 		readme, _ := os.ReadFile(f)
 		readme = updateUsage(readme)
 		readme = updateConfig(readme)
