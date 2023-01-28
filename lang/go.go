@@ -133,21 +133,21 @@ func (g golang) Initialize(outDir string) error {
 	return err
 }
 
-func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) error {
+func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
 	cmd := exec.Command("go", "list", "-m")
 	cmd.Dir = outDir
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("go list failed: %w", err)
+		return false, fmt.Errorf("go list failed: %w", err)
 	}
 	modPath := strings.TrimSpace(string(output))
 	if modPath == "" {
-		return fmt.Errorf("go mod path is empty")
+		return false, fmt.Errorf("go mod path is empty")
 	}
 
 	genResult, err := g.GeneratePaths(q)
 	if err != nil {
-		return fmt.Errorf("generate paths failed: %w", err)
+		return false, fmt.Errorf("generate paths failed: %w", err)
 	}
 	path := genResult.Files[0].Path
 	basePath := filepath.Clean(filepath.Dir(path))
@@ -156,9 +156,9 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) error {
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	_ = cmd.Run()
+	err = cmd.Run()
 
-	return nil
+	return err == nil, nil
 }
 
 func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string {

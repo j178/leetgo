@@ -85,9 +85,8 @@ leetgo test w330/`,
 			localPassed, remotePassed := true, true
 			if runLocally {
 				hclog.L().Info("running test locally", "question", q.TitleSlug)
-				err = lang.RunLocalTest(q)
+				localPassed, err = lang.RunLocalTest(q)
 				if err != nil {
-					localPassed = false
 					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
 				}
 			}
@@ -95,6 +94,7 @@ leetgo test w330/`,
 				result, err := runTestRemotely(q, c, gen, testLimiter)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
+					remotePassed = false
 				} else {
 					cmd.Print(result.Display(q))
 					remotePassed = result.CorrectAnswer

@@ -78,7 +78,7 @@ type NeedInitialization interface {
 }
 
 type LocalTestable interface {
-	RunLocalTest(q *leetcode.QuestionData, dir string) error
+	RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error)
 }
 
 type baseLang struct {
@@ -446,21 +446,21 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	return strings.Join(codeLinesToKeep, "\n"), nil
 }
 
-func RunLocalTest(q *leetcode.QuestionData) error {
+func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	cfg := config.Get()
 	gen := GetGenerator(cfg.Code.Lang)
 	if gen == nil {
-		return fmt.Errorf("language %s is not supported", cfg.Code.Lang)
+		return false, fmt.Errorf("language %s is not supported", cfg.Code.Lang)
 	}
 
 	tester, ok := gen.(LocalTestable)
 	if !ok {
-		return fmt.Errorf("language %s does not support local test", gen.Slug())
+		return false, fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
 
 	outDir := getOutDir(q, gen)
 	if !utils.IsExist(outDir) {
-		return fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
+		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
 	}
 
 	return tester.RunLocalTest(q, outDir)
