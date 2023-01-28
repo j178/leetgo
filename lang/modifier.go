@@ -14,9 +14,9 @@ func addCodeMarker(l Lang) Modifier {
 	return func(s string, q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"%s\n\n%s\n\n%s",
-			l.LineComment()+" "+config.Get().Code.CodeBeginMark,
+			l.LineComment()+" "+config.CodeBeginMarker,
 			s,
-			l.LineComment()+" "+config.Get().Code.CodeEndMark,
+			l.LineComment()+" "+config.CodeEndMarker,
 		)
 	}
 }

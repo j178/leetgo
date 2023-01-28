@@ -147,10 +147,6 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
-  # The mark to indicate the beginning of the code
-  code_begin_mark: '@lc code=begin'
-  # The mark to indicate the end of the code
-  code_end_mark: '@lc code=end'
   go:
     out_dir: go
     # Overrides the default code.filename_template

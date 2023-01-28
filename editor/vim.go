@@ -11,12 +11,7 @@ import (
 type vim struct{}
 
 func (e *vim) args(file lang.FileOutput) []string {
-	codeBeginMark := config.Get().Code.CodeBeginMark
-	args := []string{"-p"}
-	if codeBeginMark != "" {
-		args = append(args, fmt.Sprintf("+/%s", codeBeginMark))
-	}
-	return args
+	return []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)}
 }
 
 func (e *vim) Open(file lang.FileOutput) error {

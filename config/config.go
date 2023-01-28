@@ -20,8 +20,8 @@ const (
 	projectConfigFilename     = CmdName + ".yaml"
 	leetcodeCacheFileBaseName = "cache/leetcode-questions"
 	stateFile                 = "cache/state.json"
-	codeBeginMark             = "@lc code=begin"
-	codeEndMark               = "@lc code=end"
+	CodeBeginMarker           = "@lc code=begin"
+	CodeEndMarker             = "@lc code=end"
 )
 
 var (
@@ -67,8 +67,6 @@ type Editor struct {
 type CodeConfig struct {
 	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
-	CodeBeginMark    string         `yaml:"code_begin_mark" mapstructure:"code_begin_mark" comment:"The mark to indicate the beginning of the code"`
-	CodeEndMark      string         `yaml:"code_end_mark" mapstructure:"code_end_mark" comment:"The mark to indicate the end of the code"`
 	Go               GoConfig       `yaml:"go" mapstructure:"go"`
 	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
 	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
@@ -168,8 +166,6 @@ func Default() *Config {
 		Language: ZH,
 		Code: CodeConfig{
 			Lang:             "go",
-			CodeBeginMark:    codeBeginMark,
-			CodeEndMark:      codeEndMark,
 			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
 			Go: GoConfig{
 				BaseLangConfig: BaseLangConfig{OutDir: "go"},
