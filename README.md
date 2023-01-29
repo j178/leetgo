@@ -49,6 +49,10 @@
 | Ruby | :white_check_mark: | Not yet |
 | Swift | :white_check_mark: | Not yet |
 | Kotlin | :white_check_mark: | Not yet |
+| Bash | :white_check_mark: | Not yet |
+| MySQL | :white_check_mark: | Not yet |
+| MSSQL | :white_check_mark: | Not yet |
+| Oracle | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
 其他热门语言的支持都在计划中，如果你有兴趣的话，欢迎加入我们👏🏻
 

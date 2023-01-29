@@ -51,6 +51,10 @@ Local test requires more work to implement for each language, so not all languag
 | Ruby | :white_check_mark: | Not yet |
 | Swift | :white_check_mark: | Not yet |
 | Kotlin | :white_check_mark: | Not yet |
+| Bash | :white_check_mark: | Not yet |
+| MySQL | :white_check_mark: | Not yet |
+| MSSQL | :white_check_mark: | Not yet |
+| Oracle | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
 and many other languages are in plan. (help wanted, contributions welcome!)
 
