@@ -97,17 +97,23 @@ func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) (ans []Modifi
 	}
 
 	for _, m := range modifiers.([]any) {
-		name := m.(map[string]any)["name"].(string)
-		fun := m.(map[string]any)["func"]
-		if f, ok := modifiersMap[name]; ok {
-			ans = append(ans, f)
-		} else if fun != nil {
-			// TODO support js func
-			_ = fun
-			hclog.L().Warn("custom modifier not supported yet, ignored", "modifier", name)
-		} else {
-			hclog.L().Warn("modifier not supported, ignored", "modifier", name)
+		m := m.(map[string]any)
+		name, script := "", ""
+
+		if m["name"] != nil {
+			name = m["name"].(string)
+			if f, ok := modifiersMap[name]; ok {
+				ans = append(ans, f)
+				continue
+			}
 		}
+		if m["script"] != nil {
+			// TODO support js script
+			script = m["script"].(string)
+			hclog.L().Warn("custom modifier function not supported yet, ignored", "modifier", name, "script", script)
+			continue
+		}
+		hclog.L().Warn("invalid modifier, ignored", "modifier", name, "script", script)
 	}
 	return
 }

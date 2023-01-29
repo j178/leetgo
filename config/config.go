@@ -71,8 +71,8 @@ type Block struct {
 }
 
 type Modifier struct {
-	Name string `yaml:"name" mapstructure:"name"`
-	Func string `yaml:"func,omitempty" mapstructure:"func"`
+	Name   string `yaml:"name" mapstructure:"name"`
+	Script string `yaml:"script,omitempty" mapstructure:"script"`
 }
 
 type CodeConfig struct {
@@ -191,11 +191,11 @@ func Default() *Config {
 					Blocks: []Block{
 						{
 							Name: "beforeMarker", Template: fmt.Sprintf(
-							`package main
+								`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
 `, GoTestUtilsModPath,
-						),
+							),
 						},
 					},
 					Modifiers: []Modifier{
