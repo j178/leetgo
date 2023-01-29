@@ -5,9 +5,6 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Discord](https://img.shields.io/discord/1069106479744962582?label=discord&logo=discord)](https://discord.gg/bHsEwQQj9m)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
-<a href="https://trackgit.com">
-<img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/ldguvuy7jizo3v63o3ol" alt="trackgit-views" />
-</a>
 
 *Warning: This project is still in its early development stage and many features have not yet been implemented. Everything is subject to rapid change.*
 
