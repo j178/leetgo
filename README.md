@@ -168,8 +168,8 @@ code:
     modifiers:
       - name: removeUselessComments
       - name: changeReceiverName
-      - name: addMod
       - name: addNamedReturn
+      - name: addMod
     # Go module path for the generated code
     go_mod_path: ""
   python3:
