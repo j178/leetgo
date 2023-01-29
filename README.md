@@ -110,6 +110,7 @@ Use "leetgo [command] --help" for more information about a command.
 leetgo pick two-sum          # two-sum 是题目的 slug，是最准确的 qid
 leetgo pick 1                # 1 是题目的 ID
 leetgo pick today            # today 表示今天的每日一题
+leetgo contest weekly100     # weekly100 表示第100场周赛
 leetgo test last             # last 表示最近一个生成的题目
 leetgo test weekly100/1      # weekly100/1 表示第100场周赛的第一个题目
 leetgo submit b100/2         # b100/2 表示第100场双周赛的第二个题目
@@ -250,11 +251,13 @@ editor:
 
 **注意**: 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.
 
-## Troubleshooting
+## FAQ
 
 如果你在使用中遇到了问题，可以设置环境变量 `DEBUG=1` 来启动 Debug 模式，然后再运行 `leetgo`，比如 `DEBUG=1 leetgo test last`。
 
 Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并且附带 `leetgo config` 的输出，向我们提交一个 issue，这对于我们定位问题至关重要。
+
+一些常见问题请参考 [Q&A](https://github.com/j178/leetgo/discussions/categories/q-a)。
 
 ## 欢迎贡献代码
 

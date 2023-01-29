@@ -254,9 +254,11 @@ There are three ways to provide cookies to `leetgo`:
 
 **Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
 
-## Troubleshooting
+## FAQ
 
 If you encounter any problems, please run your command with `DEBUG` environment variable set to `1`, copy the command output and open an issue.
+
+Some common problems can be found in [Q&A](https://github.com/j178/leetgo/discussions/categories/q-a).
 
 ## Contributions welcome!
 
