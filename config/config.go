@@ -78,8 +78,8 @@ type Modifier struct {
 type CodeConfig struct {
 	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
-	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"TODO"`
-	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"TODO"`
+	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 	Go               GoConfig       `yaml:"go" mapstructure:"go"`
 	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
 	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
@@ -91,8 +91,8 @@ type CodeConfig struct {
 type BaseLangConfig struct {
 	OutDir           string     `yaml:"out_dir" mapstructure:"out_dir"`
 	FilenameTemplate string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
-	Blocks           []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"TODO"`
-	Modifiers        []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"TODO"`
+	Blocks           []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers        []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 }
 
 type GoConfig struct {
