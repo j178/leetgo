@@ -444,7 +444,7 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
-		if !inCode && strings.Contains(line, config.CodeEndMarker) {
+		if !inCode && strings.Contains(line, config.CodeBeginMarker) {
 			inCode = true
 			continue
 		}
