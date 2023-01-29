@@ -10,7 +10,7 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
-var ErrNoQuestion = errors.New("no such question")
+var ErrQuestionNotFound = errors.New("no such question")
 
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 	q := GetCache(c).GetBySlug(slug)
@@ -18,7 +18,7 @@ func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 		q.client = c
 		return q, nil
 	}
-	return nil, ErrNoQuestion
+	return nil, ErrQuestionNotFound
 }
 
 func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
@@ -27,7 +27,7 @@ func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
 		q.client = c
 		return q, nil
 	}
-	return nil, ErrNoQuestion
+	return nil, ErrQuestionNotFound
 }
 
 // QuestionBySlug loads question data from cache first, if not found, fetch from leetcode.com
@@ -63,15 +63,17 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	case strings.Contains(qid, "/"):
 		_, qs, err = ParseContestQID(qid, c, true)
 	}
-	if err == ErrNoQuestion {
+	if err == ErrQuestionNotFound {
 		err = nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
 	}
-	// Try slug as last resort
 	if q == nil && len(qs) == 0 {
 		q, err = QuestionBySlug(qid, c)
+		if err == ErrQuestionNotFound {
+			q, err = QuestionFromCacheByID(qid, c)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
 		}

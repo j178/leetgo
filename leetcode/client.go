@@ -427,7 +427,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	}
 	q := resp.Data.Question
 	if q.TitleSlug == "" {
-		return nil, errors.New("question not found")
+		return nil, ErrQuestionNotFound
 	}
 	if q.IsPaidOnly && q.Content == "" {
 		return nil, ErrPaidOnlyQuestion
