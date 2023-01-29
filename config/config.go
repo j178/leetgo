@@ -22,6 +22,7 @@ const (
 	stateFile                 = "cache/state.json"
 	CodeBeginMarker           = "@lc code=begin"
 	CodeEndMarker             = "@lc code=end"
+	GoTestUtilsModPath        = "github.com/j178/leetgo/testutils/go"
 )
 
 var (
@@ -64,9 +65,21 @@ type Editor struct {
 	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command"`
 }
 
+type Block struct {
+	Name     string `yaml:"name" mapstructure:"name"`
+	Template string `yaml:"template" mapstructure:"template"`
+}
+
+type Modifier struct {
+	Name string `yaml:"name" mapstructure:"name"`
+	Func string `yaml:"func,omitempty" mapstructure:"func"`
+}
+
 type CodeConfig struct {
 	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
+	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"TODO"`
+	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"TODO"`
 	Go               GoConfig       `yaml:"go" mapstructure:"go"`
 	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
 	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
@@ -76,8 +89,10 @@ type CodeConfig struct {
 }
 
 type BaseLangConfig struct {
-	OutDir           string `yaml:"out_dir" mapstructure:"out_dir"`
-	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
+	OutDir           string     `yaml:"out_dir" mapstructure:"out_dir"`
+	FilenameTemplate string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
+	Blocks           []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"TODO"`
+	Modifiers        []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"TODO"`
 }
 
 type GoConfig struct {
@@ -167,8 +182,29 @@ func Default() *Config {
 		Code: CodeConfig{
 			Lang:             "go",
 			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			Modifiers: []Modifier{
+				{Name: "removeUselessComments"},
+			},
 			Go: GoConfig{
-				BaseLangConfig: BaseLangConfig{OutDir: "go"},
+				BaseLangConfig: BaseLangConfig{
+					OutDir: "go",
+					Blocks: []Block{
+						{
+							Name: "beforeMarker", Template: fmt.Sprintf(
+							`package main
+
+{{ if .NeedsDefinition -}} import . "%s" {{- end }}
+`, GoTestUtilsModPath,
+						),
+						},
+					},
+					Modifiers: []Modifier{
+						{Name: "removeUselessComments"},
+						{Name: "changeReceiverName"},
+						{Name: "addMod"},
+						{Name: "addNamedReturn"},
+					},
+				},
 			},
 			Python: BaseLangConfig{OutDir: "python"},
 			Cpp:    BaseLangConfig{OutDir: "cpp"},
