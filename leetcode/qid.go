@@ -10,13 +10,15 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
+var ErrNoQuestion = errors.New("no such question")
+
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 	q := GetCache(c).GetBySlug(slug)
 	if q != nil {
 		q.client = c
 		return q, nil
 	}
-	return nil, errors.New("no such question")
+	return nil, ErrNoQuestion
 }
 
 func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
@@ -25,7 +27,7 @@ func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
 		q.client = c
 		return q, nil
 	}
-	return nil, errors.New("no such question")
+	return nil, ErrNoQuestion
 }
 
 // QuestionBySlug loads question data from cache first, if not found, fetch from leetcode.com
@@ -60,6 +62,9 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		q, err = c.GetTodayQuestion()
 	case strings.Contains(qid, "/"):
 		_, qs, err = ParseContestQID(qid, c, true)
+	}
+	if err == ErrNoQuestion {
+		err = nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
