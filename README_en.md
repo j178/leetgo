@@ -152,10 +152,26 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  # TODO
+  modifiers:
+    - name: removeUselessComments
   go:
     out_dir: go
     # Overrides the default code.filename_template
     filename_template: ""
+    # TODO
+    blocks:
+      - name: beforeMarker
+        template: |
+          package main
+
+          {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
+    # TODO
+    modifiers:
+      - name: removeUselessComments
+      - name: changeReceiverName
+      - name: addMod
+      - name: addNamedReturn
     # Go module path for the generated code
     go_mod_path: ""
   python3:

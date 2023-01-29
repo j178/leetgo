@@ -20,9 +20,10 @@
 
 ## 主要特性
 
-- 通过简单、漂亮的 UI 来挑选、过滤题目
-- 为题目生成描述、样例代码、测试代码，支持本地测试
-- 自动等待并及时生成所有竞赛题目
+- 自动为题目生成描述、样例代码、测试代码
+- 通过模板引擎自定义配置生成的代码文件，支持对代码做预处理
+- 支持本地测试，可以使用 Debugger 调试代码
+- 自动等待并及时生成竞赛题目，一键提交所有题目
 - (即将) 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
 - 自动从浏览器中读取 LeetCode 的 Cookie，无需手动提供
 
@@ -149,10 +150,26 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  # TODO
+  modifiers:
+    - name: removeUselessComments
   go:
     out_dir: go
     # Overrides the default code.filename_template
     filename_template: ""
+    # TODO
+    blocks:
+      - name: beforeMarker
+        template: |
+          package main
+
+          {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
+    # TODO
+    modifiers:
+      - name: removeUselessComments
+      - name: changeReceiverName
+      - name: addMod
+      - name: addNamedReturn
     # Go module path for the generated code
     go_mod_path: ""
   python3:

@@ -1,10 +1,12 @@
 package lang
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -102,31 +104,56 @@ func (l baseLang) LineComment() string {
 	return l.lineComment
 }
 
-func (l baseLang) generateComments(q *leetcode.QuestionData) string {
-	var content []string
-	cfg := config.Get()
-	now := time.Now().Format("2006/01/02 15:04")
-	content = append(content, fmt.Sprintf("%s Created by %s at %s", l.lineComment, cfg.Author, now))
-	content = append(content, fmt.Sprintf("%s %s", l.lineComment, q.Url()))
-	if q.IsContest() {
-		content = append(content, fmt.Sprintf("%s %s", l.lineComment, q.ContestUrl()))
-	}
-	content = append(content, "")
-	content = append(content, l.blockCommentStart)
-	content = append(content, fmt.Sprintf("%s. %s (%s)", q.QuestionFrontendId, q.GetTitle(), q.Difficulty))
-	content = append(content, "")
-	content = append(content, q.GetFormattedContent())
-	content = append(content, l.blockCommentEnd)
-	content = append(content, "")
-	return strings.Join(content, "\n")
-}
-
-func (l baseLang) generateCode(q *leetcode.QuestionData, modifiers ...Modifier) string {
+func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Block, modifiers []ModifierFunc) (
+	string,
+	error,
+) {
 	code := q.GetCodeSnippet(l.Slug())
-	for _, m := range modifiers {
-		code = m(code, q)
+	tmpl := template.New("root")
+	tmpl.Funcs(
+		template.FuncMap{
+			"runModifiers": func(code string) string {
+				for _, m := range modifiers {
+					code = m(code, q)
+				}
+				return code
+			},
+		},
+	)
+	_, err := tmpl.Parse(contentTemplate)
+	if err != nil {
+		return "", err
 	}
-	return code
+
+	for _, block := range blocks {
+		if _, ok := validBlocks[block.Name]; !ok {
+			return "", fmt.Errorf("invalid block name: %s", block.Name)
+		}
+		_, err := tmpl.New(block.Name).Parse(block.Template)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	cfg := config.Get()
+	data := &contentData{
+		Question:          q,
+		Author:            cfg.Author,
+		Time:              time.Now().Format("2006/01/02 15:04"),
+		LineComment:       l.lineComment,
+		BlockCommentStart: l.blockCommentStart,
+		BlockCommentEnd:   l.blockCommentEnd,
+		CodeBeginMarker:   config.CodeBeginMarker,
+		CodeEndMarker:     config.CodeEndMarker,
+		Code:              code,
+		NeedsDefinition:   needsDefinition(code),
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
@@ -170,9 +197,12 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 }
 
 func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	comment := l.generateComments(q)
-	code := l.generateCode(q, addCodeMarker(l))
-	content := comment + "\n" + code + "\n"
+	blocks := getBlocks(l)
+	modifiers := getModifiers(l, builtinModifiers)
+	content, err := l.generateContent(q, blocks, modifiers)
+	if err != nil {
+		return nil, err
+	}
 
 	filenameTmpl := getFilenameTemplate(q, l)
 	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
@@ -220,14 +250,6 @@ func getCodeConfig(lang Lang, key string) string {
 	return viper.GetString("code." + lang.ShortName() + "." + key)
 }
 
-func needsDefinition(code string) bool {
-	return strings.Contains(code, "Definition for")
-}
-
-func needsMod(description string) bool {
-	return strings.Contains(description, "10⁹ + 7")
-}
-
 func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
 	if q.IsContest() {
 		return config.Get().Contest.FilenameTemplate
@@ -245,6 +267,7 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	}
 	cfg := config.Get()
 	outDir := getCodeConfig(lang, "out_dir")
+	// If outDir is not set, use the language slug as the outDir.
 	if outDir == "" {
 		outDir = lang.Slug()
 	}
@@ -266,7 +289,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
-		return nil, nil, fmt.Errorf("no %s code snippet found for %s", cfg.Code.Lang, q.TitleSlug)
+		return nil, nil, fmt.Errorf(`question "%s" doesn't support using "%s"`, cfg.Code.Lang, q.TitleSlug)
 	}
 
 	outDir := getOutDir(q, gen)
