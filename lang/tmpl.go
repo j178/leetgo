@@ -1,8 +1,10 @@
 package lang
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/dop251/goja"
 	"github.com/hashicorp/go-hclog"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
@@ -84,7 +86,7 @@ func getBlocks(lang Lang) (ans []config.Block) {
 	return
 }
 
-func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) (ans []ModifierFunc) {
+func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) ([]ModifierFunc, error) {
 	modifiers := viper.Get("code." + lang.Slug() + ".modifiers")
 	if modifiers == nil || len(modifiers.([]any)) == 0 {
 		modifiers = viper.Get("code." + lang.ShortName() + ".modifiers")
@@ -93,9 +95,10 @@ func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) (ans []Modifi
 		modifiers = viper.Get("code.modifiers")
 	}
 	if modifiers == nil {
-		return
+		return nil, nil
 	}
 
+	var funcs []ModifierFunc
 	for _, m := range modifiers.([]any) {
 		m := m.(map[string]any)
 		name, script := "", ""
@@ -103,19 +106,34 @@ func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) (ans []Modifi
 		if m["name"] != nil {
 			name = m["name"].(string)
 			if f, ok := modifiersMap[name]; ok {
-				ans = append(ans, f)
+				funcs = append(funcs, f)
 				continue
 			}
 		}
 		if m["script"] != nil {
-			// TODO support js script
 			script = m["script"].(string)
-			hclog.L().Warn("custom modifier function not supported yet, ignored", "modifier", name, "script", script)
+			vm := goja.New()
+			_, err := vm.RunString(script)
+			if err != nil {
+				return nil, fmt.Errorf("failed to run script: %w", err)
+			}
+			var jsFn func(string) string
+			if vm.Get("modify") == nil {
+				return nil, fmt.Errorf("failed to get modify function")
+			}
+			err = vm.ExportTo(vm.Get("modify"), &jsFn)
+			if err != nil {
+				return nil, fmt.Errorf("failed to export function: %w", err)
+			}
+			f := func(s string, data *leetcode.QuestionData) string {
+				return jsFn(s)
+			}
+			funcs = append(funcs, f)
 			continue
 		}
-		hclog.L().Warn("invalid modifier, ignored", "modifier", name, "script", script)
+		hclog.L().Warn("invalid modifier, ignored", "name", name, "script", script)
 	}
-	return
+	return funcs, nil
 }
 
 func needsDefinition(code string) bool {

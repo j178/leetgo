@@ -242,7 +242,10 @@ var (
 
 func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	blocks := getBlocks(g)
-	modifiers := getModifiers(g, goBuiltinModifiers)
+	modifiers, err := getModifiers(g, goBuiltinModifiers)
+	if err != nil {
+		return nil, err
+	}
 	codeContent, err := g.generateContent(q, blocks, modifiers)
 	if err != nil {
 		return nil, err

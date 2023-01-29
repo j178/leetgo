@@ -198,7 +198,10 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 
 func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	blocks := getBlocks(l)
-	modifiers := getModifiers(l, builtinModifiers)
+	modifiers, err := getModifiers(l, builtinModifiers)
+	if err != nil {
+		return nil, err
+	}
 	content, err := l.generateContent(q, blocks, modifiers)
 	if err != nil {
 		return nil, err
