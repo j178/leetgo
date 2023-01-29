@@ -103,8 +103,13 @@ func addMod(code string, q *leetcode.QuestionData) string {
 	var returnType string
 	for _, line := range lines {
 		if strings.HasPrefix(line, "func ") {
-			rightBrace := strings.LastIndex(line, ")")
-			returnType = strings.TrimSpace(line[rightBrace+1 : strings.LastIndex(line, "{")])
+			if strings.Count(line, "(") == 1 {
+				rightBrace := strings.LastIndex(line, ")")
+				returnType = strings.TrimSpace(line[rightBrace+1 : strings.LastIndex(line, "{")])
+			} else {
+				s := line[strings.LastIndex(line, "(")+1 : strings.LastIndex(line, ")")]
+				returnType = s[strings.LastIndex(s, " ")+1:]
+			}
 			newLines = append(newLines, line)
 			newLines = append(newLines, "\tconst mod int = 1e9 + 7\n")
 		} else if strings.HasPrefix(line, "\treturn") {

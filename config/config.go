@@ -201,8 +201,8 @@ func Default() *Config {
 					Modifiers: []Modifier{
 						{Name: "removeUselessComments"},
 						{Name: "changeReceiverName"},
-						{Name: "addMod"},
 						{Name: "addNamedReturn"},
+						{Name: "addMod"},
 					},
 				},
 			},
