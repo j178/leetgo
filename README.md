@@ -273,6 +273,53 @@ editor:
 
 **注意**: 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.
 
+## 进阶用法
+
+1. template 相关
+  
+    `leetgo` 的配置中有许多支持 Go template，如果你熟悉 Go template 语法的话，可以配置出更加个性化的文件名和代码模板。
+
+2. Blocks
+
+    可以用 blocks 来自定义代码中的一些部分，目前支持的 block 有：
+    - header
+    - description
+    - title
+    - beforeMarker
+    - beforeCode
+    - afterCode
+    - afterMarker
+    
+    示例：
+    ```yaml
+    code:
+    lang: cpp
+    cpp:
+    blocks:
+    - name: beforeCode
+      template: |
+        #include <iostream>
+        using namespace std;
+    - name: afterMarker
+      template: |
+        int main() {}
+     ```
+
+3. Script
+
+    `leetgo` 支持自定义一个 JavaScript 脚本来处理函数代码，示例：
+    ```yaml
+    code:
+      lang: cpp
+      cpp:
+        modifiers:
+        - name: removeUselessComments
+        - script: |
+            function modify(code) {
+              return "// hello world\n" + code;
+            } 
+    ```
+
 ## FAQ
 
 如果你在使用中遇到了问题，可以设置环境变量 `DEBUG=1` 来启动 Debug 模式，然后再运行 `leetgo`，比如 `DEBUG=1 leetgo test last`。

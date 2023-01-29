@@ -275,6 +275,53 @@ There are three ways to provide cookies to `leetgo`:
 
 **Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
 
+## Advanced Usage
+
+1. template related
+
+   `leetgo` 的配置中有许多支持 Go template，如果你熟悉 Go template 语法的话，可以配置出更加个性化的文件名和代码模板。
+
+2. Blocks
+
+   可以用 blocks 来自定义代码中的一些部分，目前支持的 block 有：
+   - header
+   - description
+   - title
+   - beforeMarker
+   - beforeCode
+   - afterCode
+   - afterMarker
+
+   Example:
+   ```yaml
+   code:
+   lang: cpp
+   cpp:
+   blocks:
+   - name: beforeCode
+     template: |
+       #include <iostream>
+       using namespace std;
+   - name: afterMarker
+     template: |
+       int main() {}
+   ```
+
+3. Script
+
+   `leetgo` 支持自定义一个 JavaScript 脚本来处理函数代码，示例：
+    ```yaml
+    code:
+      lang: cpp
+      cpp:
+        modifiers:
+        - name: removeUselessComments
+        - script: |
+            function modify(code) {
+              return "// hello world\n" + code;
+            } 
+    ```
+
 ## FAQ
 
 If you encounter any problems, please run your command with `DEBUG` environment variable set to `1`, copy the command output and open an issue.
