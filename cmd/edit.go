@@ -18,16 +18,16 @@ var editCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Get()
 		c := leetcode.NewClient()
-		gen := lang.GetGenerator(cfg.Code.Lang)
-		if gen == nil {
-			return fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
-		}
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
 			return err
 		}
 		if len(qs) > 1 {
 			return fmt.Errorf("multiple questions found")
+		}
+		_, err = lang.GetGenerator(cfg.Code.Lang)
+		if err != nil {
+			return err
 		}
 		result, err := lang.GeneratePathsOnly(qs[0])
 		if err != nil {

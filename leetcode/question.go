@@ -211,6 +211,16 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type CategoryTitle string
+
+const (
+	CategoryAlgorithms  CategoryTitle = "Algorithms"
+	CategoryDatabase    CategoryTitle = "Database"
+	CategoryShell       CategoryTitle = "Shell"
+	CategoryConcurrency CategoryTitle = "Concurrency"
+	CategoryAll         CategoryTitle = ""
+)
+
 type QuestionData struct {
 	client               Client
 	contest              *Contest
@@ -218,7 +228,7 @@ type QuestionData struct {
 	TitleSlug            string               `json:"titleSlug"`
 	QuestionId           string               `json:"questionId"`
 	QuestionFrontendId   string               `json:"questionFrontendId"`
-	CategoryTitle        string               `json:"categoryTitle"`
+	CategoryTitle        CategoryTitle        `json:"categoryTitle"`
 	Title                string               `json:"title"`
 	TranslatedTitle      string               `json:"translatedTitle"`
 	Difficulty           string               `json:"difficulty"`

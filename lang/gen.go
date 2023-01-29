@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,10 +13,6 @@ import (
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 	"github.com/spf13/viper"
-)
-
-var (
-	NotSupported = errors.New("not supported")
 )
 
 const (
@@ -197,24 +192,24 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}, nil
 }
 
-func GetGenerator(lang string) Lang {
+func GetGenerator(lang string) (Lang, error) {
 	lang = strings.ToLower(lang)
 	for _, l := range SupportedLangs {
 		if l.Slug() == lang {
-			return l
+			return l, nil
 		}
 	}
 	for _, l := range SupportedLangs {
 		if l.ShortName() == lang {
-			return l
+			return l, nil
 		}
 	}
 	for _, l := range SupportedLangs {
 		if strings.HasPrefix(strings.ToLower(l.Name()), lang) {
-			return l
+			return l, nil
 		}
 	}
-	return nil
+	return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", lang)
 }
 
 func getCodeConfig(lang Lang, key string) string {
@@ -259,12 +254,12 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 
 func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	cfg := config.Get()
-	gen := GetGenerator(cfg.Code.Lang)
-	if gen == nil {
-		return nil, nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", cfg.Code.Lang)
+	gen, err := GetGenerator(cfg.Code.Lang)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	err := q.Fulfill()
+	err = q.Fulfill()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get question data: %w", err)
 	}
@@ -390,9 +385,9 @@ func tryWrite(file string, content string) (bool, error) {
 // GeneratePathsOnly runs generate process but does not generate real content.
 func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
-	gen := GetGenerator(cfg.Code.Lang)
-	if gen == nil {
-		return nil, fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
+	gen, err := GetGenerator(cfg.Code.Lang)
+	if err != nil {
+		return nil, err
 	}
 
 	result, err := gen.GeneratePaths(q)
@@ -447,9 +442,9 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 
 func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	cfg := config.Get()
-	gen := GetGenerator(cfg.Code.Lang)
-	if gen == nil {
-		return false, fmt.Errorf("language %s is not supported", cfg.Code.Lang)
+	gen, err := GetGenerator(cfg.Code.Lang)
+	if err != nil {
+		return false, err
 	}
 
 	tester, ok := gen.(LocalTestable)

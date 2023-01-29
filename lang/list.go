@@ -113,6 +113,42 @@ var (
 		blockCommentStart: "/*",
 		blockCommentEnd:   "*/",
 	}
+	mysqlGen = baseLang{
+		name:              "MySQL",
+		slug:              "mysql",
+		shortName:         "sql",
+		extension:         ".sql",
+		lineComment:       "--",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
+	mssqlGen = baseLang{
+		name:              "MSSQL",
+		slug:              "mssql",
+		shortName:         "sql",
+		extension:         ".sql",
+		lineComment:       "--",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
+	oraclesqlGen = baseLang{
+		name:              "Oracle",
+		slug:              "oraclesql",
+		shortName:         "sql",
+		extension:         ".sql",
+		lineComment:       "--",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
+	bashGen = baseLang{
+		name:              "Bash",
+		slug:              "bash",
+		shortName:         "sh",
+		extension:         ".sh",
+		lineComment:       "#",
+		blockCommentStart: ">>COMMENT",
+		blockCommentEnd:   "\nCOMMENT",
+	}
 	// TODO scala, typescript, erlang, dart, racket
 	SupportedLangs = []Lang{
 		golangGen,
@@ -127,5 +163,9 @@ var (
 		rubyGen,
 		swiftGen,
 		kotlinGen,
+		bashGen,
+		mysqlGen,
+		mssqlGen,
+		oraclesqlGen,
 	}
 )

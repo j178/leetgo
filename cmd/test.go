@@ -67,9 +67,9 @@ leetgo test w330/`,
 			return err
 		}
 
-		gen := lang.GetGenerator(cfg.Code.Lang)
-		if gen == nil {
-			return fmt.Errorf("language %s is not supported yet", cfg.Code.Lang)
+		gen, err := lang.GetGenerator(cfg.Code.Lang)
+		if err != nil {
+			return err
 		}
 		_, supportLocalTest := gen.(lang.LocalTestable)
 		if runLocally && !supportLocalTest {

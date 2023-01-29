@@ -632,7 +632,7 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 		TranslatedTitle:    title,
 		ExampleTestcases:   exampleTestcases,
 		SampleTestCase:     sampleTestcase,
-		CategoryTitle:      categoryTitle,
+		CategoryTitle:      CategoryTitle(categoryTitle),
 	}
 	err = json.Unmarshal([]byte(metaDataText), &q.MetaData)
 	if err != nil {
