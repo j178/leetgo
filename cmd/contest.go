@@ -235,6 +235,6 @@ var unregisterCmd = &cobra.Command{
 }
 
 func init() {
-	contestCmd.Flags().BoolVarP(&openInBrowser, "browser", "b", false, "do not open in browser")
+	contestCmd.Flags().BoolVarP(&openInBrowser, "browser", "b", false, "open question page in browser")
 	contestCmd.AddCommand(unregisterCmd)
 }

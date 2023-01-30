@@ -45,6 +45,10 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		err := initWorkDir()
+		if err != nil {
+			return err
+		}
 		initLogger()
 		return config.Load(cmd == initCmd)
 	},
@@ -60,6 +64,13 @@ func Execute() {
 
 func UsageString() string {
 	return rootCmd.UsageString()
+}
+
+func initWorkDir() error {
+	if os.Getenv("LEETGO_WORKDIR") != "" {
+		return os.Chdir(os.Getenv("LEETGO_WORKDIR"))
+	}
+	return nil
 }
 
 func initLogger() {

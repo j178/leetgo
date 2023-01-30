@@ -11,8 +11,9 @@ var configCmd = &cobra.Command{
 	Short: "Show configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Get()
-		cmd.Println("Global config dir:", cfg.ConfigDir())
-		cmd.Println("Global config file:", cfg.GlobalConfigFile())
+		cmd.Println("Global config dir  :", cfg.ConfigDir())
+		cmd.Println("Global config file :", cfg.GlobalConfigFile())
+		cmd.Println("Project root       :", cfg.ProjectRoot())
 		cmd.Println("Project config file:", cfg.ProjectConfigFile())
 		cmd.Println("Full configurations:")
 		cmd.Println()
