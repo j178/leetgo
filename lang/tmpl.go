@@ -6,9 +6,10 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/hashicorp/go-hclog"
+	"github.com/spf13/viper"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/spf13/viper"
 )
 
 const contentTemplate = `

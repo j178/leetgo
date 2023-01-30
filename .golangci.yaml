@@ -1,0 +1,13 @@
+linters:
+  enable:
+    - gofumpt
+    - gci
+
+# https://golangci-lint.run/usage/linters#linters-configuration
+linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/j178/leetgo)

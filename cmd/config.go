@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/j178/leetgo/config"
 	"github.com/spf13/cobra"
+
+	"github.com/j178/leetgo/config"
 )
 
 var configCmd = &cobra.Command{

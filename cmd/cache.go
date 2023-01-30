@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
+
+	"github.com/j178/leetgo/leetcode"
 )
 
 var cacheCmd = &cobra.Command{

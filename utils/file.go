@@ -19,7 +19,7 @@ func IsExist(path string) bool {
 }
 
 func MakeDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0o755)
 }
 
 // CreateIfNotExists creates a file or a directory only if it does not already exist.
@@ -27,12 +27,12 @@ func CreateIfNotExists(path string, isDir bool) error {
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			if isDir {
-				return os.MkdirAll(path, 0755)
+				return os.MkdirAll(path, 0o755)
 			}
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 				return err
 			}
-			f, err := os.OpenFile(path, os.O_CREATE, 0755)
+			f, err := os.OpenFile(path, os.O_CREATE, 0o755)
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func RemoveIfExist(path string) error {
 }
 
 func Truncate(filename string) error {
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err
 	}

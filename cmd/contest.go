@@ -11,13 +11,14 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-hclog"
+	"github.com/pkg/browser"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/pkg/browser"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (

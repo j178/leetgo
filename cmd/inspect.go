@@ -4,8 +4,9 @@ import (
 	"bytes"
 
 	"github.com/goccy/go-json"
-	"github.com/j178/leetgo/leetcode"
 	"github.com/spf13/cobra"
+
+	"github.com/j178/leetgo/leetcode"
 )
 
 var inspectCmd = &cobra.Command{

@@ -13,10 +13,11 @@ import (
 	"github.com/JohannesKaufmann/html-to-markdown/plugin"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
-	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/utils"
 	"github.com/k3a/html2text"
 	"github.com/mitchellh/go-wordwrap"
+
+	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/utils"
 )
 
 type TopicTag struct {

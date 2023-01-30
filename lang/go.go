@@ -231,14 +231,12 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	}, nil
 }
 
-var (
-	goBuiltinModifiers = map[string]ModifierFunc{
-		"removeUselessComments": removeUselessComments,
-		"changeReceiverName":    changeReceiverName,
-		"addNamedReturn":        addNamedReturn,
-		"addMod":                addMod,
-	}
-)
+var goBuiltinModifiers = map[string]ModifierFunc{
+	"removeUselessComments": removeUselessComments,
+	"changeReceiverName":    changeReceiverName,
+	"addNamedReturn":        addNamedReturn,
+	"addMod":                addMod,
+}
 
 func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	blocks := getBlocks(g)

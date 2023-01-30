@@ -54,7 +54,7 @@ func SaveState(s State) {
 	states := loadStates()
 	states[projectRoot] = s
 
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		hclog.L().Error("failed to create state file", "err", err)
 		return

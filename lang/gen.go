@@ -400,7 +400,7 @@ func tryWrite(file string, content string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(file, utils.StringToBytes(content), 0644)
+	err = os.WriteFile(file, utils.StringToBytes(content), 0o644)
 	if err != nil {
 		return false, err
 	}

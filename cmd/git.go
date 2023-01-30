@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
+
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/spf13/cobra"
 )
 
 var gitCmd = &cobra.Command{
@@ -74,7 +75,7 @@ func gitAddCommitPush(genResult *lang.GenerateResult) error {
 	msg = stripComments(msg)
 	msg = strings.TrimSpace(msg)
 	if msg == "" {
-		return errors.New("git commit message: empty message")
+		return errors.New("git: empty commit message")
 	}
 	err = runCmd("git", "commit", "-m", msg)
 	if err != nil {

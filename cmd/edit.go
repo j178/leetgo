@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/spf13/cobra"
 )
 
 var editCmd = &cobra.Command{

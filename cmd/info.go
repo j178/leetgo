@@ -7,10 +7,11 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/leetcode"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
+
+	"github.com/j178/leetgo/leetcode"
 )
 
 var infoCmd = &cobra.Command{

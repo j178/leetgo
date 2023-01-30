@@ -11,8 +11,9 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/utils"
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/j178/leetgo/utils"
 )
 
 const (

@@ -6,15 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/spf13/cobra"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
-	"github.com/spf13/cobra"
 )
 
-var (
-	initTemplate string
-)
+var initTemplate string
 
 var initCmd = &cobra.Command{
 	Use:     "init [DIR]",

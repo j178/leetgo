@@ -9,9 +9,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
-	"github.com/j178/leetgo/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/j178/leetgo/config"
 )
 
 var (

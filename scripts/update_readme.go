@@ -6,10 +6,11 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/jedib0t/go-pretty/v6/table"
+
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
-	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 		readme = updateUsage(readme)
 		readme = updateConfig(readme)
 		readme = updateSupportMatrix(readme)
-		_ = os.WriteFile(f, readme, 0644)
+		_ = os.WriteFile(f, readme, 0o644)
 	}
 }
 

@@ -6,11 +6,12 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
+	"github.com/spf13/cobra"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
-	"github.com/spf13/cobra"
 )
 
 var submitCmd = &cobra.Command{

@@ -7,9 +7,10 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/config"
 	"github.com/zellyn/kooky"
 	_ "github.com/zellyn/kooky/browser/chrome"
+
+	"github.com/j178/leetgo/config"
 )
 
 type CredentialsProvider interface {
