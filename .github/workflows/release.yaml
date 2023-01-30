@@ -29,3 +29,5 @@ jobs:
         env:
           # Custom secret here since we need to access to j178/homebrew-tap repo.
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          DISCORD_WEBHOOK_ID: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          DISCORD_WEBHOOK_TOKEN: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
