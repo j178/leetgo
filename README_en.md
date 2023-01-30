@@ -25,8 +25,9 @@ And `leetgo` also supports real-time generation of **contest questions**, so you
 - Customize the code template for generated code, use modifiers to preprocess code
 - Run test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
-- (Will) Support both leetcode.com and leetcode.c
+- (Will) Support both leetcode.com and leetcode.cn
 - Read cookies from browser automatically, no need to provide password
+- Auto open question files in your favorite editor
 
 ## Language support
 
