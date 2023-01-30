@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/j178/leetgo/utils"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+
+	"github.com/j178/leetgo/utils"
 )
 
 const (
@@ -191,11 +192,12 @@ func Default() *Config {
 					Blocks: []Block{
 						{
 							Name: "beforeMarker", Template: fmt.Sprintf(
-								`package main
+							`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
+
 `, GoTestUtilsModPath,
-							),
+						),
 						},
 					},
 					Modifiers: []Modifier{

@@ -108,6 +108,7 @@ func initCommands() {
 		testCmd,
 		submitCmd,
 		editCmd,
+		extractCmd,
 		contestCmd,
 		cacheCmd,
 		configCmd,

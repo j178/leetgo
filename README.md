@@ -93,6 +93,7 @@ Available Commands:
   test                    Run question test cases
   submit                  Submit solution
   edit                    Open solution in editor
+  extract                 Extract solution code from generated file
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations
@@ -160,10 +161,11 @@ code:
     # Replace some blocks of the generated code
     blocks:
       - name: beforeMarker
-        template: |
+        template: |+
           package main
 
           {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
+
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
