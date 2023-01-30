@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Get help in GitHub Discussions
+    url: https://github.com/j178/leetgo/discussions
+    about: Have a question? Not sure if your issue affects everyone reproducibly? The quickest way to get help is on GitHub Discussions!
+  - name: Chat in Discord
+    url: https://discord.gg/bHsEwQQj9m
+    about: Want to chat with other users? Join our Discord server!
