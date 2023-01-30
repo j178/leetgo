@@ -192,12 +192,12 @@ func Default() *Config {
 					Blocks: []Block{
 						{
 							Name: "beforeMarker", Template: fmt.Sprintf(
-								`package main
+							`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
 
 `, GoTestUtilsModPath,
-							),
+						),
 						},
 					},
 					Modifiers: []Modifier{
@@ -299,6 +299,10 @@ func verify(c *Config) error {
 func Load(init bool) error {
 	if globalCfg != nil {
 		return nil
+	}
+	// Convenient way to switch site during development
+	if err := viper.BindEnv("leetcode.site", "LEETGO_SITE"); err != nil {
+		return err
 	}
 
 	// load global configuration
