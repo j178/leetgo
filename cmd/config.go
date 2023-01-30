@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
@@ -12,9 +14,11 @@ var configCmd = &cobra.Command{
 	Short: "Show configurations",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Get()
+		cwd, _ := os.Getwd()
 		cmd.Println("Global config dir  :", cfg.ConfigDir())
 		cmd.Println("Global config file :", cfg.GlobalConfigFile())
 		cmd.Println("Project root       :", cfg.ProjectRoot())
+		cmd.Println("Working dir        :", cwd)
 		cmd.Println("Project config file:", cfg.ProjectConfigFile())
 		cmd.Println("Full configurations:")
 		cmd.Println()
