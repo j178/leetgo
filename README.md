@@ -289,6 +289,7 @@ editor:
     - title
     - beforeMarker
     - beforeCode
+    - code
     - afterCode
     - afterMarker
     

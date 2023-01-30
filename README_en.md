@@ -291,6 +291,7 @@ There are three ways to provide cookies to `leetgo`:
    - title
    - beforeMarker
    - beforeCode
+   - code
    - afterCode
    - afterMarker
 
