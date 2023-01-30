@@ -51,7 +51,14 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		initLogger()
-		return config.Load(cmd == initCmd)
+		err = config.Load(cmd == initCmd)
+		if err != nil {
+			return fmt.Errorf(
+				"%w\nSeems like your configuration is not a valid YAML file, please paste your configuration to tools like https://www.yamllint.com/ to fix it.",
+				err,
+			)
+		}
+		return nil
 	},
 }
 

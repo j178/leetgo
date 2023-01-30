@@ -317,7 +317,7 @@ func Load(init bool) error {
 			}
 			return nil
 		}
-		return err
+		return fmt.Errorf("load config file %s failed: %w", cfg.GlobalConfigFile(), err)
 	}
 
 	// Don't read project config if we are running `init` command
@@ -333,14 +333,14 @@ func Load(init bool) error {
 					cfg.GlobalConfigFile(),
 				)
 			} else {
-				return err
+				return fmt.Errorf("load config file %s failed: %w", cfg.ProjectConfigFile(), err)
 			}
 		}
 	}
 
 	err = viper.Unmarshal(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("config file is invalid: %s", err)
 	}
 	if err = verify(cfg); err != nil {
 		return fmt.Errorf("config file is invalid: %w", err)
