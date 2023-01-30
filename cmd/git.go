@@ -20,7 +20,7 @@ var gitCmd = &cobra.Command{
 }
 
 var gitPushCmd = &cobra.Command{
-	Use:   "push",
+	Use:   "push [qid]",
 	Short: "Add, commit and push your code to remote repository",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -59,15 +59,12 @@ func gitAddCommitPush(genResult *lang.GenerateResult) error {
 		return fmt.Errorf("git add: %w", err)
 	}
 	var msg string
-	prompt := &survey.Editor{
+	prompt := &survey.Input{
 		Message: "Commit message",
 		Default: fmt.Sprintf(
-			"Add solution for %s. %s",
-			genResult.Question.QuestionFrontendId,
-			genResult.Question.GetTitle(),
+			"Add solution for %s.",
+			genResult.Question.TitleSlug,
 		),
-		AppendDefault: true,
-		HideDefault:   true,
 	}
 	err = survey.AskOne(prompt, &msg)
 	if err != nil {

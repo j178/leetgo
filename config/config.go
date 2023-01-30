@@ -325,7 +325,11 @@ func Load(init bool) error {
 		err = viper.MergeInConfig()
 		if err != nil {
 			if os.IsNotExist(err) {
-				hclog.L().Warn("project config file not found, use global config only", "file", cfg.GlobalConfigFile())
+				hclog.L().Warn(
+					fmt.Sprintf("%s not found, use global config only", projectConfigFilename),
+					"file",
+					cfg.GlobalConfigFile(),
+				)
 			} else {
 				return err
 			}
