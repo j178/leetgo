@@ -69,6 +69,8 @@ brews:
     bash_completion.install "completions/leetgo.bash" => "leetgo"
     zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
     fish_completion.install "completions/leetgo.fish"
+  test: |-
+    system "#{bin}/leetgo", "-v"
 
 scoop:
     bucket:
@@ -83,6 +85,11 @@ scoop:
       leetgo is a command line tool for leetcode.com. It can help you to login,
       submit, test, and view your submissions.
     license: MIT
+
+announce:
+  # DISCORD_WEBHOOK_ID and DISCORD_WEBHOOK_TOKEN
+  discord:
+    enabled: true
 
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
