@@ -657,6 +657,7 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
 
+// RunCode runs code on leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput string) (
 	*InterpretSolutionResult,
 	error,
@@ -688,6 +689,7 @@ func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput 
 	return &resp, err
 }
 
+// SubmitCode submits code to leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string, error) {
 	url := ""
 	if q.IsContest() {
