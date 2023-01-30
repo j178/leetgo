@@ -192,12 +192,12 @@ func Default() *Config {
 					Blocks: []Block{
 						{
 							Name: "beforeMarker", Template: fmt.Sprintf(
-							`package main
+								`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
 
 `, GoTestUtilsModPath,
-						),
+							),
 						},
 					},
 					Modifiers: []Modifier{
