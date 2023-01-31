@@ -26,7 +26,7 @@ var (
 	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrUserNotSignedIn  = errors.New("user not signed in")
+	ErrUserNotSignedIn   = errors.New("user not signed in")
 )
 
 type unexpectedStatusCode struct {
@@ -184,6 +184,7 @@ const (
 	submitCodePath        = "/problems/%s/submit/"
 	checkResultPath       = "/submissions/detail/%s/check/"
 	contestRegisterPath   = "/contest/api/%s/register/"
+	problemsAllPath       = "/api/problems/all/"
 )
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
@@ -465,7 +466,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	return q, nil
 }
 
-// todo
+// different
 func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	query := `
 	query AllQuestionUrls {
@@ -536,8 +537,8 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	return c.GetQuestionData(slug)
 }
 
-// todo
-func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
+// same
+func (c *cnClient) getContest(contestSlug string) (*Contest, error) {
 	path := fmt.Sprintf(contestInfoPath, contestSlug)
 	var resp gjson.Result
 	_, err := c.jsonGet(path, nil, &resp, nil)
@@ -549,7 +550,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	}
 	contestInfo := resp.Get("contest")
 	contest := &Contest{
-		client:          c,
 		Id:              int(contestInfo.Get("id").Int()),
 		TitleSlug:       contestSlug,
 		Title:           contestInfo.Get("title").Str,
@@ -564,7 +564,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	}
 	for _, q := range resp.Get("questions").Array() {
 		question := &QuestionData{
-			client:          c,
 			partial:         1,
 			contest:         contest,
 			TitleSlug:       q.Get("title_slug").Str,
@@ -578,8 +577,20 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	return contest, nil
 }
 
-// todo
-func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
+	ct, err := c.getContest(contestSlug)
+	if err != nil {
+		return nil, err
+	}
+	ct.client = c
+	for i := range ct.Questions {
+		ct.Questions[i].client = c
+	}
+	return ct, nil
+}
+
+// same
+func (c *cnClient) getContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
 	req, _ := c.http.New().Get(path).Request()
@@ -591,7 +602,15 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	return c.parseContestHtml(html, questionSlug)
 }
 
-// todo
+func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+	q, err := c.getContestQuestionData(contestSlug, questionSlug)
+	if err != nil {
+		return nil, err
+	}
+	q.client = c
+	return q, nil
+}
+
 func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*QuestionData, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
 	if err != nil {
@@ -655,7 +674,6 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 	}
 
 	q := &QuestionData{
-		client:             c,
 		QuestionId:         questionId,
 		QuestionFrontendId: frontendId,
 		TitleSlug:          questionSlug,
@@ -819,7 +837,7 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 	return contests, nil
 }
 
-// todo
+// same
 func (c *cnClient) RegisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	_, err := c.jsonPost(path, nil, nil, nil)
@@ -829,7 +847,7 @@ func (c *cnClient) RegisterContest(slug string) error {
 	return err
 }
 
-// todo
+// same
 func (c *cnClient) UnregisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	req, _ := c.http.New().Delete(path).Request()
@@ -904,7 +922,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 	return result, err
 }
 
-// todo
+// different
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 	query := `
 query questionTagTypeWithTags {

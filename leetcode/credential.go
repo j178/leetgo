@@ -114,13 +114,12 @@ func (p *passwordAuth) Reset() {
 
 type browserAuth struct {
 	cookiesAuth
-	mu       sync.Mutex
-	browsers []string
-	c        Client
+	mu sync.Mutex
+	c  Client
 }
 
-func NewBrowserAuth(browsers ...string) CredentialsProvider {
-	return &browserAuth{browsers: browsers}
+func NewBrowserAuth() CredentialsProvider {
+	return &browserAuth{}
 }
 
 func (b *browserAuth) SetClient(c Client) {
@@ -186,7 +185,7 @@ func CredentialsFromConfig() CredentialsProvider {
 	cfg := config.Get()
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
-		return NewBrowserAuth("chrome")
+		return NewBrowserAuth()
 	case "password":
 		return NewPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password)
 	case "cookies":

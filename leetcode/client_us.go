@@ -2,15 +2,13 @@ package leetcode
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 
-	"github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/utils"
 )
 
 type usClient struct {
@@ -24,8 +22,6 @@ func (c *usClient) BaseURI() string {
 func (c *usClient) Login(username, password string) (*http.Response, error) {
 	return nil, errors.New("leetcode.com does not support login with username and password")
 }
-
-// GetUserStatus can be reused from cnClient
 
 func (c *usClient) GetQuestionData(slug string) (*QuestionData, error) {
 	query := `
@@ -70,28 +66,112 @@ func (c *usClient) GetQuestionData(slug string) (*QuestionData, error) {
 }
 
 func (c *usClient) GetAllQuestions() ([]*QuestionData, error) {
-	// TODO implement me
-	panic("implement me")
+	var resp struct {
+		UserName        string `json:"user_name"`
+		NumSolved       int    `json:"num_solved"`
+		NumTotal        int    `json:"num_total"`
+		AcEasy          int    `json:"ac_easy"`
+		AcMedium        int    `json:"ac_medium"`
+		AcHard          int    `json:"ac_hard"`
+		StatStatusPairs []struct {
+			Stat struct {
+				QuestionID         int    `json:"question_id"`
+				QuestionFrontendID int    `json:"frontend_question_id"`
+				QuestionTitle      string `json:"question__title"`
+				QuestionTitleSlug  string `json:"question__title_slug"`
+			} `json:"stat"`
+			Status     string `json:"status"`
+			Difficulty struct {
+				Level int `json:"level"`
+			} `json:"difficulty"`
+			PaidOnly bool `json:"paid_only"`
+		} `json:"stat_status_pairs"`
+	}
+	_, err := c.http.New().Get(problemsAllPath).ReceiveSuccess(&resp)
+	if err != nil {
+		return nil, err
+	}
+	qs := make([]*QuestionData, 0, len(resp.StatStatusPairs))
+	for _, pair := range resp.StatStatusPairs {
+		difficulty := ""
+		switch pair.Difficulty.Level {
+		case 1:
+			difficulty = "Easy"
+		case 2:
+			difficulty = "Medium"
+		case 3:
+			difficulty = "Hard"
+		}
+		q := &QuestionData{
+			QuestionId:         strconv.Itoa(pair.Stat.QuestionID),
+			QuestionFrontendId: strconv.Itoa(pair.Stat.QuestionFrontendID),
+			Title:              pair.Stat.QuestionTitle,
+			TitleSlug:          pair.Stat.QuestionTitleSlug,
+			IsPaidOnly:         pair.PaidOnly,
+			Status:             pair.Status,
+			Difficulty:         difficulty,
+		}
+		qs = append(qs, q)
+	}
+	return qs, nil
 }
 
 func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
-	// TODO implement me
-	panic("implement me")
+	query := `
+	query questionOfToday {
+		activeDailyCodingChallengeQuestion {
+			question {
+				titleSlug
+			}
+		}
+	}`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{query: query}, &resp, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	slug := resp.Get("data.activeDailyCodingChallengeQuestion.question.titleSlug").Str
+	return c.GetQuestionData(slug)
+}
+
+func (c *usClient) GetContest(contestSlug string) (*Contest, error) {
+	ct, err := c.getContest(contestSlug)
+	if err != nil {
+		return nil, err
+	}
+	ct.client = c
+	for i := range ct.Questions {
+		ct.Questions[i].client = c
+	}
+	return ct, nil
+}
+
+func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+	q, err := c.getContestQuestionData(contestSlug, questionSlug)
+	if err != nil {
+		return nil, err
+	}
+	q.client = c
+	return q, nil
 }
 
 func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
+	// ContestNode does not have `registered` field
+	// We have to call `/contest/api/info/slug` to get that info.
 	query := `
 {
-    contestUpcomingContests {
-        containsPremium
+    upcomingContests {
         title
         titleSlug
         description
-        startTime
         duration
+        startTime
         originStartTime
         isVirtual
-        registered
+        containsPremium
+		__typename
     }
 }
 `
@@ -103,19 +183,26 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 		return nil, err
 	}
 	var contests []*Contest
-	for _, contestInfo := range resp.Get("data.contestUpcomingContests").Array() {
+	for _, contestInfo := range resp.Get("data.upcomingContests").Array() {
+		slug := contestInfo.Get("titleSlug").Str
+		ct, err := c.GetContest(slug)
+		var registered bool
+		if err == nil {
+			registered = ct.Registered
+		}
+
 		contests = append(
 			contests, &Contest{
 				client:          c,
 				Id:              int(contestInfo.Get("id").Int()),
-				TitleSlug:       contestInfo.Get("titleSlug").Str,
+				TitleSlug:       slug,
 				Title:           contestInfo.Get("title").Str,
 				StartTime:       contestInfo.Get("startTime").Int(),
 				OriginStartTime: contestInfo.Get("originStartTime").Int(),
 				Duration:        int(contestInfo.Get("duration").Int()),
 				IsVirtual:       contestInfo.Get("isVirtual").Bool(),
 				Description:     contestInfo.Get("description").Str,
-				Registered:      contestInfo.Get("registered").Bool(),
+				Registered:      registered,
 			},
 		)
 	}
@@ -127,120 +214,7 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 	return contests, nil
 }
 
-func (c *usClient) RegisterContest(slug string) error {
-	path := fmt.Sprintf(contestRegisterPath, slug)
-	_, err := c.jsonPost(path, nil, nil, nil)
-	if e, ok := err.(unexpectedStatusCode); ok && e.Code == http.StatusFound {
-		err = nil
-	}
-	return err
-}
-
-func (c *usClient) UnregisterContest(slug string) error {
-	path := fmt.Sprintf(contestRegisterPath, slug)
-	req, _ := c.http.New().Delete(path).Request()
-	_, err := c.send(req, nil, nil)
-	return err
-}
-
-func (c *usClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
-	query := `
-query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
-  problemsetQuestionList(
-    categorySlug: $categorySlug
-    limit: $limit
-    skip: $skip
-    filters: $filters
-  ) {
-    hasMore
-    total
-    questions {
-      difficulty
-      frontendQuestionId
-      status
-      title
-      titleCn
-      titleSlug
-      topicTags {
-        name
-        nameTranslated
-        id
-        slug
-      }
-    }
-  }
-}
-`
-	vars := map[string]any{
-		"categorySlug": "algorithms",
-		"limit":        limit,
-		"skip":         skip,
-		"filters":      f,
-	}
-	var resp gjson.Result
-	_, err := c.graphqlPost(
-		graphqlRequest{
-			query:     query,
-			variables: vars,
-		}, &resp, nil,
-	)
-	if err != nil {
-		return QuestionList{}, err
-	}
-
-	var result QuestionList
-	questionList := resp.Get("data.problemsetQuestionList")
-	err = json.Unmarshal(utils.StringToBytes(questionList.Raw), &result)
-	if err != nil {
-		return QuestionList{}, err
-	}
-	for _, q := range result.Questions {
-		q.client = c
-		q.partial = 1
-	}
-
-	return result, err
-}
-
+// Cannot find a equivalent API for leetcode.com, use leetcode.cn instead.
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
-	query := `
-query questionTagTypeWithTags {
-    questionTagTypeWithTags {
-        name
-        transName
-        tagRelation {
-            questionNum
-            tag {
-                name
-                id
-                nameTranslated
-                slug
-            }
-        }
-    }
-}
-`
-	var resp gjson.Result
-	_, err := c.graphqlPost(graphqlRequest{query: query}, &resp, nil)
-	if err != nil {
-		return nil, err
-	}
-	var tags []QuestionTag
-	for _, tagType := range resp.Get("data.questionTagTypeWithTags").Array() {
-		tagTypeName := tagType.Get("name").Str
-		tagTypeTransName := tagType.Get("transName").Str
-		for _, tagInfo := range tagType.Get("tagRelation").Array() {
-			tag := QuestionTag{
-				TypeName:       tagTypeName,
-				TypeTransName:  tagTypeTransName,
-				Id:             tagInfo.Get("tag.id").Str,
-				Name:           tagInfo.Get("tag.name").Str,
-				NameTranslated: tagInfo.Get("tag.nameTranslated").Str,
-				Slug:           tagInfo.Get("tag.slug").Str,
-			}
-			tags = append(tags, tag)
-		}
-	}
-
-	return tags, nil
+	return c.cnClient.GetQuestionTags()
 }
