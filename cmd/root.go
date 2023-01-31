@@ -75,8 +75,9 @@ func UsageString() string {
 }
 
 func initWorkDir() error {
-	if os.Getenv("LEETGO_WORKDIR") != "" {
-		return os.Chdir(os.Getenv("LEETGO_WORKDIR"))
+	if dir := os.Getenv("LEETGO_WORKDIR"); dir != "" {
+		hclog.L().Info("change workdir to LEETGO_WORKDIR", "dir", dir)
+		return os.Chdir(dir)
 	}
 	return nil
 }
