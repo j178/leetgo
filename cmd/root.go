@@ -46,11 +46,11 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		initLogger()
 		err := initWorkDir()
 		if err != nil {
 			return err
 		}
-		initLogger()
 		err = config.Load(cmd == initCmd)
 		if err != nil {
 			return fmt.Errorf(

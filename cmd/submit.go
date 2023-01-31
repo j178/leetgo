@@ -63,7 +63,8 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
 	}
 
-	hclog.L().Info("submitting solution", "question", q.TitleSlug)
+	user, _ := whoami(c)
+	hclog.L().Info("submitting solution", "question", q.TitleSlug, "user", user)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Submitting solution..."))
 	spin.Reverse()
 	spin.Start()

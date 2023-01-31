@@ -134,7 +134,8 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 	}
 	casesStr := strings.Join(cases, "\n")
 
-	hclog.L().Info("running test remotely", "question", q.TitleSlug)
+	user, _ := whoami(c)
+	hclog.L().Info("running test remotely", "question", q.TitleSlug, "user", user)
 	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Running test..."))
 	spin.Reverse()
 	spin.Start()
