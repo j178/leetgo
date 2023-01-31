@@ -10,6 +10,7 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/j178/leetgo/utils"
 )
 
@@ -59,7 +60,7 @@ func (c *jsonCache) load() {
 	c.once.Do(
 		func() {
 			defer func(now time.Time) {
-				hclog.L().Trace("cache loaded", "path", c.GetCacheFile(), "time", time.Since(now))
+				hclog.L().Trace("cache loaded", "path", c.GetCacheFile(), "elpased", time.Since(now))
 			}(time.Now())
 			err := c.doLoad()
 			if err != nil {

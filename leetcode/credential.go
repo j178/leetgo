@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/zellyn/kooky"
@@ -131,7 +132,12 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		hclog.L().Info("reading cookies from browsers", "domain", domain)
+		hclog.L().Info("reading cookies from browser", "domain", domain)
+
+		defer func(start time.Time) {
+			hclog.L().Debug("finished read cookies from browser", "elapsed", time.Since(start))
+		}(time.Now())
+
 		cookies := kooky.ReadCookies(
 			kooky.Valid,
 			kooky.DomainHasSuffix(domain),
@@ -143,7 +149,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			),
 		)
 		if len(cookies) < 2 {
-			return errors.New("no cookie found in browsers")
+			return errors.New("no cookie found in browser")
 		}
 		for _, cookie := range cookies {
 			if cookie.Name == "LEETCODE_SESSION" {
@@ -154,9 +160,8 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			}
 		}
 		if b.LeetcodeSession == "" || b.CsrfToken == "" {
-			return errors.New("no cookie found in browsers")
+			return errors.New("no cookie found in browser")
 		}
-		hclog.L().Debug("found credentials in browser")
 	}
 
 	return b.cookiesAuth.AddCredentials(req)
