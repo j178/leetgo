@@ -296,14 +296,14 @@ editor:
     code:
     lang: cpp
     cpp:
-    blocks:
-    - name: beforeCode
-      template: |
-        #include <iostream>
-        using namespace std;
-    - name: afterMarker
-      template: |
-        int main() {}
+      blocks:
+      - name: beforeCode
+        template: |
+          #include <iostream>
+          using namespace std;
+      - name: afterMarker
+        template: |
+          int main() {}
      ```
 
 3. Script
