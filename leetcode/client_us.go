@@ -108,6 +108,8 @@ func (c *usClient) GetAllQuestions() ([]*QuestionData, error) {
 			difficulty = "Hard"
 		}
 		q := &QuestionData{
+			client:             c,
+			partial:            1,
 			QuestionId:         strconv.Itoa(pair.Stat.QuestionID),
 			QuestionFrontendId: strconv.Itoa(pair.Stat.QuestionFrontendID),
 			Title:              pair.Stat.QuestionTitle,

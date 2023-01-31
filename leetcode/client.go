@@ -265,7 +265,6 @@ func (c *cnClient) BaseURI() string {
 	return string(config.LeetCodeCN) + "/"
 }
 
-// same
 func (c *cnClient) Inspect(typ string) (map[string]any, error) {
 	query := `
 query a {
@@ -308,7 +307,6 @@ query a {
 	return resp, err
 }
 
-// only cn
 func (c *cnClient) Login(username, password string) (*http.Response, error) {
 	// touch "csrftoken" cookie
 	req, _ := c.http.New().Post(graphQLPath).BodyJSON(
@@ -353,7 +351,6 @@ func (c *cnClient) Login(username, password string) (*http.Response, error) {
 	return resp, nil
 }
 
-// same
 func (c *cnClient) GetUserStatus() (*UserStatus, error) {
 	query := `
 query globalData {
@@ -408,7 +405,6 @@ func (c *cnClient) getQuestionData(slug string, query string) (*QuestionData, er
 	return &q, nil
 }
 
-// minor difference
 func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	query := `
 	query questionData($titleSlug: String!) {
@@ -452,7 +448,6 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	return q, nil
 }
 
-// different
 func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	query := `
 	query AllQuestionUrls {
@@ -494,12 +489,15 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	if err != nil {
 		return nil, err
 	}
+	for i := range qs {
+		qs[i].client = c
+		qs[i].partial = 1
+	}
 	// Sleep a while to make sure the progress bar is rendered.
 	time.Sleep(time.Millisecond * 100)
 	return qs, err
 }
 
-// different
 func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	query := `
     query questionOfToday {
@@ -523,7 +521,6 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	return c.GetQuestionData(slug)
 }
 
-// same
 func (c *cnClient) getContest(contestSlug string) (*Contest, error) {
 	path := fmt.Sprintf(contestInfoPath, contestSlug)
 	var resp gjson.Result
@@ -575,7 +572,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	return ct, nil
 }
 
-// minor different
 func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
@@ -702,7 +698,6 @@ func parseContestHtml(html []byte, questionSlug string, site config.LeetcodeSite
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
 
-// same
 // RunCode runs code on leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput string) (
 	*InterpretSolutionResult,
@@ -734,7 +729,6 @@ func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput 
 	return &resp, err
 }
 
-// same
 // SubmitCode submits code to leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string, error) {
 	path := ""
@@ -760,7 +754,6 @@ func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string
 	return resp.Get("submission_id").String(), err
 }
 
-// same
 func (c *cnClient) CheckResult(submissionId string) (
 	CheckResult,
 	error,
@@ -781,7 +774,6 @@ func (c *cnClient) CheckResult(submissionId string) (
 	return &r, err
 }
 
-// different
 func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 	query := `
 {
@@ -830,7 +822,6 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 	return contests, nil
 }
 
-// same
 func (c *cnClient) RegisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	_, err := c.jsonPost(path, nil, nil, nil)
@@ -840,7 +831,6 @@ func (c *cnClient) RegisterContest(slug string) error {
 	return err
 }
 
-// same
 func (c *cnClient) UnregisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	req, _ := c.http.New().Delete(path).Request()
@@ -855,7 +845,6 @@ type QuestionFilter struct {
 	SearchKeywords string   `json:"searchKeywords,omitempty"`
 }
 
-// different
 func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
 	query := `
 query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
@@ -915,7 +904,6 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 	return result, err
 }
 
-// different
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 	query := `
 query questionTagTypeWithTags {
