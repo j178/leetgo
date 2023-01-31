@@ -10,8 +10,6 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
-var ErrQuestionNotFound = errors.New("no such question")
-
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 	q := GetCache(c).GetBySlug(slug)
 	if q != nil {

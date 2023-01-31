@@ -22,8 +22,10 @@ import (
 )
 
 var (
-	ErrPaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
-	ErrTooManyRequests  = errors.New("you have submitted too frequently, please submit again later")
+	ErrPaidOnlyQuestion  = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
+	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
+	ErrQuestionNotFound  = errors.New("no such question")
+	ErrContestNotStarted = errors.New("contest has not started")
 	ErrUserNotSignedIn  = errors.New("user not signed in")
 )
 

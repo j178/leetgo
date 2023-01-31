@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var ErrContestNotStarted = errors.New("contest has not started")
-
 type Contest struct {
 	client          Client
 	Id              int
@@ -61,7 +59,7 @@ func (ct *Contest) GetQuestionNumber(slug string) (int, error) {
 			return i + 1, nil
 		}
 	}
-	return 0, errors.New("question not found")
+	return 0, ErrQuestionNotFound
 }
 
 func (ct *Contest) GetQuestionByNumber(num int) (*QuestionData, error) {
