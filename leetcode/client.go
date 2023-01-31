@@ -26,7 +26,7 @@ var (
 	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrUserNotSignedIn   = errors.New("user not signed in")
+	ErrUserNotSignedIn   = errors.New("user not signed in, your cookies may have expired")
 )
 
 type unexpectedStatusCode struct {
@@ -38,27 +38,9 @@ type unexpectedStatusCode struct {
 func (e unexpectedStatusCode) Error() string {
 	body := "<empty>"
 	if len(e.Body) > 0 {
-		body = string(e.Body)
+		body = string(e.Body)[:1024]
 	}
 	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, body)
-}
-
-// nolint: unused
-type errorResponse struct {
-	ErrorMsg *string `json:"error"`
-}
-
-// nolint: unused
-func (e errorResponse) Ok() bool {
-	return e.ErrorMsg == nil
-}
-
-// nolint: unused
-func (e errorResponse) Error() string {
-	if e.ErrorMsg != nil {
-		return *e.ErrorMsg
-	}
-	return ""
 }
 
 type Client interface {
@@ -209,8 +191,11 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	if err != nil {
 		return resp, err
 	}
-	if resp.StatusCode == http.StatusTooManyRequests {
+	switch resp.StatusCode {
+	case http.StatusTooManyRequests:
 		return resp, ErrTooManyRequests
+	case http.StatusForbidden:
+		return resp, ErrUserNotSignedIn
 	}
 
 	if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
