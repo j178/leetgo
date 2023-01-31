@@ -590,24 +590,22 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	return ct, nil
 }
 
-// same
-func (c *cnClient) getContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+// minor different
+func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
 	req, _ := c.http.New().Get(path).Request()
 	_, err := c.send(req, &html, nil)
 	if err != nil {
+		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
+			return nil, ErrPaidOnlyQuestion
+		}
 		return nil, err
 	}
 	if len(html) == 0 {
 		return nil, errors.New("get contest question data: empty response")
 	}
-
-	return c.parseContestHtml(html, questionSlug)
-}
-
-func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
-	q, err := c.getContestQuestionData(contestSlug, questionSlug)
+	q, err := parseContestHtml(html, questionSlug, config.LeetCodeCN)
 	if err != nil {
 		return nil, err
 	}
@@ -615,18 +613,18 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	return q, nil
 }
 
-func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*QuestionData, error) {
+func parseContestHtml(html []byte, questionSlug string, site config.LeetcodeSite) (*QuestionData, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
 	if err != nil {
 		return nil, err
 	}
 	difficulty := strings.TrimSpace(doc.Find("span.pull-right.label.round").Text())
 	frontendId := strings.TrimSuffix(doc.Find("div.question-title h3").Get(0).FirstChild.Data, ". ")
-	translatedContent, err := doc.Find("div.question-content.default-content").Html()
+	defaultContent, err := doc.Find("div.question-content.default-content").Html()
 	if err != nil {
 		return nil, err
 	}
-	content, err := doc.Find("div.question-content.source-content").Html()
+	sourceContent, err := doc.Find("div.question-content.source-content").Html()
 	if err != nil {
 		return nil, err
 	}
@@ -677,13 +675,19 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 		}
 	}
 
+	if site == config.LeetCodeUS {
+		sourceContent = defaultContent
+		defaultContent = ""
+		sourceTitle = title
+		title = ""
+	}
 	q := &QuestionData{
 		QuestionId:         questionId,
 		QuestionFrontendId: frontendId,
 		TitleSlug:          questionSlug,
 		Difficulty:         difficulty,
-		Content:            content,
-		TranslatedContent:  translatedContent,
+		Content:            sourceContent,
+		TranslatedContent:  defaultContent,
 		Title:              sourceTitle,
 		TranslatedTitle:    title,
 		ExampleTestcases:   exampleTestcases,

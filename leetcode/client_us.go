@@ -3,6 +3,7 @@ package leetcode
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -153,7 +154,20 @@ func (c *usClient) GetContest(contestSlug string) (*Contest, error) {
 }
 
 func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
-	q, err := c.getContestQuestionData(contestSlug, questionSlug)
+	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
+	var html []byte
+	req, _ := c.http.New().Get(path).Request()
+	_, err := c.send(req, &html, nil)
+	if err != nil {
+		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
+			return nil, ErrPaidOnlyQuestion
+		}
+		return nil, err
+	}
+	if len(html) == 0 {
+		return nil, errors.New("get contest question data: empty response")
+	}
+	q, err := parseContestHtml(html, questionSlug, config.LeetCodeUS)
 	if err != nil {
 		return nil, err
 	}

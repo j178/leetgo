@@ -48,6 +48,7 @@ var infoCmd = &cobra.Command{
 			},
 		)
 		for _, q := range questions {
+			_ = q.Fulfill()
 			w.AppendRow(
 				table.Row{fmt.Sprintf("%s. %s", q.QuestionFrontendId, q.GetTitle())},
 				table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft},
