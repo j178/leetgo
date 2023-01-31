@@ -24,7 +24,7 @@
 - 通过模板引擎自定义配置生成的代码文件，支持对代码做预处理
 - 支持本地测试，可以使用 Debugger 调试代码
 - 自动等待并及时生成竞赛题目，一键提交所有题目
-- (即将) 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
+- 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
 - 自动从浏览器中读取 LeetCode 的 Cookie，无需手动提供
 - 自动在你喜欢的编辑器中打开生成的代码文件
 
@@ -227,8 +227,6 @@ editor:
 <!-- END CONFIG -->
 
 ## LeetCode 支持情况
-
-现阶段 `leetgo` 仅支持 `leetcode.cn` (中国站)，`leetcode.com` (美国站) 的支持仍在开发中.
 
 `leetgo` 使用 LeetCode 的 GraphQL API 来获取题目和提交代码，`leetgo` 需要 LeetCode 的 Cookie 来代替你做这些事情。
 

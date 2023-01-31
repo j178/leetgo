@@ -2,8 +2,10 @@ package leetcode
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
@@ -112,13 +114,12 @@ func (p *passwordAuth) Reset() {
 
 type browserAuth struct {
 	cookiesAuth
-	mu       sync.Mutex
-	browsers []string
-	c        Client
+	mu sync.Mutex
+	c  Client
 }
 
-func NewBrowserAuth(browsers ...string) CredentialsProvider {
-	return &browserAuth{browsers: browsers}
+func NewBrowserAuth() CredentialsProvider {
+	return &browserAuth{}
 }
 
 func (b *browserAuth) SetClient(c Client) {
@@ -162,6 +163,12 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		if b.LeetcodeSession == "" || b.CsrfToken == "" {
 			return errors.New("no cookie found in browser")
 		}
+
+		// Convenient for debugging
+		if os.Getenv("LEETGO_EXPORT_COOKIES") != "" {
+			fmt.Println("LEETCODE_SESSION:", b.LeetcodeSession)
+			fmt.Println("csrftoken:", b.CsrfToken)
+		}
 	}
 
 	return b.cookiesAuth.AddCredentials(req)
@@ -178,7 +185,7 @@ func CredentialsFromConfig() CredentialsProvider {
 	cfg := config.Get()
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
-		return NewBrowserAuth("chrome")
+		return NewBrowserAuth()
 	case "password":
 		return NewPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password)
 	case "cookies":

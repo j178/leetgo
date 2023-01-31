@@ -300,6 +300,10 @@ func Load(init bool) error {
 	if globalCfg != nil {
 		return nil
 	}
+	// Convenient way to switch site during development
+	if err := viper.BindEnv("leetcode.site", "LEETGO_SITE"); err != nil {
+		return err
+	}
 
 	// load global configuration
 	cfg := Get()

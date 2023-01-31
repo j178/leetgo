@@ -244,6 +244,7 @@ type QuestionData struct {
 	SampleTestCase       string               `json:"sampleTestCase"`
 	ExampleTestcases     string               `json:"exampleTestcases"`
 	JsonExampleTestcases JsonExampleTestCases `json:"jsonExampleTestcases"`
+	ExampleTestcaseList  []string             `json:"exampleTestcaseList"`
 	MetaData             MetaData             `json:"metaData"`
 	CodeSnippets         []CodeSnippet        `json:"codeSnippets"`
 }
@@ -360,6 +361,10 @@ func (q *QuestionData) GetTestCases() []string {
 	var cases []string
 	if len(q.JsonExampleTestcases) > 0 {
 		for _, c := range q.JsonExampleTestcases {
+			cases = append(cases, strings.Split(c, "\n")...)
+		}
+	} else if len(q.ExampleTestcaseList) > 0 {
+		for _, c := range q.ExampleTestcaseList {
 			cases = append(cases, strings.Split(c, "\n")...)
 		}
 	} else if q.ExampleTestcases != "" {

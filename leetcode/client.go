@@ -22,9 +22,11 @@ import (
 )
 
 var (
-	ErrPaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
-	ErrTooManyRequests  = errors.New("you have submitted too frequently, please submit again later")
-	ErrUserNotSignedIn  = errors.New("user not signed in")
+	ErrPaidOnlyQuestion  = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
+	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
+	ErrQuestionNotFound  = errors.New("no such question")
+	ErrContestNotStarted = errors.New("contest has not started")
+	ErrUserNotSignedIn   = errors.New("user not signed in")
 )
 
 type unexpectedStatusCode struct {
@@ -34,7 +36,11 @@ type unexpectedStatusCode struct {
 }
 
 func (e unexpectedStatusCode) Error() string {
-	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, string(e.Body))
+	body := "<empty>"
+	if len(e.Body) > 0 {
+		body = string(e.Body)
+	}
+	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, body)
 }
 
 // nolint: unused
@@ -168,7 +174,18 @@ type graphqlRequest struct {
 }
 
 const (
-	graphQLPath = "/graphql"
+	graphQLPath           = "/graphql"
+	accountLoginPath      = "/accounts/login/"
+	contestInfoPath       = "/contest/api/info/%s/"
+	contestProblemsPath   = "/contest/%s/problems/%s/"
+	contestRunCodePath    = "/contest/api/%s/problems/%s/interpret_solution/"
+	runCodePath           = "/problems/%s/interpret_solution/"
+	contestSubmitCodePath = "/contest/api/%s/problems/%s/submit/"
+	submitCodePath        = "/problems/%s/submit/"
+	checkResultPath       = "/submissions/detail/%s/check/"
+	contestRegisterPath   = "/contest/api/%s/register/"
+	problemsAllPath       = "/api/problems/all/"
+	problemSetAllPath     = "/problemset/all/"
 )
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
@@ -263,6 +280,7 @@ func (c *cnClient) BaseURI() string {
 	return string(config.LeetCodeCN) + "/"
 }
 
+// same
 func (c *cnClient) Inspect(typ string) (map[string]any, error) {
 	query := `
 query a {
@@ -305,6 +323,7 @@ query a {
 	return resp, err
 }
 
+// only cn
 func (c *cnClient) Login(username, password string) (*http.Response, error) {
 	// touch "csrftoken" cookie
 	req, _ := c.http.New().Post(graphQLPath).BodyJSON(
@@ -335,7 +354,7 @@ func (c *cnClient) Login(username, password string) (*http.Response, error) {
 		Password            string `url:"password"`
 		CsrfMiddlewareToken string `url:"csrfmiddlewaretoken"`
 	}{username, password, csrfToken}
-	req, err = c.http.New().Post("/accounts/login/").BodyForm(body).Request()
+	req, err = c.http.New().Post(accountLoginPath).BodyForm(body).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -349,6 +368,7 @@ func (c *cnClient) Login(username, password string) (*http.Response, error) {
 	return resp, nil
 }
 
+// same
 func (c *cnClient) GetUserStatus() (*UserStatus, error) {
 	query := `
 query globalData {
@@ -377,41 +397,7 @@ query globalData {
 	return &userStatus, nil
 }
 
-func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
-	query := `
-	query questionData($titleSlug: String!) {
-		question(titleSlug: $titleSlug) {
-			questionId
-			questionFrontendId
-			categoryTitle
-			title
-			titleSlug
-			content
-			isPaidOnly
-			translatedTitle
-			translatedContent
-			difficulty
-			status
-			stats
-			hints
-			similarQuestions
-			sampleTestCase
-			exampleTestcases
-			jsonExampleTestcases
-			metaData
-			codeSnippets {
-				lang
-				langSlug
-				code
-			}
-			topicTags {
-				name
-				slug
-				translatedName
-			}
-		}
-	}`
-
+func (c *cnClient) getQuestionData(slug string, query string) (*QuestionData, error) {
 	var resp struct {
 		Data struct {
 			Question QuestionData `json:"question"`
@@ -434,10 +420,54 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 	if q.IsPaidOnly && q.Content == "" {
 		return nil, ErrPaidOnlyQuestion
 	}
-	q.client = c
 	return &q, nil
 }
 
+// minor difference
+func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
+	query := `
+	query questionData($titleSlug: String!) {
+		question(titleSlug: $titleSlug) {
+			questionId
+			questionFrontendId
+			categoryTitle
+			title
+			titleSlug
+			content
+			isPaidOnly
+			translatedTitle
+			translatedContent
+			difficulty
+			status
+			stats
+			hints
+			similarQuestions
+			sampleTestCase
+			exampleTestcases
+			exampleTestcaseList
+			jsonExampleTestcases
+			metaData
+			codeSnippets {
+				lang
+				langSlug
+				code
+			}
+			topicTags {
+				name
+				slug
+				translatedName
+			}
+		}
+	}`
+	q, err := c.getQuestionData(slug, query)
+	if err != nil {
+		return q, err
+	}
+	q.client = c
+	return q, nil
+}
+
+// different
 func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	query := `
 	query AllQuestionUrls {
@@ -484,6 +514,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	return qs, err
 }
 
+// different
 func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	query := `
     query questionOfToday {
@@ -507,10 +538,11 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	return c.GetQuestionData(slug)
 }
 
-func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
-	url := fmt.Sprintf("%scontest/api/info/%s/", c.BaseURI(), contestSlug)
+// same
+func (c *cnClient) getContest(contestSlug string) (*Contest, error) {
+	path := fmt.Sprintf(contestInfoPath, contestSlug)
 	var resp gjson.Result
-	_, err := c.jsonGet(url, nil, &resp, nil)
+	_, err := c.jsonGet(path, nil, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +551,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	}
 	contestInfo := resp.Get("contest")
 	contest := &Contest{
-		client:          c,
 		Id:              int(contestInfo.Get("id").Int()),
 		TitleSlug:       contestSlug,
 		Title:           contestInfo.Get("title").Str,
@@ -534,7 +565,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	}
 	for _, q := range resp.Get("questions").Array() {
 		question := &QuestionData{
-			client:          c,
 			partial:         1,
 			contest:         contest,
 			TitleSlug:       q.Get("title_slug").Str,
@@ -548,30 +578,53 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 	return contest, nil
 }
 
-func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
-	url := fmt.Sprintf("%scontest/%s/problems/%s/", c.BaseURI(), contestSlug, questionSlug)
-	var html []byte
-	req, _ := c.http.New().Get(url).Request()
-	_, err := c.send(req, &html, nil)
+func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
+	ct, err := c.getContest(contestSlug)
 	if err != nil {
 		return nil, err
 	}
-
-	return c.parseContestHtml(html, questionSlug)
+	ct.client = c
+	for i := range ct.Questions {
+		ct.Questions[i].client = c
+	}
+	return ct, nil
 }
 
-func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*QuestionData, error) {
+// minor different
+func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
+	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
+	var html []byte
+	req, _ := c.http.New().Get(path).Request()
+	_, err := c.send(req, &html, nil)
+	if err != nil {
+		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
+			return nil, ErrPaidOnlyQuestion
+		}
+		return nil, err
+	}
+	if len(html) == 0 {
+		return nil, errors.New("get contest question data: empty response")
+	}
+	q, err := parseContestHtml(html, questionSlug, config.LeetCodeCN)
+	if err != nil {
+		return nil, err
+	}
+	q.client = c
+	return q, nil
+}
+
+func parseContestHtml(html []byte, questionSlug string, site config.LeetcodeSite) (*QuestionData, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
 	if err != nil {
 		return nil, err
 	}
 	difficulty := strings.TrimSpace(doc.Find("span.pull-right.label.round").Text())
 	frontendId := strings.TrimSuffix(doc.Find("div.question-title h3").Get(0).FirstChild.Data, ". ")
-	translatedContent, err := doc.Find("div.question-content.default-content").Html()
+	defaultContent, err := doc.Find("div.question-content.default-content").Html()
 	if err != nil {
 		return nil, err
 	}
-	content, err := doc.Find("div.question-content.source-content").Html()
+	sourceContent, err := doc.Find("div.question-content.source-content").Html()
 	if err != nil {
 		return nil, err
 	}
@@ -622,14 +675,19 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 		}
 	}
 
+	if site == config.LeetCodeUS {
+		sourceContent = defaultContent
+		defaultContent = ""
+		sourceTitle = title
+		title = ""
+	}
 	q := &QuestionData{
-		client:             c,
 		QuestionId:         questionId,
 		QuestionFrontendId: frontendId,
 		TitleSlug:          questionSlug,
 		Difficulty:         difficulty,
-		Content:            content,
-		TranslatedContent:  translatedContent,
+		Content:            sourceContent,
+		TranslatedContent:  defaultContent,
 		Title:              sourceTitle,
 		TranslatedTitle:    title,
 		ExampleTestcases:   exampleTestcases,
@@ -659,26 +717,26 @@ func (c *cnClient) parseContestHtml(html []byte, questionSlug string) (*Question
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
 
+// same
 // RunCode runs code on leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput string) (
 	*InterpretSolutionResult,
 	error,
 ) {
-	url := ""
+	path := ""
 	if q.IsContest() {
-		url = fmt.Sprintf(
-			"%scontest/api/%s/problems/%s/interpret_solution/",
-			c.BaseURI(),
+		path = fmt.Sprintf(
+			contestRunCodePath,
 			q.contest.TitleSlug,
 			q.TitleSlug,
 		)
 	} else {
-		url = fmt.Sprintf("%sproblems/%s/interpret_solution/", c.BaseURI(), q.TitleSlug)
+		path = fmt.Sprintf(runCodePath, q.TitleSlug)
 	}
 
 	var resp InterpretSolutionResult
 	_, err := c.jsonPost(
-		url, map[string]any{
+		path, map[string]any{
 			"lang":        lang,
 			"question_id": q.QuestionId,
 			"typed_code":  code,
@@ -691,23 +749,23 @@ func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput 
 	return &resp, err
 }
 
+// same
 // SubmitCode submits code to leetcode server. Questions no need to be fully loaded.
 func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string, error) {
-	url := ""
+	path := ""
 	if q.IsContest() {
-		url = fmt.Sprintf(
-			"%scontest/api/%s/problems/%s/submit/",
-			c.BaseURI(),
+		path = fmt.Sprintf(
+			contestSubmitCodePath,
 			q.contest.TitleSlug,
 			q.TitleSlug,
 		)
 	} else {
-		url = fmt.Sprintf("%sproblems/%s/submit/", c.BaseURI(), q.TitleSlug)
+		path = fmt.Sprintf(submitCodePath, q.TitleSlug)
 	}
 
 	var resp gjson.Result
 	_, err := c.jsonPost(
-		url, map[string]any{
+		path, map[string]any{
 			"lang":         lang,
 			"questionSlug": q.TitleSlug,
 			"question_id":  q.QuestionId,
@@ -717,13 +775,14 @@ func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string
 	return resp.Get("submission_id").String(), err
 }
 
+// same
 func (c *cnClient) CheckResult(submissionId string) (
 	CheckResult,
 	error,
 ) {
-	url := fmt.Sprintf("%ssubmissions/detail/%s/check/", c.BaseURI(), submissionId)
+	path := fmt.Sprintf(checkResultPath, submissionId)
 	var result gjson.Result
-	_, err := c.jsonGet(url, nil, &result, nil)
+	_, err := c.jsonGet(path, nil, &result, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -737,6 +796,7 @@ func (c *cnClient) CheckResult(submissionId string) (
 	return &r, err
 }
 
+// different
 func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 	query := `
 {
@@ -785,18 +845,20 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 	return contests, nil
 }
 
+// same
 func (c *cnClient) RegisterContest(slug string) error {
-	url := fmt.Sprintf("%scontest/api/%s/register", c.BaseURI(), slug)
-	_, err := c.jsonPost(url, nil, nil, nil)
+	path := fmt.Sprintf(contestRegisterPath, slug)
+	_, err := c.jsonPost(path, nil, nil, nil)
 	if e, ok := err.(unexpectedStatusCode); ok && e.Code == http.StatusFound {
 		err = nil
 	}
 	return err
 }
 
+// same
 func (c *cnClient) UnregisterContest(slug string) error {
-	url := fmt.Sprintf("%scontest/api/%s/register", c.BaseURI(), slug)
-	req, _ := c.http.New().Delete(url).Request()
+	path := fmt.Sprintf(contestRegisterPath, slug)
+	req, _ := c.http.New().Delete(path).Request()
 	_, err := c.send(req, nil, nil)
 	return err
 }
@@ -808,6 +870,7 @@ type QuestionFilter struct {
 	SearchKeywords string   `json:"searchKeywords,omitempty"`
 }
 
+// different
 func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
 	query := `
 query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
@@ -867,6 +930,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 	return result, err
 }
 
+// different
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 	query := `
 query questionTagTypeWithTags {

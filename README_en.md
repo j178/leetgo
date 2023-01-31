@@ -25,7 +25,7 @@ And `leetgo` also supports real-time generation of **contest questions**, so you
 - Customize the code template for generated code, use modifiers to preprocess code
 - Run test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
-- (Will) Support both leetcode.com and leetcode.cn
+- Support both leetcode.com and leetcode.cn
 - Read cookies from browser automatically, no need to provide password
 - Auto open question files in your favorite editor
 
@@ -230,15 +230,13 @@ editor:
 
 ## LeetCode Support
 
-Currently only `leetcode.cn` is supported. Support for `leetcode.com` is under development.
-
 `leetgo` uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
 
 There are three ways to provide cookies to `leetgo`:
 
 - Read cookies from browser automatically.
   
-  Currently Chrome and FireFox are supported, if you want to support other browsers, please let us know!
+  Currently, Chrome and FireFox are supported, if you want to support other browsers, please let us know!
 
   ```yaml
   leetcode:
