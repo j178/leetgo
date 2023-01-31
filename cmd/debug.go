@@ -24,14 +24,23 @@ var whoamiCmd = &cobra.Command{
 	},
 }
 
+var userCache map[leetcode.Client]string
+
+func init() {
+	userCache = make(map[leetcode.Client]string)
+}
+
 func whoami(c leetcode.Client) (string, error) {
-	u, err := c.GetUserStatus()
-	if err != nil {
-		return "", err
+	if userCache[c] == "" {
+		u, err := c.GetUserStatus()
+		if err != nil {
+			return "", err
+		}
+		if !u.IsSignedIn {
+			return "", leetcode.ErrUserNotSignedIn
+		}
+		uri, _ := url.Parse(c.BaseURI())
+		userCache[c] = u.Username + "@" + uri.Host
 	}
-	if !u.IsSignedIn {
-		return "", leetcode.ErrUserNotSignedIn
-	}
-	uri, _ := url.Parse(c.BaseURI())
-	return u.Username + "@" + uri.Host, nil
+	return userCache[c], nil
 }
