@@ -11,10 +11,11 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/hashicorp/go-hclog"
+	"github.com/spf13/viper"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -459,7 +460,13 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		}
 	}
 
-	if len(codeLinesToKeep) == 0 {
+	nonEmptyLines := 0
+	for _, line := range codeLinesToKeep {
+		if strings.TrimSpace(line) != "" {
+			nonEmptyLines++
+		}
+	}
+	if nonEmptyLines == 0 {
 		return "", fmt.Errorf("no code found in %s", codeFile.Path)
 	}
 
