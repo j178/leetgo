@@ -11,10 +11,14 @@ import (
 	"github.com/j178/leetgo/cmd"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
+	"github.com/j178/leetgo/utils"
 )
 
 func main() {
-	for _, f := range []string{"README.md", "README_en.md"} {
+	for _, f := range []string{"README_zh.md", "README_en.md", "README.md"} {
+		if !utils.IsExist(f) {
+			continue
+		}
 		readme, _ := os.ReadFile(f)
 		readme = updateUsage(readme)
 		readme = updateConfig(readme)
