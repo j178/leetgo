@@ -337,6 +337,8 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 欢迎大家参与这个项目的开发，如果你不知道如何开始，这些 [Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 是很好的起步点，
 你也可以看看这些 [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues。
 
+提交前请使用 `golangci-lint run --fix` 来修复代码格式问题。
+
 ## 致谢
 
 在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，在这里向他们表示感谢 :heart:

@@ -337,6 +337,8 @@ Some common problems can be found in [Q&A](https://github.com/j178/leetgo/discus
 [Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start, 
 and you can also check out some [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
 
+Before submitting a PR, please run `golangci-lint run --fix` to fix lint errors.
+
 ## Credits
 
 Here are some awesome projects that inspired me to create this project:
