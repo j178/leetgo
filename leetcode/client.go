@@ -185,6 +185,7 @@ const (
 	checkResultPath       = "/submissions/detail/%s/check/"
 	contestRegisterPath   = "/contest/api/%s/register/"
 	problemsAllPath       = "/api/problems/all/"
+	problemSetAllPath     = "/problemset/all/"
 )
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
@@ -598,6 +599,9 @@ func (c *cnClient) getContestQuestionData(contestSlug string, questionSlug strin
 	if err != nil {
 		return nil, err
 	}
+	if len(html) == 0 {
+		return nil, errors.New("get contest question data: empty response")
+	}
 
 	return c.parseContestHtml(html, questionSlug)
 }
@@ -862,7 +866,7 @@ type QuestionFilter struct {
 	SearchKeywords string   `json:"searchKeywords,omitempty"`
 }
 
-// todo
+// different
 func (c *cnClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
 	query := `
 query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {

@@ -1,14 +1,18 @@
 package leetcode
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"sort"
 	"strconv"
 
+	"github.com/PuerkitoBio/goquery"
+	"github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/utils"
 )
 
 type usClient struct {
@@ -214,7 +218,94 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 	return contests, nil
 }
 
-// Cannot find a equivalent API for leetcode.com, use leetcode.cn instead.
+func (c *usClient) GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error) {
+	query := `
+query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+  problemsetQuestionList: questionList(
+    categorySlug: $categorySlug
+    limit: $limit
+    skip: $skip
+    filters: $filters
+  ) {
+    total: totalNum
+    questions: data {
+      difficulty
+      frontendQuestionId: questionFrontendId
+      isFavor
+      paidOnly: isPaidOnly
+      status
+      title
+      titleSlug
+      topicTags {
+        name
+        slug
+      }
+    }
+  }
+}
+`
+	vars := map[string]any{
+		"categorySlug": "algorithms",
+		"limit":        limit,
+		"skip":         skip,
+		"filters":      f,
+	}
+	body := map[string]any{
+		"query":     query,
+		"variables": vars,
+	}
+	var resp gjson.Result
+	req, _ := c.http.New().
+		Post(graphQLPath).
+		Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").
+		BodyJSON(body).Request()
+	_, err := c.send(req, &resp, nil)
+	if err != nil {
+		return QuestionList{}, err
+	}
+
+	var result QuestionList
+	questionList := resp.Get("data.problemsetQuestionList")
+	err = json.Unmarshal(utils.StringToBytes(questionList.Raw), &result)
+	if err != nil {
+		return QuestionList{}, err
+	}
+	for _, q := range result.Questions {
+		q.client = c
+		q.partial = 1
+	}
+
+	return result, err
+}
+
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
-	return c.cnClient.GetQuestionTags()
+	var html []byte
+	req, _ := c.http.New().Get(problemSetAllPath).Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").Request()
+	_, err := c.send(req, &html, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(html) == 0 {
+		return nil, errors.New("get question tags: empty response")
+	}
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
+	if err != nil {
+		return nil, err
+	}
+	scriptText := doc.Find("script#__NEXT_DATA__").Text()
+	data := gjson.Parse(scriptText)
+	topicTags := data.Get("props.pageProps.topicTags")
+	if len(topicTags.Array()) == 0 {
+		return nil, errors.New("get question tags: empty response")
+	}
+	var tags []QuestionTag
+	for _, tag := range topicTags.Array() {
+		tags = append(
+			tags, QuestionTag{
+				Slug: tag.Get("slug").Str,
+				Name: tag.Get("name").Str,
+			},
+		)
+	}
+	return tags, nil
 }
