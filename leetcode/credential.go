@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/zellyn/kooky"
 	_ "github.com/zellyn/kooky/browser/chrome"
+	_ "github.com/zellyn/kooky/browser/firefox"
 
 	"github.com/j178/leetgo/config"
 )
@@ -130,23 +132,36 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		hclog.L().Info("reading credentials from browser", "browser", "chrome", "domain", domain)
-		session := kooky.ReadCookies(
+		hclog.L().Info("reading cookies from browser", "domain", domain)
+
+		defer func(start time.Time) {
+			hclog.L().Debug("finished read cookies from browser", "elapsed", time.Since(start))
+		}(time.Now())
+
+		cookies := kooky.ReadCookies(
 			kooky.Valid,
-			kooky.DomainContains(domain),
-			kooky.Name("LEETCODE_SESSION"),
+			kooky.DomainHasSuffix(domain),
+			kooky.FilterFunc(
+				func(cookie *kooky.Cookie) bool {
+					return kooky.Name("LEETCODE_SESSION").Filter(cookie) ||
+						kooky.Name("csrftoken").Filter(cookie)
+				},
+			),
 		)
-		csrfToken := kooky.ReadCookies(
-			kooky.Valid,
-			kooky.DomainContains(domain),
-			kooky.Name("csrftoken"),
-		)
-		if len(session) == 0 || len(csrfToken) == 0 {
+		if len(cookies) < 2 {
 			return errors.New("no cookie found in browser")
 		}
-		b.LeetcodeSession = session[0].Value
-		b.CsrfToken = csrfToken[0].Value
-		hclog.L().Debug("found credentials in browser")
+		for _, cookie := range cookies {
+			if cookie.Name == "LEETCODE_SESSION" {
+				b.LeetcodeSession = cookie.Value
+			}
+			if cookie.Name == "csrftoken" {
+				b.CsrfToken = cookie.Value
+			}
+		}
+		if b.LeetcodeSession == "" || b.CsrfToken == "" {
+			return errors.New("no cookie found in browser")
+		}
 	}
 
 	return b.cookiesAuth.AddCredentials(req)

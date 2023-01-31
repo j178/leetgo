@@ -238,7 +238,7 @@ There are three ways to provide cookies to `leetgo`:
 
 - Read cookies from browser automatically.
   
-  Currently only chrome is supported, if you want to support other browsers, please let us know!
+  Currently Chrome and FireFox are supported, if you want to support other browsers, please let us know!
 
   ```yaml
   leetcode:
