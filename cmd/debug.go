@@ -15,12 +15,23 @@ var whoamiCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		u, err := c.GetUserStatus()
+		name, err := whoami(c)
 		if err != nil {
 			return err
 		}
-		url, _ := url.Parse(c.BaseURI())
-		cmd.Println(u.Username + "@" + url.Host)
+		cmd.Println(name)
 		return nil
 	},
+}
+
+func whoami(c leetcode.Client) (string, error) {
+	u, err := c.GetUserStatus()
+	if err != nil {
+		return "", err
+	}
+	if !u.IsSignedIn {
+		return "", leetcode.ErrUserNotSignedIn
+	}
+	uri, _ := url.Parse(c.BaseURI())
+	return u.Username + "@" + uri.Host, nil
 }

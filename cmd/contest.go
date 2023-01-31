@@ -50,6 +50,7 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 		return "", errors.New(msg)
 	}
 
+	// TODO show contest begin time in select list
 	contestNames := make([]string, len(contestList))
 	for i, ct := range contestList {
 		mark := " "
@@ -137,11 +138,12 @@ leetgo contest left w330
 		if err != nil {
 			return err
 		}
+		user, _ := whoami(c)
 		if !contest.HasFinished() && !contest.Registered {
 			register := true
 			if !viper.GetBool("yes") {
 				prompt := survey.Confirm{
-					Message: fmt.Sprintf("Register for %s?", contest.Title),
+					Message: fmt.Sprintf("Register for %s as %s?", contest.Title, user),
 				}
 				err := survey.AskOne(&prompt, &register)
 				if err != nil {
@@ -153,7 +155,7 @@ leetgo contest left w330
 				if err != nil {
 					return err
 				}
-				hclog.L().Info("registered", "contest", contest.Title)
+				hclog.L().Info("registered", "contest", contest.Title, "user", user)
 			} else {
 				return nil
 			}
@@ -213,10 +215,11 @@ var unregisterCmd = &cobra.Command{
 		if contest.HasFinished() {
 			return fmt.Errorf("contest %s has finished", contest.Title)
 		}
+		user, _ := whoami(c)
 		unregister := true
 		if !viper.GetBool("yes") {
 			prompt := survey.Confirm{
-				Message: fmt.Sprintf("Unregister from %s?", contest.Title),
+				Message: fmt.Sprintf("Unregister from %s as %s?", contest.Title, user),
 			}
 			err = survey.AskOne(&prompt, &unregister)
 			if err != nil {
@@ -228,7 +231,7 @@ var unregisterCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			hclog.L().Info("unregistered", "contest", contest.Title)
+			hclog.L().Info("unregistered", "contest", contest.Title, "user", user)
 		}
 
 		return nil

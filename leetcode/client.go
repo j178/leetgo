@@ -24,6 +24,7 @@ import (
 var (
 	ErrPaidOnlyQuestion = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
 	ErrTooManyRequests  = errors.New("you have submitted too frequently, please submit again later")
+	ErrUserNotSignedIn  = errors.New("user not signed in")
 )
 
 type unexpectedStatusCode struct {
