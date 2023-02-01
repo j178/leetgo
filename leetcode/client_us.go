@@ -1,14 +1,12 @@
 package leetcode
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
 
@@ -295,27 +293,13 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 }
 
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
-	var html []byte
-	req, _ := c.http.New().Get(problemSetAllPath).Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").Request()
-	_, err := c.send(req, &html, nil)
+	var resp gjson.Result
+	_, err := c.jsonGet(problemsApiTagsPath, nil, &resp, nil)
 	if err != nil {
 		return nil, err
-	}
-	if len(html) == 0 {
-		return nil, errors.New("get question tags: empty response")
-	}
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
-	if err != nil {
-		return nil, err
-	}
-	scriptText := doc.Find("script#__NEXT_DATA__").Text()
-	data := gjson.Parse(scriptText)
-	topicTags := data.Get("props.pageProps.topicTags")
-	if len(topicTags.Array()) == 0 {
-		return nil, errors.New("get question tags: empty response")
 	}
 	var tags []QuestionTag
-	for _, tag := range topicTags.Array() {
+	for _, tag := range resp.Get("topics").Array() {
 		tags = append(
 			tags, QuestionTag{
 				Slug: tag.Get("slug").Str,

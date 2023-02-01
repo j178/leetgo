@@ -167,7 +167,7 @@ const (
 	checkResultPath       = "/submissions/detail/%s/check/"
 	contestRegisterPath   = "/contest/api/%s/register/"
 	problemsAllPath       = "/api/problems/all/"
-	problemSetAllPath     = "/problemset/all/"
+	problemsApiTagsPath   = "/problems/api/tags/"
 )
 
 func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Response, error) {
@@ -905,44 +905,20 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 }
 
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
-	query := `
-query questionTagTypeWithTags {
-    questionTagTypeWithTags {
-        name
-        transName
-        tagRelation {
-            questionNum
-            tag {
-                name
-                id
-                nameTranslated
-                slug
-            }
-        }
-    }
-}
-`
 	var resp gjson.Result
-	_, err := c.graphqlPost(graphqlRequest{query: query}, &resp, nil)
+	_, err := c.jsonGet(problemsApiTagsPath, nil, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
 	var tags []QuestionTag
-	for _, tagType := range resp.Get("data.questionTagTypeWithTags").Array() {
-		tagTypeName := tagType.Get("name").Str
-		tagTypeTransName := tagType.Get("transName").Str
-		for _, tagInfo := range tagType.Get("tagRelation").Array() {
-			tag := QuestionTag{
-				TypeName:       tagTypeName,
-				TypeTransName:  tagTypeTransName,
-				Id:             tagInfo.Get("tag.id").Str,
-				Name:           tagInfo.Get("tag.name").Str,
-				NameTranslated: tagInfo.Get("tag.nameTranslated").Str,
-				Slug:           tagInfo.Get("tag.slug").Str,
-			}
-			tags = append(tags, tag)
-		}
+	for _, tag := range resp.Get("topics").Array() {
+		tags = append(
+			tags, QuestionTag{
+				Slug:           tag.Get("slug").Str,
+				Name:           tag.Get("name").Str,
+				NameTranslated: tag.Get("translatedName").Str,
+			},
+		)
 	}
-
 	return tags, nil
 }

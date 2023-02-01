@@ -18,9 +18,11 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 	if err != nil {
 		return
 	}
-	var tagNames []string
+	tagNames := make([]string, 0, len(tags))
+	tagNamesToSlug := make(map[string]string, len(tags))
 	for _, t := range tags {
 		tagNames = append(tagNames, t.Name)
+		tagNamesToSlug[t.Name] = t.Slug
 	}
 
 	qs := []*survey.Question{
@@ -68,7 +70,10 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 				if len(opt) == len(tagNames) {
 					return []survey.OptionAnswer{}
 				}
-				return ans
+				for i, o := range opt {
+					opt[i].Value = tagNamesToSlug[o.Value]
+				}
+				return opt
 			},
 		},
 	}
