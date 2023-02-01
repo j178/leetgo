@@ -36,7 +36,7 @@
 本地测试需要为每一种语言做单独的适配，所以目前仅支持部分语言(其实只支持 Go)，下表是目前的支持情况：
 
 <!-- BEGIN MATRIX -->
-|  | Generate | Local Test |
+|  | Generation | Local testing |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
 | Python | :white_check_mark: | Not yet |
@@ -338,7 +338,7 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 
 ## 致谢
 
-在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，在这里向他们表示感谢 :heart:
+在 `leetgo` 的开发过程中，下面这些项目为我提供了许多灵感和参考，感谢他们 :heart:
 
 - https://github.com/EndlessCheng/codeforces-go
 - https://github.com/clearloop/leetcode-cli

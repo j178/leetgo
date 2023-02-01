@@ -9,34 +9,34 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
 `leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
-allowing you to complete all of your LeetCode exercises without leaving the terminal. 
+allowing you to do all of your LeetCode exercises without leaving the terminal. 
 It can automatically generate **skeleton code and test cases**, support **local testing and debugging**, 
 and you can use any IDE you like to solve problems. 
 
-And `leetgo` also supports real-time generation of **contest questions**, so your submissions are one step ahead!
+And `leetgo` also supports real-time generation of **contest questions**, submitting all questions at once, so your submissions are always one step ahead!
 
 [![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
 
 ## Highlight of features
 
-- Generate description, skeleton code and testing code for a question
-- Customize the code template for generated code, use modifiers to preprocess code
-- Run test cases on your local machine
+- Generate description, skeleton code and testg code for a question
+- Customize the code template for generated code, use modifiers to pre-process code
+- Execute test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
-- Support both leetcode.com and leetcode.cn
-- Read cookies from browser automatically, no need to provide password
-- Auto open question files in your favorite editor
+- Support for both leetcode.com and leetcode.cn
+- Automatically read cookies from browser, no need to enter password
+- Automatically open question files in your favourite editor
 
 ## Language support
 
-`leetgo` supports generating code for most languages, and local test skeleton for some languages.
+`leetgo` supports code generation for most languages, and local testing for some languages.
 
-Local test means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
+Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
 
-Local test requires more work to implement for each language, so not all languages are supported.
+Local testing requires more work to implement for each language, so not all languages are supported.
 
 <!-- BEGIN MATRIX -->
-|  | Generate | Local Test |
+|  | Generation | Local testing |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
 | Python | :white_check_mark: | Not yet |
@@ -55,7 +55,7 @@ Local test requires more work to implement for each language, so not all languag
 | MSSQL | :white_check_mark: | Not yet |
 | Oracle | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
-and many other languages are in plan. (help wanted, contributions welcome!)
+and many other languages are planned. (Help wanted, contributions welcome!)
 
 ## Installation
 
@@ -111,7 +111,7 @@ Use "leetgo [command] --help" for more information about a command.
 
 ### Question Identifier
 
-Many `leetgo` commands rely on `qid` to locate the leetcode question. `qid` is a simplified question 
+Many `leetgo` commands rely on `qid` to find the leetcode question. `qid` is a simplified question 
 identifier defined by leetgo, which includes the following forms (using the two-sum problem as an example):
 
 ```shell
@@ -131,12 +131,12 @@ leetgo test last/            # `last/` means all questions of the last generated
 
 Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
 
-These configuration files are generated during the `leetgo init` process. 
-The local configuration file in the project will override the global configuration. 
+These configuration files are created during the `leetgo init` process. 
+The local configuration file in the project overrides the global configuration. 
 
 It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
 
-Here is the demonstration of full configurations:
+Here is the demonstration of complete configurations:
 
 <!-- BEGIN CONFIG -->
 ```yaml
@@ -229,9 +229,9 @@ editor:
 
 ## LeetCode Support
 
-`leetgo` uses LeetCode's GraphQL API to get questions and submit solutions. `leetgo` needs your LeetCode cookies to access authenticated API.
+`leetgo` uses LeetCode's GraphQL API to retrieve questions and submit solutions. `leetgo` needs your LeetCode cookies to access the authenticated API.
 
-There are three ways to provide cookies to `leetgo`:
+There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
   
@@ -277,9 +277,9 @@ There are three ways to provide cookies to `leetgo`:
 
 ## Advanced Usage
 
-1. template related
-
-   Many configuration of `leetgo` are using Go template，you can use customize template to generate your own filename, code, etc.
+1. Templates
+   Several fields in leetgo's config file support templating. These fields are often suffixed with `_template`.
+   You can use custom template to generate your own filename, code, etc.
 
 2. Blocks
 
@@ -311,7 +311,7 @@ There are three ways to provide cookies to `leetgo`:
 
 3. Script
 
-   `leetgo` suppots providing a JavaScript function to handle the code before generation, for example：
+   `leetgo` supports providing a JavaScript function to handle the code before generation, for example：
     ```yaml
     code:
       lang: cpp
@@ -326,14 +326,14 @@ There are three ways to provide cookies to `leetgo`:
 
 ## FAQ
 
-If you encounter any problems, please run your command with `DEBUG` environment variable set to `1`, copy the command output and open an issue.
+If you encounter any problems, please run your command with the `DEBUG` environment variable set to `1`, copy the command output, and open an issue.
 
-Some common problems can be found in [Q&A](https://github.com/j178/leetgo/discussions/categories/q-a).
+Some common problems can be found in the [Q&A](https://github.com/j178/leetgo/discussions/categories/q-a) page.
 
 ## Contributions welcome!
 
-[Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a great place to start, 
-and you can also check out some [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
+[Good First Issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start, 
+and you can also check out some [Help Wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
 
 Before submitting a PR, please run `golangci-lint run --fix` to fix lint errors.
 
