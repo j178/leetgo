@@ -7,7 +7,7 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.3.6
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/briandowns/spinner v1.20.0
-	github.com/charmbracelet/bubbles v0.14.0
+	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/dghubble/sling v1.4.1
