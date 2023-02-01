@@ -9,7 +9,7 @@ require (
 	github.com/briandowns/spinner v1.20.0
 	github.com/charmbracelet/bubbles v0.14.0
 	github.com/charmbracelet/bubbletea v0.23.1
-	github.com/charmbracelet/lipgloss v0.5.0
+	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230128084908-78b980256d04
 	github.com/fatih/color v1.13.0
