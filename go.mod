@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230128084908-78b980256d04
-	github.com/fatih/color v1.13.0
+	github.com/fatih/color v1.14.1
 	github.com/goccy/go-json v0.10.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hashicorp/go-hclog v1.4.0
@@ -56,8 +56,8 @@ require (
 	github.com/keybase/go-keychain v0.0.0-20220408132150-ad3b4a8fd4a7 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
