@@ -14,6 +14,7 @@ require (
 	github.com/dop251/goja v0.0.0-20230128084908-78b980256d04
 	github.com/fatih/color v1.13.0
 	github.com/goccy/go-json v0.10.0
+	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hashicorp/go-hclog v1.4.0
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/jedib0t/go-pretty/v6 v6.4.3

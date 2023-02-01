@@ -10,6 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/hako/durafmt"
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
@@ -22,7 +23,9 @@ import (
 )
 
 var (
-	colorGreen    = color.New(color.FgHiGreen, color.Bold)
+	colorBlue     = color.New(color.FgHiBlue, color.Bold)
+	colorCyan     = color.New(color.FgHiCyan)
+	colorFaint    = color.New(color.Faint)
 	checkDuration = 10 * time.Second
 	openInBrowser bool
 )
@@ -50,14 +53,18 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 		return "", errors.New(msg)
 	}
 
-	// TODO show contest begin time in select list
 	contestNames := make([]string, len(contestList))
 	for i, ct := range contestList {
 		mark := " "
 		if ct.Registered {
-			mark = colorGreen.Sprint("√")
+			mark = "√"
 		}
-		contestNames[i] = mark + " " + ct.Title
+		contestNames[i] = fmt.Sprintf(
+			"%s %s in %s",
+			mark,
+			ct.Title,
+			durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2),
+		)
 	}
 	var idx int
 	prompt := &survey.Select{
@@ -81,8 +88,11 @@ func waitContestStart(cmd *cobra.Command, ct *leetcode.Contest) error {
 	spin.PreUpdate = func(s *spinner.Spinner) {
 		mu.Lock()
 		defer mu.Unlock()
-		t := ct.TimeTillStart().Round(time.Second)
-		s.Suffix = fmt.Sprintf("  %s begins in %s, waiting...", ct.Title, t)
+		s.Suffix = fmt.Sprintf(
+			" %s begins in %s, waiting...",
+			colorBlue.Sprint(ct.Title),
+			colorFaint.Sprint(durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2)),
+		)
 	}
 	spin.Start()
 	defer spin.Stop()
@@ -143,7 +153,11 @@ leetgo contest left w330
 			register := true
 			if !viper.GetBool("yes") {
 				prompt := survey.Confirm{
-					Message: fmt.Sprintf("Register for %s as %s?", contest.Title, user),
+					Message: fmt.Sprintf(
+						"Register for %s as %s?",
+						colorBlue.Sprint(contest.Title),
+						colorCyan.Sprint(user),
+					),
 				}
 				err := survey.AskOne(&prompt, &register)
 				if err != nil {
@@ -219,7 +233,11 @@ var unregisterCmd = &cobra.Command{
 		unregister := true
 		if !viper.GetBool("yes") {
 			prompt := survey.Confirm{
-				Message: fmt.Sprintf("Unregister from %s as %s?", contest.Title, user),
+				Message: fmt.Sprintf(
+					"Unregister from %s as %s?",
+					colorBlue.Sprint(contest.Title),
+					colorCyan.Sprint(user),
+				),
 			}
 			err = survey.AskOne(&prompt, &unregister)
 			if err != nil {
