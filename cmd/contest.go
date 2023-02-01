@@ -71,13 +71,13 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 	return contestList[idx].TitleSlug, nil
 }
 
-func waitContestStart(ct *leetcode.Contest) error {
+func waitContestStart(cmd *cobra.Command, ct *leetcode.Contest) error {
 	if ct.HasStarted() {
 		return nil
 	}
 
 	var mu sync.Mutex
-	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond)
+	spin := newSpinner(cmd.ErrOrStderr())
 	spin.PreUpdate = func(s *spinner.Spinner) {
 		mu.Lock()
 		defer mu.Unlock()
@@ -161,7 +161,7 @@ leetgo contest left w330
 			}
 		}
 
-		err = waitContestStart(contest)
+		err = waitContestStart(cmd, contest)
 		if err != nil {
 			return err
 		}

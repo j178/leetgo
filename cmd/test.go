@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -92,7 +93,7 @@ leetgo test w330/`,
 				}
 			}
 			if runRemotely {
-				result, err := runTestRemotely(q, c, gen, testLimiter)
+				result, err := runTestRemotely(cmd, q, c, gen, testLimiter)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 					remotePassed = false
@@ -103,7 +104,7 @@ leetgo test w330/`,
 			}
 
 			if localPassed && remotePassed && autoSubmit {
-				result, err := submitSolution(q, c, gen, submitLimiter)
+				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
 					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
@@ -115,7 +116,13 @@ leetgo test w330/`,
 	},
 }
 
-func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, limiter *utils.RateLimiter) (
+func runTestRemotely(
+	cmd *cobra.Command,
+	q *leetcode.QuestionData,
+	c leetcode.Client,
+	gen lang.Lang,
+	limiter *utils.RateLimiter,
+) (
 	*leetcode.RunCheckResult,
 	error,
 ) {
@@ -136,7 +143,8 @@ func runTestRemotely(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang,
 
 	user, _ := whoami(c)
 	hclog.L().Info("running test remotely", "question", q.TitleSlug, "user", user)
-	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Running test..."))
+	spin := newSpinner(cmd.ErrOrStderr())
+	spin.Suffix = " Running test..."
 	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
@@ -180,4 +188,15 @@ func waitResult(c leetcode.Client, submissionId string) (
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
+}
+
+func newSpinner(w io.Writer) *spinner.Spinner {
+	spin := spinner.New(
+		spinner.CharSets[11],
+		125*time.Millisecond,
+		spinner.WithHiddenCursor(false),
+		spinner.WithWriter(w),
+		spinner.WithColor("fgHiCyan"),
+	)
+	return spin
 }

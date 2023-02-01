@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
 
@@ -42,7 +41,7 @@ leetgo submit w330/
 		defer limiter.Stop()
 
 		for _, q := range qs {
-			result, err := submitSolution(q, c, gen, limiter)
+			result, err := submitSolution(cmd, q, c, gen, limiter)
 			if err != nil {
 				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				continue
@@ -54,7 +53,13 @@ leetgo submit w330/
 	},
 }
 
-func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, limiter *utils.RateLimiter) (
+func submitSolution(
+	cmd *cobra.Command,
+	q *leetcode.QuestionData,
+	c leetcode.Client,
+	gen lang.Lang,
+	limiter *utils.RateLimiter,
+) (
 	*leetcode.SubmitCheckResult,
 	error,
 ) {
@@ -65,7 +70,8 @@ func submitSolution(q *leetcode.QuestionData, c leetcode.Client, gen lang.Lang, 
 
 	user, _ := whoami(c)
 	hclog.L().Info("submitting solution", "question", q.TitleSlug, "user", user)
-	spin := spinner.New(spinner.CharSets[9], 250*time.Millisecond, spinner.WithSuffix(" Submitting solution..."))
+	spin := newSpinner(cmd.ErrOrStderr())
+	spin.Suffix = " Submitting solution..."
 	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
