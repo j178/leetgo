@@ -277,52 +277,56 @@ There are three ways to make cookies available to `leetgo`:
 
 ## Advanced Usage
 
-1. Templates
-   Several fields in leetgo's config file support templating. These fields are often suffixed with `_template`.
-   You can use custom template to generate your own filename, code, etc.
+### Templates
 
-2. Blocks
+Several fields in leetgo's config file support templating. These fields are often suffixed with `_template`.
+You can use custom template to generate your own filename, code, etc.
 
-   A code file is composed of different blocks, you can overwrite some of them to provide your own snippets.
-   Supported blocks:
-   - header
-   - description
-   - title
-   - beforeMarker
-   - beforeCode
-   - code
-   - afterCode
-   - afterMarker
+### Blocks
 
-   For example:
-   ```yaml
-   code:
-   lang: cpp
-   cpp:
-     blocks:
-     - name: beforeCode
-       template: |
-         #include <iostream>
-         using namespace std;
-     - name: afterMarker
-       template: |
-         int main() {}
-   ```
+A code file is composed of different blocks, you can overwrite some of them to provide your own snippets.
 
-3. Script
+| Available blocks |
+| -- | 
+| header |
+| description |
+| title |
+| beforeMarker |
+| beforeCode |
+| code |
+| afterCode |
+| afterMarker |
 
-   `leetgo` supports providing a JavaScript function to handle the code before generation, for example：
-    ```yaml
-    code:
-      lang: cpp
-      cpp:
-        modifiers:
-        - name: removeUselessComments
-        - script: |
-            function modify(code) {
-              return "// hello world\n" + code;
-            } 
-    ```
+For example:
+```yaml
+code:
+lang: cpp
+cpp:
+  blocks:
+  - name: beforeCode
+    template: |
+      #include <iostream>
+      using namespace std;
+  - name: afterMarker
+    template: |
+      int main() {}
+```
+
+### Scripting
+
+`leetgo` supports providing a JavaScript function to handle the code before generation, for example:
+
+```yaml
+code:
+  lang: cpp
+  cpp:
+    modifiers:
+    - name: removeUselessComments
+    - script: |
+        function modify(code) {
+          return "// hello world\n" + code;
+        } 
+```
 
 ## FAQ
 
