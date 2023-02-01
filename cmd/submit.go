@@ -38,7 +38,6 @@ leetgo submit w330/
 		}
 
 		limiter := utils.NewRateLimiter(10 * time.Second)
-		defer limiter.Stop()
 
 		for _, q := range qs {
 			result, err := submitSolution(cmd, q, c, gen, limiter)
@@ -76,7 +75,7 @@ func submitSolution(
 	spin.Start()
 	defer spin.Stop()
 
-	limiter.Wait()
+	limiter.Take()
 	spin.Reverse()
 
 	submissionId, err := c.SubmitCode(q, gen.Slug(), solution)

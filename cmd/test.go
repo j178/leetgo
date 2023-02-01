@@ -80,8 +80,6 @@ leetgo test w330/`,
 
 		testLimiter := utils.NewRateLimiter(10 * time.Second)
 		submitLimiter := utils.NewRateLimiter(10 * time.Second)
-		defer testLimiter.Stop()
-		defer submitLimiter.Stop()
 
 		for _, q := range qs {
 			localPassed, remotePassed := true, true
@@ -149,7 +147,7 @@ func runTestRemotely(
 	spin.Start()
 	defer spin.Stop()
 
-	limiter.Wait()
+	limiter.Take()
 	spin.Reverse()
 
 	interResult, err := c.RunCode(q, gen.Slug(), solution, casesStr)

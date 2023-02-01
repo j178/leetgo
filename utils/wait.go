@@ -3,32 +3,30 @@ package utils
 import "time"
 
 type RateLimiter struct {
-	delay time.Duration
-	ch    chan struct{}
+	per  time.Duration
+	last time.Time
 }
 
-func NewRateLimiter(delay time.Duration) *RateLimiter {
+func NewRateLimiter(per time.Duration) *RateLimiter {
 	r := &RateLimiter{
-		delay: delay,
-		ch:    make(chan struct{}),
+		per:  per,
+		last: time.Time{},
 	}
-	go r.run()
 	return r
 }
 
-func (r *RateLimiter) run() {
-	for {
-		if _, ok := <-r.ch; !ok {
-			return
-		}
-		time.Sleep(r.delay)
+func (r *RateLimiter) Take() {
+	now := time.Now()
+	if r.last.IsZero() {
+		r.last = now
+		return
 	}
-}
 
-func (r *RateLimiter) Wait() {
-	r.ch <- struct{}{}
-}
-
-func (r *RateLimiter) Stop() {
-	close(r.ch)
+	sleep := r.per - now.Sub(r.last)
+	if sleep > 0 {
+		time.Sleep(sleep)
+		r.last = now.Add(sleep)
+	} else {
+		r.last = now
+	}
 }
