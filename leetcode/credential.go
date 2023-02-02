@@ -136,7 +136,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		hclog.L().Info("reading cookies from browser", "domain", domain)
 
 		defer func(start time.Time) {
-			hclog.L().Debug("finished read cookies from browser", "elapsed", time.Since(start))
+			hclog.L().Trace("finished read cookies from browser", "elapsed", time.Since(start))
 		}(time.Now())
 
 		cookies := kooky.ReadCookies(
