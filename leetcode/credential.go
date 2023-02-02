@@ -13,6 +13,7 @@ import (
 	"github.com/zellyn/kooky"
 	_ "github.com/zellyn/kooky/browser/chrome"
 	_ "github.com/zellyn/kooky/browser/firefox"
+	_ "github.com/zellyn/kooky/browser/safari"
 
 	"github.com/j178/leetgo/config"
 )
