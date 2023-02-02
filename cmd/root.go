@@ -23,7 +23,7 @@ var (
 
 const website = "https://github.com/j178/leetgo"
 
-func buildVersion(version, commit, date string) string {
+func buildVersion() string {
 	result := version
 	if commit != "" {
 		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
@@ -35,14 +35,14 @@ func buildVersion(version, commit, date string) string {
 	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
 		result = fmt.Sprintf("%s\nmodule version: %s, checksum: %s", result, info.Main.Version, info.Main.Sum)
 	}
-	return result + "\n\n" + website
+	return result
 }
 
 var rootCmd = &cobra.Command{
 	Use:           config.CmdName,
 	Short:         "Leetcode",
 	Long:          "Leetcode friend for geek.",
-	Version:       buildVersion(version, commit, date),
+	Version:       buildVersion() + "\n\n" + website,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

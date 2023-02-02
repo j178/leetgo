@@ -15,14 +15,27 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Get()
 		cwd, _ := os.Getwd()
-		cmd.Println("Global config dir  :", cfg.ConfigDir())
-		cmd.Println("Global config file :", cfg.GlobalConfigFile())
-		cmd.Println("Project root       :", cfg.ProjectRoot())
-		cmd.Println("Working dir        :", cwd)
-		cmd.Println("Project config file:", cfg.ProjectConfigFile())
-		cmd.Println("Full configurations:")
-		cmd.Println()
+		projectConfig, err := os.ReadFile(cfg.ProjectConfigFile())
+		if err != nil {
+			projectConfig = []byte("No project config file found")
+		}
+		cmd.Println("Leetgo version info  :")
+		cmd.Println("```")
+		cmd.Println(buildVersion())
+		cmd.Println("```")
+		cmd.Println("Global config dir    :", cfg.ConfigDir())
+		cmd.Println("Global config file   :", cfg.GlobalConfigFile())
+		cmd.Println("Project root         :", cfg.ProjectRoot())
+		cmd.Println("Working dir          :", cwd)
+		cmd.Println("Project config file  :", cfg.ProjectConfigFile())
+		cmd.Println("Project configuration:")
+		cmd.Println("```yaml")
+		cmd.Println(string(projectConfig))
+		cmd.Println("```")
+		cmd.Println("Full configuration   :")
+		cmd.Println("```yaml")
 		_ = cfg.Write(cmd.OutOrStdout(), false)
+		cmd.Println("```")
 	},
 }
 

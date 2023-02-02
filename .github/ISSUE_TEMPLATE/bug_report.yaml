@@ -33,16 +33,6 @@ I have read the [documentation](https://github.com/j178/leetgo/blob/master/READM
           required: true
   - type: textarea
     attributes:
-      label: "leetgo version"
-      render: shell
-      description: "
-在下方附上 `leetgo -v` 的输出
-Paste the output of `leetgo -v` below
-"
-    validations:
-      required: true
-  - type: textarea
-    attributes:
       render: shell
       label: "leetgo config"
       description: "
