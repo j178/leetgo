@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 	"time"
 
@@ -184,7 +185,7 @@ func waitResult(c leetcode.Client, submissionId string) (
 		if result.GetState() == "SUCCESS" {
 			return result, nil
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -197,4 +198,25 @@ func newSpinner(w io.Writer) *spinner.Spinner {
 		spinner.WithColor("fgHiCyan"),
 	)
 	return spin
+}
+
+var userCache map[leetcode.Client]string
+
+func init() {
+	userCache = make(map[leetcode.Client]string)
+}
+
+func whoami(c leetcode.Client) (string, error) {
+	if userCache[c] == "" {
+		u, err := c.GetUserStatus()
+		if err != nil {
+			return "", err
+		}
+		if !u.IsSignedIn {
+			return "", leetcode.ErrUserNotSignedIn
+		}
+		uri, _ := url.Parse(c.BaseURI())
+		userCache[c] = u.Username + "@" + uri.Host
+	}
+	return userCache[c], nil
 }
