@@ -264,7 +264,11 @@ func (c *sqliteCache) GetAllQuestions() []*QuestionData {
 }
 
 func (c *sqliteCache) createTable() error {
-	err := utils.Truncate(c.GetCacheFile())
+	err := utils.CreateIfNotExists(c.GetCacheFile(), false)
+	if err != nil {
+		return err
+	}
+	err = utils.Truncate(c.GetCacheFile())
 	if err != nil {
 		return err
 	}
