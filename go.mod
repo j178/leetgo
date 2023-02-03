@@ -32,7 +32,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230105140252-602b62fe3a37
+replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230203021902-e439c6617a99
 
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
