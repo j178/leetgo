@@ -20,7 +20,7 @@ const (
 	globalConfigFile          = "config.yaml"
 	projectConfigFilename     = CmdName + ".yaml"
 	leetcodeCacheFileBaseName = "leetcode-questions"
-	stateFile                 = "state.json"
+	stateFilename             = "state.json"
 	CodeBeginMarker           = "@lc code=begin"
 	CodeEndMarker             = "@lc code=end"
 	GoTestUtilsModPath        = "github.com/j178/leetgo/testutils/go"
@@ -122,7 +122,7 @@ func (c *Config) ConfigDir() string {
 	return c.dir
 }
 
-func (c *Config) ConfigCacheDir() string {
+func (c *Config) CacheDir() string {
 	return filepath.Join(c.ConfigDir(), "cache")
 }
 
@@ -159,14 +159,11 @@ func (c *Config) ProjectConfigFilename() string {
 }
 
 func (c *Config) StateFile() string {
-	return filepath.Join(c.ConfigCacheDir(), stateFile)
+	return filepath.Join(c.CacheDir(), stateFilename)
 }
 
 func (c *Config) LeetCodeCacheBaseName() string {
-	if err := os.MkdirAll(c.ConfigCacheDir(), 0o755); err != nil {
-		panic(err)
-	}
-	return filepath.Join(c.ConfigCacheDir(), leetcodeCacheFileBaseName)
+	return filepath.Join(c.CacheDir(), leetcodeCacheFileBaseName)
 }
 
 func (c *Config) Write(w io.Writer, withComments bool) error {
