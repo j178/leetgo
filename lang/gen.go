@@ -105,10 +105,12 @@ func (l baseLang) LineComment() string {
 	return l.lineComment
 }
 
-func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Block, modifiers []ModifierFunc) (
-	string,
-	error,
-) {
+func (l baseLang) generateCodeContent(
+	q *leetcode.QuestionData,
+	baseFilename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+) (string, error) {
 	code := q.GetCodeSnippet(l.Slug())
 	tmpl := template.New("root")
 	tmpl.Funcs(
@@ -138,16 +140,17 @@ func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Bloc
 
 	cfg := config.Get()
 	data := &contentData{
-		Question:          q,
-		Author:            cfg.Author,
-		Time:              time.Now().Format("2006/01/02 15:04"),
-		LineComment:       l.lineComment,
-		BlockCommentStart: l.blockCommentStart,
-		BlockCommentEnd:   l.blockCommentEnd,
-		CodeBeginMarker:   config.CodeBeginMarker,
-		CodeEndMarker:     config.CodeEndMarker,
-		Code:              code,
-		NeedsDefinition:   needsDefinition(code),
+		Question:                q,
+		Author:                  cfg.Author,
+		Time:                    time.Now().Format("2006/01/02 15:04"),
+		LineComment:             l.lineComment,
+		BlockCommentStart:       l.blockCommentStart,
+		BlockCommentEnd:         l.blockCommentEnd,
+		CodeBeginMarker:         config.CodeBeginMarker,
+		CodeEndMarker:           config.CodeEndMarker,
+		Code:                    code,
+		NeedsDefinition:         needsDefinition(code),
+		SeparateDescriptionFile: separateDescriptionFile(l),
 	}
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, data)
@@ -155,6 +158,26 @@ func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Bloc
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func (l baseLang) generateCodeFile(
+	q *leetcode.QuestionData,
+	baseFilename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+) (
+	FileOutput,
+	error,
+) {
+	content, err := l.generateCodeContent(q, baseFilename, blocks, modifiers)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	return FileOutput{
+		Path:    baseFilename + l.extension,
+		Content: content,
+		Type:    CodeFile,
+	}, nil
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
@@ -179,6 +202,14 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 	return strings.Join(caseAndOutputs, "\n\n")
 }
 
+func (l baseLang) generateDocFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
+	return FileOutput{
+		Path:    baseFilename + ".md",
+		Content: q.GetFormattedContent(),
+		Type:    DocFile,
+	}, nil
+}
+
 func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	filenameTmpl := getFilenameTemplate(q, l)
 	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
@@ -186,43 +217,57 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 		return nil, err
 	}
 
-	file := FileOutput{
+	code := FileOutput{
 		Path: baseFilename + l.extension,
 		Type: CodeFile,
 	}
+	files := []FileOutput{code}
+
+	if separateDescriptionFile(l) {
+		files = append(
+			files, FileOutput{
+				Path: baseFilename + ".md",
+				Type: DocFile,
+			},
+		)
+	}
+
 	return &GenerateResult{
 		Question: q,
 		Lang:     l,
-		Files:    []FileOutput{file},
+		Files:    files,
 	}, nil
 }
 
 func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	blocks := getBlocks(l)
-	modifiers, err := getModifiers(l, builtinModifiers)
-	if err != nil {
-		return nil, err
-	}
-	content, err := l.generateContent(q, blocks, modifiers)
-	if err != nil {
-		return nil, err
-	}
-
 	filenameTmpl := getFilenameTemplate(q, l)
 	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
 	}
 
-	file := FileOutput{
-		Path:    baseFilename + l.extension,
-		Content: content,
-		Type:    CodeFile,
+	blocks := getBlocks(l)
+	modifiers, err := getModifiers(l, builtinModifiers)
+	if err != nil {
+		return nil, err
+	}
+	codeFile, err := l.generateCodeFile(q, baseFilename, blocks, modifiers)
+	if err != nil {
+		return nil, err
+	}
+	files := []FileOutput{codeFile}
+
+	if separateDescriptionFile(l) {
+		docFile, err := l.generateDocFile(q, baseFilename)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, docFile)
 	}
 	return &GenerateResult{
 		Question: q,
 		Lang:     l,
-		Files:    []FileOutput{file},
+		Files:    files,
 	}, nil
 }
 
@@ -246,7 +291,7 @@ func GetGenerator(lang string) (Lang, error) {
 	return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", lang)
 }
 
-func getCodeConfig(lang Lang, key string) string {
+func getCodeStringConfig(lang Lang, key string) string {
 	ans := viper.GetString("code." + lang.Slug() + "." + key)
 	if ans != "" {
 		return ans
@@ -258,7 +303,7 @@ func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
 	if q.IsContest() {
 		return config.Get().Contest.FilenameTemplate
 	}
-	ans := getCodeConfig(gen, "filename_template")
+	ans := getCodeStringConfig(gen, "filename_template")
 	if ans != "" {
 		return ans
 	}
@@ -270,13 +315,25 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 		return config.Get().Contest.OutDir
 	}
 	cfg := config.Get()
-	outDir := getCodeConfig(lang, "out_dir")
+	outDir := getCodeStringConfig(lang, "out_dir")
 	// If outDir is not set, use the language slug as the outDir.
 	if outDir == "" {
 		outDir = lang.Slug()
 	}
 	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
 	return outDir
+}
+
+func separateDescriptionFile(lang Lang) bool {
+	ans := viper.Get("code." + lang.Slug() + ".separate_description_file")
+	if ans != nil {
+		return ans.(bool)
+	}
+	ans = viper.Get("code." + lang.ShortName() + ".separate_description_file")
+	if ans != nil {
+		return ans.(bool)
+	}
+	return config.Get().Code.SeparateDescriptionFile
 }
 
 func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {

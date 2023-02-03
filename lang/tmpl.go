@@ -22,8 +22,9 @@ const contentTemplate = `
 {{ block "description" . -}}
 {{ .BlockCommentStart }}
 {{ block "title" . }}{{ .Question.QuestionFrontendId }}. {{ .Question.GetTitle }} ({{ .Question.Difficulty }}){{ end }}
-
+{{ if not .SeparateDescriptionFile }}
 {{ .Question.GetFormattedContent }}
+{{ end }}
 {{ .BlockCommentEnd }}
 {{ end }}
 {{ block "beforeMarker" . }}{{ end }}
@@ -36,16 +37,17 @@ const contentTemplate = `
 `
 
 type contentData struct {
-	Question          *leetcode.QuestionData
-	Author            string
-	Time              string
-	LineComment       string
-	BlockCommentStart string
-	BlockCommentEnd   string
-	CodeBeginMarker   string
-	CodeEndMarker     string
-	Code              string
-	NeedsDefinition   bool
+	Question                *leetcode.QuestionData
+	Author                  string
+	Time                    string
+	LineComment             string
+	BlockCommentStart       string
+	BlockCommentEnd         string
+	CodeBeginMarker         string
+	CodeEndMarker           string
+	Code                    string
+	NeedsDefinition         bool
+	SeparateDescriptionFile bool
 }
 
 var validBlocks = map[string]bool{
