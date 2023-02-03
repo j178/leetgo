@@ -93,7 +93,10 @@ func (c *sqliteCache) Outdated() bool {
 	if err != nil {
 		return true
 	}
-	st, _ := db.Prepare("select timestamp from lastUpdate")
+	st, e := db.Prepare("select timestamp from lastUpdate")
+	if e != nil {
+		return true
+	}
 	var ts int64
 	err = st.QueryRow().Scan(&ts)
 	if err != nil {
