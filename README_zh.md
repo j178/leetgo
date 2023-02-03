@@ -233,7 +233,9 @@ editor:
 
 - 从浏览器中直接读取。
   
-  这是最方便的方法，也是默认的行为。目前支持 Chrome 和 FireFox，如果你需要其他浏览器的支持，请告诉我们~
+  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox 和 Safari[^1]。
+
+  如果你需要其他浏览器的支持，请告诉我们~
 
   ```yaml
   leetcode:
@@ -344,3 +346,5 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 - https://github.com/clearloop/leetcode-cli
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
+
+[^1]: 使用 Safari 的用户注意，你需要赋予使用 `leetgo` 的终端 App `全盘访问`的权限。
