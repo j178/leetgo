@@ -66,22 +66,22 @@ func (c *jsonCache) load() {
 			}(time.Now())
 			err := c.doLoad()
 			if err != nil {
-				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`", "err", err)
+				hclog.L().Error("failed to load cache, try updating with `leetgo cache update`", "err", err)
 				return
 			}
-			c.checkUpdateTime()
+			if c.Outdated() {
+				hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
+			}
 		},
 	)
 }
 
-func (c *jsonCache) checkUpdateTime() {
+func (c *jsonCache) Outdated() bool {
 	stat, err := os.Stat(c.path)
 	if os.IsNotExist(err) {
-		return
+		return true
 	}
-	if time.Since(stat.ModTime()) >= 14*24*time.Hour {
-		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
-	}
+	return time.Since(stat.ModTime()) >= 14*24*time.Hour
 }
 
 func (c *jsonCache) Update() error {

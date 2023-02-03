@@ -126,7 +126,7 @@ leetcode:
 func createQuestionCache() error {
 	c := leetcode.NewClient()
 	cache := leetcode.GetCache(c)
-	if utils.IsExist(cache.CacheFile()) {
+	if !cache.Outdated() {
 		return nil
 	}
 	err := cache.Update()

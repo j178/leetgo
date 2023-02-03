@@ -7,11 +7,12 @@ import (
 )
 
 type QuestionsCache interface {
+	CacheFile() string
 	GetBySlug(slug string) *QuestionData
 	GetById(id string) *QuestionData
 	GetAllQuestions() []*QuestionData
+	Outdated() bool
 	Update() error
-	CacheFile() string
 }
 
 func GetCache(c Client) QuestionsCache {

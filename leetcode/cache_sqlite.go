@@ -77,33 +77,32 @@ func (c *sqliteCache) load() {
 			var err error
 			c.db, err = sql.Open("sqlite3", c.path)
 			if err != nil {
-				hclog.L().Warn("failed to load cache, try updating with `leetgo cache update`")
+				hclog.L().Error("failed to load cache, try updating with `leetgo cache update`")
 				return
 			}
-			c.checkUpdateTime()
+			if c.Outdated() {
+				hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
+			}
 		},
 	)
 }
 
-func (c *sqliteCache) checkUpdateTime() {
-	if c.db == nil {
-		return
-	}
-	st, err := c.db.Prepare("select timestamp from lastUpdate")
+func (c *sqliteCache) Outdated() bool {
+	// Cannot use c.load() here, because it will cause a deadlock.
+	db, err := sql.Open("sqlite3", c.path)
 	if err != nil {
-		return
+		return true
 	}
+	st, _ := db.Prepare("select timestamp from lastUpdate")
 	var ts int64
 	err = st.QueryRow().Scan(&ts)
 	if err != nil {
-		return
+		return true
 	}
-	if time.Since(time.Unix(ts, 0)) >= 14*24*time.Hour {
-		hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
-	}
+	return time.Since(time.Unix(ts, 0)) >= 14*24*time.Hour
 }
 
-func (c *sqliteCache) updateTime() error {
+func (c *sqliteCache) updateLastUpdate() error {
 	st, err := c.db.Prepare("update lastUpdate set timestamp = ? ")
 	if err != nil {
 		return err
@@ -313,7 +312,7 @@ func (c *sqliteCache) Update() error {
 		all = all[size:]
 	}
 
-	err = c.updateTime()
+	err = c.updateLastUpdate()
 	if err != nil {
 		return err
 	}
