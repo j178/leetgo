@@ -235,10 +235,8 @@ There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
   
-  Currently, `leetgo` supports Chrome, FireFox, and Safari*.
+  Currently, `leetgo` supports Chrome, FireFox, and Safari[^1].
   If you want to support other browsers, please let us know!
-
-  *For Safari on MacOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
 
   ```yaml
   leetcode:
@@ -352,3 +350,5 @@ Here are some awesome projects that inspired me to create this project:
 - https://github.com/clearloop/leetcode-cli
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
+
+[^1] For Safari on MacOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
