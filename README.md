@@ -351,4 +351,4 @@ Here are some awesome projects that inspired me to create this project:
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
 
-[^1] For Safari on MacOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
+[^1]: For Safari on MacOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
