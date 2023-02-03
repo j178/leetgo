@@ -14,6 +14,8 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
+var cacheExt = ".json"
+
 type jsonCache struct {
 	path     string
 	client   Client
@@ -26,18 +28,18 @@ func newCache(path string, c Client) QuestionsCache {
 	return &jsonCache{path: path, client: c}
 }
 
-func (c *jsonCache) GetCacheFile() string {
-	return c.path + ".json"
+func (c *jsonCache) CacheFile() string {
+	return c.path
 }
 
 func (c *jsonCache) doLoad() error {
 	c.slugs = make(map[string]*QuestionData)
 	c.frontIds = make(map[string]*QuestionData)
 
-	if _, err := os.Stat(c.GetCacheFile()); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(c.path); errors.Is(err, os.ErrNotExist) {
 		return err
 	}
-	s, err := os.ReadFile(c.GetCacheFile())
+	s, err := os.ReadFile(c.path)
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func (c *jsonCache) load() {
 	c.once.Do(
 		func() {
 			defer func(now time.Time) {
-				hclog.L().Trace("cache loaded", "path", c.GetCacheFile(), "elpased", time.Since(now))
+				hclog.L().Trace("cache loaded", "path", c.path, "elapsed", time.Since(now))
 			}(time.Now())
 			err := c.doLoad()
 			if err != nil {
@@ -73,7 +75,7 @@ func (c *jsonCache) load() {
 }
 
 func (c *jsonCache) checkUpdateTime() {
-	stat, err := os.Stat(c.GetCacheFile())
+	stat, err := os.Stat(c.path)
 	if os.IsNotExist(err) {
 		return
 	}
@@ -83,7 +85,7 @@ func (c *jsonCache) checkUpdateTime() {
 }
 
 func (c *jsonCache) Update() error {
-	err := utils.CreateIfNotExists(c.GetCacheFile(), false)
+	err := utils.CreateIfNotExists(c.path, false)
 	if err != nil {
 		return err
 	}
@@ -92,7 +94,7 @@ func (c *jsonCache) Update() error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(c.GetCacheFile())
+	f, err := os.Create(c.path)
 	if err != nil {
 		return err
 	}
@@ -102,7 +104,7 @@ func (c *jsonCache) Update() error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.GetCacheFile())
+	hclog.L().Info("cache updated", "path", c.path)
 	return nil
 }
 

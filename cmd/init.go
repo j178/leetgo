@@ -40,7 +40,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = createQuestionDB()
+		err = createQuestionCache()
 		return err
 	},
 }
@@ -91,7 +91,7 @@ func createConfigFiles(dir string) error {
 		hclog.L().Info("global config file created", "file", globalFile)
 	}
 
-	projectFile := filepath.Join(dir, cfg.ProjectConfigFilename())
+	projectFile := filepath.Join(dir, config.ProjectConfigFilename)
 	f, err := os.Create(projectFile)
 	if err != nil {
 		return err
@@ -123,10 +123,10 @@ leetcode:
 	return nil
 }
 
-func createQuestionDB() error {
+func createQuestionCache() error {
 	c := leetcode.NewClient()
 	cache := leetcode.GetCache(c)
-	if utils.IsExist(cache.GetCacheFile()) {
+	if utils.IsExist(cache.CacheFile()) {
 		return nil
 	}
 	err := cache.Update()

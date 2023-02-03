@@ -21,8 +21,6 @@ var (
 	date    = "unknown"
 )
 
-const website = "https://github.com/j178/leetgo"
-
 func buildVersion() string {
 	result := version
 	if commit != "" {
@@ -42,7 +40,7 @@ var rootCmd = &cobra.Command{
 	Use:           config.CmdName,
 	Short:         "Leetcode",
 	Long:          "Leetcode friend for geek.",
-	Version:       buildVersion() + "\n\n" + website,
+	Version:       buildVersion() + "\n\n" + config.ProjectURL,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

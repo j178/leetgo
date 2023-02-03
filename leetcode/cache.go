@@ -10,15 +10,15 @@ type QuestionsCache interface {
 	GetBySlug(slug string) *QuestionData
 	GetById(id string) *QuestionData
 	GetAllQuestions() []*QuestionData
-	GetCacheFile() string
 	Update() error
+	CacheFile() string
 }
 
 func GetCache(c Client) QuestionsCache {
 	once.Do(
 		func() {
 			cfg := config.Get()
-			lazyCache = newCache(cfg.LeetCodeCacheBaseName(), c)
+			lazyCache = newCache(cfg.QuestionCacheFile(cacheExt), c)
 		},
 	)
 	return lazyCache

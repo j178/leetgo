@@ -16,14 +16,15 @@ import (
 )
 
 const (
-	CmdName                   = "leetgo"
-	globalConfigFile          = "config.yaml"
-	projectConfigFilename     = CmdName + ".yaml"
-	leetcodeCacheFileBaseName = "leetcode-questions"
-	stateFilename             = "state.json"
-	CodeBeginMarker           = "@lc code=begin"
-	CodeEndMarker             = "@lc code=end"
-	GoTestUtilsModPath        = "github.com/j178/leetgo/testutils/go"
+	CmdName               = "leetgo"
+	globalConfigFile      = "config.yaml"
+	ProjectConfigFilename = CmdName + ".yaml"
+	questionCacheBaseName = "leetcode-questions"
+	stateFilename         = "state.json"
+	CodeBeginMarker       = "@lc code=begin"
+	CodeEndMarker         = "@lc code=end"
+	GoTestUtilsModPath    = "github.com/j178/leetgo/testutils/go"
+	ProjectURL            = "https://github.com/j178/leetgo"
 )
 
 var (
@@ -135,7 +136,7 @@ func (c *Config) ProjectRoot() string {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
 		for {
-			if utils.IsExist(filepath.Join(dir, projectConfigFilename)) {
+			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
@@ -151,19 +152,15 @@ func (c *Config) ProjectRoot() string {
 }
 
 func (c *Config) ProjectConfigFile() string {
-	return filepath.Join(c.ProjectRoot(), projectConfigFilename)
-}
-
-func (c *Config) ProjectConfigFilename() string {
-	return projectConfigFilename
+	return filepath.Join(c.ProjectRoot(), ProjectConfigFilename)
 }
 
 func (c *Config) StateFile() string {
 	return filepath.Join(c.CacheDir(), stateFilename)
 }
 
-func (c *Config) LeetCodeCacheBaseName() string {
-	return filepath.Join(c.CacheDir(), leetcodeCacheFileBaseName)
+func (c *Config) QuestionCacheFile(ext string) string {
+	return filepath.Join(c.CacheDir(), questionCacheBaseName+ext)
 }
 
 func (c *Config) Write(w io.Writer, withComments bool) error {
@@ -336,7 +333,7 @@ func Load(init bool) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				hclog.L().Warn(
-					fmt.Sprintf("%s not found, use global config only", projectConfigFilename),
+					fmt.Sprintf("%s not found, use global config only", ProjectConfigFilename),
 					"file",
 					cfg.GlobalConfigFile(),
 				)
