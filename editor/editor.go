@@ -24,6 +24,7 @@ var editors = map[string]Opener{
 	"none":   &noneEditor{},
 	"custom": &customEditor{},
 	"vim":    &vim{},
+	"neovim": &vim{command: "nvim"},
 	"vscode": &commonMultiEditor{commonEditor{command: "code"}},
 	"goland": &commonEditor{command: "goland"},
 }
