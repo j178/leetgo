@@ -9,15 +9,17 @@ import (
 	"github.com/j178/leetgo/lang"
 )
 
-type vim struct{}
+type vim struct {
+	command string
+}
 
 func (e *vim) args(file lang.FileOutput) []string {
 	return []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)}
 }
 
 func (e *vim) Open(file lang.FileOutput) error {
-	hclog.L().Info("opening files with vim")
-	return runCmd("vim", e.args(file), file.Path)
+	hclog.L().Info("opening file", "command", e.command)
+	return runCmd(e.command, e.args(file), file.Path)
 }
 
 func (e *vim) OpenMulti(files ...lang.FileOutput) error {
@@ -25,6 +27,6 @@ func (e *vim) OpenMulti(files ...lang.FileOutput) error {
 	for i, f := range files {
 		paths[i] = f.Path
 	}
-	hclog.L().Info("opening files with vim")
-	return runCmd("vim", e.args(files[0]), paths...)
+	hclog.L().Info("opening files", "command", e.command)
+	return runCmd(e.command, e.args(files[0]), paths...)
 }
