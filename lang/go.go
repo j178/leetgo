@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	goTemplate = `
+	goTestFileTemplate = `
 package main
 
 import (
@@ -199,8 +199,8 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 		funcName = q.MetaData.Name
 		testFuncName = "RunTestsWithString"
 	}
-	content := testFileHeader
-	content += fmt.Sprintf(goTemplate, config.GoTestUtilsModPath, testcases, funcName, testFuncName, funcName)
+	content := fmt.Sprintf(testFileHeader, g.lineComment)
+	content += fmt.Sprintf(goTestFileTemplate, config.GoTestUtilsModPath, testcases, funcName, testFuncName, funcName)
 	return content
 }
 

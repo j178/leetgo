@@ -41,7 +41,7 @@ const (
 	outputFileStreamName  = "ofs"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
-	cppTemplate           = `#include <bits/stdc++.h>
+	cppTestFileTemplate   = `#include <bits/stdc++.h>
 using namespace std;
 
 // definitions
@@ -191,7 +191,11 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 		callCode += fmt.Sprintf("\t%s.ignore(); %s << '[';\n", inputFileStreamName, outputFileStreamName)
 		callCode += fmt.Sprintf("\tfor (auto &&%s : %s) {\n", systemDesignFuncName, systemDesignFuncNames)
 		/* iterate thru all function calls */ {
-			callCode += fmt.Sprintf("\t\t%s.ignore(); auto hash_value = hash<string>()(%s);\n", inputFileStreamName, systemDesignFuncName)
+			callCode += fmt.Sprintf(
+				"\t\t%s.ignore(); auto hash_value = hash<string>()(%s);\n",
+				inputFileStreamName,
+				systemDesignFuncName,
+			)
 			/* operations in constructor function call */ {
 				callCode += fmt.Sprintf("\t\tif (hash_value == hash_value_%s) {\n", className)
 				generateParamScanningCode(q.MetaData.Constructor.Params)
@@ -224,7 +228,8 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 					callCode += fmt.Sprintf(
 						"\t\t\t%s;\n\t\t\t%s << \"null,\";\n\t\t}",
 						functionCall,
-						outputFileStreamName)
+						outputFileStreamName,
+					)
 				}
 			}
 			callCode += fmt.Sprintf(
@@ -258,8 +263,9 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) string {
 }
 
 func (c cpp) generateTest(q *leetcode.QuestionData, testcases string) string {
-	return testFileHeader + fmt.Sprintf(
-		cppTemplate,
+	content := fmt.Sprintf(testFileHeader, c.lineComment)
+	content += fmt.Sprintf(
+		cppTestFileTemplate,
 		structDefi,
 		helperFuncs,
 		c.generateScanCode(q),
@@ -267,6 +273,7 @@ func (c cpp) generateTest(q *leetcode.QuestionData, testcases string) string {
 		c.generateCallCode(q),
 		c.generatePrintCode(q),
 	)
+	return content
 }
 
 func (c cpp) getJudgeResult(dimCnt int, returnType string, expectedOutput string, actualOutput string) (eq bool) {
