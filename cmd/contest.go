@@ -148,7 +148,11 @@ leetgo contest left w330
 		if err != nil {
 			return err
 		}
-		user, _ := whoami(c)
+		user, err := c.GetUserStatus()
+		if err != nil {
+			user = &leetcode.UserStatus{}
+		}
+
 		if !contest.HasFinished() && !contest.Registered {
 			register := true
 			if !viper.GetBool("yes") {
@@ -156,7 +160,7 @@ leetgo contest left w330
 					Message: fmt.Sprintf(
 						"Register for %s as %s?",
 						colorBlue.Sprint(contest.Title),
-						colorCyan.Sprint(user),
+						colorCyan.Sprint(user.Whoami(c)),
 					),
 				}
 				err := survey.AskOne(&prompt, &register)
@@ -169,7 +173,7 @@ leetgo contest left w330
 				if err != nil {
 					return err
 				}
-				hclog.L().Info("registered", "contest", contest.Title, "user", user)
+				hclog.L().Info("registered", "contest", contest.Title, "user", user.Whoami(c))
 			} else {
 				return nil
 			}
@@ -229,14 +233,17 @@ var unregisterCmd = &cobra.Command{
 		if contest.HasFinished() {
 			return fmt.Errorf("contest %s has finished", contest.Title)
 		}
-		user, _ := whoami(c)
+		user, err := c.GetUserStatus()
+		if err != nil {
+			return err
+		}
 		unregister := true
 		if !viper.GetBool("yes") {
 			prompt := survey.Confirm{
 				Message: fmt.Sprintf(
 					"Unregister from %s as %s?",
 					colorBlue.Sprint(contest.Title),
-					colorCyan.Sprint(user),
+					colorCyan.Sprint(user.Whoami(c)),
 				),
 			}
 			err = survey.AskOne(&prompt, &unregister)
@@ -249,7 +256,7 @@ var unregisterCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			hclog.L().Info("unregistered", "contest", contest.Title, "user", user)
+			hclog.L().Info("unregistered", "contest", contest.Title, "user", user.Whoami(c))
 		}
 
 		return nil
