@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"net/url"
 	"strings"
 	"time"
 
@@ -79,8 +78,12 @@ leetgo test w330/`,
 			return fmt.Errorf("local test not supported for %s", cfg.Code.Lang)
 		}
 
-		testLimiter := utils.NewRateLimiter(10 * time.Second)
-		submitLimiter := utils.NewRateLimiter(10 * time.Second)
+		user, err := c.GetUserStatus()
+		if err != nil {
+			user = &leetcode.UserStatus{}
+		}
+		testLimiter := newLimiter(user)
+		submitLimiter := newLimiter(user)
 
 		for _, q := range qs {
 			localPassed, remotePassed := true, true
@@ -92,6 +95,7 @@ leetgo test w330/`,
 				}
 			}
 			if runRemotely {
+				hclog.L().Info("running test remotely", "question", q.TitleSlug, "user", user.Whoami(c))
 				result, err := runTestRemotely(cmd, q, c, gen, testLimiter)
 				if err != nil {
 					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
@@ -140,8 +144,6 @@ func runTestRemotely(
 	}
 	casesStr := strings.Join(cases, "\n")
 
-	user, _ := whoami(c)
-	hclog.L().Info("running test remotely", "question", q.TitleSlug, "user", user)
 	spin := newSpinner(cmd.ErrOrStderr())
 	spin.Suffix = " Running test..."
 	spin.Reverse()
@@ -189,6 +191,13 @@ func waitResult(c leetcode.Client, submissionId string) (
 	}
 }
 
+func newLimiter(user *leetcode.UserStatus) *utils.RateLimiter {
+	if user.IsPremium {
+		return utils.NewRateLimiter(1 * time.Second)
+	}
+	return utils.NewRateLimiter(10 * time.Second)
+}
+
 func newSpinner(w io.Writer) *spinner.Spinner {
 	spin := spinner.New(
 		spinner.CharSets[11],
@@ -198,25 +207,4 @@ func newSpinner(w io.Writer) *spinner.Spinner {
 		spinner.WithColor("fgHiCyan"),
 	)
 	return spin
-}
-
-var userCache map[leetcode.Client]string
-
-func init() {
-	userCache = make(map[leetcode.Client]string)
-}
-
-func whoami(c leetcode.Client) (string, error) {
-	if userCache[c] == "" {
-		u, err := c.GetUserStatus()
-		if err != nil {
-			return "", err
-		}
-		if !u.IsSignedIn {
-			return "", leetcode.ErrUserNotSignedIn
-		}
-		uri, _ := url.Parse(c.BaseURI())
-		userCache[c] = u.Username + "@" + uri.Host
-	}
-	return userCache[c], nil
 }
