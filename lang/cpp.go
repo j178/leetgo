@@ -13,17 +13,12 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 )
 
 type cpp struct {
 	baseLang
 }
-
-//go:embed cpp/LC_DS.h
-var structDefi string
-
-//go:embed cpp/LC_IO.h
-var helperFuncs string
 
 var cppTypes = map[string]string{
 	"void":     "void",
@@ -42,16 +37,12 @@ const (
 	outputFileStreamName  = "ofs"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
-	cppTestFileTemplate   = `#include <bits/stdc++.h>
+	cppTestFileTemplate   = `#include "LC_IO.h"
+
+#include <bits/stdc++.h>
 using namespace std;
 
-// definitions
-%s
-
 #include "solution.h"
-
-// helper funcs
-%s
 
 // main func
 int main(int argc, char **argv) {
@@ -136,11 +127,9 @@ func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
 func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 	if q.MetaData.SystemDesign {
 		return fmt.Sprintf(
-			"\t%s %s; %s >> %s;\n",
-			c.getVectorTypeName(1, "string"),
-			systemDesignFuncNames,
-			inputFileStreamName,
-			systemDesignFuncNames,
+			"\t%s %s\n",
+			c.getDeclCodeForType(1, "string", systemDesignFuncNames),
+			c.getScanCodeForType(1, "string", systemDesignFuncNames, inputFileStreamName),
 		)
 	}
 
@@ -267,8 +256,6 @@ func (c cpp) generateTest(q *leetcode.QuestionData, testcases string) string {
 	content := fmt.Sprintf(testFileHeader, c.lineComment)
 	content += fmt.Sprintf(
 		cppTestFileTemplate,
-		structDefi,
-		helperFuncs,
 		c.generateScanCode(q),
 		c.generateInitCode(q),
 		c.generateCallCode(q),
@@ -308,13 +295,13 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	testFile := filepath.Join("cpp/", baseFilename, "solution.cpp")
-	execFile := filepath.Join("cpp/", baseFilename, "solution.exec")
-	inputFile := filepath.Join("cpp/", baseFilename, "input.txt")
-	outputFile := filepath.Join("cpp/", baseFilename, "output.txt")
+	testFile := filepath.Join(dir, baseFilename, "solution.cpp")
+	execFile := filepath.Join(dir, "solution.exec")
+	inputFile := filepath.Join(dir, baseFilename, "input.txt")
+	outputFile := filepath.Join(dir, baseFilename, "output.txt")
 
 	// compile
-	cmd := exec.Command("g++", "-O2", "-std=c++17", testFile, "-o", execFile)
+	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", dir, "-o", execFile, testFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	compileStart := time.Now()
@@ -467,4 +454,20 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 		Lang:     c,
 		Files:    files,
 	}, nil
+}
+
+//go:embed cpp/LC_IO.h
+var headerContent string
+
+func (c cpp) Initialize(outDir string) error {
+	headerPath := filepath.Join(outDir, "LC_IO.h")
+	if ok, err := tryWrite(headerPath, headerContent); !ok {
+		return err
+	}
+	return nil
+}
+
+func (c cpp) HasInitialized(outDir string) (bool, error) {
+	headerPath := filepath.Join(outDir, "LC_IO.h")
+	return utils.IsExist(headerPath), nil
 }
