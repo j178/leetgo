@@ -63,7 +63,7 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 			"%s %s in %s",
 			mark,
 			ct.Title,
-			durafmt.Parse(ct.TimeTillStart()).LimitToUnit("seconds"),
+			durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2),
 		)
 	}
 	var idx int
@@ -91,7 +91,7 @@ func waitContestStart(cmd *cobra.Command, ct *leetcode.Contest) error {
 		s.Suffix = fmt.Sprintf(
 			" %s begins in %s, waiting...",
 			colorBlue.Sprint(ct.Title),
-			colorFaint.Sprint(durafmt.Parse(ct.TimeTillStart()).LimitToUnit("seconds")),
+			colorFaint.Sprint(durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2)),
 		)
 	}
 	spin.Start()
