@@ -60,10 +60,10 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 			mark = "√"
 		}
 		contestNames[i] = fmt.Sprintf(
-			"%s %s in %s",
+			"%s %s at %s",
 			mark,
 			ct.Title,
-			durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2),
+			time.Unix(ct.StartTime, 0).Format("2006/01/02 15:04:05"),
 		)
 	}
 	var idx int
