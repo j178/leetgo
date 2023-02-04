@@ -13,21 +13,13 @@ type vim struct {
 	command string
 }
 
-func (e *vim) cmd() string {
-	if e.command == "" {
-		e.command = "vim"
-	}
-
-	return e.command
-}
-
 func (e *vim) args(file lang.FileOutput) []string {
 	return []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)}
 }
 
 func (e *vim) Open(file lang.FileOutput) error {
-	hclog.L().Info("opening files with", "editor", e.cmd())
-	return runCmd(e.cmd(), e.args(file), file.Path)
+	hclog.L().Info("opening file", "command", e.command)
+	return runCmd(e.command, e.args(file), file.Path)
 }
 
 func (e *vim) OpenMulti(files ...lang.FileOutput) error {
@@ -35,6 +27,6 @@ func (e *vim) OpenMulti(files ...lang.FileOutput) error {
 	for i, f := range files {
 		paths[i] = f.Path
 	}
-	hclog.L().Info("opening files with", "editor", e.cmd())
-	return runCmd(e.cmd(), e.args(files[0]), paths...)
+	hclog.L().Info("opening files", "command", e.command)
+	return runCmd(e.command, e.args(files[0]), paths...)
 }
