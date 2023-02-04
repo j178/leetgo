@@ -180,7 +180,8 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 	// Below code is adapted from https://github.com/baoliay2008/lccn_predictor/blob/main/app/crawler/contest.py#L115
 	var html []byte
 	req, _ := c.http.New().Get("/contest/").Request()
-	_, err := c.send(req, &html, nil)
+	// Cannot c.send() here, sending with cookies can be easily rejected.
+	_, err := c.http.Do(req, &html, nil)
 	if err != nil {
 		return nil, err
 	}

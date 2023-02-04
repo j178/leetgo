@@ -29,7 +29,7 @@ const (
 
 var (
 	globalCfg *Config
-	Debug     = os.Getenv("DEBUG") != ""
+	Debug     = os.Getenv("DEBUG") == "1"
 )
 
 type (
