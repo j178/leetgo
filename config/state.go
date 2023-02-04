@@ -5,6 +5,8 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
+
+	"github.com/j178/leetgo/utils"
 )
 
 // Small project state management.
@@ -54,9 +56,14 @@ func SaveState(s State) {
 	states := loadStates()
 	states[projectRoot] = s
 
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	err := utils.CreateIfNotExists(file, false)
 	if err != nil {
 		hclog.L().Error("failed to create state file", "err", err)
+		return
+	}
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0o644)
+	if err != nil {
+		hclog.L().Error("failed to open state file", "err", err)
 		return
 	}
 	enc := json.NewEncoder(f)
