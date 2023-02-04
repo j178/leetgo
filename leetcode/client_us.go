@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 
@@ -176,53 +177,60 @@ func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug strin
 }
 
 func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
-	// ContestNode does not have `registered` field
-	// We have to call `/contest/api/info/slug` to get that info.
-	query := `
-{
-    upcomingContests {
-        title
-        titleSlug
-        description
-        duration
-        startTime
-        originStartTime
-        isVirtual
-        containsPremium
-		__typename
-    }
-}
-`
+	// Below code is adapted from https://github.com/baoliay2008/lccn_predictor/blob/main/app/crawler/contest.py#L115
+	var html []byte
+	req, _ := c.http.New().Get("/contest/").Request()
+	_, err := c.send(req, &html, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(html) == 0 {
+		return nil, errors.New("get upcoming contests: empty response")
+	}
+	buildId := ""
+	found := regexp.MustCompile(`"buildId":\s*"(.*?)",`).FindSubmatch(html)
+	if len(found) == 2 {
+		buildId = string(found[1])
+	} else {
+		return nil, errors.New("get upcoming contests: cannot find buildId")
+	}
+
+	path := "_next/data/" + buildId + "/contest.json"
 	var resp gjson.Result
-	_, err := c.graphqlPost(
-		graphqlRequest{query: query}, &resp, nil,
-	)
+	_, err = c.jsonGet(path, nil, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
 	var contests []*Contest
-	for _, contestInfo := range resp.Get("data.upcomingContests").Array() {
-		slug := contestInfo.Get("titleSlug").Str
-		ct, err := c.GetContest(slug)
-		var registered bool
-		if err == nil {
-			registered = ct.Registered
+	for _, query := range resp.Get("pageProps.dehydratedState.queries").Array() {
+		if query.Get("state.data.topTwoContests").Exists() {
+			topTwo := query.Get("state.data.topTwoContests").Array()
+			for _, contestInfo := range topTwo {
+				slug := contestInfo.Get("titleSlug").Str
+				// ContestNode does not have `registered` field
+				// We have to call `/contest/api/info/slug` to get that info.
+				ct, err := c.GetContest(slug)
+				var registered bool
+				if err == nil {
+					registered = ct.Registered
+				}
+				contests = append(
+					contests, &Contest{
+						client:          c,
+						TitleSlug:       slug,
+						Title:           contestInfo.Get("title").Str,
+						StartTime:       contestInfo.Get("startTime").Int(),
+						Duration:        int(contestInfo.Get("duration").Int()),
+						Id:              ct.Id,
+						OriginStartTime: ct.OriginStartTime,
+						IsVirtual:       ct.IsVirtual,
+						Description:     ct.Description,
+						Registered:      registered,
+					},
+				)
+			}
+			break
 		}
-
-		contests = append(
-			contests, &Contest{
-				client:          c,
-				Id:              int(contestInfo.Get("id").Int()),
-				TitleSlug:       slug,
-				Title:           contestInfo.Get("title").Str,
-				StartTime:       contestInfo.Get("startTime").Int(),
-				OriginStartTime: contestInfo.Get("originStartTime").Int(),
-				Duration:        int(contestInfo.Get("duration").Int()),
-				IsVirtual:       contestInfo.Get("isVirtual").Bool(),
-				Description:     contestInfo.Get("description").Str,
-				Registered:      registered,
-			},
-		)
 	}
 	sort.Slice(
 		contests, func(i, j int) bool {
