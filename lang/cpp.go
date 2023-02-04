@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+
 	"github.com/j178/leetgo/leetcode"
 )
 
@@ -349,7 +350,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		f.Sync()
+		err = f.Sync()
 		if err != nil {
 			return false, err
 		}
