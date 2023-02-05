@@ -219,11 +219,12 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 				return false
 			},
 		),
-		retry.Attempts(3),
+		retry.Delay(1*time.Second),
+		retry.MaxDelay(5*time.Second),
 		retry.LastErrorOnly(true),
 		retry.OnRetry(
 			func(n uint, err error) {
-				hclog.L().Debug("retry", "attempt", n, "error", err)
+				hclog.L().Info("retry", "url", req.URL.String(), "attempt", n, "error", err)
 			},
 		),
 	)
