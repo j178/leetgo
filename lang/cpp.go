@@ -33,7 +33,7 @@ var cppTypes = map[string]string{
 const (
 	objectName            = "obj"
 	returnName            = "res"
-	inputFileStreamName   = "ifs"
+	inputFileStreamName   = "cin"
 	outputFileStreamName  = "ofs"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
@@ -46,16 +46,11 @@ using namespace std;
 
 // main func
 int main(int argc, char **argv) {
-	if (argc != 3) {
+	if (argc != 2) {
 		return 1;
 	}
 
-	ifstream ` + inputFileStreamName + `(argv[1]);
-	if (!` + inputFileStreamName + `.is_open()) {
-		return 1;
-	}
-
-	ofstream ` + outputFileStreamName + `(argv[2]);
+	ofstream ` + outputFileStreamName + `(argv[1]);
 	if (!` + outputFileStreamName + `.is_open()) {
 		return 1;
 	}
@@ -75,7 +70,6 @@ int main(int argc, char **argv) {
 	// delete object
 	delete ` + objectName + `;
 
-	` + inputFileStreamName + `.close();
 	` + outputFileStreamName + `.close();
 	return 0;
 }
@@ -298,7 +292,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	testFile := filepath.Join(dir, baseFilename, "solution.cpp")
 	execFile := filepath.Join(dir, "solution.exec")
 	inputFile := filepath.Join(dir, baseFilename, "input.txt")
-	outputFile := filepath.Join(dir, baseFilename, "output.txt")
+	outputFile := filepath.Join(dir, "output.txt")
 
 	// compile
 	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", dir, "-o", execFile, testFile)
@@ -315,39 +309,34 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 		fmt.Println("Compilation Finished in", elapsed)
 	}
 
-	// execute
-	var argsNum int
-	if q.MetaData.SystemDesign {
-		argsNum = 2
-	} else {
-		argsNum = len(q.MetaData.Params)
+	// parse input.txt
+	filebuffer, err := os.ReadFile(inputFile)
+	if err != nil {
+		return false, err
 	}
-	cases := q.GetTestCases()
-	outputs := q.ParseExampleOutputs()
-	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
-		caseId := i / argsNum
+	inputs, outputs := c.parseGeneratedTestCases(string(filebuffer))
 
-		// write input file
-		input := strings.Join(cases[i:i+argsNum], "\n")
-		f, err := os.Create(inputFile)
-		if err != nil {
-			return false, err
-		}
-		_, err = f.WriteString(input)
-		if err != nil {
-			return false, err
-		}
-		err = f.Sync()
-		if err != nil {
-			return false, err
+	// execute
+	for caseId := 0; caseId < len(inputs); caseId++ {
+		// setup input & output
+		input := inputs[caseId]
+		expectedOutput := outputs[caseId]
+		if len(expectedOutput) == 0 {
+			expectedOutput = "[Not Implemented] to be retrieved from LC online testing..."
 		}
 
-		// execute test program
+		// setup command
 		timeLimit := 3000 * time.Millisecond
 		ctx, cancel := context.WithTimeout(context.Background(), timeLimit)
 		defer cancel()
+		cmd = exec.CommandContext(ctx, execFile, outputFile)
+		cmd.Stdin = strings.NewReader(input)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		// execute test program
 		executeStart := time.Now()
-		err = exec.CommandContext(ctx, execFile, inputFile, outputFile).Run()
+		err = cmd.Run()
 		elapsed := time.Since(executeStart)
 		if ctx.Err() != nil {
 			blue.Print("[TLE]")
@@ -365,7 +354,6 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		expectedOutput := outputs[caseId]
 		actualOutput := string(filebuffer)
 
 		// judge & show result
@@ -408,6 +396,7 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	codeFile := filepath.Join(baseFilename, "solution.h")
 	testFile := filepath.Join(baseFilename, "solution.cpp")
+	inputFile := filepath.Join(baseFilename, "input.txt")
 
 	files := []FileOutput{
 		{
@@ -419,6 +408,11 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 			Path:    testFile,
 			Content: testContent,
 			Type:    TestFile,
+		},
+		{
+			Path:    inputFile,
+			Content: testcaseStr,
+			Type:    InputFile,
 		},
 	}
 
@@ -437,6 +431,7 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	codeFile := filepath.Join(baseFilename, "solution.h")
 	testFile := filepath.Join(baseFilename, "solution.cpp")
+	inputFile := filepath.Join(baseFilename, "input.txt")
 
 	files := []FileOutput{
 		{
@@ -446,6 +441,10 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 		{
 			Path: testFile,
 			Type: TestFile,
+		},
+		{
+			Path: inputFile,
+			Type: InputFile,
 		},
 	}
 

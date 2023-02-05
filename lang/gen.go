@@ -45,6 +45,7 @@ const (
 	TestFile
 	DocFile
 	OtherFile
+	InputFile
 )
 
 func (r *GenerateResult) GetCodeFile() *FileOutput {
@@ -179,6 +180,19 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 		)
 	}
 	return strings.Join(caseAndOutputs, "\n\n")
+}
+
+func (l baseLang) parseGeneratedTestCases(testCaseStr string) (inputs []string, outputs []string) {
+	testCases := strings.Split(testCaseStr, testCaseInputMark)
+	for _, testCase := range testCases {
+		inputOutput := strings.Split(testCase, testCaseOutputMark)
+		if len(inputOutput) != 2 {
+			continue
+		}
+		inputs = append(inputs, strings.TrimSpace(inputOutput[0]))
+		outputs = append(outputs, strings.TrimSpace(inputOutput[1]))
+	}
+	return
 }
 
 func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
