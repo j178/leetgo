@@ -13,6 +13,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/j178/leetgo/leetcode"
+	cppTestUtils "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -37,7 +38,7 @@ const (
 	outputStreamName      = "ofs"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
-	cppTestFileTemplate   = `#include "LC_IO.h"
+	cppTestFileTemplate   = `#include "` + cppTestUtils.HeaderName + `"
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -462,18 +463,15 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}, nil
 }
 
-//go:embed cpp/LC_IO.h
-var headerContent string
-
 func (c cpp) Initialize(outDir string) error {
-	headerPath := filepath.Join(outDir, "LC_IO.h")
-	if ok, err := tryWrite(headerPath, headerContent); !ok {
+	headerPath := filepath.Join(outDir, cppTestUtils.HeaderName)
+	if _, err := tryWrite(headerPath, cppTestUtils.HeaderContent); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (c cpp) HasInitialized(outDir string) (bool, error) {
-	headerPath := filepath.Join(outDir, "LC_IO.h")
+	headerPath := filepath.Join(outDir, cppTestUtils.HeaderName)
 	return utils.IsExist(headerPath), nil
 }
