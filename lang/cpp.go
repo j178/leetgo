@@ -33,8 +33,8 @@ var cppTypes = map[string]string{
 const (
 	objectName            = "obj"
 	returnName            = "res"
-	inputFileStreamName   = "cin"
-	outputFileStreamName  = "ofs"
+	inputStreamName       = "cin"
+	outputStreamName      = "ofs"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
 	cppTestFileTemplate   = `#include "LC_IO.h"
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	ofstream ` + outputFileStreamName + `(argv[1]);
-	if (!` + outputFileStreamName + `.is_open()) {
+	ofstream ` + outputStreamName + `(argv[1]);
+	if (!` + outputStreamName + `.is_open()) {
 		return 1;
 	}
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 	// delete object
 	delete ` + objectName + `;
 
-	` + outputFileStreamName + `.close();
+	` + outputStreamName + `.close();
 	return 0;
 }
 `
@@ -123,7 +123,7 @@ func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"\t%s %s\n",
 			c.getDeclCodeForType(1, "string", systemDesignFuncNames),
-			c.getScanCodeForType(1, "string", systemDesignFuncNames, inputFileStreamName),
+			c.getScanCodeForType(1, "string", systemDesignFuncNames, inputStreamName),
 		)
 	}
 
@@ -133,7 +133,7 @@ func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 		scanCode += fmt.Sprintf(
 			"\t%s %s\n",
 			c.getDeclCodeForType(dimCnt, cppType, param.Name),
-			c.getScanCodeForType(dimCnt, cppType, param.Name, inputFileStreamName),
+			c.getScanCodeForType(dimCnt, cppType, param.Name, inputStreamName),
 		)
 	}
 	return scanCode
@@ -157,12 +157,12 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 				callCode += fmt.Sprintf(
 					"\t\t\t%s %s %s.ignore();\n",
 					c.getDeclCodeForType(dimCnt, cppType, param.Name),
-					c.getScanCodeForType(dimCnt, cppType, param.Name, inputFileStreamName),
-					inputFileStreamName,
+					c.getScanCodeForType(dimCnt, cppType, param.Name, inputStreamName),
+					inputStreamName,
 				)
 			}
 		} else {
-			callCode += fmt.Sprintf("\t\t\t%s.ignore();\n", inputFileStreamName)
+			callCode += fmt.Sprintf("\t\t\t%s.ignore();\n", inputStreamName)
 		}
 	}
 
@@ -172,12 +172,12 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 		for _, method := range q.MetaData.Methods {
 			callCode += fmt.Sprintf("\tauto hash_value_%s = hash<string>()(\"%s\");\n", method.Name, method.Name)
 		}
-		callCode += fmt.Sprintf("\t%s.ignore(); %s << '[';\n", inputFileStreamName, outputFileStreamName)
+		callCode += fmt.Sprintf("\t%s.ignore(); %s << '[';\n", inputStreamName, outputStreamName)
 		callCode += fmt.Sprintf("\tfor (auto &&%s : %s) {\n", systemDesignFuncName, systemDesignFuncNames)
 		/* iterate thru all function calls */ {
 			callCode += fmt.Sprintf(
 				"\t\t%s.ignore(); auto hash_value = hash<string>()(%s);\n",
-				inputFileStreamName,
+				inputStreamName,
 				systemDesignFuncName,
 			)
 			/* operations in constructor function call */ {
@@ -189,7 +189,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 					className,
 					c.getParamString(q.MetaData.Constructor.Params),
 				)
-				callCode += fmt.Sprintf("\t\t\t%s << \"null,\";\n\t\t}", outputFileStreamName)
+				callCode += fmt.Sprintf("\t\t\t%s << \"null,\";\n\t\t}", outputStreamName)
 			}
 			/* operations in member function calls */
 			for _, method := range q.MetaData.Methods {
@@ -205,26 +205,26 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 				if returnType != "void" {
 					callCode += fmt.Sprintf(
 						"\t\t\t%s %s << ',';\n\t\t}",
-						c.getPrintCodeForType(dimCnt, returnType, functionCall, outputFileStreamName),
-						outputFileStreamName,
+						c.getPrintCodeForType(dimCnt, returnType, functionCall, outputStreamName),
+						outputStreamName,
 					)
 				} else {
 					callCode += fmt.Sprintf(
 						"\t\t\t%s;\n\t\t\t%s << \"null,\";\n\t\t}",
 						functionCall,
-						outputFileStreamName,
+						outputStreamName,
 					)
 				}
 			}
 			callCode += fmt.Sprintf(
 				" else {\n\t\t\treturn 1;\n\t\t}\n\t\t%s.ignore();\n",
-				inputFileStreamName,
+				inputStreamName,
 			)
 		}
 		callCode += fmt.Sprintf(
 			"\t}\n\t%s.seekp(-1, ios_base::end); %s << ']';\n",
-			outputFileStreamName,
-			outputFileStreamName,
+			outputStreamName,
+			outputStreamName,
 		)
 	} else {
 		callCode = fmt.Sprintf(
@@ -243,7 +243,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) string {
 		return ""
 	}
 	dimCnt, cppType := c.getCppTypeName(q.MetaData.Return.Type)
-	return fmt.Sprintf("\t%s\n", c.getPrintCodeForType(dimCnt, cppType, returnName, outputFileStreamName))
+	return fmt.Sprintf("\t%s\n", c.getPrintCodeForType(dimCnt, cppType, returnName, outputStreamName))
 }
 
 func (c cpp) generateTest(q *leetcode.QuestionData, testcases string) string {
@@ -291,7 +291,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	}
 	testFile := filepath.Join(dir, baseFilename, "solution.cpp")
 	execFile := filepath.Join(dir, "solution.exec")
-	inputFile := filepath.Join(dir, baseFilename, "input.txt")
+	testCasesFile := filepath.Join(dir, baseFilename, "testcases.txt")
 	outputFile := filepath.Join(dir, "output.txt")
 
 	// compile
@@ -310,7 +310,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	}
 
 	// parse input.txt
-	filebuffer, err := os.ReadFile(inputFile)
+	filebuffer, err := os.ReadFile(testCasesFile)
 	if err != nil {
 		return false, err
 	}
@@ -396,7 +396,7 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	codeFile := filepath.Join(baseFilename, "solution.h")
 	testFile := filepath.Join(baseFilename, "solution.cpp")
-	inputFile := filepath.Join(baseFilename, "input.txt")
+	testCasesFile := filepath.Join(baseFilename, "testcases.txt")
 
 	files := []FileOutput{
 		{
@@ -410,9 +410,9 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 			Type:    TestFile,
 		},
 		{
-			Path:    inputFile,
+			Path:    testCasesFile,
 			Content: testcaseStr,
-			Type:    InputFile,
+			Type:    TestCasesFile,
 		},
 	}
 
@@ -431,7 +431,7 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	codeFile := filepath.Join(baseFilename, "solution.h")
 	testFile := filepath.Join(baseFilename, "solution.cpp")
-	inputFile := filepath.Join(baseFilename, "input.txt")
+	testCasesFile := filepath.Join(baseFilename, "testcases.txt")
 
 	files := []FileOutput{
 		{
@@ -443,8 +443,8 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 			Type: TestFile,
 		},
 		{
-			Path: inputFile,
-			Type: InputFile,
+			Path: testCasesFile,
+			Type: TestCasesFile,
 		},
 	}
 

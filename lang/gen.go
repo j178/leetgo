@@ -45,7 +45,7 @@ const (
 	TestFile
 	DocFile
 	OtherFile
-	InputFile
+	TestCasesFile
 )
 
 func (r *GenerateResult) GetCodeFile() *FileOutput {
