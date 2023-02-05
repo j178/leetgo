@@ -283,16 +283,23 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	yellow := color.New(color.FgYellow).Add(color.Bold)
 	blue := color.New(color.FgBlue).Add(color.Bold)
 
-	// get path
+	// manage non-temporary files
 	filenameTmpl := getFilenameTemplate(q, c)
 	baseFilename, err := q.GetFormattedFilename(c.slug, filenameTmpl)
 	if err != nil {
 		return false, err
 	}
 	testFile := filepath.Join(dir, baseFilename, "solution.cpp")
-	execFile := filepath.Join(dir, "solution.exec")
 	testCasesFile := filepath.Join(dir, baseFilename, "testcases.txt")
+
+	// manage temporary files
 	outputFile := filepath.Join(dir, "output.txt")
+	execFile := filepath.Join(dir, "solution.exec")
+	removeTempFiles := func(b bool, err error) (bool, error) {
+		defer os.Remove(outputFile)
+		defer os.Remove(execFile)
+		return b, err
+	}
 
 	// compile
 	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", dir, "-o", execFile, testFile)
@@ -303,7 +310,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	if err != nil {
 		yellow.Print("[CE]")
 		fmt.Println(" Compile Error! :(")
-		return false, err
+		return removeTempFiles(false, err)
 	} else {
 		elapsed := time.Since(compileStart)
 		fmt.Println("Compilation Finished in", elapsed)
@@ -312,7 +319,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 	// parse input.txt
 	filebuffer, err := os.ReadFile(testCasesFile)
 	if err != nil {
-		return false, err
+		return removeTempFiles(false, err)
 	}
 	inputs, outputs := c.parseGeneratedTestCases(string(filebuffer))
 
@@ -352,7 +359,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 		// read test result
 		filebuffer, err := os.ReadFile(outputFile)
 		if err != nil {
-			return false, err
+			return removeTempFiles(false, err)
 		}
 		actualOutput := string(filebuffer)
 
@@ -372,7 +379,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
 		}
 	}
 
-	return true, nil
+	return removeTempFiles(true, nil)
 }
 
 func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
