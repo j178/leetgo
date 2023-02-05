@@ -38,6 +38,7 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
 	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/containerd/console v1.0.3 // indirect
