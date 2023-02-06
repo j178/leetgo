@@ -95,7 +95,7 @@ func NewClient(options ...ClientOption) Client {
 	httpClient := sling.New()
 	httpClient.Add(
 		"User-Agent",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/109.0.1518.78",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
 	)
 	httpClient.Add("Accept-Encoding", "gzip, deflate")
 	httpClient.Add("x-requested-with", "XMLHttpRequest")
