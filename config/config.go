@@ -196,7 +196,6 @@ func Default() *Config {
 								`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
-
 `, GoTestUtilsModPath,
 							),
 						},

@@ -191,7 +191,6 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 	err := retry.Do(
 		func() error {
 			var err error
-			// default error detection
 			resp, err = c.http.Do(req, result, failure)
 			if err != nil {
 				return err

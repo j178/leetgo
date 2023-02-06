@@ -162,11 +162,10 @@ code:
     # Replace some blocks of the generated code
     blocks:
       - name: beforeMarker
-        template: |+
+        template: |
           package main
 
           {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
-
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
