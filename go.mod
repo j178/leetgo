@@ -36,6 +36,9 @@ require (
 replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230203021902-e439c6617a99
 
 require (
+	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a // indirect
+	github.com/Velocidex/ordereddict v0.0.0-20220411103415-79032cf99b1d // indirect
+	github.com/Velocidex/yaml/v2 v2.2.8 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -43,6 +46,7 @@ require (
 	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ini/ini v1.66.4 // indirect
@@ -86,4 +90,5 @@ require (
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	www.velocidex.com/golang/go-ese v0.1.0 // indirect
 )

@@ -234,7 +234,7 @@ editor:
 
 - 从浏览器中直接读取。
   
-  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox 和 Safari[^1]。
+  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox，Safari[^1]，Edge。
 
   如果你需要其他浏览器的支持，请告诉我们~
 
