@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/zellyn/kooky"
 	_ "github.com/zellyn/kooky/browser/chrome"
+	_ "github.com/zellyn/kooky/browser/edge"
 	_ "github.com/zellyn/kooky/browser/firefox"
 	_ "github.com/zellyn/kooky/browser/safari"
 
