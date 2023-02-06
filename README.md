@@ -278,7 +278,8 @@ There are three ways to make cookies available to `leetgo`:
         3963
   ```
 
-**Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
+> **Note**
+> Password authentication is not recommended, and it is not supported by `leetcode.com`.
 
 ## Advanced Usage
 
