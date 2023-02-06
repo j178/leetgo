@@ -64,7 +64,8 @@
 ### 使用 `go install`
  
 ```shell
-go install github.com/j178/leetgo@latest
+git clone git@github.com:j178/leetgo.git
+cd leetgo && go install
 ```
 
 ### macOS/Linux 使用 [HomeBrew](https://brew.sh/)
