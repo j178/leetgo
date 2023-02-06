@@ -235,7 +235,7 @@ There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
   
-  Currently, `leetgo` supports Chrome, FireFox, and Safari[^1].
+  Currently, `leetgo` supports Chrome, FireFox, Safari[^1], Edge.
   If you want to support other browsers, please let us know!
 
   ```yaml
