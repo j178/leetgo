@@ -139,6 +139,9 @@ It is generally recommended to use the global configuration as the default confi
 
 Here is the demonstration of complete configurations:
 
+<details>
+<summary>Click to expand</summary>
+
 <!-- BEGIN CONFIG -->
 ```yaml
 # Your name
@@ -226,6 +229,7 @@ editor:
   args: []
 ```
 <!-- END CONFIG -->
+</details>
 
 ## LeetCode Support
 
