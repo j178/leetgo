@@ -66,6 +66,10 @@ type MetaDataReturn struct {
 	Dealloc bool   `json:"dealloc"`
 }
 
+type MetaDataOutput struct {
+	ParamIndex int `json:"paramindex"`
+}
+
 type MetaDataMethod struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
@@ -148,6 +152,7 @@ type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
 	Return MetaDataReturn  `json:"return"`
+	Output MetaDataOutput  `json:"output"`
 	// System design problems related
 	SystemDesign bool                `json:"systemdesign"`
 	ClassName    string              `json:"classname"`
