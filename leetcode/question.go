@@ -40,18 +40,18 @@ type Stats struct {
 	ACRate             string `json:"acRate"`
 }
 
+type statsNoMethods Stats
+
 func (s *Stats) UnmarshalJSON(data []byte) error {
 	// Cannot use `var v Stats` here, because it will cause infinite recursion.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias Stats
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*statsNoMethods)(s))
+	if err != nil {
 		return err
 	}
-	*s = Stats(v)
 	return nil
 }
 
@@ -157,34 +157,33 @@ type MetaData struct {
 	Manual bool `json:"manual"`
 }
 
+type metaDataNoMethods MetaData
+
 func (m *MetaData) UnmarshalJSON(data []byte) error {
-	// Ignore error, when we loads from sqlite, no need to unquote it.
+	// Ignore error, when we load from sqlite, no need to unquote it.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias MetaData
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*metaDataNoMethods)(m))
+	if err != nil {
 		return err
 	}
-	*m = MetaData(v)
 	return nil
 }
 
 type JsonExampleTestCases []string
+
+type jsonExampleTestCasesNoMethods JsonExampleTestCases
 
 func (j *JsonExampleTestCases) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	var v []any
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*jsonExampleTestCasesNoMethods)(j))
+	if err != nil {
 		return err
-	}
-	for _, c := range v {
-		*j = append(*j, c.(string))
 	}
 	return nil
 }
@@ -198,17 +197,17 @@ type SimilarQuestion struct {
 
 type SimilarQuestions []SimilarQuestion
 
+type similarQuestionsNoMethods SimilarQuestions
+
 func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias SimilarQuestions
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*similarQuestionsNoMethods)(s))
+	if err != nil {
 		return err
 	}
-	*s = SimilarQuestions(v)
 	return nil
 }
 
