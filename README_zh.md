@@ -39,7 +39,7 @@
 |  | Generation | Local testing |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
-| Python | :white_check_mark: | Not yet |
+| Python | :white_check_mark: | :white_check_mark: |
 | C++ | :white_check_mark: | Not yet |
 | Rust | :white_check_mark: | Not yet |
 | Java | :white_check_mark: | Not yet |

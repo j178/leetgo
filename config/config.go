@@ -83,7 +83,7 @@ type CodeConfig struct {
 	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
 	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 	Go               GoConfig       `yaml:"go" mapstructure:"go"`
-	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
+	Python           PythonConfig   `yaml:"python3" mapstructure:"python3"`
 	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
 	Java             BaseLangConfig `yaml:"java" mapstructure:"java"`
 	Rust             BaseLangConfig `yaml:"rust" mapstructure:"rust"`
@@ -100,6 +100,11 @@ type BaseLangConfig struct {
 type GoConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
 	GoModPath      string `yaml:"go_mod_path" mapstructure:"go_mod_path" comment:"Go module path for the generated code"`
+}
+
+type PythonConfig struct {
+	BaseLangConfig   `yaml:",inline" mapstructure:",squash"`
+	PythonExecutable string `yaml:"python_executable" mapstructure:"python_executable" comment:"Python executable to run the generated code"`
 }
 
 type Credentials struct {
@@ -208,10 +213,13 @@ func Default() *Config {
 					},
 				},
 			},
-			Python: BaseLangConfig{OutDir: "python"},
-			Cpp:    BaseLangConfig{OutDir: "cpp"},
-			Java:   BaseLangConfig{OutDir: "java"},
-			Rust:   BaseLangConfig{OutDir: "rust"},
+			Python: PythonConfig{
+				BaseLangConfig:   BaseLangConfig{OutDir: "python"},
+				PythonExecutable: DefaultPython,
+			},
+			Cpp:  BaseLangConfig{OutDir: "cpp"},
+			Java: BaseLangConfig{OutDir: "java"},
+			Rust: BaseLangConfig{OutDir: "rust"},
 			// Add more languages here
 		},
 		LeetCode: LeetCodeConfig{

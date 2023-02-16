@@ -8,10 +8,10 @@
 [![Discord](https://img.shields.io/discord/1069106479744962582?label=discord&logo=discord)](https://discord.gg/bHsEwQQj9m)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
 
-`leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode, 
-allowing you to do all of your LeetCode exercises without leaving the terminal. 
-It can automatically generate **skeleton code and test cases**, support **local testing and debugging**, 
-and you can use any IDE you like to solve problems. 
+`leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode,
+allowing you to do all of your LeetCode exercises without leaving the terminal.
+It can automatically generate **skeleton code and test cases**, support **local testing and debugging**,
+and you can use any IDE you like to solve problems.
 
 And `leetgo` also supports real-time generation of **contest questions**, submitting all questions at once, so your submissions are always one step ahead!
 
@@ -39,7 +39,7 @@ Local testing requires more work to implement for each language, so not all lang
 |  | Generation | Local testing |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
-| Python | :white_check_mark: | Not yet |
+| Python | :white_check_mark: | :white_check_mark: |
 | C++ | :white_check_mark: | Not yet |
 | Rust | :white_check_mark: | Not yet |
 | Java | :white_check_mark: | Not yet |
@@ -62,7 +62,7 @@ and many other languages are planned. (Help wanted, contributions welcome!)
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
 ### Install via go
- 
+
 ```shell
 git clone git@github.com:j178/leetgo.git
 cd leetgo && go install
@@ -112,7 +112,7 @@ Use "leetgo [command] --help" for more information about a command.
 
 ### Question Identifier
 
-Many `leetgo` commands rely on `qid` to find the leetcode question. `qid` is a simplified question 
+Many `leetgo` commands rely on `qid` to find the leetcode question. `qid` is a simplified question
 identifier defined by leetgo, which includes the following forms (using the two-sum problem as an example):
 
 ```shell
@@ -130,10 +130,10 @@ leetgo test last/            # `last/` means all questions of the last generated
 
 ## Configuration
 
-Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root. 
+Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root.
 
-These configuration files are created during the `leetgo init` process. 
-The local configuration file in the project overrides the global configuration. 
+These configuration files are created during the `leetgo init` process.
+The local configuration file in the project overrides the global configuration.
 
 It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
 
@@ -150,7 +150,7 @@ author: Bob
 language: zh
 # Code configuration
 code:
-  # Language of code generated for questions: go, python, ... 
+  # Language of code generated for questions: go, python, ...
   # (will be override by project config and flag --lang)
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
@@ -238,7 +238,7 @@ editor:
 There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
-  
+
   Currently, `leetgo` supports Chrome, FireFox, Safari[^1], Edge.
   If you want to support other browsers, please let us know!
 
@@ -249,7 +249,7 @@ There are three ways to make cookies available to `leetgo`:
   ```
 
 - Provide cookies in config file.
-  
+
   You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools.
 
   ```yaml
@@ -293,7 +293,7 @@ You can use custom template to generate your own filename, code, etc.
 A code file is composed of different blocks, you can overwrite some of them to provide your own snippets.
 
 | Available blocks |
-| -- | 
+| -- |
 | header |
 | description |
 | title |
@@ -331,7 +331,7 @@ code:
     - script: |
         function modify(code) {
           return "// hello world\n" + code;
-        } 
+        }
 ```
 
 ## FAQ
@@ -342,7 +342,7 @@ Some common problems can be found in the [Q&A](https://github.com/j178/leetgo/di
 
 ## Contributions welcome!
 
-[Good First Issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start, 
+[Good First Issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start,
 and you can also check out some [Help Wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
 
 Before submitting a PR, please run `golangci-lint run --fix` to fix lint errors.
