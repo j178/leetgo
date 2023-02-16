@@ -19,7 +19,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 ## Highlight of features
 
-- Generate description, skeleton code and testg code for a question
+- Generate description, skeleton code and testing code for a question
 - Customize the code template for generated code, use modifiers to pre-process code
 - Execute test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
