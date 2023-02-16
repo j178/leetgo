@@ -150,7 +150,7 @@ author: Bob
 language: zh
 # Code configuration
 code:
-  # Language of code generated for questions: go, python, ...
+  # Language of code generated for questions: go, python, ... 
   # (will be override by project config and flag --lang)
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
@@ -183,6 +183,8 @@ code:
     out_dir: python
     # Overrides the default code.filename_template
     filename_template: ""
+    # Python executable to run the generated code
+    python_executable: python3
   cpp:
     out_dir: cpp
     # Overrides the default code.filename_template
