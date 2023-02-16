@@ -89,7 +89,6 @@ func (p python) Initialize(outDir string) error {
 	python := config.Get().Code.Python.PythonExecutable
 
 	pythonExe, err := exec.LookPath(python)
-
 	if err != nil {
 		return fmt.Errorf("python executable %v not found in PATH", python)
 	}
