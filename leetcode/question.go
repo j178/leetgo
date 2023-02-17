@@ -352,7 +352,7 @@ func (q *QuestionData) GetFormattedContent() string {
 		maxWidth = 60
 	}
 	content = wordwrap.WrapString(content, maxWidth)
-	content = utils.RemoveEmptyLine(content)
+	content = utils.CondenseEmptyLines(content)
 	return content
 }
 

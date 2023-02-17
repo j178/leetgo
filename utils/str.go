@@ -22,15 +22,24 @@ func StringToBytes(s string) []byte {
 	))
 }
 
-func RemoveEmptyLine(s string) string {
+// CondenseEmptyLines condenses multiple consecutive empty lines in a string to a single empty line,
+// while preserving non-empty lines.
+func CondenseEmptyLines(s string) string {
 	lines := strings.Split(s, "\n")
-	var result []string
-	for _, line := range lines {
-		if line != "" {
-			result = append(result, line)
+	var filtered []string
+	for i := 0; i < len(lines); i++ {
+		if i == 0 || lines[i] != "" || lines[i-1] != "" {
+			filtered = append(filtered, lines[i])
 		}
 	}
-	return strings.Join(result, "\n")
+	return strings.Join(filtered, "\n")
+}
+
+func EnsureTrailingNewline(s string) string {
+	if s == "" || s[len(s)-1] != '\n' {
+		return s + "\n"
+	}
+	return s
 }
 
 var (
@@ -97,10 +106,6 @@ func ReplaceSubscript(s string) string {
 
 func ReplaceSuperscript(s string) string {
 	return supReplace.Replace(s)
-}
-
-func PtrTo[T any](v T) *T {
-	return &v
 }
 
 func DecodeRawUnicodeEscape(s string) string {

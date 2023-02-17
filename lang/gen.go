@@ -154,7 +154,10 @@ func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Bloc
 	if err != nil {
 		return "", err
 	}
-	return buf.String(), nil
+	content := buf.String()
+	content = utils.CondenseEmptyLines(content)
+	content = utils.EnsureTrailingNewline(content)
+	return content, nil
 }
 
 func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
