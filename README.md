@@ -93,6 +93,7 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
+  fix                     Use OpenAI GPT-3 API to fix your solution code (just for fun)
   edit                    Open solution in editor
   extract                 Extract solution code from generated file
   contest                 Generate contest questions
