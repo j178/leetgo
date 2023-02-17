@@ -36,11 +36,11 @@ var whoamiCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		name, err := whoami(c)
+		user, err := c.GetUserStatus()
 		if err != nil {
 			return err
 		}
-		cmd.Println(name)
+		cmd.Println(user.Whoami(c))
 		return nil
 	},
 }

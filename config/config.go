@@ -29,7 +29,7 @@ const (
 
 var (
 	globalCfg *Config
-	Debug     = os.Getenv("DEBUG") != ""
+	Debug     = os.Getenv("DEBUG") == "1"
 )
 
 type (
@@ -199,7 +199,6 @@ func Default() *Config {
 								`package main
 
 {{ if .NeedsDefinition -}} import . "%s" {{- end }}
-
 `, GoTestUtilsModPath,
 							),
 						},

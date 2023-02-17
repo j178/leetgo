@@ -19,7 +19,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 ## Highlight of features
 
-- Generate description, skeleton code and testg code for a question
+- Generate description, skeleton code and testing code for a question
 - Customize the code template for generated code, use modifiers to pre-process code
 - Execute test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
@@ -64,7 +64,8 @@ You can download the latest binary from the [release page](https://github.com/j1
 ### Install via go
  
 ```shell
-go install github.com/j178/leetgo@latest
+git clone git@github.com:j178/leetgo.git
+cd leetgo && go install
 ```
 
 ### Install via [HomeBrew](https://brew.sh/) on macOS/Linux
@@ -138,6 +139,9 @@ It is generally recommended to use the global configuration as the default confi
 
 Here is the demonstration of complete configurations:
 
+<details>
+<summary>Click to expand</summary>
+
 <!-- BEGIN CONFIG -->
 ```yaml
 # Your name
@@ -165,11 +169,10 @@ code:
     # Replace some blocks of the generated code
     blocks:
       - name: beforeMarker
-        template: |+
+        template: |
           package main
 
           {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
-
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
@@ -228,6 +231,7 @@ editor:
   args: []
 ```
 <!-- END CONFIG -->
+</details>
 
 ## LeetCode Support
 
@@ -237,7 +241,7 @@ There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
   
-  Currently, `leetgo` supports Chrome, FireFox, and Safari[^1].
+  Currently, `leetgo` supports Chrome, FireFox, Safari[^1], Edge.
   If you want to support other browsers, please let us know!
 
   ```yaml
@@ -276,7 +280,8 @@ There are three ways to make cookies available to `leetgo`:
         3963
   ```
 
-**Note**: username/password authentication is not recommended, and it is not supported by `leetcode.com`.
+> **Note**
+> Password authentication is not recommended, and it is not supported by `leetcode.com`.
 
 ## Advanced Usage
 

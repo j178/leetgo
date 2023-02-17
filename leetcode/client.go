@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/avast/retry-go"
 	"github.com/dghubble/sling"
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-hclog"
@@ -186,22 +187,46 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 		hclog.L().Trace("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
 	}
 
-	// default error detection
-	resp, err := c.http.Do(req, result, failure)
-	if err != nil {
-		return resp, err
-	}
-	switch resp.StatusCode {
-	case http.StatusTooManyRequests:
-		return resp, ErrTooManyRequests
-	case http.StatusForbidden:
-		return resp, ErrUserNotSignedIn
-	}
-
-	if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
-		body, _ := io.ReadAll(resp.Body)
-		return resp, unexpectedStatusCode{Code: resp.StatusCode, Resp: resp, Body: body}
-	}
+	var resp *http.Response
+	err := retry.Do(
+		func() error {
+			var err error
+			resp, err = c.http.Do(req, result, failure)
+			if err != nil {
+				return err
+			}
+			switch resp.StatusCode {
+			case http.StatusTooManyRequests:
+				return ErrTooManyRequests
+			case http.StatusForbidden:
+				return ErrUserNotSignedIn
+			}
+			if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
+				body, _ := io.ReadAll(resp.Body)
+				return unexpectedStatusCode{Code: resp.StatusCode, Resp: resp, Body: body}
+			}
+			return nil
+		},
+		retry.RetryIf(
+			func(err error) bool {
+				switch err := err.(type) {
+				case unexpectedStatusCode:
+					if err.Code == http.StatusServiceUnavailable {
+						return true
+					}
+				}
+				return false
+			},
+		),
+		retry.Delay(1*time.Second),
+		retry.MaxDelay(5*time.Second),
+		retry.LastErrorOnly(true),
+		retry.OnRetry(
+			func(n uint, err error) {
+				hclog.L().Info("retry", "url", req.URL.String(), "attempt", n, "error", err)
+			},
+		),
+	)
 
 	return nil, err
 }

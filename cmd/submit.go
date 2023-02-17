@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/cobra"
@@ -37,9 +36,14 @@ leetgo submit w330/
 			return err
 		}
 
-		limiter := utils.NewRateLimiter(10 * time.Second)
+		user, err := c.GetUserStatus()
+		if err != nil {
+			return err
+		}
+		limiter := newLimiter(user)
 
 		for _, q := range qs {
+			hclog.L().Info("submitting solution", "question", q.TitleSlug, "user", user.Whoami(c))
 			result, err := submitSolution(cmd, q, c, gen, limiter)
 			if err != nil {
 				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
@@ -67,8 +71,6 @@ func submitSolution(
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
 	}
 
-	user, _ := whoami(c)
-	hclog.L().Info("submitting solution", "question", q.TitleSlug, "user", user)
 	spin := newSpinner(cmd.ErrOrStderr())
 	spin.Suffix = " Submitting solution..."
 	spin.Reverse()

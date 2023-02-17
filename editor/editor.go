@@ -17,13 +17,24 @@ type Opener interface {
 
 type MultiOpener interface {
 	Opener
-	OpenMulti(files ...lang.FileOutput) error
+	OpenMulti(files []lang.FileOutput) error
 }
 
 var editors = map[string]Opener{
 	"none":   &noneEditor{},
 	"custom": &customEditor{},
-	"vim":    &vim{},
+	"vim": &commonMultiEditor{
+		commonEditor{
+			command: "vim",
+			args:    []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)},
+		},
+	},
+	"neovim": &commonMultiEditor{
+		commonEditor{
+			command: "nvim",
+			args:    []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)},
+		},
+	},
 	"vscode": &commonMultiEditor{commonEditor{command: "code"}},
 	"goland": &commonEditor{command: "goland"},
 }
@@ -40,13 +51,22 @@ type commonEditor struct {
 	args    []string
 }
 
+func (e *commonEditor) Open(file lang.FileOutput) error {
+	hclog.L().Info("opening file", "command", e.command)
+	return runCmd(e.command, e.args, file.Path)
+}
+
 type commonMultiEditor struct {
 	commonEditor
 }
 
-func (e *commonEditor) Open(file lang.FileOutput) error {
-	hclog.L().Info("opening files with command", "command", e.command)
-	return runCmd(e.command, e.args, file.Path)
+func (e *commonMultiEditor) OpenMulti(files []lang.FileOutput) error {
+	paths := make([]string, len(files))
+	for i, f := range files {
+		paths[i] = f.Path
+	}
+	hclog.L().Info("opening files", "command", e.command)
+	return runCmd(e.command, e.args, paths...)
 }
 
 type customEditor struct{}
@@ -57,16 +77,8 @@ func (e *customEditor) Open(file lang.FileOutput) error {
 		hclog.L().Warn("editor.command is empty, skip opening files")
 		return nil
 	}
-	hclog.L().Info("opening files with custom command", "command", cfg.Editor.Command)
+	hclog.L().Info("opening files", "command", cfg.Editor.Command)
 	return runCmd(cfg.Editor.Command, cfg.Editor.Args, file.Path)
-}
-
-func (e *commonMultiEditor) OpenMulti(files ...lang.FileOutput) error {
-	paths := make([]string, len(files))
-	for i, f := range files {
-		paths[i] = f.Path
-	}
-	return runCmd(e.command, e.args, paths...)
 }
 
 func Get(s string) Opener {
@@ -87,7 +99,7 @@ func Open(paths []lang.FileOutput) error {
 		)
 	}
 	if ed, ok := ed.(MultiOpener); ok {
-		return ed.OpenMulti(paths...)
+		return ed.OpenMulti(paths)
 	}
 	return ed.Open(paths[0])
 }

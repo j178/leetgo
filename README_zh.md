@@ -64,7 +64,8 @@
 ### 使用 `go install`
  
 ```shell
-go install github.com/j178/leetgo@latest
+git clone git@github.com:j178/leetgo.git
+cd leetgo && go install
 ```
 
 ### macOS/Linux 使用 [HomeBrew](https://brew.sh/)
@@ -163,11 +164,10 @@ code:
     # Replace some blocks of the generated code
     blocks:
       - name: beforeMarker
-        template: |+
+        template: |
           package main
 
           {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
-
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
@@ -235,7 +235,7 @@ editor:
 
 - 从浏览器中直接读取。
   
-  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox 和 Safari[^1]。
+  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox，Safari[^1]，Edge。
 
   如果你需要其他浏览器的支持，请告诉我们~
 

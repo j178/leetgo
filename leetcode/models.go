@@ -2,6 +2,7 @@ package leetcode
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/fatih/color"
@@ -15,6 +16,11 @@ type UserStatus struct {
 	ActiveSessionId int    `json:"activeSessionId"`
 	IsSignedIn      bool   `json:"isSignedIn"`
 	IsPremium       bool   `json:"isPremium"`
+}
+
+func (u *UserStatus) Whoami(c Client) string {
+	uri, _ := url.Parse(c.BaseURI())
+	return u.Username + "@" + uri.Host
 }
 
 type InterpretSolutionResult struct {
