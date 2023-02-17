@@ -12,9 +12,10 @@ import (
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/charmbracelet/glamour"
 	"github.com/hashicorp/go-hclog"
+	"github.com/spf13/cobra"
+
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
-	"github.com/spf13/cobra"
 )
 
 // Use OpenAI GPT-3 API to fix solution code
