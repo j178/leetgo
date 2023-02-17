@@ -74,7 +74,7 @@ func UsageString() string {
 
 func initWorkDir() error {
 	if dir := os.Getenv("LEETGO_WORKDIR"); dir != "" {
-		hclog.L().Info("change workdir to LEETGO_WORKDIR", "dir", dir)
+		hclog.L().Debug("change workdir to LEETGO_WORKDIR", "dir", dir)
 		return os.Chdir(dir)
 	}
 	return nil
@@ -113,6 +113,7 @@ func initCommands() {
 		infoCmd,
 		testCmd,
 		submitCmd,
+		fixCmd,
 		editCmd,
 		extractCmd,
 		contestCmd,
