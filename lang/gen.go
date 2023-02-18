@@ -514,7 +514,7 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("updated", "file", codeFile.Path)
+	hclog.L().Info("updated", "file", utils.RelToCwd(codeFile.Path))
 	return nil
 }
 
