@@ -5,17 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/charmbracelet/glamour"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 )
 
 // Use OpenAI GPT-3 API to fix solution code
@@ -44,12 +46,17 @@ var fixCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		response, err := askOpenAI(cmd, q, code)
+
+		fixedCode, err := askOpenAI(cmd, q, code)
 		if err != nil {
 			return err
 		}
-		response = "# Here is the fix from OpenAI GPT-3 API\n" + response
-		output, err := glamour.Render(response, "dark")
+
+		output := "# Here is the fix from OpenAI GPT-3 API\n"
+		edits := myers.ComputeEdits("", code, fixedCode)
+		diff := gotextdiff.ToUnified("original", "AI fixed", code, edits)
+		output += "```diff\n" + fmt.Sprint(diff) + "\n```\n"
+		output, err = glamour.Render(output, "dark")
 		if err != nil {
 			return err
 		}
@@ -65,10 +72,6 @@ var fixCmd = &cobra.Command{
 			return err
 		}
 		if accept {
-			fixedCode, err := extractCode(response)
-			if err != nil {
-				return err
-			}
 			err = lang.UpdateSolutionCode(q, fixedCode)
 			if err != nil {
 				return err
@@ -86,7 +89,8 @@ const fixPrompt = `Given a LeetCode problem %s, the problem description below is
 I have written the following solution:
 %s
 
-Please find anything incorrect and fix it or improve it. Mark sure to wrap the fixed code in markdown code block with corresponding language specifier.
+Please identify any issues or inefficiencies in my code and to help me fix or improve it.
+I want you to only reply with pure code without <code> tags, and nothing else. Do not write explanations.
 `
 
 var errNoFix = errors.New("no fix found")
@@ -126,13 +130,6 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 	}
 	hclog.L().Debug("got response from openai", "response", resp.Choices)
 	text := resp.Choices[0].Text
+	text = utils.EnsureTrailingNewline(text)
 	return text, nil
-}
-
-func extractCode(text string) (string, error) {
-	fixedCode := regexp.MustCompile("(?s)```\\w+\n(.*)```").FindStringSubmatch(text)
-	if fixedCode == nil {
-		return "", errors.New("no code found")
-	}
-	return fixedCode[1], nil
 }
