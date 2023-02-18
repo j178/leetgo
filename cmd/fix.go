@@ -23,8 +23,10 @@ import (
 // Use OpenAI GPT-3 API to fix solution code
 
 var fixCmd = &cobra.Command{
-	Use:     "fix qid",
-	Short:   "Use OpenAI GPT-3 API to fix your solution code (just for fun)",
+	Use:   "fix qid",
+	Short: "Use OpenAI GPT-3 API to fix your solution code (just for fun)",
+	Long: `Use OpenAI GPT-3 API to fix your solution code.
+Set OPENAI_API_KEY environment variable to your OpenAI API key before using this command.`,
 	Example: `leetgo fix 429`,
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
