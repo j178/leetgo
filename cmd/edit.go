@@ -39,9 +39,10 @@ var editCmd = &cobra.Command{
 }
 
 var extractCmd = &cobra.Command{
-	Use:   "extract qid",
-	Short: "Extract solution code from generated file",
-	Args:  cobra.ExactArgs(1),
+	Use:    "extract qid",
+	Short:  "Extract solution code from generated file",
+	Args:   cobra.ExactArgs(1),
+	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		qs, err := leetcode.ParseQID(args[0], c)
