@@ -8,10 +8,9 @@ import (
 )
 
 var openCmd = &cobra.Command{
-	Use:   "open [qid]",
-	Short: "open a question in browser",
-	Example: `leetgo open
-leetgo open today
+	Use:   "open qid",
+	Short: "open one or multiple questions in browser",
+	Example: `leetgo open today
 leetgo open 549
 leetgo open two-sum`,
 	Args: cobra.ExactArgs(1),
