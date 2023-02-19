@@ -23,7 +23,7 @@ leetgo open two-sum`,
 		if err != nil {
 			return err
 		}
-		for _, q := range qs { // qs is 4 or 1
+		for _, q := range qs {
 			if q.IsContest() {
 				err = browser.OpenURL(q.ContestUrl())
 			} else {
