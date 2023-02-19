@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"github.com/j178/leetgo/leetcode"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
+
+	"github.com/j178/leetgo/leetcode"
 )
 
 var openCmd = &cobra.Command{
@@ -13,25 +14,23 @@ var openCmd = &cobra.Command{
 leetgo open today
 leetgo open 549
 leetgo open two-sum`,
-	Args: cobra.MaximumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
-		var err error
-		if len(args) > 0 {
-			qid := args[0]
-			qs, err := leetcode.ParseQID(qid, c)
-			if err != nil {
-				return err
-			}
-			for i := 0; i < len(qs); i++ { // qs is 4 or 1
-				if qs[i].IsContest() {
-					err = browser.OpenURL(qs[i].ContestUrl())
-				} else {
-					err = browser.OpenURL(qs[i].Url())
-				}
+		qid := args[0]
+		qs, err := leetcode.ParseQID(qid, c)
+		if err != nil {
+			return err
+		}
+		for _, q := range qs { // qs is 4 or 1
+			if q.IsContest() {
+				err = browser.OpenURL(q.ContestUrl())
+			} else {
+				err = browser.OpenURL(q.Url())
 			}
 		}
+
 		return err
 	},
 }
