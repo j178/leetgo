@@ -24,15 +24,13 @@ leetgo open two-sum`,
 			if err != nil {
 				return err
 			}
-			if len(qs) > 1 {
-				for _, r := range qs {
-					err = browser.OpenURL(r.ContestUrl())
+			for i := 0; i < len(qs); i++ { // qs is 4 or 1
+				if qs[i].IsContest() {
+					err = browser.OpenURL(qs[i].ContestUrl())
+				} else {
+					err = browser.OpenURL(qs[i].Url())
 				}
-			} else {
-				err = browser.OpenURL(qs[0].Url())
-
 			}
-
 		}
 		return err
 	},
