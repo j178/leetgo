@@ -98,6 +98,7 @@ Available Commands:
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations
+  open                    open a question in browser
   help                    Help about any command
 
 Flags:

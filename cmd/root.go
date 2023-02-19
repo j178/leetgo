@@ -122,6 +122,7 @@ func initCommands() {
 		gitCmd,
 		inspectCmd,
 		whoamiCmd,
+		openCmd,
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false
