@@ -14,6 +14,7 @@ import (
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -64,14 +65,16 @@ Set OPENAI_API_KEY environment variable to your OpenAI API key before using this
 		}
 		cmd.Println(output)
 
-		var accept bool
-		err = survey.AskOne(
-			&survey.Confirm{
-				Message: "Do you want to accept the fix?",
-			}, &accept,
-		)
-		if err != nil {
-			return err
+		accept := true
+		if !viper.GetBool("yes") {
+			err = survey.AskOne(
+				&survey.Confirm{
+					Message: "Do you want to accept the fix?",
+				}, &accept,
+			)
+			if err != nil {
+				return err
+			}
 		}
 		if accept {
 			err = lang.UpdateSolutionCode(q, fixedCode)
