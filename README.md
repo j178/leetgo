@@ -158,6 +158,8 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  # Generate question description into a separate file
+  separate_description_file: false
   # Functions that modify the generated code
   modifiers:
     - name: removeUselessComments

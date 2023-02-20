@@ -12,7 +12,8 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
-const contentTemplate = `
+const (
+	defaultContentTemplate = `
 {{- block "header" . -}}
 {{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
 {{ .LineComment }} {{ .Question.Url }}
@@ -22,7 +23,6 @@ const contentTemplate = `
 {{ block "description" . -}}
 {{ .BlockCommentStart }}
 {{ block "title" . }}{{ .Question.QuestionFrontendId }}. {{ .Question.GetTitle }} ({{ .Question.Difficulty }}){{ end }}
-
 {{ .Question.GetFormattedContent }}
 {{ .BlockCommentEnd }}
 {{ end }}
@@ -34,6 +34,23 @@ const contentTemplate = `
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
 `
+
+	withoutDescriptionContentTemplate = `
+{{- block "header" . -}}
+{{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
+{{ .LineComment }} {{ .Question.Url }}
+{{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
+{{ end }}
+{{ end }}
+{{ block "beforeMarker" . }}{{ end }}
+{{ .LineComment }} {{ .CodeBeginMarker }}
+{{ block "beforeCode" . }}{{ end }}
+{{ block "code" . }}{{ .Code | runModifiers }}{{ end }}
+{{ block "afterCode" . }}{{ end }}
+{{ .LineComment }} {{ .CodeEndMarker }}
+{{ block "afterMarker" . }}{{ end }}
+`
+)
 
 type contentData struct {
 	Question          *leetcode.QuestionData

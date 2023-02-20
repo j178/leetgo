@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
@@ -191,7 +192,34 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	return err == nil, nil
 }
 
-func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string {
+func (g golang) generateCodeFile(
+	q *leetcode.QuestionData,
+	baseFilename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
+) (
+	FileOutput,
+	error,
+) {
+	content, err := g.generateCodeContent(
+		q,
+		baseFilename,
+		blocks,
+		modifiers,
+		separateDescriptionFile,
+	)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	return FileOutput{
+		Path:    filepath.Join(baseFilename, "solution.go"),
+		Content: content,
+		Type:    CodeFile,
+	}, nil
+}
+
+func (g golang) generateTestFile(q *leetcode.QuestionData, baseFilename string, testcases string) (FileOutput, error) {
 	var funcName, testFuncName string
 	if q.MetaData.SystemDesign {
 		funcName = "Constructor"
@@ -200,7 +228,7 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 		funcName = q.MetaData.Name
 		testFuncName = "RunTestsWithString"
 	}
-	content := fmt.Sprintf(
+	testContent := fmt.Sprintf(
 		testFileTemplate,
 		config.ProjectURL,
 		config.GoTestUtilsModPath,
@@ -209,7 +237,15 @@ func (g golang) generateTest(q *leetcode.QuestionData, testcases string) string 
 		testFuncName,
 		funcName,
 	)
-	return content
+	return FileOutput{
+		Path:    filepath.Join(baseFilename, "solution_test.go"),
+		Content: testContent,
+		Type:    TestFile,
+	}, nil
+}
+
+func (g golang) generateDescriptionFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
+	return g.baseLang.generateDescriptionFile(q, filepath.Join(baseFilename, "question"))
 }
 
 func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
@@ -232,6 +268,15 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 		},
 	}
 
+	if separateDescriptionFile(g) {
+		files = append(
+			files, FileOutput{
+				Path: filepath.Join(baseFilename, "question.md"),
+				Type: DocFile,
+			},
+		)
+	}
+
 	return &GenerateResult{
 		Question: q,
 		Lang:     g,
@@ -247,38 +292,36 @@ var goBuiltinModifiers = map[string]ModifierFunc{
 }
 
 func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	blocks := getBlocks(g)
-	modifiers, err := getModifiers(g, goBuiltinModifiers)
-	if err != nil {
-		return nil, err
-	}
-	codeContent, err := g.generateContent(q, blocks, modifiers)
-	if err != nil {
-		return nil, err
-	}
-
-	testcaseStr := g.generateTestCases(q)
-	testContent := g.generateTest(q, testcaseStr)
-
 	filenameTmpl := getFilenameTemplate(q, g)
 	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
 	}
-	codeFile := filepath.Join(baseFilename, "solution.go")
-	testFile := filepath.Join(baseFilename, "solution_test.go")
 
-	files := []FileOutput{
-		{
-			Path:    codeFile,
-			Content: codeContent,
-			Type:    CodeFile,
-		},
-		{
-			Path:    testFile,
-			Content: testContent,
-			Type:    TestFile,
-		},
+	separateDescriptionFile := separateDescriptionFile(g)
+	blocks := getBlocks(g)
+	modifiers, err := getModifiers(g, goBuiltinModifiers)
+	if err != nil {
+		return nil, err
+	}
+	codeFile, err := g.generateCodeFile(q, baseFilename, blocks, modifiers, separateDescriptionFile)
+	if err != nil {
+		return nil, err
+	}
+
+	testcaseStr := g.generateTestCases(q)
+	testFile, err := g.generateTestFile(q, baseFilename, testcaseStr)
+	if err != nil {
+		return nil, err
+	}
+	files := []FileOutput{codeFile, testFile}
+
+	if separateDescriptionFile {
+		docFile, err := g.generateDescriptionFile(q, baseFilename)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, docFile)
 	}
 
 	return &GenerateResult{

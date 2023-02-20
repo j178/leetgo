@@ -78,23 +78,25 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
-	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
-	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
-	Go               GoConfig       `yaml:"go" mapstructure:"go"`
-	Python           BaseLangConfig `yaml:"python3" mapstructure:"python3"`
-	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java             BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust             BaseLangConfig `yaml:"rust" mapstructure:"rust"`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
+	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
+	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
+	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
+	Python                  BaseLangConfig `yaml:"python3" mapstructure:"python3"`
+	Cpp                     BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust                    BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
 }
 
 type BaseLangConfig struct {
-	OutDir           string     `yaml:"out_dir" mapstructure:"out_dir"`
-	FilenameTemplate string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
-	Blocks           []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers        []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir"`
+	FilenameTemplate        string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
+	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
+	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 }
 
 type GoConfig struct {
@@ -182,8 +184,9 @@ func Default() *Config {
 		Author:   "Bob",
 		Language: ZH,
 		Code: CodeConfig{
-			Lang:             "go",
-			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			Lang:                    "go",
+			FilenameTemplate:        `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			SeparateDescriptionFile: false,
 			Modifiers: []Modifier{
 				{Name: "removeUselessComments"},
 			},
