@@ -197,6 +197,7 @@ func (g golang) generateCodeFile(
 	baseFilename string,
 	blocks []config.Block,
 	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
 ) (
 	FileOutput,
 	error,
@@ -206,7 +207,7 @@ func (g golang) generateCodeFile(
 		baseFilename,
 		blocks,
 		modifiers,
-		separateDescriptionFile(g),
+		separateDescriptionFile,
 	)
 	if err != nil {
 		return FileOutput{}, err
@@ -243,8 +244,8 @@ func (g golang) generateTestFile(q *leetcode.QuestionData, baseFilename string, 
 	}, nil
 }
 
-func (g golang) generateDocFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
-	return g.baseLang.generateDocFile(q, filepath.Join(baseFilename, "question"))
+func (g golang) generateDescriptionFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
+	return g.baseLang.generateDescriptionFile(q, filepath.Join(baseFilename, "question"))
 }
 
 func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
@@ -266,6 +267,7 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 			Type: TestFile,
 		},
 	}
+
 	if separateDescriptionFile(g) {
 		files = append(
 			files, FileOutput{
@@ -296,12 +298,13 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, err
 	}
 
+	separateDescriptionFile := separateDescriptionFile(g)
 	blocks := getBlocks(g)
 	modifiers, err := getModifiers(g, goBuiltinModifiers)
 	if err != nil {
 		return nil, err
 	}
-	codeFile, err := g.generateCodeFile(q, baseFilename, blocks, modifiers)
+	codeFile, err := g.generateCodeFile(q, baseFilename, blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
@@ -313,8 +316,8 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	files := []FileOutput{codeFile, testFile}
 
-	if separateDescriptionFile(g) {
-		docFile, err := g.generateDocFile(q, baseFilename)
+	if separateDescriptionFile {
+		docFile, err := g.generateDescriptionFile(q, baseFilename)
 		if err != nil {
 			return nil, err
 		}

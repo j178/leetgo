@@ -173,6 +173,7 @@ func (l baseLang) generateCodeFile(
 	baseFilename string,
 	blocks []config.Block,
 	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
 ) (
 	FileOutput,
 	error,
@@ -182,7 +183,7 @@ func (l baseLang) generateCodeFile(
 		baseFilename,
 		blocks,
 		modifiers,
-		separateDescriptionFile(l),
+		separateDescriptionFile,
 	)
 	if err != nil {
 		return FileOutput{}, err
@@ -216,7 +217,7 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 	return strings.Join(caseAndOutputs, "\n\n")
 }
 
-func (l baseLang) generateDocFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
+func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
 	tmpl := `# [%s. %s](%s) (%s)
 %s`
 	url := ""
@@ -276,19 +277,20 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		return nil, err
 	}
 
+	separateDescriptionFile := separateDescriptionFile(l)
 	blocks := getBlocks(l)
 	modifiers, err := getModifiers(l, builtinModifiers)
 	if err != nil {
 		return nil, err
 	}
-	codeFile, err := l.generateCodeFile(q, baseFilename, blocks, modifiers)
+	codeFile, err := l.generateCodeFile(q, baseFilename, blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
 	files := []FileOutput{codeFile}
 
-	if separateDescriptionFile(l) {
-		docFile, err := l.generateDocFile(q, baseFilename)
+	if separateDescriptionFile {
+		docFile, err := l.generateDescriptionFile(q, baseFilename)
 		if err != nil {
 			return nil, err
 		}
