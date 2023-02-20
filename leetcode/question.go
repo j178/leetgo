@@ -485,7 +485,7 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 			"upper": strings.ToUpper,
 			"trim":  strings.TrimSpace,
 			"padWithZero": func(n int, s string) string {
-				return fmt.Sprintf("%0"+strconv.Itoa(n)+"s", s)
+				return fmt.Sprintf("%0*s", n, s)
 			},
 			"toUnderscore": func(s string) string {
 				return strings.ReplaceAll(s, "-", "_")
