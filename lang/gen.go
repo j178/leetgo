@@ -110,6 +110,7 @@ func (l baseLang) generateCodeContent(
 	baseFilename string,
 	blocks []config.Block,
 	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
 ) (string, error) {
 	code := q.GetCodeSnippet(l.Slug())
 	tmpl := template.New("root")
@@ -123,7 +124,12 @@ func (l baseLang) generateCodeContent(
 			},
 		},
 	)
-	_, err := tmpl.Parse(contentTemplate)
+	var err error
+	if separateDescriptionFile {
+		_, err = tmpl.Parse(withoutDescriptionContentTemplate)
+	} else {
+		_, err = tmpl.Parse(defaultContentTemplate)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -140,17 +146,16 @@ func (l baseLang) generateCodeContent(
 
 	cfg := config.Get()
 	data := &contentData{
-		Question:                q,
-		Author:                  cfg.Author,
-		Time:                    time.Now().Format("2006/01/02 15:04"),
-		LineComment:             l.lineComment,
-		BlockCommentStart:       l.blockCommentStart,
-		BlockCommentEnd:         l.blockCommentEnd,
-		CodeBeginMarker:         config.CodeBeginMarker,
-		CodeEndMarker:           config.CodeEndMarker,
-		Code:                    code,
-		NeedsDefinition:         needsDefinition(code),
-		SeparateDescriptionFile: separateDescriptionFile(l),
+		Question:          q,
+		Author:            cfg.Author,
+		Time:              time.Now().Format("2006/01/02 15:04"),
+		LineComment:       l.lineComment,
+		BlockCommentStart: l.blockCommentStart,
+		BlockCommentEnd:   l.blockCommentEnd,
+		CodeBeginMarker:   config.CodeBeginMarker,
+		CodeEndMarker:     config.CodeEndMarker,
+		Code:              code,
+		NeedsDefinition:   needsDefinition(code),
 	}
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, data)
@@ -172,7 +177,13 @@ func (l baseLang) generateCodeFile(
 	FileOutput,
 	error,
 ) {
-	content, err := l.generateCodeContent(q, baseFilename, blocks, modifiers)
+	content, err := l.generateCodeContent(
+		q,
+		baseFilename,
+		blocks,
+		modifiers,
+		separateDescriptionFile(l),
+	)
 	if err != nil {
 		return FileOutput{}, err
 	}
@@ -206,9 +217,25 @@ func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
 }
 
 func (l baseLang) generateDocFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
+	tmpl := `# [%s. %s](%s) (%s)
+%s`
+	url := ""
+	if q.IsContest() {
+		url = q.ContestUrl()
+	} else {
+		url = q.Url()
+	}
+	content := fmt.Sprintf(
+		tmpl,
+		q.QuestionFrontendId,
+		q.GetTitle(),
+		url,
+		q.Difficulty,
+		q.GetFormattedContent(),
+	)
 	return FileOutput{
 		Path:    baseFilename + ".md",
-		Content: q.GetFormattedContent(),
+		Content: content,
 		Type:    DocFile,
 	}, nil
 }

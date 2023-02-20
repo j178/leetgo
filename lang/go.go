@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
@@ -200,7 +201,13 @@ func (g golang) generateCodeFile(
 	FileOutput,
 	error,
 ) {
-	content, err := g.generateCodeContent(q, baseFilename, blocks, modifiers)
+	content, err := g.generateCodeContent(
+		q,
+		baseFilename,
+		blocks,
+		modifiers,
+		separateDescriptionFile(g),
+	)
 	if err != nil {
 		return FileOutput{}, err
 	}
@@ -237,11 +244,7 @@ func (g golang) generateTestFile(q *leetcode.QuestionData, baseFilename string, 
 }
 
 func (g golang) generateDocFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
-	return FileOutput{
-		Path:    filepath.Join(baseFilename, "question.md"),
-		Content: q.GetFormattedContent(),
-		Type:    DocFile,
-	}, nil
+	return g.baseLang.generateDocFile(q, filepath.Join(baseFilename, "question"))
 }
 
 func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {

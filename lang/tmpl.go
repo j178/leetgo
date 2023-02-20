@@ -12,7 +12,8 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
-const contentTemplate = `
+const (
+	defaultContentTemplate = `
 {{- block "header" . -}}
 {{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
 {{ .LineComment }} {{ .Question.Url }}
@@ -22,9 +23,7 @@ const contentTemplate = `
 {{ block "description" . -}}
 {{ .BlockCommentStart }}
 {{ block "title" . }}{{ .Question.QuestionFrontendId }}. {{ .Question.GetTitle }} ({{ .Question.Difficulty }}){{ end }}
-{{ if not .SeparateDescriptionFile }}
 {{ .Question.GetFormattedContent }}
-{{ end }}
 {{ .BlockCommentEnd }}
 {{ end }}
 {{ block "beforeMarker" . }}{{ end }}
@@ -36,18 +35,34 @@ const contentTemplate = `
 {{ block "afterMarker" . }}{{ end }}
 `
 
+	withoutDescriptionContentTemplate = `
+{{- block "header" . -}}
+{{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
+{{ .LineComment }} {{ .Question.Url }}
+{{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
+{{ end }}
+{{ end }}
+{{ block "beforeMarker" . }}{{ end }}
+{{ .LineComment }} {{ .CodeBeginMarker }}
+{{ block "beforeCode" . }}{{ end }}
+{{ block "code" . }}{{ .Code | runModifiers }}{{ end }}
+{{ block "afterCode" . }}{{ end }}
+{{ .LineComment }} {{ .CodeEndMarker }}
+{{ block "afterMarker" . }}{{ end }}
+`
+)
+
 type contentData struct {
-	Question                *leetcode.QuestionData
-	Author                  string
-	Time                    string
-	LineComment             string
-	BlockCommentStart       string
-	BlockCommentEnd         string
-	CodeBeginMarker         string
-	CodeEndMarker           string
-	Code                    string
-	NeedsDefinition         bool
-	SeparateDescriptionFile bool
+	Question          *leetcode.QuestionData
+	Author            string
+	Time              string
+	LineComment       string
+	BlockCommentStart string
+	BlockCommentEnd   string
+	CodeBeginMarker   string
+	CodeEndMarker     string
+	Code              string
+	NeedsDefinition   bool
 }
 
 var validBlocks = map[string]bool{
