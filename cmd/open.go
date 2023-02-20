@@ -9,10 +9,10 @@ import (
 
 var openCmd = &cobra.Command{
 	Use:   "open qid",
-	Short: "open one or multiple questions in browser",
+	Short: "Open one or multiple question pages in a browser",
 	Example: `leetgo open today
 leetgo open 549
-leetgo open two-sum`,
+leetgo open w330/`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cred := leetcode.CredentialsFromConfig()

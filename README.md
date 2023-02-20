@@ -98,7 +98,7 @@ Available Commands:
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations
-  open                    open one or multiple questions in browser
+  open                    Open one or multiple question pages in a browser
   help                    Help about any command
 
 Flags:
