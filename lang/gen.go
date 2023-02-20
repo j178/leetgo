@@ -533,6 +533,48 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	return strings.Join(codeLinesToKeep, "\n"), nil
 }
 
+func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
+	result, err := GeneratePathsOnly(q)
+	if err != nil {
+		return err
+	}
+	codeFile := result.GetCodeFile()
+	if codeFile == nil {
+		return fmt.Errorf("no code file generated")
+	}
+	if !utils.IsExist(codeFile.Path) {
+		return fmt.Errorf("code file %s does not exist", codeFile.Path)
+	}
+	code, err := os.ReadFile(codeFile.Path)
+	if err != nil {
+		return err
+	}
+
+	lines := strings.Split(string(code), "\n")
+	var newLines []string
+	skip := false
+	for _, line := range lines {
+		if strings.Contains(line, config.CodeBeginMarker) {
+			newLines = append(newLines, line)
+			newLines = append(newLines, newCode)
+			skip = true
+		} else if strings.Contains(line, config.CodeEndMarker) {
+			newLines = append(newLines, line)
+			skip = false
+		} else if !skip {
+			newLines = append(newLines, line)
+		}
+	}
+
+	newContent := strings.Join(newLines, "\n")
+	err = os.WriteFile(codeFile.Path, []byte(newContent), 0o644)
+	if err != nil {
+		return err
+	}
+	hclog.L().Info("updated", "file", utils.RelToCwd(codeFile.Path))
+	return nil
+}
+
 func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	cfg := config.Get()
 	gen, err := GetGenerator(cfg.Code.Lang)
