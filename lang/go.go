@@ -214,7 +214,7 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	genResult.AddFile(
 		&FileOutput{
 			Filename: "testcases.txt",
-			Type:     DocFile,
+			Type:     TestCasesFile,
 		},
 	)
 	if separateDescriptionFile(g) {

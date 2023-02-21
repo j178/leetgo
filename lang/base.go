@@ -459,6 +459,7 @@ func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 
 func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	content := l.generateTestCasesContent(q)
+	content = fmt.Sprintf("%s 0\n\n", testCaseTargetMark) + content
 	return FileOutput{
 		Filename: filename,
 		Content:  content,
