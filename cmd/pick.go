@@ -130,7 +130,7 @@ leetgo pick two-sum`,
 		if err != nil {
 			return err
 		}
-		err = editor.Open(result.Files)
+		err = editor.Open(result)
 		return err
 	},
 }

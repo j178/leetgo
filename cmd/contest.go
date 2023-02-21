@@ -195,7 +195,7 @@ leetgo contest left w330
 				_ = browser.OpenURL(r.Question.ContestUrl())
 			}
 		}
-		err = editor.Open(generated[0].Files)
+		err = editor.Open(generated[0])
 		return err
 	},
 }

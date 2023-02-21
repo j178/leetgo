@@ -6,10 +6,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
@@ -19,22 +17,16 @@ const (
 
 package main
 
-import (
-    "testing"
+import . "%s"
 
-    . "%s"
-)
-
-var testcases = ` + "`" + `
-%s
-` + "`" + `
-
-func Test_%s(t *testing.T) {
+func main() {
     targetCaseNum := 0
     // targetCaseNum := -1
-    if err := %s(t, %s, testcases, targetCaseNum); err != nil {
-        t.Fatal(err)
-    }
+	// deserialize param
+	// call function
+    %s(t, %s, testcases, targetCaseNum)
+    // get output param
+    // serialize output and write to stdout
 }
 `
 )
@@ -141,11 +133,7 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 }
 
 func (g golang) Initialize(outDir string) error {
-	modPath := config.Get().Code.Go.GoModPath
-	if modPath == "" {
-		modPath = "leetcode-solutions"
-		log.Warn("`code.go.go_mod_path` is not set, use default path", "mod_path", modPath)
-	}
+	modPath := "leetcode-solutions"
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
 	cmd.Dir = outDir
@@ -164,61 +152,18 @@ func (g golang) Initialize(outDir string) error {
 }
 
 func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
-	cmd := exec.Command("go", "list", "-m")
-	cmd.Dir = outDir
-	output, err := cmd.Output()
-	if err != nil {
-		return false, fmt.Errorf("go list failed: %w", err)
-	}
-	modPath := strings.TrimSpace(string(output))
-	if modPath == "" {
-		return false, fmt.Errorf("go mod path is empty")
-	}
-
 	genResult, err := g.GeneratePaths(q)
 	if err != nil {
 		return false, fmt.Errorf("generate paths failed: %w", err)
 	}
-	path := genResult.Files[0].Path
-	basePath := filepath.Clean(filepath.Dir(path))
+	genResult.SetOutDir(outDir)
 
-	cmd = exec.Command("go", "test", "-v", modPath+"/"+basePath)
-	cmd.Dir = outDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-
+	args := []string{"go", "run", "./" + genResult.SubDir}
+	err = runTest(q, genResult, args, outDir)
 	return err == nil, nil
 }
 
-func (g golang) generateCodeFile(
-	q *leetcode.QuestionData,
-	baseFilename string,
-	blocks []config.Block,
-	modifiers []ModifierFunc,
-	separateDescriptionFile bool,
-) (
-	FileOutput,
-	error,
-) {
-	content, err := g.generateCodeContent(
-		q,
-		baseFilename,
-		blocks,
-		modifiers,
-		separateDescriptionFile,
-	)
-	if err != nil {
-		return FileOutput{}, err
-	}
-	return FileOutput{
-		Path:    filepath.Join(baseFilename, "solution.go"),
-		Content: content,
-		Type:    CodeFile,
-	}, nil
-}
-
-func (g golang) generateTestFile(q *leetcode.QuestionData, baseFilename string, testcases string) (FileOutput, error) {
+func (g golang) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	var funcName, testFuncName string
 	if q.MetaData.SystemDesign {
 		funcName = "Constructor"
@@ -227,24 +172,20 @@ func (g golang) generateTestFile(q *leetcode.QuestionData, baseFilename string, 
 		funcName = q.MetaData.Name
 		testFuncName = "RunTestsWithString"
 	}
+	// TODO
+	// TODO 根据 output.paramindex 找到真正的 output 对象
 	testContent := fmt.Sprintf(
 		testFileTemplate,
 		config.ProjectURL,
 		config.GoTestUtilsModPath,
-		testcases,
-		funcName,
 		testFuncName,
 		funcName,
 	)
 	return FileOutput{
-		Path:    filepath.Join(baseFilename, "solution_test.go"),
-		Content: testContent,
-		Type:    TestFile,
+		Filename: filename,
+		Content:  testContent,
+		Type:     TestFile,
 	}, nil
-}
-
-func (g golang) generateDescriptionFile(q *leetcode.QuestionData, baseFilename string) (FileOutput, error) {
-	return g.baseLang.generateDescriptionFile(q, filepath.Join(baseFilename, "question"))
 }
 
 func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
@@ -253,34 +194,38 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	if err != nil {
 		return nil, err
 	}
-	codeFile := filepath.Join(baseFilename, "solution.go")
-	testFile := filepath.Join(baseFilename, "solution_test.go")
-
-	files := []FileOutput{
-		{
-			Path: codeFile,
-			Type: CodeFile,
-		},
-		{
-			Path: testFile,
-			Type: TestFile,
-		},
+	genResult := &GenerateResult{
+		SubDir:   baseFilename,
+		Question: q,
+		Lang:     g,
 	}
-
+	genResult.AddFile(
+		&FileOutput{
+			Filename: "solution.go",
+			Type:     CodeFile,
+		},
+	)
+	genResult.AddFile(
+		&FileOutput{
+			Filename: "solution_test.go",
+			Type:     TestFile,
+		},
+	)
+	genResult.AddFile(
+		&FileOutput{
+			Filename: "testcases.txt",
+			Type:     DocFile,
+		},
+	)
 	if separateDescriptionFile(g) {
-		files = append(
-			files, FileOutput{
-				Path: filepath.Join(baseFilename, "question.md"),
-				Type: DocFile,
+		genResult.AddFile(
+			&FileOutput{
+				Filename: "question.md",
+				Type:     DocFile,
 			},
 		)
 	}
-
-	return &GenerateResult{
-		Question: q,
-		Lang:     g,
-		Files:    files,
-	}, nil
+	return genResult, nil
 }
 
 var goBuiltinModifiers = map[string]ModifierFunc{
@@ -296,6 +241,11 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	genResult := &GenerateResult{
+		Question: q,
+		Lang:     g,
+		SubDir:   baseFilename,
+	}
 
 	separateDescriptionFile := separateDescriptionFile(g)
 	blocks := getBlocks(g)
@@ -303,29 +253,30 @@ func (g golang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	codeFile, err := g.generateCodeFile(q, baseFilename, blocks, modifiers, separateDescriptionFile)
+	codeFile, err := g.generateCodeFile(q, "solution.go", blocks, modifiers, separateDescriptionFile)
+	if err != nil {
+		return nil, err
+	}
+	testcaseFile, err := g.generateTestCasesFile(q, "testcases.txt")
+	if err != nil {
+		return nil, err
+	}
+	testFile, err := g.generateTestFile(q, "solution_test.go")
 	if err != nil {
 		return nil, err
 	}
 
-	testcaseStr := g.generateTestCases(q)
-	testFile, err := g.generateTestFile(q, baseFilename, testcaseStr)
-	if err != nil {
-		return nil, err
-	}
-	files := []FileOutput{codeFile, testFile}
+	genResult.AddFile(&codeFile)
+	genResult.AddFile(&testFile)
+	genResult.AddFile(&testcaseFile)
 
 	if separateDescriptionFile {
-		docFile, err := g.generateDescriptionFile(q, baseFilename)
+		docFile, err := g.generateDescriptionFile(q, "question.md")
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, docFile)
+		genResult.AddFile(&docFile)
 	}
 
-	return &GenerateResult{
-		Question: q,
-		Lang:     g,
-		Files:    files,
-	}, nil
+	return genResult, nil
 }

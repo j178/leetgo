@@ -12,12 +12,12 @@ import (
 )
 
 type Opener interface {
-	Open(file lang.FileOutput) error
+	Open(result *lang.GenerateResult) error
 }
 
 type MultiOpener interface {
 	Opener
-	OpenMulti(files []lang.FileOutput) error
+	OpenMulti(result *lang.GenerateResult) error
 }
 
 var editors = map[string]Opener{
@@ -41,7 +41,7 @@ var editors = map[string]Opener{
 
 type noneEditor struct{}
 
-func (e *noneEditor) Open(file lang.FileOutput) error {
+func (e *noneEditor) Open(result *lang.GenerateResult) error {
 	log.Info("none editor is used, skip opening files")
 	return nil
 }
@@ -51,19 +51,19 @@ type commonEditor struct {
 	args    []string
 }
 
-func (e *commonEditor) Open(file lang.FileOutput) error {
+func (e *commonEditor) Open(result *lang.GenerateResult) error {
 	log.Info("opening file", "command", e.command)
-	return runCmd(e.command, e.args, file.Path)
+	return runCmd(e.command, e.args, result.GetFile(lang.CodeFile).GetPath())
 }
 
 type commonMultiEditor struct {
 	commonEditor
 }
 
-func (e *commonMultiEditor) OpenMulti(files []lang.FileOutput) error {
-	paths := make([]string, len(files))
-	for i, f := range files {
-		paths[i] = f.Path
+func (e *commonMultiEditor) OpenMulti(result *lang.GenerateResult) error {
+	paths := make([]string, 0, len(result.Files))
+	for _, f := range result.Files {
+		paths = append(paths, f.GetPath())
 	}
 	log.Info("opening files", "command", e.command)
 	return runCmd(e.command, e.args, paths...)
@@ -71,26 +71,29 @@ func (e *commonMultiEditor) OpenMulti(files []lang.FileOutput) error {
 
 type customEditor struct{}
 
-func (e *customEditor) Open(file lang.FileOutput) error {
+func (e *customEditor) Open(result *lang.GenerateResult) error {
 	cfg := config.Get()
 	if cfg.Editor.Command == "" {
 		log.Warn("editor.command is empty, skip opening files")
 		return nil
 	}
 	log.Info("opening files", "command", cfg.Editor.Command)
-	return runCmd(cfg.Editor.Command, cfg.Editor.Args, file.Path)
+	return runCmd(cfg.Editor.Command, cfg.Editor.Args, result.GetFile(lang.CodeFile).GetPath())
 }
 
 func Get(s string) Opener {
 	return editors[s]
 }
 
-func Open(paths []lang.FileOutput) error {
-	if len(paths) == 0 {
+func Open(result *lang.GenerateResult) error {
+	if len(result.Files) == 0 {
 		return nil
 	}
-	cfg := config.Get()
+	if result.GetFile(lang.CodeFile) == nil {
+		return fmt.Errorf("no code file found")
+	}
 
+	cfg := config.Get()
 	ed := Get(cfg.Editor.Use)
 	if ed == nil {
 		return fmt.Errorf(
@@ -99,9 +102,9 @@ func Open(paths []lang.FileOutput) error {
 		)
 	}
 	if ed, ok := ed.(MultiOpener); ok {
-		return ed.OpenMulti(paths)
+		return ed.OpenMulti(result)
 	}
-	return ed.Open(paths[0])
+	return ed.Open(result)
 }
 
 func runCmd(command string, args []string, files ...string) error {

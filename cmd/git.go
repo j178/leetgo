@@ -50,7 +50,7 @@ func init() {
 func gitAddCommitPush(genResult *lang.GenerateResult) error {
 	files := make([]string, 0, len(genResult.Files))
 	for _, f := range genResult.Files {
-		files = append(files, f.Path)
+		files = append(files, f.Filename)
 	}
 	err := runCmd("git", "add", files...)
 	if err != nil {

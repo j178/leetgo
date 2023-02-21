@@ -101,7 +101,6 @@ type BaseLangConfig struct {
 
 type GoConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	GoModPath      string `yaml:"go_mod_path" mapstructure:"go_mod_path" comment:"Go module path for the generated code"`
 }
 
 type Credentials struct {
