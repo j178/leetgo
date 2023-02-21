@@ -162,21 +162,12 @@ code:
     out_dir: go
     # Overrides the default code.filename_template
     filename_template: ""
-    # Replace some blocks of the generated code
-    blocks:
-      - name: beforeMarker
-        template: |
-          package main
-
-          {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
       - name: changeReceiverName
       - name: addNamedReturn
       - name: addMod
-    # Go module path for the generated code
-    go_mod_path: ""
   python3:
     out_dir: python
     # Overrides the default code.filename_template
