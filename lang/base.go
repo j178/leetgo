@@ -466,6 +466,7 @@ func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename strin
 	}, nil
 }
 
+// nolint: unused
 func (l baseLang) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	return FileOutput{}, errors.New("not implemented")
 }
