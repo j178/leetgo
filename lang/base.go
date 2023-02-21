@@ -167,6 +167,7 @@ const (
 {{ .Question.GetFormattedContent }}
 {{ .BlockCommentEnd }}
 {{ end }}
+{{ block "_internalBeforeMarker" . }}{{ end }}
 {{ block "beforeMarker" . }}{{ end }}
 {{ .LineComment }} {{ .CodeBeginMarker }}
 {{ block "beforeCode" . }}{{ end }}
@@ -174,7 +175,7 @@ const (
 {{ block "afterCode" . }}{{ end }}
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
-{{ block "_testRunner" . }}{{ end }}
+{{ block "_internalAfterMarker" . }}{{ end }}
 `
 
 	withoutDescriptionContentTemplate = `
@@ -184,6 +185,7 @@ const (
 {{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
 {{ end }}
 {{ end }}
+{{ block "_internalBeforeMarker" . }}{{ end }}
 {{ block "beforeMarker" . }}{{ end }}
 {{ .LineComment }} {{ .CodeBeginMarker }}
 {{ block "beforeCode" . }}{{ end }}
@@ -191,7 +193,7 @@ const (
 {{ block "afterCode" . }}{{ end }}
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
-{{ block "_testRunner" . }}{{ end }}
+{{ block "_internalAfterMarker" . }}{{ end }}
 `
 )
 
@@ -220,7 +222,8 @@ var validBlocks = map[string]bool{
 }
 
 var internalBlocks = map[string]bool{
-	"_testRunner": true,
+	"_internalBeforeMarker": true,
+	"_internalAfterMarker":  true,
 }
 
 var builtinModifiers = map[string]ModifierFunc{

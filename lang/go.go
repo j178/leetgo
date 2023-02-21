@@ -191,8 +191,17 @@ func (g golang) generateCodeFile(
 		return FileOutput{}, err
 	}
 	blocks = append(
-		blocks, config.Block{
-			Name:     "_testRunner",
+		blocks,
+		config.Block{
+			Name: "_internalBeforeMarker",
+			Template: fmt.Sprintf(
+				`package main
+
+import . "%s"`, config.GoTestUtilsModPath,
+			),
+		},
+		config.Block{
+			Name:     "_internalAfterMarker",
 			Template: testContent,
 		},
 	)
