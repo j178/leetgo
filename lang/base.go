@@ -30,7 +30,8 @@ type GenerateResult struct {
 	Lang     Lang
 	OutDir   string
 	SubDir   string
-	Files    map[FileType]*FileOutput
+	Files    []FileOutput
+	mask     int
 }
 
 type FileOutput struct {
@@ -59,31 +60,30 @@ func (f *FileOutput) GetContent() (string, error) {
 type FileType int
 
 const (
-	CodeFile FileType = iota
+	CodeFile FileType = 1 << iota
 	TestFile
 	TestCasesFile
 	DocFile
 	OtherFile
 )
 
-func (r *GenerateResult) AddFile(f *FileOutput) *GenerateResult {
-	if _, exist := r.Files[f.Type]; exist {
+func (r *GenerateResult) AddFile(f FileOutput) *GenerateResult {
+	if r.mask&int(f.Type) != 0 {
 		panic(fmt.Sprintf("file type %d already exists", f.Type))
 	}
-	if r.Files == nil {
-		r.Files = make(map[FileType]*FileOutput)
-	}
 	f.genResult = r
-	r.Files[f.Type] = f
+	r.Files = append(r.Files, f)
+	r.mask |= int(f.Type)
 	return r
 }
 
 func (r *GenerateResult) GetFile(typ FileType) *FileOutput {
-	if f, ok := r.Files[typ]; !ok {
-		return nil
-	} else {
-		return f
+	for _, f := range r.Files {
+		if int(f.Type&typ) != 0 {
+			return &f
+		}
 	}
+	return nil
 }
 
 func (r *GenerateResult) SetOutDir(dir string) {
@@ -174,6 +174,7 @@ const (
 {{ block "afterCode" . }}{{ end }}
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
+{{ block "_testRunner" . }}{{ end }}
 `
 
 	withoutDescriptionContentTemplate = `
@@ -190,6 +191,7 @@ const (
 {{ block "afterCode" . }}{{ end }}
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
+{{ block "_testRunner" . }}{{ end }}
 `
 )
 
@@ -215,6 +217,10 @@ var validBlocks = map[string]bool{
 	"code":         true,
 	"afterCode":    true,
 	"afterMarker":  true,
+}
+
+var internalBlocks = map[string]bool{
+	"_testRunner": true,
 }
 
 var builtinModifiers = map[string]ModifierFunc{
@@ -376,7 +382,7 @@ func (l baseLang) generateCodeContent(
 	}
 
 	for _, block := range blocks {
-		if _, ok := validBlocks[block.Name]; !ok {
+		if !validBlocks[block.Name] && !internalBlocks[block.Name] {
 			return "", fmt.Errorf("invalid block name: %s", block.Name)
 		}
 		_, err := tmpl.New(block.Name).Parse(block.Template)
@@ -508,14 +514,14 @@ func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, erro
 		Lang:     l,
 	}
 	genResult.AddFile(
-		&FileOutput{
+		FileOutput{
 			Filename: baseFilename + l.extension,
 			Type:     CodeFile,
 		},
 	)
 	if separateDescriptionFile(l) {
 		genResult.AddFile(
-			&FileOutput{
+			FileOutput{
 				Filename: baseFilename + ".md",
 				Type:     DocFile,
 			},
@@ -546,14 +552,14 @@ func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	genResult.AddFile(&codeFile)
+	genResult.AddFile(codeFile)
 
 	if separateDescriptionFile {
 		docFile, err := l.generateDescriptionFile(q, baseFilename+".md")
 		if err != nil {
 			return nil, err
 		}
-		genResult.AddFile(&docFile)
+		genResult.AddFile(docFile)
 	}
 	return genResult, nil
 }
