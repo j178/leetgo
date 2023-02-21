@@ -15,11 +15,9 @@ import (
 const (
 	goTestTemplate = `
 func main() {
-    targetCaseNum := 0
-    // targetCaseNum := -1
 	// deserialize param
 	// call function
-    %s(t, %s, testcases, targetCaseNum)
+    %s(%s, testcases)
     // get output param
     // serialize output and write to stdout
 }
@@ -172,8 +170,6 @@ func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	// TODO 根据 output.paramindex 找到真正的 output 对象
 	testContent := fmt.Sprintf(
 		goTestTemplate,
-		config.ProjectURL,
-		config.GoTestUtilsModPath,
 		testFuncName,
 		funcName,
 	)
@@ -230,7 +226,7 @@ func (g golang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	genResult.AddFile(
 		FileOutput{
 			Filename: "solution.go",
-			Type:     CodeFile,
+			Type:     CodeFile | TestFile,
 		},
 	)
 	genResult.AddFile(
