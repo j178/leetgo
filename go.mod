@@ -13,12 +13,12 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.6.0
+	github.com/charmbracelet/log v0.1.0
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230216180835-5937a312edda
 	github.com/fatih/color v1.14.1
 	github.com/goccy/go-json v0.10.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/hashicorp/go-hclog v1.4.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/jedib0t/go-pretty/v6 v6.4.4
@@ -55,6 +55,7 @@ require (
 	github.com/dlclark/regexp2 v1.8.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-sqlite/sqlite3 v0.0.0-20180313105335-53dd8e640ee7 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

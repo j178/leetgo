@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/dop251/goja"
-	"github.com/hashicorp/go-hclog"
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
@@ -149,7 +149,7 @@ func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) ([]ModifierFu
 			funcs = append(funcs, f)
 			continue
 		}
-		hclog.L().Warn("invalid modifier, ignored", "name", name, "script", script)
+		log.Warn("invalid modifier, ignored", "name", name, "script", script)
 	}
 	return funcs, nil
 }

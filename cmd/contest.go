@@ -9,9 +9,9 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
+	"github.com/charmbracelet/log"
 	"github.com/fatih/color"
 	"github.com/hako/durafmt"
-	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -173,7 +173,7 @@ leetgo contest left w330
 				if err != nil {
 					return err
 				}
-				hclog.L().Info("registered", "contest", contest.Title, "user", user.Whoami(c))
+				log.Info("registered", "contest", contest.Title, "user", user.Whoami(c))
 			} else {
 				return nil
 			}
@@ -256,7 +256,7 @@ var unregisterCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			hclog.L().Info("unregistered", "contest", contest.Title, "user", user.Whoami(c))
+			log.Info("unregistered", "contest", contest.Title, "user", user.Whoami(c))
 		}
 
 		return nil

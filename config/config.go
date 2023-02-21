@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -316,7 +316,7 @@ func Load(init bool) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			if !init {
-				hclog.L().Warn(
+				log.Warn(
 					"global config file not found, have you ran `leetgo init`?",
 					"file",
 					cfg.GlobalConfigFile(),
@@ -334,7 +334,7 @@ func Load(init bool) error {
 		err = viper.MergeInConfig()
 		if err != nil {
 			if os.IsNotExist(err) {
-				hclog.L().Warn(
+				log.Warn(
 					fmt.Sprintf("%s not found, use global config only", ProjectConfigFilename),
 					"file",
 					cfg.GlobalConfigFile(),

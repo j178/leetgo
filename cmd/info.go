@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ var infoCmd = &cobra.Command{
 		for _, qid := range args {
 			qs, err := leetcode.ParseQID(qid, c)
 			if err != nil {
-				hclog.L().Error("failed to get question", "qid", qid, "err", err)
+				log.Error("failed to get question", "qid", qid, "err", err)
 				continue
 			}
 			questions = append(questions, qs...)

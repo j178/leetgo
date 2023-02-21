@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
@@ -129,7 +129,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 			}
 		}
 		if err != nil {
-			hclog.L().Error(
+			log.Error(
 				"check initialization failed, skip initialization",
 				"lang", gen.Slug(),
 				"err", err,
@@ -147,7 +147,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	for i, file := range result.Files {
 		written, err := tryWrite(file.Path, file.Content)
 		if err != nil {
-			hclog.L().Error("failed to write file", "path", file.Path, "err", err)
+			log.Error("failed to write file", "path", file.Path, "err", err)
 			continue
 		}
 		result.Files[i].Written = written
@@ -182,7 +182,7 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	for _, q := range qs {
 		_, result, err := generate(q)
 		if err != nil {
-			hclog.L().Error("failed to generate", "question", q.TitleSlug, "err", err)
+			log.Error("failed to generate", "question", q.TitleSlug, "err", err)
 			continue
 		}
 		results = append(results, result)
@@ -222,7 +222,7 @@ func tryWrite(file string, content string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	hclog.L().Info("generated", "file", relPath)
+	log.Info("generated", "file", relPath)
 	return true, nil
 }
 
@@ -328,7 +328,7 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("updated", "file", utils.RelToCwd(codeFile.Path))
+	log.Info("updated", "file", utils.RelToCwd(codeFile.Path))
 	return nil
 }
 
