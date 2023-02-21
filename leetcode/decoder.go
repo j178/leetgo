@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/dghubble/sling"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-hclog"
 	"github.com/jedib0t/go-pretty/v6/progress"
 	"github.com/tidwall/gjson"
 
@@ -69,7 +69,7 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 			}
 			dataStr = dataStr[:limit]
 		}
-		hclog.L().Trace(
+		log.Debug(
 			"response",
 			"url", resp.Request.URL.String(),
 			"code", resp.StatusCode,

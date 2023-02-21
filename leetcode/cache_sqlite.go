@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-hclog"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/j178/leetgo/utils"
@@ -72,16 +72,16 @@ func (c *sqliteCache) load() {
 	c.once.Do(
 		func() {
 			defer func(now time.Time) {
-				hclog.L().Trace("cache loaded", "path", c.path, "time", time.Since(now))
+				log.Debug("cache loaded", "path", c.path, "time", time.Since(now))
 			}(time.Now())
 			var err error
 			c.db, err = sql.Open("sqlite3", c.path)
 			if err != nil {
-				hclog.L().Error("failed to load cache, try updating with `leetgo cache update`")
+				log.Error("failed to load cache, try updating with `leetgo cache update`")
 				return
 			}
 			if c.Outdated() {
-				hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
+				log.Warn("cache is too old, try updating with `leetgo cache update`")
 			}
 		},
 	)
@@ -319,7 +319,7 @@ func (c *sqliteCache) Update() error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.path)
+	log.Info("cache updated", "path", c.path)
 	return nil
 }
 

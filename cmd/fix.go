@@ -10,7 +10,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/PullRequestInc/go-gpt3"
 	"github.com/charmbracelet/glamour"
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	"github.com/spf13/cobra"
@@ -112,7 +112,7 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 		q.GetFormattedContent(),
 		code,
 	)
-	hclog.L().Debug("requesting openai", "prompt", prompt)
+	log.Debug("requesting openai", "prompt", prompt)
 	spin := newSpinner(cmd.OutOrStdout())
 	spin.Suffix = " Waiting for OpenAI..."
 	spin.Start()
@@ -133,7 +133,7 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 	if len(resp.Choices) == 0 {
 		return "", errNoFix
 	}
-	hclog.L().Debug("got response from openai", "response", resp.Choices)
+	log.Debug("got response from openai", "response", resp.Choices)
 	text := resp.Choices[0].Text
 	text = utils.EnsureTrailingNewline(text)
 	return text, nil

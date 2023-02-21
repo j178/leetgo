@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/config"
@@ -43,10 +43,10 @@ leetgo submit w330/
 		limiter := newLimiter(user)
 
 		for _, q := range qs {
-			hclog.L().Info("submitting solution", "question", q.TitleSlug, "user", user.Whoami(c))
+			log.Info("submitting solution", "question", q.TitleSlug, "user", user.Whoami(c))
 			result, err := submitSolution(cmd, q, c, gen, limiter)
 			if err != nil {
-				hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+				log.Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				continue
 			}
 			cmd.Print(result.Display(qs[0]))

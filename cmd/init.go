@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/config"
@@ -58,7 +58,7 @@ func createConfigDir() error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("config dir created", "dir", dir)
+	log.Info("config dir created", "dir", dir)
 	return nil
 }
 
@@ -88,7 +88,7 @@ func createConfigFiles(dir string) error {
 		if err != nil {
 			return err
 		}
-		hclog.L().Info("global config file created", "file", globalFile)
+		log.Info("global config file created", "file", globalFile)
 	}
 
 	projectFile := filepath.Join(dir, config.ProjectConfigFilename)
@@ -118,7 +118,7 @@ leetcode:
 			site,
 		),
 	)
-	hclog.L().Info("project config file created", "file", projectFile)
+	log.Info("project config file created", "file", projectFile)
 
 	return nil
 }

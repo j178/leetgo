@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/config"
@@ -88,17 +88,17 @@ leetgo test w330/`,
 		for _, q := range qs {
 			localPassed, remotePassed := true, true
 			if runLocally {
-				hclog.L().Info("running test locally", "question", q.TitleSlug)
+				log.Info("running test locally", "question", q.TitleSlug)
 				localPassed, err = lang.RunLocalTest(q)
 				if err != nil {
-					hclog.L().Error("failed to run test locally", "question", q.TitleSlug, "err", err)
+					log.Error("failed to run test locally", "question", q.TitleSlug, "err", err)
 				}
 			}
 			if runRemotely {
-				hclog.L().Info("running test remotely", "question", q.TitleSlug, "user", user.Whoami(c))
+				log.Info("running test remotely", "question", q.TitleSlug, "user", user.Whoami(c))
 				result, err := runTestRemotely(cmd, q, c, gen, testLimiter)
 				if err != nil {
-					hclog.L().Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
+					log.Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
 					remotePassed = false
 				} else {
 					cmd.Print(result.Display(q))
@@ -109,7 +109,7 @@ leetgo test w330/`,
 			if localPassed && remotePassed && autoSubmit {
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
-					hclog.L().Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+					log.Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
 					cmd.Print(result.Display(q))
 				}

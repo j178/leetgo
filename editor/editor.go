@@ -5,8 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/hashicorp/go-hclog"
-
+	"github.com/charmbracelet/log"
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
 )
@@ -42,7 +41,7 @@ var editors = map[string]Opener{
 type noneEditor struct{}
 
 func (e *noneEditor) Open(file lang.FileOutput) error {
-	hclog.L().Info("none editor is used, skip opening files")
+	log.Info("none editor is used, skip opening files")
 	return nil
 }
 
@@ -52,7 +51,7 @@ type commonEditor struct {
 }
 
 func (e *commonEditor) Open(file lang.FileOutput) error {
-	hclog.L().Info("opening file", "command", e.command)
+	log.Info("opening file", "command", e.command)
 	return runCmd(e.command, e.args, file.Path)
 }
 
@@ -65,7 +64,7 @@ func (e *commonMultiEditor) OpenMulti(files []lang.FileOutput) error {
 	for i, f := range files {
 		paths[i] = f.Path
 	}
-	hclog.L().Info("opening files", "command", e.command)
+	log.Info("opening files", "command", e.command)
 	return runCmd(e.command, e.args, paths...)
 }
 
@@ -74,10 +73,10 @@ type customEditor struct{}
 func (e *customEditor) Open(file lang.FileOutput) error {
 	cfg := config.Get()
 	if cfg.Editor.Command == "" {
-		hclog.L().Warn("editor.command is empty, skip opening files")
+		log.Warn("editor.command is empty, skip opening files")
 		return nil
 	}
-	hclog.L().Info("opening files", "command", cfg.Editor.Command)
+	log.Info("opening files", "command", cfg.Editor.Command)
 	return runCmd(cfg.Editor.Command, cfg.Editor.Args, file.Path)
 }
 

@@ -3,9 +3,8 @@ package config
 import (
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-hclog"
-
 	"github.com/j178/leetgo/utils"
 )
 
@@ -30,7 +29,7 @@ func loadStates() States {
 	file := Get().StateFile()
 	f, err := os.Open(file)
 	if err != nil {
-		hclog.L().Debug("failed to open state file", "err", err)
+		log.Debug("failed to open state file", "err", err)
 		return s
 	}
 	defer func() { _ = f.Close() }()
@@ -38,7 +37,7 @@ func loadStates() States {
 	dec := json.NewDecoder(f)
 	err = dec.Decode(&s)
 	if err != nil {
-		hclog.L().Debug("failed to load state", "err", err)
+		log.Debug("failed to load state", "err", err)
 	}
 
 	return s
@@ -58,17 +57,17 @@ func SaveState(s State) {
 
 	err := utils.CreateIfNotExists(file, false)
 	if err != nil {
-		hclog.L().Error("failed to create state file", "err", err)
+		log.Error("failed to create state file", "err", err)
 		return
 	}
 	f, err := os.OpenFile(file, os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
-		hclog.L().Error("failed to open state file", "err", err)
+		log.Error("failed to open state file", "err", err)
 		return
 	}
 	enc := json.NewEncoder(f)
 	err = enc.Encode(states)
 	if err != nil {
-		hclog.L().Error("failed to save state", "err", err)
+		log.Error("failed to save state", "err", err)
 	}
 }

@@ -12,9 +12,9 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/avast/retry-go"
+	"github.com/charmbracelet/log"
 	"github.com/dghubble/sling"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-hclog"
 	"github.com/jedib0t/go-pretty/v6/progress"
 	"github.com/tidwall/gjson"
 
@@ -184,7 +184,7 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 			bodyStr, _ = io.ReadAll(req.Body)
 			req.Body = io.NopCloser(bytes.NewReader(bodyStr))
 		}
-		hclog.L().Trace("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
+		log.Debug("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
 	}
 
 	var resp *http.Response
@@ -223,7 +223,7 @@ func (c *cnClient) send(req *http.Request, result any, failure any) (*http.Respo
 		retry.LastErrorOnly(true),
 		retry.OnRetry(
 			func(n uint, err error) {
-				hclog.L().Info("retry", "url", req.URL.String(), "attempt", n, "error", err)
+				log.Warn("retry", "url", req.URL.String(), "attempt", n, "error", err)
 			},
 		),
 	)
@@ -493,7 +493,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	}
 	url := resp.Get("data.allQuestionUrls.questionUrl").Str
 
-	hclog.L().Trace("request", "url", url)
+	log.Debug("request", "url", url)
 	tracker := &progress.Tracker{
 		Message: "Downloading questions",
 		Total:   0,

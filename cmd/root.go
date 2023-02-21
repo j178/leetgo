@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"runtime/debug"
 
+	"github.com/charmbracelet/log"
 	"github.com/fatih/color"
-	"github.com/hashicorp/go-hclog"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -74,25 +74,19 @@ func UsageString() string {
 
 func initWorkDir() error {
 	if dir := os.Getenv("LEETGO_WORKDIR"); dir != "" {
-		hclog.L().Debug("change workdir to LEETGO_WORKDIR", "dir", dir)
+		log.Debug("change workdir to LEETGO_WORKDIR", "dir", dir)
 		return os.Chdir(dir)
 	}
 	return nil
 }
 
 func initLogger() {
-	opts := &hclog.LoggerOptions{
-		Level:           hclog.Info,
-		DisableTime:     true,
-		Color:           hclog.AutoColor,
-		ColorHeaderOnly: true,
-	}
+	log.SetReportTimestamp(false)
+	log.SetLevel(log.InfoLevel)
 	if config.Debug {
-		opts.Level = hclog.Trace
-		opts.DisableTime = false
-		opts.Color = hclog.ColorOff
+		log.SetReportTimestamp(true)
+		log.SetLevel(log.DebugLevel)
 	}
-	hclog.SetDefault(hclog.New(opts))
 }
 
 func initCommands() {
