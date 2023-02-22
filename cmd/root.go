@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 
 	"github.com/charmbracelet/log"
-	"github.com/fatih/color"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -63,8 +62,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, color.New(color.FgHiRed).Sprint("Error:"), err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 

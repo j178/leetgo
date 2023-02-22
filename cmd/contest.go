@@ -9,8 +9,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
-	"github.com/fatih/color"
 	"github.com/hako/durafmt"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
@@ -23,11 +23,12 @@ import (
 )
 
 var (
-	colorBlue     = color.New(color.FgHiBlue, color.Bold)
-	colorCyan     = color.New(color.FgHiCyan)
-	colorFaint    = color.New(color.Faint)
-	checkDuration = 10 * time.Second
-	openInBrowser bool
+	// https://robotmoon.com/256-colors/
+	contestTitleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("47")).Bold(true)
+	nameStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("47"))
+	timeStyle         = lipgloss.NewStyle().Faint(true)
+	checkDuration     = 10 * time.Second
+	openInBrowser     bool
 )
 
 func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, error) {
@@ -90,8 +91,8 @@ func waitContestStart(cmd *cobra.Command, ct *leetcode.Contest) error {
 		defer mu.Unlock()
 		s.Suffix = fmt.Sprintf(
 			" %s begins in %s, waiting...",
-			colorBlue.Sprint(ct.Title),
-			colorFaint.Sprint(durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2)),
+			contestTitleStyle.Render(ct.Title),
+			timeStyle.Render(durafmt.Parse(ct.TimeTillStart()).LimitFirstN(2).String()),
 		)
 	}
 	spin.Start()
@@ -140,7 +141,10 @@ leetgo contest left w330
 		} else {
 			qid = args[0]
 		}
-		if !strings.HasSuffix(qid, "/") {
+		if slash := strings.Index(qid, "/"); slash > 0 && slash != len(qid)-1 {
+			log.Warn("ignore question ID part in qid", "qid", qid)
+		}
+		if !strings.Contains(qid, "/") {
 			qid += "/"
 		}
 
@@ -159,8 +163,8 @@ leetgo contest left w330
 				prompt := survey.Confirm{
 					Message: fmt.Sprintf(
 						"Register for %s as %s?",
-						colorBlue.Sprint(contest.Title),
-						colorCyan.Sprint(user.Whoami(c)),
+						contestTitleStyle.Render(contest.Title),
+						nameStyle.Render(user.Whoami(c)),
 					),
 				}
 				err := survey.AskOne(&prompt, &register)
@@ -242,8 +246,8 @@ var unregisterCmd = &cobra.Command{
 			prompt := survey.Confirm{
 				Message: fmt.Sprintf(
 					"Unregister from %s as %s?",
-					colorBlue.Sprint(contest.Title),
-					colorCyan.Sprint(user.Whoami(c)),
+					contestTitleStyle.Render(contest.Title),
+					nameStyle.Render(user.Whoami(c)),
 				),
 			}
 			err = survey.AskOne(&prompt, &unregister)

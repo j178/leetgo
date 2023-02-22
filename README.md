@@ -44,6 +44,7 @@ Local testing requires more work to implement for each language, so not all lang
 | Rust | :white_check_mark: | Not yet |
 | Java | :white_check_mark: | Not yet |
 | JavaScript | :white_check_mark: | Not yet |
+| TypeScript | :white_check_mark: | Not yet |
 | PHP | :white_check_mark: | Not yet |
 | C | :white_check_mark: | Not yet |
 | C# | :white_check_mark: | Not yet |
