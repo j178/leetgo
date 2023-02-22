@@ -18,7 +18,7 @@ import (
 const (
 	CmdName               = "leetgo"
 	globalConfigFile      = "config.yaml"
-	ProjectConfigFilename = CmdName + ".yaml"
+	ProjectConfigFilename = "leetgo.yaml"
 	questionCacheBaseName = "leetcode-questions"
 	stateFilename         = "state.json"
 	CodeBeginMarker       = "@lc code=begin"
