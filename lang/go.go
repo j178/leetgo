@@ -193,7 +193,7 @@ func (g golang) generateCodeFile(
 	blocks = append(
 		blocks,
 		config.Block{
-			Name: "_internalBeforeMarker",
+			Name: internalBeforeMarker,
 			Template: fmt.Sprintf(
 				`package main
 
@@ -201,7 +201,7 @@ import . "%s"`, config.GoTestUtilsModPath,
 			),
 		},
 		config.Block{
-			Name:     "_internalAfterMarker",
+			Name:     internalAfterMarker,
 			Template: testContent,
 		},
 	)

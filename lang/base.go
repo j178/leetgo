@@ -153,37 +153,20 @@ func separateDescriptionFile(lang Lang) bool {
 	return config.Get().Code.SeparateDescriptionFile
 }
 
-const (
-	defaultContentTemplate = `
+const codeContentTemplate = `
 {{- block "header" . -}}
 {{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
 {{ .LineComment }} {{ .Question.Url }}
 {{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
 {{ end }}
 {{ end }}
+{{ if not .SeparateDescriptionFile }}
 {{ block "description" . -}}
 {{ .BlockCommentStart }}
 {{ block "title" . }}{{ .Question.QuestionFrontendId }}. {{ .Question.GetTitle }} ({{ .Question.Difficulty }}){{ end }}
 {{ .Question.GetFormattedContent }}
 {{ .BlockCommentEnd }}
 {{ end }}
-{{ block "_internalBeforeMarker" . }}{{ end }}
-{{ block "beforeMarker" . }}{{ end }}
-{{ .LineComment }} {{ .CodeBeginMarker }}
-{{ block "beforeCode" . }}{{ end }}
-{{ block "code" . }}{{ .Code | runModifiers }}{{ end }}
-{{ block "afterCode" . }}{{ end }}
-{{ .LineComment }} {{ .CodeEndMarker }}
-{{ block "afterMarker" . }}{{ end }}
-{{ block "_internalAfterMarker" . }}{{ end }}
-`
-
-	withoutDescriptionContentTemplate = `
-{{- block "header" . -}}
-{{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
-{{ .LineComment }} {{ .Question.Url }}
-{{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
-{{ end }}
 {{ end }}
 {{ block "_internalBeforeMarker" . }}{{ end }}
 {{ block "beforeMarker" . }}{{ end }}
@@ -195,19 +178,19 @@ const (
 {{ block "afterMarker" . }}{{ end }}
 {{ block "_internalAfterMarker" . }}{{ end }}
 `
-)
 
 type contentData struct {
-	Question          *leetcode.QuestionData
-	Author            string
-	Time              string
-	LineComment       string
-	BlockCommentStart string
-	BlockCommentEnd   string
-	CodeBeginMarker   string
-	CodeEndMarker     string
-	Code              string
-	NeedsDefinition   bool
+	Question                *leetcode.QuestionData
+	Author                  string
+	Time                    string
+	LineComment             string
+	BlockCommentStart       string
+	BlockCommentEnd         string
+	CodeBeginMarker         string
+	CodeEndMarker           string
+	Code                    string
+	SeparateDescriptionFile bool
+	NeedsDefinition         bool
 }
 
 var validBlocks = map[string]bool{
@@ -221,16 +204,22 @@ var validBlocks = map[string]bool{
 	"afterMarker":  true,
 }
 
+// internal blocks are used to generate code for internal use.
+const (
+	internalBeforeMarker = "_internalBeforeMarker"
+	internalAfterMarker  = "_internalAfterMarker"
+)
+
 var internalBlocks = map[string]bool{
-	"_internalBeforeMarker": true,
-	"_internalAfterMarker":  true,
+	internalBeforeMarker: true,
+	internalAfterMarker:  true,
 }
 
 var builtinModifiers = map[string]ModifierFunc{
 	"removeUselessComments": removeUselessComments,
 }
 
-type ModifierFunc func(string, *leetcode.QuestionData) string
+type ModifierFunc = func(string, *leetcode.QuestionData) string
 
 func getBlocks(lang Lang) (ans []config.Block) {
 	blocks := viper.Get("code." + lang.Slug() + ".blocks")
@@ -374,16 +363,10 @@ func (l baseLang) generateCodeContent(
 			},
 		},
 	)
-	var err error
-	if separateDescriptionFile {
-		_, err = tmpl.Parse(withoutDescriptionContentTemplate)
-	} else {
-		_, err = tmpl.Parse(defaultContentTemplate)
-	}
+	_, err := tmpl.Parse(codeContentTemplate)
 	if err != nil {
 		return "", err
 	}
-
 	for _, block := range blocks {
 		if !validBlocks[block.Name] && !internalBlocks[block.Name] {
 			return "", fmt.Errorf("invalid block name: %s", block.Name)
@@ -396,16 +379,17 @@ func (l baseLang) generateCodeContent(
 
 	cfg := config.Get()
 	data := &contentData{
-		Question:          q,
-		Author:            cfg.Author,
-		Time:              time.Now().Format("2006/01/02 15:04"),
-		LineComment:       l.lineComment,
-		BlockCommentStart: l.blockCommentStart,
-		BlockCommentEnd:   l.blockCommentEnd,
-		CodeBeginMarker:   config.CodeBeginMarker,
-		CodeEndMarker:     config.CodeEndMarker,
-		Code:              code,
-		NeedsDefinition:   needsDefinition(code),
+		Question:                q,
+		Author:                  cfg.Author,
+		Time:                    time.Now().Format("2006/01/02 15:04"),
+		LineComment:             l.lineComment,
+		BlockCommentStart:       l.blockCommentStart,
+		BlockCommentEnd:         l.blockCommentEnd,
+		CodeBeginMarker:         config.CodeBeginMarker,
+		CodeEndMarker:           config.CodeEndMarker,
+		Code:                    code,
+		SeparateDescriptionFile: separateDescriptionFile,
+		NeedsDefinition:         needsDefinition(code),
 	}
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, data)
