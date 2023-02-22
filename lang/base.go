@@ -179,7 +179,7 @@ const codeContentTemplate = `
 {{ block "_internalAfterMarker" . }}{{ end }}
 `
 
-type contentData struct {
+type codeContentData struct {
 	Question                *leetcode.QuestionData
 	Author                  string
 	Time                    string
@@ -378,7 +378,7 @@ func (l baseLang) generateCodeContent(
 	}
 
 	cfg := config.Get()
-	data := &contentData{
+	data := &codeContentData{
 		Question:                q,
 		Author:                  cfg.Author,
 		Time:                    time.Now().Format("2006/01/02 15:04"),

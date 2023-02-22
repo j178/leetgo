@@ -98,9 +98,13 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 			},
 		)
 	}
+	if tc.targetCase > len(tc.cases) {
+		return tc, fmt.Errorf("invalid target_case: %d, maximum is %d", tc.targetCase, len(tc.cases))
+	}
 	if tc.targetCase < 0 {
 		tc.targetCase += len(tc.cases)
 	}
+	// TODO check parameters count and deserialize
 	return tc, nil
 }
 
