@@ -153,24 +153,21 @@ func convertToGoType(typeName string) goutils.GoTypeName {
 		return "int"
 	case "double":
 		return "float64"
-	case "string", "String":
+	case "string":
 		return "string"
 	case "boolean":
 		return "bool"
 	case "character":
 		return "byte"
-	case "void", "":
+	case "void":
 		return ""
 	case "TreeNode":
 		return "*TreeNode"
 	case "ListNode":
 		return "*ListNode"
 	default:
-		switch {
-		case strings.HasSuffix(typeName, "[]"):
+		if strings.HasSuffix(typeName, "[]") {
 			return "[]" + convertToGoType(typeName[:len(typeName)-2])
-		case strings.HasPrefix(typeName, "list<"):
-			return "[]" + convertToGoType(typeName[5:len(typeName)-1])
 		}
 	}
 	return ""
@@ -198,8 +195,7 @@ import (
 )`
 )
 
-func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
-	// TODO System design
+func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	var scanCode, callCode, outputCode, writeCode string
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
@@ -210,7 +206,7 @@ func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 		)
 		paramNames = append(paramNames, param.Name)
 	}
-	if q.MetaData.Return != nil && q.MetaData.Return.Type != "" && q.MetaData.Return.Type != "void" {
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		callCode = fmt.Sprintf(
 			"\tans := %s(%s)\n",
 			q.MetaData.Name,
@@ -238,6 +234,17 @@ func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 		writeCode,
 	)
 	return testContent, nil
+}
+
+func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
+	return "", nil
+}
+
+func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
+	if q.MetaData.SystemDesign {
+		return g.generateSystemDesignTestCode(q)
+	}
+	return g.generateNormalTestCode(q)
 }
 
 func (g golang) generateCodeFile(
