@@ -10,7 +10,6 @@ import (
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-	goutils "github.com/j178/leetgo/testutils/go"
 )
 
 type golang struct {
@@ -146,8 +145,8 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	return err == nil, nil
 }
 
-// convertToGoType converts LeetCode type name to Go type.
-func convertToGoType(typeName string) goutils.GoTypeName {
+// convertToGoType converts LeetCode type name to Go type name.
+func convertToGoType(typeName string) string {
 	switch typeName {
 	case "integer":
 		return "int"
@@ -170,7 +169,7 @@ func convertToGoType(typeName string) goutils.GoTypeName {
 			return "[]" + convertToGoType(typeName[:len(typeName)-2])
 		}
 	}
-	return goutils.GoTypeName(typeName)
+	return typeName
 }
 
 const (
@@ -189,9 +188,11 @@ const (
 	goCodeHeader = `package main
 
 import (
-"bufio"
-"os"
-. "` + config.GoTestUtilsModPath + `"
+	"bufio"
+	"fmt"
+	"os"
+
+	. "` + config.GoTestUtilsModPath + `"
 )`
 )
 
@@ -222,7 +223,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		outputCode = fmt.Sprintf("\tans := %s\n", ansName)
 	}
 	writeCode = fmt.Sprintf(
-		"\tprintln(\"%s \" + Serialize(ans))",
+		"\tfmt.Println(\"%s \" + Serialize(ans))",
 		testCaseOutputMark,
 	)
 

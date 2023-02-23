@@ -38,18 +38,55 @@ func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	return tester.RunLocalTest(q, outDir)
 }
 
-func deserializeByLeetCodeType(tpName string, raw string) (reflect.Value, error) {
-	name := convertToGoType(tpName)
-	if name == "" {
-		return reflect.Value{}, fmt.Errorf("invalid type: %s", tpName)
+// typeNameToType converts a Go type name to reflect.Type.
+func typeNameToType(ty string) reflect.Type {
+	switch ty {
+	case "int":
+		return reflect.TypeOf(0)
+	case "int64":
+		return reflect.TypeOf(int64(0))
+	case "float64":
+		return reflect.TypeOf(float64(0))
+	case "string":
+		return reflect.TypeOf("")
+	case "bool":
+		return reflect.TypeOf(false)
+	case "byte":
+		return reflect.TypeOf(byte(0))
+	case "*TreeNode":
+		return reflect.TypeOf((*goutils.TreeNode)(nil))
+	case "*ListNode":
+		return reflect.TypeOf((*goutils.ListNode)(nil))
+	default:
+		if strings.HasPrefix(ty, "[]") {
+			et := typeNameToType(ty[2:])
+			if et == nil {
+				return nil
+			}
+			return reflect.SliceOf(et)
+		}
 	}
-	return goutils.DeserializeByGoType(name, raw)
+	return nil
+}
+
+func deserialize(tpName string, raw string) (reflect.Value, error) {
+	raw = strings.TrimSpace(raw)
+	goTpName := convertToGoType(tpName)
+	ty := typeNameToType(goTpName)
+	if ty == nil {
+		return reflect.Value{}, fmt.Errorf("unknown type: %s", tpName)
+	}
+	return goutils.DeserializeValue(ty, raw)
 }
 
 type testCase struct {
 	no     int
-	input  string
+	input  []string
 	output string
+}
+
+func (c testCase) Input() string {
+	return utils.EnsureTrailingNewline(strings.Join(c.input, "\n"))
 }
 
 type testCases struct {
@@ -57,15 +94,45 @@ type testCases struct {
 	targetCase int
 }
 
-func parseTestCases(f *FileOutput) (testCases, error) {
+func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
+	narg := q.MetaData.NArg()
+	var resultType string
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		resultType = q.MetaData.Return.Type
+	} else {
+		resultType = q.MetaData.Params[q.MetaData.Output.ParamIndex].Type
+	}
+	for _, c := range tc.cases {
+		if len(c.input) != narg {
+			return fmt.Errorf("invalid number of arguments in case %d", c.no)
+		}
+	}
+	for _, c := range tc.cases {
+		for i, arg := range c.input {
+			if _, err := deserialize(q.MetaData.Params[i].Type, arg); err != nil {
+				return fmt.Errorf("invalid argument in case %d: %w", c.no, err)
+			}
+		}
+		if _, err := deserialize(resultType, c.output); err != nil {
+			return fmt.Errorf("invalid result in case %d: %w", c.no, err)
+		}
+	}
+	return nil
+}
+
+func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) {
 	tc := testCases{}
 	content, err := f.GetContent()
 	if err != nil {
 		return tc, err
 	}
+	var (
+		input         []string
+		output        string
+		inputStarted  bool
+		outputStarted bool
+	)
 	lines := strings.Split(content, "\n")
-	var input, output []string
-	var inputStarted, outputStarted bool
 	for _, line := range lines {
 		switch {
 		case strings.TrimSpace(line) == "":
@@ -83,12 +150,12 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 				tc.cases = append(
 					tc.cases, testCase{
 						no:     len(tc.cases),
-						input:  strings.Join(input, "\n"),
-						output: strings.Join(output, "\n"),
+						input:  append([]string(nil), input...),
+						output: output,
 					},
 				)
 				input = input[:0]
-				output = output[:0]
+				output = ""
 			}
 		case strings.HasPrefix(line, testCaseOutputMark):
 			outputStarted = true
@@ -96,15 +163,15 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 		case inputStarted:
 			input = append(input, line)
 		case outputStarted:
-			output = append(output, line)
+			output = line
 		}
 	}
 	if len(input) > 0 && len(output) > 0 {
 		tc.cases = append(
 			tc.cases, testCase{
 				no:     len(tc.cases),
-				input:  strings.Join(input, "\n"),
-				output: strings.Join(output, "\n"),
+				input:  append([]string(nil), input...),
+				output: output,
 			},
 		)
 	}
@@ -114,21 +181,26 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 	if tc.targetCase < 0 {
 		tc.targetCase += len(tc.cases)
 	}
-	// TODO check parameters count and deserialize
+
+	if err := checkTestCases(q, tc); err != nil {
+		return tc, err
+	}
+
 	return tc, nil
 }
 
 func parseOutput(out string) string {
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, testCaseTargetMark) {
-			return strings.TrimSpace(line[len(testCaseTargetMark):])
+		if strings.HasPrefix(line, testCaseOutputMark) {
+			return strings.TrimSpace(line[len(testCaseOutputMark):])
 		}
 	}
 	return ""
 }
 
 func judgeOutput(output, expected string) bool {
+	// TODO deserialize and compare by type
 	return output == expected
 }
 
@@ -137,7 +209,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	if testcaseFile == nil {
 		panic("no test cases file generated")
 	}
-	tc, err := parseTestCases(testcaseFile)
+	tc, err := parseTestCases(q, testcaseFile)
 	if err != nil {
 		return err
 	}
@@ -155,7 +227,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 
 		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 		cmd.Dir = outDir
-		cmd.Stdin = strings.NewReader(testcase.input)
+		cmd.Stdin = strings.NewReader(testcase.Input())
 		cmd.Stdout = io.MultiWriter(&outputBuf, os.Stdout)
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()

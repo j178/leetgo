@@ -48,48 +48,8 @@ func splitArray(raw string) (splits []string, err error) {
 	return
 }
 
-type GoTypeName string
-
-func typeNameToType(ty GoTypeName) reflect.Type {
-	switch ty {
-	case "int":
-		return reflect.TypeOf(0)
-	case "int64":
-		return reflect.TypeOf(int64(0))
-	case "float64":
-		return reflect.TypeOf(float64(0))
-	case "string":
-		return reflect.TypeOf("")
-	case "bool":
-		return reflect.TypeOf(false)
-	case "byte":
-		return reflect.TypeOf(byte(0))
-	case "*TreeNode":
-		return reflect.TypeOf((*TreeNode)(nil))
-	case "*ListNode":
-		return reflect.TypeOf((*ListNode)(nil))
-	default:
-		if strings.HasPrefix(string(ty), "[]") {
-			et := typeNameToType(GoTypeName(string(ty)[2:]))
-			if et == nil {
-				return nil
-			}
-			return reflect.SliceOf(et)
-		}
-	}
-	return nil
-}
-
-func DeserializeByGoType(tpName GoTypeName, raw string) (reflect.Value, error) {
-	raw = strings.TrimSpace(raw)
-	ty := typeNameToType(tpName)
-	if ty == nil {
-		return reflect.Value{}, fmt.Errorf("invalid type: %s", tpName)
-	}
-	return deserialize(ty, raw)
-}
-
-func deserialize(ty reflect.Type, raw string) (reflect.Value, error) {
+// DeserializeValue deserialize a string to a reflect.Value
+func DeserializeValue(ty reflect.Type, raw string) (reflect.Value, error) {
 	z := reflect.Value{}
 	switch ty.Kind() {
 	case reflect.Bool:
@@ -146,7 +106,7 @@ func deserialize(ty reflect.Type, raw string) (reflect.Value, error) {
 		}
 		sl := reflect.MakeSlice(ty, 0, len(splits))
 		for _, s := range splits {
-			e, err := deserialize(ty.Elem(), s)
+			e, err := DeserializeValue(ty.Elem(), s)
 			if err != nil {
 				return z, err
 			}
@@ -169,16 +129,17 @@ func deserialize(ty reflect.Type, raw string) (reflect.Value, error) {
 			return reflect.ValueOf(head), nil
 		}
 	}
-	return z, fmt.Errorf("unknown type %s", ty.Name())
+	return z, fmt.Errorf("unknown type %s", ty.String())
 }
 
+// Deserialize deserialize a string to a type.
 func Deserialize[T any](raw string) T {
 	raw = strings.TrimSpace(raw)
 	var z T
 	ty := reflect.TypeOf(z)
-	v, err := deserialize(ty, raw)
+	v, err := DeserializeValue(ty, raw)
 	if err != nil {
-		panic(fmt.Errorf("deserialize %s failed: %w", raw, err))
+		panic(fmt.Errorf("deserialize failed: %w", err))
 	}
 	rv := reflect.ValueOf(&z)
 	rv.Elem().Set(v)
@@ -226,7 +187,7 @@ func Serialize(v any) string {
 	vt := reflect.ValueOf(v)
 	s, err := serialize(vt)
 	if err != nil {
-		panic(fmt.Errorf("serialize %v failed: %w", v, err))
+		panic(fmt.Errorf("serialize failed: %w", err))
 	}
 	return s
 }
