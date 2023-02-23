@@ -10,18 +10,7 @@ import (
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-)
-
-const (
-	goTestTemplate = `
-func main() {
-	// deserialize param
-	// call function
-    %s(%s, testcases)
-    // get output param
-    // serialize output and write to stdout
-}
-`
+	goutils "github.com/j178/leetgo/testutils/go"
 )
 
 type golang struct {
@@ -157,21 +146,91 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	return err == nil, nil
 }
 
-func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
-	var funcName, testFuncName string
-	if q.MetaData.SystemDesign {
-		funcName = "Constructor"
-		testFuncName = "RunClassTestsWithString"
-	} else {
-		funcName = q.MetaData.Name
-		testFuncName = "RunTestsWithString"
+// convertToGoType converts LeetCode type name to Go type.
+func convertToGoType(typeName string) goutils.GoTypeName {
+	switch typeName {
+	case "integer":
+		return "int"
+	case "double":
+		return "float64"
+	case "string", "String":
+		return "string"
+	case "boolean":
+		return "bool"
+	case "character":
+		return "byte"
+	case "void", "":
+		return ""
+	case "TreeNode":
+		return "*TreeNode"
+	case "ListNode":
+		return "*ListNode"
+	default:
+		switch {
+		case strings.HasSuffix(typeName, "[]"):
+			return "[]" + convertToGoType(typeName[:len(typeName)-2])
+		case strings.HasPrefix(typeName, "list<"):
+			return "[]" + convertToGoType(typeName[5:len(typeName)-1])
+		}
 	}
-	// TODO
-	// TODO 根据 output.paramindex 找到真正的 output 对象
+	return ""
+}
+
+const goTestTemplate = `
+func main() {
+	stdin := bufio.NewReader(os.Stdin)
+
+%s
+
+%s
+
+%s
+
+%s
+}
+`
+
+func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
+	// TODO System design
+	var scanCode, callCode, outputCode, writeCode string
+	paramNames := make([]string, 0, len(q.MetaData.Params))
+	for _, param := range q.MetaData.Params {
+		scanCode += fmt.Sprintf(
+			"\t%s, err := Deserialize[%s](MustRead(stdin.ReadString('\\n')))\n"+
+				"\tif err != nil { panic(err) }\n",
+			param.Name,
+			convertToGoType(param.Type),
+		)
+		paramNames = append(paramNames, param.Name)
+	}
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		callCode = fmt.Sprintf(
+			"\tans := %s(%s)\n",
+			q.MetaData.Name,
+			strings.Join(paramNames, ", "),
+		)
+	} else {
+		callCode = fmt.Sprintf(
+			"\t%s(%s)\n",
+			q.MetaData.Name,
+			strings.Join(paramNames, ", "),
+		)
+		ansName := paramNames[q.MetaData.Output.ParamIndex]
+		outputCode = fmt.Sprintf("\tans := %s\n", ansName)
+	}
+	writeCode = fmt.Sprintf(
+		"\toutput, err := Serialize(ans)\n"+
+			"\tif err != nil { panic(err) }\n"+
+			"\tprintln(\"%s\" + output)",
+		testCaseOutputMark,
+	)
+
 	testContent := fmt.Sprintf(
 		goTestTemplate,
-		testFuncName,
-		funcName,
+		scanCode,
+		callCode,
+		outputCode,
+		writeCode,
 	)
 	return testContent, nil
 }
@@ -198,7 +257,11 @@ func (g golang) generateCodeFile(
 			Template: fmt.Sprintf(
 				`package main
 
-import . "%s"`, config.GoTestUtilsModPath,
+import (
+	"os"
+	"bufio"
+	. "%s"
+)`, config.GoTestUtilsModPath,
 			),
 		},
 		config.Block{

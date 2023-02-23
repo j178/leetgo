@@ -167,6 +167,7 @@ func runTestRemotely(
 	return r, nil
 }
 
+// TODO run custom cases in local testing too
 func getCustomCases() []string {
 	cases := make([]string, len(customCases))
 	for i, c := range customCases {

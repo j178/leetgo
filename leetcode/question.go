@@ -61,9 +61,10 @@ type MetaDataParam struct {
 }
 
 type MetaDataReturn struct {
-	Type    string `json:"type"`
-	Size    int    `json:"size"`
-	Dealloc bool   `json:"dealloc"`
+	Type string `json:"type"`
+	// Size    *int   `json:"size"`
+	// ColSize *int `json:"colsize"`
+	Dealloc bool `json:"dealloc"`
 }
 
 type MetaDataOutput struct {
@@ -151,13 +152,13 @@ type MetaDataConstructor struct {
 type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
-	Return MetaDataReturn  `json:"return"`
-	Output MetaDataOutput  `json:"output"`
+	Return *MetaDataReturn `json:"return"`
+	Output *MetaDataOutput `json:"output"`
 	// System design problems related
-	SystemDesign bool                `json:"systemdesign"`
-	ClassName    string              `json:"classname"`
-	Constructor  MetaDataConstructor `json:"constructor"`
-	Methods      []MetaDataMethod    `json:"methods"`
+	SystemDesign bool                 `json:"systemdesign"`
+	ClassName    *string              `json:"classname"`
+	Constructor  *MetaDataConstructor `json:"constructor"`
+	Methods      *[]MetaDataMethod    `json:"methods"`
 	// Unknown fields
 	Manual bool `json:"manual"`
 }
@@ -175,6 +176,13 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (m *MetaData) NArg() int {
+	if m.SystemDesign {
+		return 2
+	}
+	return len(m.Params)
 }
 
 type JsonExampleTestCases []string

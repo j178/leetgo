@@ -7,12 +7,14 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
+	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -34,6 +36,14 @@ func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	}
 
 	return tester.RunLocalTest(q, outDir)
+}
+
+func deserializeByLeetCodeType(tpName string, raw string) (reflect.Value, error) {
+	name := convertToGoType(tpName)
+	if name == "" {
+		return reflect.Value{}, fmt.Errorf("invalid type: %s", tpName)
+	}
+	return goutils.DeserializeByGoType(name, raw)
 }
 
 type testCase struct {
@@ -66,7 +76,7 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 				return tc, fmt.Errorf("invalid target_case: %w", err)
 			}
 			tc.targetCase = targetCase
-		case strings.HasPrefix(line, "input:"):
+		case strings.HasPrefix(line, testCaseInputMark):
 			inputStarted = true
 			outputStarted = false
 			if len(input) > 0 && len(output) > 0 {
@@ -80,7 +90,7 @@ func parseTestCases(f *FileOutput) (testCases, error) {
 				input = input[:0]
 				output = output[:0]
 			}
-		case strings.HasPrefix(line, "output:"):
+		case strings.HasPrefix(line, testCaseOutputMark):
 			outputStarted = true
 			inputStarted = false
 		case inputStarted:
