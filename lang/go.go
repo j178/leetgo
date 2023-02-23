@@ -196,14 +196,13 @@ func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
 		scanCode += fmt.Sprintf(
-			"\t%s, err := Deserialize[%s](MustRead(stdin.ReadString('\\n')))\n"+
-				"\tif err != nil { panic(err) }\n",
+			"\t%s := Deserialize[%s](MustRead(stdin.ReadString('\\n')))\n",
 			param.Name,
 			convertToGoType(param.Type),
 		)
 		paramNames = append(paramNames, param.Name)
 	}
-	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "" && q.MetaData.Return.Type != "void" {
 		callCode = fmt.Sprintf(
 			"\tans := %s(%s)\n",
 			q.MetaData.Name,
@@ -219,9 +218,7 @@ func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 		outputCode = fmt.Sprintf("\tans := %s\n", ansName)
 	}
 	writeCode = fmt.Sprintf(
-		"\toutput, err := Serialize(ans)\n"+
-			"\tif err != nil { panic(err) }\n"+
-			"\tprintln(\"%s\" + output)",
+		"\tprintln(\"%s \" + Serialize(ans))",
 		testCaseOutputMark,
 	)
 
@@ -258,8 +255,8 @@ func (g golang) generateCodeFile(
 				`package main
 
 import (
-	"os"
 	"bufio"
+	"os"
 	. "%s"
 )`, config.GoTestUtilsModPath,
 			),

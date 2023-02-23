@@ -79,6 +79,7 @@ func typeNameToType(ty GoTypeName) reflect.Type {
 }
 
 func DeserializeByGoType(tpName GoTypeName, raw string) (reflect.Value, error) {
+	raw = strings.TrimSpace(raw)
 	ty := typeNameToType(tpName)
 	if ty == nil {
 		return reflect.Value{}, fmt.Errorf("invalid type: %s", tpName)
@@ -169,16 +170,17 @@ func deserialize(ty reflect.Type, raw string) (reflect.Value, error) {
 	return z, fmt.Errorf("unknown type %s", ty.Name())
 }
 
-func Deserialize[T any](raw string) (T, error) {
+func Deserialize[T any](raw string) T {
+	raw = strings.TrimSpace(raw)
 	var z T
 	ty := reflect.TypeOf(z)
 	v, err := deserialize(ty, raw)
 	if err != nil {
-		return z, err
+		panic(fmt.Errorf("deserialize %s failed: %w", raw, err))
 	}
 	rv := reflect.ValueOf(&z)
 	rv.Elem().Set(v)
-	return z, err
+	return z
 }
 
 func serialize(v reflect.Value) (s string, err error) {
@@ -190,7 +192,7 @@ func serialize(v reflect.Value) (s string, err error) {
 			if i > 0 {
 				sb.WriteByte(',')
 			}
-			_s, er := Serialize(v.Index(i))
+			_s, er := serialize(v.Index(i))
 			if er != nil {
 				return "", er
 			}
@@ -218,7 +220,12 @@ func serialize(v reflect.Value) (s string, err error) {
 	}
 	return
 }
-func Serialize(v any) (s string, err error) {
+
+func Serialize(v any) string {
 	vt := reflect.ValueOf(v)
-	return serialize(vt)
+	s, err := serialize(vt)
+	if err != nil {
+		panic(fmt.Errorf("serialize %v failed: %w", v, err))
+	}
+	return s
 }
