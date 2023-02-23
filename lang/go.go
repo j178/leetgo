@@ -151,10 +151,10 @@ func convertToGoType(typeName string) goutils.GoTypeName {
 	switch typeName {
 	case "integer":
 		return "int"
+	case "long":
+		return "int64"
 	case "double":
 		return "float64"
-	case "string":
-		return "string"
 	case "boolean":
 		return "bool"
 	case "character":
@@ -170,7 +170,7 @@ func convertToGoType(typeName string) goutils.GoTypeName {
 			return "[]" + convertToGoType(typeName[:len(typeName)-2])
 		}
 	}
-	return ""
+	return goutils.GoTypeName(typeName)
 }
 
 const (

@@ -203,6 +203,7 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	m.normalize()
 	return nil
 }
 

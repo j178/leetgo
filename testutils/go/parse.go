@@ -54,6 +54,8 @@ func typeNameToType(ty GoTypeName) reflect.Type {
 	switch ty {
 	case "int":
 		return reflect.TypeOf(0)
+	case "int64":
+		return reflect.TypeOf(int64(0))
 	case "float64":
 		return reflect.TypeOf(float64(0))
 	case "string":
@@ -183,7 +185,7 @@ func Deserialize[T any](raw string) T {
 	return z
 }
 
-func serialize(v reflect.Value) (s string, err error) {
+func serialize(v reflect.Value) (string, error) {
 	switch v.Kind() {
 	case reflect.Slice:
 		sb := &strings.Builder{}
@@ -192,33 +194,32 @@ func serialize(v reflect.Value) (s string, err error) {
 			if i > 0 {
 				sb.WriteByte(',')
 			}
-			_s, er := serialize(v.Index(i))
-			if er != nil {
-				return "", er
+			_s, err := serialize(v.Index(i))
+			if err != nil {
+				return "", err
 			}
 			sb.WriteString(_s)
 		}
 		sb.WriteByte(']')
-		s = sb.String()
+		return sb.String(), nil
 	case reflect.Ptr: // *TreeNode, *ListNode
 		switch tpName := v.Type().Elem().Name(); tpName {
 		case "TreeNode":
-			s = v.Interface().(*TreeNode).ToString()
+			return v.Interface().(*TreeNode).ToString(), nil
 		case "ListNode":
-			s = v.Interface().(*ListNode).ToString()
+			return v.Interface().(*ListNode).ToString(), nil
 		default:
 			return "", fmt.Errorf("unknown type %s", tpName)
 		}
 	case reflect.String:
-		s = fmt.Sprintf(`"%s"`, v.Interface())
+		return fmt.Sprintf(`"%s"`, v.Interface()), nil
 	case reflect.Uint8: // byte
-		s = fmt.Sprintf(`"%c"`, v.Interface())
+		return fmt.Sprintf(`"%c"`, v.Interface()), nil
 	case reflect.Float64:
-		s = fmt.Sprintf(`%.5f`, v.Interface())
+		return fmt.Sprintf(`%.5f`, v.Interface()), nil
 	default: // int uint int64 uint64 bool
-		s = fmt.Sprintf(`%v`, v.Interface())
+		return fmt.Sprintf(`%v`, v.Interface()), nil
 	}
-	return
 }
 
 func Serialize(v any) string {
