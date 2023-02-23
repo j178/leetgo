@@ -176,8 +176,8 @@ func convertToGoType(typeName string) goutils.GoTypeName {
 	return ""
 }
 
-const goTestTemplate = `
-func main() {
+const (
+	goTestTemplate = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
 
 %s
@@ -189,6 +189,14 @@ func main() {
 %s
 }
 `
+	goCodeHeader = `package main
+
+import (
+"bufio"
+"os"
+. "` + config.GoTestUtilsModPath + `"
+)`
+)
 
 func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	// TODO System design
@@ -250,16 +258,8 @@ func (g golang) generateCodeFile(
 	blocks = append(
 		blocks,
 		config.Block{
-			Name: internalBeforeMarker,
-			Template: fmt.Sprintf(
-				`package main
-
-import (
-	"bufio"
-	"os"
-	. "%s"
-)`, config.GoTestUtilsModPath,
-			),
+			Name:     internalBeforeMarker,
+			Template: goCodeHeader,
 		},
 		config.Block{
 			Name:     internalAfterMarker,
