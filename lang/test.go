@@ -80,9 +80,10 @@ func deserialize(tpName string, raw string) (reflect.Value, error) {
 }
 
 type testCase struct {
-	no     int
-	input  []string
-	output string
+	no          int
+	input       []string
+	output      string
+	outputValue reflect.Value
 }
 
 func (c testCase) Input() string {
@@ -97,17 +98,19 @@ type testCases struct {
 func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 	narg := q.MetaData.NArg()
 	resultType := q.MetaData.ResultType()
-	for _, c := range tc.cases {
+	for i, c := range tc.cases {
 		if len(c.input) != narg {
 			return fmt.Errorf("invalid number of arguments in case %d", c.no)
 		}
-		for i, arg := range c.input {
-			if _, err := deserialize(q.MetaData.Params[i].Type, arg); err != nil {
+		for j, arg := range c.input {
+			if _, err := deserialize(q.MetaData.Params[j].Type, arg); err != nil {
 				return fmt.Errorf("invalid argument in case %d: %w", c.no, err)
 			}
 		}
-		if _, err := deserialize(resultType, c.output); err != nil {
+		if v, err := deserialize(resultType, c.output); err != nil {
 			return fmt.Errorf("invalid result in case %d: %w", c.no, err)
+		} else {
+			tc.cases[i].outputValue = v
 		}
 	}
 	return nil
@@ -182,19 +185,28 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 	return tc, nil
 }
 
-func parseOutput(out string) string {
-	lines := strings.Split(out, "\n")
-	for _, line := range lines {
+func parseOutput(q *leetcode.QuestionData, out string) (reflect.Value, error) {
+	var outputLine string
+	for _, line := range strings.Split(out, "\n") {
 		if strings.HasPrefix(line, testCaseOutputMark) {
-			return strings.TrimSpace(line[len(testCaseOutputMark):])
+			outputLine = strings.TrimSpace(line[len(testCaseOutputMark):])
+			break
 		}
 	}
-	return ""
+	if outputLine == "" {
+		return reflect.Value{}, fmt.Errorf("no output found")
+	}
+	tp := q.MetaData.ResultType()
+	v, err := deserialize(tp, outputLine)
+	if err != nil {
+		return reflect.Value{}, fmt.Errorf("invalid output: %w", err)
+	}
+	return v, nil
 }
 
-func judgeOutput(output, expected string) bool {
-	// TODO deserialize and compare by type
-	return output == expected
+func judgeResult(q *leetcode.QuestionData, output, expected reflect.Value) bool {
+	// TODO compare by question rules
+	return reflect.DeepEqual(output.Interface(), expected.Interface())
 }
 
 func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) error {
@@ -210,34 +222,36 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		outputBuf bytes.Buffer
 		passed    int
 	)
-	for _, testcase := range tc.cases {
-		if tc.targetCase != 0 && testcase.no != tc.targetCase {
+	for _, c := range tc.cases {
+		if tc.targetCase != 0 && c.no != tc.targetCase {
 			continue
 		}
 		outputBuf.Reset()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
 
 		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 		cmd.Dir = outDir
-		cmd.Stdin = strings.NewReader(testcase.Input())
+		cmd.Stdin = strings.NewReader(c.Input())
 		cmd.Stdout = io.MultiWriter(&outputBuf, os.Stdout)
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			// show error
+			// todo show error
+			cancel()
 			continue
 		}
 
-		output, err := parseOutput(outputBuf.String())
-		if output == "" {
+		output, err := parseOutput(q, outputBuf.String())
+		if err != nil {
 			// show error
+			cancel()
 			continue
 		}
 
-		if judgeOutput(output, testcase.output) {
+		if judgeResult(q, output, c.outputValue) {
 			passed++
 		}
+		cancel()
 	}
 
 	return nil
