@@ -96,18 +96,11 @@ type testCases struct {
 
 func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 	narg := q.MetaData.NArg()
-	var resultType string
-	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
-		resultType = q.MetaData.Return.Type
-	} else {
-		resultType = q.MetaData.Params[q.MetaData.Output.ParamIndex].Type
-	}
+	resultType := q.MetaData.ResultType()
 	for _, c := range tc.cases {
 		if len(c.input) != narg {
 			return fmt.Errorf("invalid number of arguments in case %d", c.no)
 		}
-	}
-	for _, c := range tc.cases {
 		for i, arg := range c.input {
 			if _, err := deserialize(q.MetaData.Params[i].Type, arg); err != nil {
 				return fmt.Errorf("invalid argument in case %d: %w", c.no, err)
@@ -232,15 +225,16 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
 		if err != nil {
-			// todo show error
+			// show error
 			continue
 		}
 
-		output := parseOutput(outputBuf.String())
+		output, err := parseOutput(outputBuf.String())
 		if output == "" {
 			// show error
 			continue
 		}
+
 		if judgeOutput(output, testcase.output) {
 			passed++
 		}

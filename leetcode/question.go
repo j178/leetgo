@@ -214,6 +214,14 @@ func (m *MetaData) NArg() int {
 	return len(m.Params)
 }
 
+func (m *MetaData) ResultType() string {
+	if m.Return != nil && m.Return.Type != "void" {
+		return m.Return.Type
+	} else {
+		return m.Params[m.Output.ParamIndex].Type
+	}
+}
+
 type JsonExampleTestCases []string
 
 type jsonExampleTestCasesNoMethods JsonExampleTestCases
