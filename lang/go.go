@@ -181,7 +181,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
 		code += fmt.Sprintf(
-			"\t%s := Deserialize[%s](MustRead(stdin.ReadString('\\n')))\n",
+			"\t%s := Deserialize[%s](ReadLine(stdin))\n",
 			param.Name,
 			convertToGoType(param.Type),
 		)
@@ -219,12 +219,13 @@ func toGoFuncName(f string) string {
 func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
-	ops := Deserialize[[]string](MustRead(stdin.ReadString('\n')))
-	params := MustSplitArray(MustRead(stdin.ReadString('\n')))
+	ops := Deserialize[[]string](ReadLine(stdin))
+	params := MustSplitArray(ReadLine(stdin))
 	output := make([]string, 0, len(ops))
-%s
-	obj := Constructor(%s)
 	output = append(output, "null")
+
+%s
+
 	for i := 1; i < len(ops); i++ {
 		switch ops[i] {
 %s
@@ -233,21 +234,21 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	fmt.Println("%s " + JoinArray(output))
 }
 `
-	var prepareConstructorParams string
-	var constructorParamNames []string
+	var prepareCode string
+	var paramNames []string
 	if len(q.MetaData.Constructor.Params) > 0 {
-		prepareConstructorParams += "\tconstructorParams := MustSplitArray(params[0])\n"
+		prepareCode += "\tconstructorParams := MustSplitArray(params[0])\n"
 		for i, param := range q.MetaData.Constructor.Params {
-			prepareConstructorParams += fmt.Sprintf(
+			prepareCode += fmt.Sprintf(
 				"\t%s := Deserialize[%s](constructorParams[%d])\n",
 				param.Name,
 				convertToGoType(param.Type),
 				i,
 			)
-			constructorParamNames = append(constructorParamNames, param.Name)
+			paramNames = append(paramNames, param.Name)
 		}
 	}
-	prepareConstructorParams = prepareConstructorParams[:len(prepareConstructorParams)-1] // remove last newline
+	prepareCode += fmt.Sprintf("\tobj := Constructor(%s)", strings.Join(paramNames, ", "))
 
 	callCode := ""
 	for _, method := range q.MetaData.Methods {
@@ -284,8 +285,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	callCode = callCode[:len(callCode)-1] // remove last newline
 	testContent := fmt.Sprintf(
 		template,
-		prepareConstructorParams,
-		strings.Join(constructorParamNames, ", "),
+		prepareCode,
 		callCode,
 		testCaseOutputMark,
 	)

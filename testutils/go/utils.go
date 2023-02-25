@@ -1,12 +1,16 @@
 package goutils
 
-import "strings"
+import (
+	"bufio"
+	"strings"
+)
 
-func MustRead(s string, err error) string {
-	if err != nil {
+func ReadLine(r *bufio.Reader) string {
+	if line, err := r.ReadString('\n'); err != nil {
 		panic(err)
+	} else {
+		return line
 	}
-	return s
 }
 
 func JoinArray(s []string) string {

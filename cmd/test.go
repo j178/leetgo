@@ -39,7 +39,7 @@ func init() {
 		false,
 		"run test both locally and remotely",
 	)
-	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "custom test cases")
+	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "additional test cases for remote test")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 }
 
@@ -167,7 +167,6 @@ func runTestRemotely(
 	return r, nil
 }
 
-// TODO run custom cases in local testing too
 func getCustomCases() []string {
 	cases := make([]string, len(customCases))
 	for i, c := range customCases {
