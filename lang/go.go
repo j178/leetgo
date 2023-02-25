@@ -172,18 +172,6 @@ func convertToGoType(typeName string) string {
 }
 
 const (
-	goTestTemplate = `func main() {
-	stdin := bufio.NewReader(os.Stdin)
-
-%s
-
-%s
-
-%s
-
-%s
-}
-`
 	goCodeHeader = `package main
 
 import (
@@ -196,10 +184,15 @@ import (
 )
 
 func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
-	var scanCode, callCode, outputCode, writeCode string
+	const template = `func main() {
+	stdin := bufio.NewReader(os.Stdin)
+%s
+}
+`
+	code := ""
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
-		scanCode += fmt.Sprintf(
+		code += fmt.Sprintf(
 			"\t%s := Deserialize[%s](MustRead(stdin.ReadString('\\n')))\n",
 			param.Name,
 			convertToGoType(param.Type),
@@ -207,37 +200,104 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		paramNames = append(paramNames, param.Name)
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
-		callCode = fmt.Sprintf(
+		code += fmt.Sprintf(
 			"\tans := %s(%s)\n",
 			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
 	} else {
-		callCode = fmt.Sprintf(
+		code += fmt.Sprintf(
 			"\t%s(%s)\n",
 			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
-		outputCode = fmt.Sprintf("\tans := %s\n", ansName)
+		code += fmt.Sprintf("\tans := %s\n", ansName)
 	}
-	writeCode = fmt.Sprintf(
+	code += fmt.Sprintf(
 		"\tfmt.Println(\"%s \" + Serialize(ans))",
 		testCaseOutputMark,
 	)
 
-	testContent := fmt.Sprintf(
-		goTestTemplate,
-		scanCode,
-		callCode,
-		outputCode,
-		writeCode,
-	)
+	testContent := fmt.Sprintf(template, code)
 	return testContent, nil
 }
 
+func toGoFuncName(f string) string {
+	return strings.Title(f)
+}
+
 func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
-	return "", nil
+	const template = `func main() {
+	stdin := bufio.NewReader(os.Stdin)
+	ops := Deserialize[[]string](MustRead(stdin.ReadString('\n')))
+	params := SplitArray(MustRead(stdin.ReadString('\n')))
+	output := make([]string, 0, len(ops))
+	constructorParams := SplitArray(params[0])
+%s
+	obj := Constructor(%s)
+	output = append(output, "null")
+	for i := 1; i < len(ops); i++ {
+		switch ops[i] {
+%s
+		}
+	}
+	fmt.Println("%s " + JoinArray(output))
+}
+`
+	var prepareConstructorParams string
+	var constructorParamNames []string
+	for i, param := range q.MetaData.Constructor.Params {
+		prepareConstructorParams +=
+			fmt.Sprintf(
+				"\t%s := Deserialize[%s](constructorParams[%d])\n",
+				param.Name,
+				convertToGoType(param.Type),
+				i,
+			)
+		constructorParamNames = append(constructorParamNames, param.Name)
+	}
+	branchCode := ""
+	for _, method := range q.MetaData.Methods {
+		methodCall := "\t\tcase \"" + method.Name + "\":\n"
+		if len(method.Params) > 0 {
+			methodCall += "\t\t\tmethodParams := SplitArray(params[i])\n"
+		}
+		var methodParamNames []string
+		for i, param := range method.Params {
+			methodCall +=
+				fmt.Sprintf(
+					"\t\t\t%s := Deserialize[%s](methodParams[%d])\n",
+					param.Name,
+					convertToGoType(param.Type),
+					i,
+				)
+			methodParamNames = append(methodParamNames, param.Name)
+		}
+		if method.Return.Type != "" && method.Return.Type != "void" {
+			methodCall += fmt.Sprintf(
+				"\t\t\tans := Serialize(obj.%s(%s))\n\t\t\toutput = append(output, ans)\n",
+				toGoFuncName(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+		} else {
+			methodCall += fmt.Sprintf(
+				"\t\t\tobj.%s(%s)\n",
+				toGoFuncName(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+			methodCall += "\t\t\toutput = append(output, \"null\")\n"
+		}
+		branchCode += methodCall
+	}
+	testContent := fmt.Sprintf(
+		template,
+		prepareConstructorParams,
+		strings.Join(constructorParamNames, ","),
+		branchCode,
+		testCaseOutputMark,
+	)
+	return testContent, nil
 }
 
 func (g golang) generateTestContent(q *leetcode.QuestionData) (string, error) {

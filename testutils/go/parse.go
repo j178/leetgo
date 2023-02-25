@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+func SplitArray(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	splits, err := splitArray(raw)
+	if err != nil {
+		panic(err)
+	}
+	return splits
+}
+
 func splitArray(raw string) (splits []string, err error) {
 	invalidErr := fmt.Errorf("invalid array: %s", raw)
 

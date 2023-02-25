@@ -431,12 +431,7 @@ func (l baseLang) generateCodeFile(
 func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 	cases := q.GetTestCases()
 	outputs := q.ParseExampleOutputs()
-	argsNum := 0
-	if q.MetaData.SystemDesign {
-		argsNum = 2
-	} else {
-		argsNum = len(q.MetaData.Params)
-	}
+	argsNum := q.MetaData.NArg()
 
 	// Assume all questions output are single.
 	var caseAndOutputs []string
@@ -447,7 +442,9 @@ func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, input, testCaseOutputMark, outputs[i/argsNum]),
 		)
 	}
-	return strings.Join(caseAndOutputs, "\n\n")
+	content := strings.Join(caseAndOutputs, "\n\n")
+	content = utils.EnsureTrailingNewline(content)
+	return content
 }
 
 func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {

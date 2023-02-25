@@ -82,10 +82,9 @@ func deserialize(tpName string, raw string) (reflect.Value, error) {
 }
 
 type testCase struct {
-	no          int
-	input       []string
-	output      string
-	outputValue reflect.Value
+	no     int
+	input  []string
+	output string
 }
 
 func (c testCase) Input() string {
@@ -98,9 +97,20 @@ type testCases struct {
 }
 
 func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
+	if q.MetaData.SystemDesign {
+		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
+		// different types. We cannot parse the second input, the output is also contains different of types,
+		// so we skip system design problems.
+		// input:
+		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
+		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
+		// output:
+		// [null,null,null,1,null,-1,null,-1,3,4]
+		return nil
+	}
 	narg := q.MetaData.NArg()
 	resultType := q.MetaData.ResultType()
-	for i, c := range tc.cases {
+	for _, c := range tc.cases {
 		if len(c.input) != narg {
 			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
 		}
@@ -110,10 +120,8 @@ func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 				return fmt.Errorf("cannot parse %s as %s", arg, tp)
 			}
 		}
-		if v, err := deserialize(resultType, c.output); err != nil {
+		if _, err := deserialize(resultType, c.output); err != nil {
 			return fmt.Errorf("cannot parse %s as %s", c.output, resultType)
-		} else {
-			tc.cases[i].outputValue = v
 		}
 	}
 	return nil
@@ -182,7 +190,7 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		return tc, fmt.Errorf("invalid target_case: %d, maximum is %d", tc.targetCase, len(tc.cases))
 	}
 	if tc.targetCase < 0 {
-		tc.targetCase += len(tc.cases)
+		tc.targetCase += len(tc.cases) + 1
 	}
 
 	if err := checkTestCases(q, tc); err != nil {
@@ -210,6 +218,9 @@ func parseOutput(q *leetcode.QuestionData, outputLine string) (reflect.Value, er
 	if outputLine == "" {
 		return reflect.Value{}, fmt.Errorf("no output found")
 	}
+	if q.MetaData.SystemDesign {
+		return reflect.Value{}, nil
+	}
 	tp := q.MetaData.ResultType()
 	v, err := deserialize(tp, outputLine)
 	if err != nil {
@@ -218,11 +229,7 @@ func parseOutput(q *leetcode.QuestionData, outputLine string) (reflect.Value, er
 	return v, nil
 }
 
-func judgeResult(q *leetcode.QuestionData, actual, expected reflect.Value) bool {
-	// TODO compare by question rules
-	return reflect.DeepEqual(actual.Interface(), expected.Interface())
-}
-
+// TODO add color
 func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)
 	if testcaseFile == nil {
@@ -240,11 +247,13 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		ran       int
 		passed    int
 	)
-	l := list.NewWriter()
-	l.SetStyle(list.StyleBulletCircle)
-
 	for _, c := range tc.cases {
 		func() {
+			l := list.NewWriter()
+			l.SetStyle(list.StyleBulletCircle)
+			defer func() {
+				fmt.Println(l.Render())
+			}()
 			if tc.targetCase != 0 && c.no != tc.targetCase {
 				l.AppendItem(fmt.Sprintf("Case %d:    Skipped", c.no))
 				return
@@ -294,7 +303,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.UnIndent()
 				return
 			}
-			actualOutputValue, err := parseOutput(q, actualOutput)
+			_, err := parseOutput(q, actualOutput)
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    Invalid output", c.no))
 				l.Indent()
@@ -307,7 +316,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 
-			if judgeResult(q, actualOutputValue, c.outputValue) {
+			if judgeResult(q, actualOutput, c.output) {
 				passed++
 				l.AppendItem(fmt.Sprintf("Case %d:    Accepted", c.no))
 			} else {
@@ -323,8 +332,6 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 		}()
 	}
-	fmt.Println(l.Render())
-
 	if passed == ran {
 		return true, nil
 	}
