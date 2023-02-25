@@ -321,7 +321,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.UnIndent()
 				return
 			}
-			_, err := parseOutput(q, actualOutput)
+			err = checkOutput(q, actualOutput)
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    Invalid output", c.no))
 				l.Indent()
