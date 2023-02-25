@@ -223,6 +223,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 	return testContent, nil
 }
 
+// nolint: staticcheck
 func toGoFuncName(f string) string {
 	return strings.Title(f)
 }
@@ -248,13 +249,12 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	var prepareConstructorParams string
 	var constructorParamNames []string
 	for i, param := range q.MetaData.Constructor.Params {
-		prepareConstructorParams +=
-			fmt.Sprintf(
-				"\t%s := Deserialize[%s](constructorParams[%d])\n",
-				param.Name,
-				convertToGoType(param.Type),
-				i,
-			)
+		prepareConstructorParams += fmt.Sprintf(
+			"\t%s := Deserialize[%s](constructorParams[%d])\n",
+			param.Name,
+			convertToGoType(param.Type),
+			i,
+		)
 		constructorParamNames = append(constructorParamNames, param.Name)
 	}
 	branchCode := ""
@@ -265,13 +265,12 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		}
 		var methodParamNames []string
 		for i, param := range method.Params {
-			methodCall +=
-				fmt.Sprintf(
-					"\t\t\t%s := Deserialize[%s](methodParams[%d])\n",
-					param.Name,
-					convertToGoType(param.Type),
-					i,
-				)
+			methodCall += fmt.Sprintf(
+				"\t\t\t%s := Deserialize[%s](methodParams[%d])\n",
+				param.Name,
+				convertToGoType(param.Type),
+				i,
+			)
 			methodParamNames = append(methodParamNames, param.Name)
 		}
 		if method.Return.Type != "" && method.Return.Type != "void" {
