@@ -171,18 +171,6 @@ func convertToGoType(typeName string) string {
 	return typeName
 }
 
-const (
-	goCodeHeader = `package main
-
-import (
-	"bufio"
-	"fmt"
-	"os"
-
-	. "` + config.GoTestUtilsModPath + `"
-)`
-)
-
 func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
@@ -249,18 +237,19 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	var constructorParamNames []string
 	if len(q.MetaData.Constructor.Params) > 0 {
 		prepareConstructorParams += "\tconstructorParams := MustSplitArray(params[0])\n"
+		for i, param := range q.MetaData.Constructor.Params {
+			prepareConstructorParams += fmt.Sprintf(
+				"\t%s := Deserialize[%s](constructorParams[%d])\n",
+				param.Name,
+				convertToGoType(param.Type),
+				i,
+			)
+			constructorParamNames = append(constructorParamNames, param.Name)
+		}
 	}
-	for i, param := range q.MetaData.Constructor.Params {
-		prepareConstructorParams += fmt.Sprintf(
-			"\t%s := Deserialize[%s](constructorParams[%d])\n",
-			param.Name,
-			convertToGoType(param.Type),
-			i,
-		)
-		constructorParamNames = append(constructorParamNames, param.Name)
-	}
+	prepareConstructorParams = prepareConstructorParams[:len(prepareConstructorParams)-1] // remove last newline
 
-	branchCode := ""
+	callCode := ""
 	for _, method := range q.MetaData.Methods {
 		methodCall := "\t\tcase \"" + method.Name + "\":\n"
 		if len(method.Params) > 0 {
@@ -290,13 +279,14 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 			)
 			methodCall += "\t\t\toutput = append(output, \"null\")\n"
 		}
-		branchCode += methodCall
+		callCode += methodCall
 	}
+	callCode = callCode[:len(callCode)-1] // remove last newline
 	testContent := fmt.Sprintf(
 		template,
 		prepareConstructorParams,
 		strings.Join(constructorParamNames, ", "),
-		branchCode,
+		callCode,
 		testCaseOutputMark,
 	)
 	return testContent, nil
@@ -319,6 +309,17 @@ func (g golang) generateCodeFile(
 	FileOutput,
 	error,
 ) {
+	codeHeader := fmt.Sprintf(
+		`package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+
+	. "%s"
+)`, config.GoTestUtilsModPath,
+	)
 	testContent, err := g.generateTestContent(q)
 	if err != nil {
 		return FileOutput{}, err
@@ -328,7 +329,7 @@ func (g golang) generateCodeFile(
 		blocks,
 		config.Block{
 			Name:     internalBeforeMarker,
-			Template: goCodeHeader,
+			Template: codeHeader,
 		},
 		config.Block{
 			Name:     internalAfterMarker,
