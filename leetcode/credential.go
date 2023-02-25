@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/zellyn/kooky"
-	_ "github.com/zellyn/kooky/browser/chrome"
-	_ "github.com/zellyn/kooky/browser/edge"
-	_ "github.com/zellyn/kooky/browser/firefox"
-	_ "github.com/zellyn/kooky/browser/safari"
+	"github.com/j178/kooky"
+	_ "github.com/j178/kooky/browser/chrome"
+	_ "github.com/j178/kooky/browser/edge"
+	_ "github.com/j178/kooky/browser/firefox"
+	_ "github.com/j178/kooky/browser/safari"
 
 	"github.com/j178/leetgo/config"
 )

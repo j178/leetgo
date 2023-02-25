@@ -65,8 +65,7 @@ You can download the latest binary from the [release page](https://github.com/j1
 ### Install via go
  
 ```shell
-git clone git@github.com:j178/leetgo.git
-cd leetgo && go install
+go install github.com/j178/leetgo@latest
 ```
 
 ### Install via [HomeBrew](https://brew.sh/) on macOS/Linux

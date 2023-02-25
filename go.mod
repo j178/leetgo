@@ -21,6 +21,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
+	github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88
 	github.com/j178/leetgo/testutils/go v0.1.0-alpha
 	github.com/jedib0t/go-pretty/v6 v6.4.4
 	github.com/k3a/html2text v1.1.0
@@ -33,16 +34,11 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/zalando/go-keyring v0.2.2
-	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230203021902-e439c6617a99
-
 require (
-	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a // indirect
 	github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd // indirect
-	github.com/Velocidex/yaml/v2 v2.2.8 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
@@ -52,7 +48,6 @@ require (
 	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.8.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
@@ -103,5 +98,4 @@ require (
 	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	www.velocidex.com/golang/go-ese v0.1.0 // indirect
 )
