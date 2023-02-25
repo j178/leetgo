@@ -232,9 +232,8 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	const template = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
 	ops := Deserialize[[]string](MustRead(stdin.ReadString('\n')))
-	params := SplitArray(MustRead(stdin.ReadString('\n')))
+	params := MustSplitArray(MustRead(stdin.ReadString('\n')))
 	output := make([]string, 0, len(ops))
-	constructorParams := SplitArray(params[0])
 %s
 	obj := Constructor(%s)
 	output = append(output, "null")
@@ -248,6 +247,9 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 `
 	var prepareConstructorParams string
 	var constructorParamNames []string
+	if len(q.MetaData.Constructor.Params) > 0 {
+		prepareConstructorParams += "\tconstructorParams := MustSplitArray(params[0])\n"
+	}
 	for i, param := range q.MetaData.Constructor.Params {
 		prepareConstructorParams += fmt.Sprintf(
 			"\t%s := Deserialize[%s](constructorParams[%d])\n",
@@ -257,11 +259,12 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		)
 		constructorParamNames = append(constructorParamNames, param.Name)
 	}
+
 	branchCode := ""
 	for _, method := range q.MetaData.Methods {
 		methodCall := "\t\tcase \"" + method.Name + "\":\n"
 		if len(method.Params) > 0 {
-			methodCall += "\t\t\tmethodParams := SplitArray(params[i])\n"
+			methodCall += "\t\t\tmethodParams := MustSplitArray(params[i])\n"
 		}
 		var methodParamNames []string
 		for i, param := range method.Params {
@@ -292,7 +295,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 	testContent := fmt.Sprintf(
 		template,
 		prepareConstructorParams,
-		strings.Join(constructorParamNames, ","),
+		strings.Join(constructorParamNames, ", "),
 		branchCode,
 		testCaseOutputMark,
 	)

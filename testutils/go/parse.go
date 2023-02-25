@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func SplitArray(raw string) []string {
+func MustSplitArray(raw string) []string {
 	raw = strings.TrimSpace(raw)
-	splits, err := splitArray(raw)
+	splits, err := SplitArray(raw)
 	if err != nil {
 		panic(err)
 	}
 	return splits
 }
 
-func splitArray(raw string) (splits []string, err error) {
+func SplitArray(raw string) (splits []string, err error) {
 	invalidErr := fmt.Errorf("invalid array: %s", raw)
 
 	// check [] at leftmost and rightmost
@@ -109,7 +109,7 @@ func DeserializeValue(ty reflect.Type, raw string) (reflect.Value, error) {
 		}
 		return reflect.ValueOf(f), nil
 	case reflect.Slice:
-		splits, err := splitArray(raw)
+		splits, err := SplitArray(raw)
 		if err != nil {
 			return z, fmt.Errorf("invalid array: %s", raw)
 		}

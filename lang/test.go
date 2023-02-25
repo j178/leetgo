@@ -97,18 +97,32 @@ type testCases struct {
 }
 
 func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
+	narg := q.MetaData.NArg()
 	if q.MetaData.SystemDesign {
 		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
-		// different types. We cannot parse the second input, the output is also contains different of types,
-		// so we skip system design problems.
+		// different types. We just check if it's a valid list.
 		// input:
 		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
 		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
 		// output:
 		// [null,null,null,1,null,-1,null,-1,3,4]
+		for _, c := range tc.cases {
+			if len(c.input) != narg {
+				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
+			}
+			if _, err := deserialize("[]string", c.input[0]); err != nil {
+				return fmt.Errorf("cannot parse %s as []string", c.input[0])
+			}
+			if _, err := goutils.SplitArray(c.input[1]); err != nil {
+				return fmt.Errorf("%s is not a valid list", c.input[0])
+			}
+			if _, err := goutils.SplitArray(c.output); err != nil {
+				return fmt.Errorf("%s is not a valid list", c.input[0])
+			}
+		}
 		return nil
 	}
-	narg := q.MetaData.NArg()
+
 	resultType := q.MetaData.ResultType()
 	for _, c := range tc.cases {
 		if len(c.input) != narg {
@@ -214,19 +228,23 @@ func extractOutput(s string) (string, string) {
 	return output, strings.Join(others, "\n")
 }
 
-func parseOutput(q *leetcode.QuestionData, outputLine string) (reflect.Value, error) {
+func checkOutput(q *leetcode.QuestionData, outputLine string) error {
 	if outputLine == "" {
-		return reflect.Value{}, fmt.Errorf("no output found")
+		return fmt.Errorf("no output found")
 	}
 	if q.MetaData.SystemDesign {
-		return reflect.Value{}, nil
+		_, err := goutils.SplitArray(outputLine)
+		if err != nil {
+			return fmt.Errorf("invalid output: %s", outputLine)
+		}
+		return nil
 	}
 	tp := q.MetaData.ResultType()
-	v, err := deserialize(tp, outputLine)
+	_, err := deserialize(tp, outputLine)
 	if err != nil {
-		return reflect.Value{}, fmt.Errorf("invalid output: %w", err)
+		return fmt.Errorf("invalid output: %s", outputLine)
 	}
-	return v, nil
+	return nil
 }
 
 // TODO add color
