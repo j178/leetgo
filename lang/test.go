@@ -3,9 +3,8 @@ package lang
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
 	"reflect"
 	"strconv"
@@ -24,12 +23,14 @@ func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	tester, ok := gen.(LocalTestable)
 	if !ok {
 		return false, fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
-
+	err = q.Fulfill()
+	if err != nil {
+		return false, fmt.Errorf("failed to get question data: %w", err)
+	}
 	outDir := getOutDir(q, gen)
 	if !utils.IsExist(outDir) {
 		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
@@ -100,15 +101,16 @@ func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 	resultType := q.MetaData.ResultType()
 	for i, c := range tc.cases {
 		if len(c.input) != narg {
-			return fmt.Errorf("invalid number of arguments in case %d", c.no)
+			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
 		}
 		for j, arg := range c.input {
-			if _, err := deserialize(q.MetaData.Params[j].Type, arg); err != nil {
-				return fmt.Errorf("invalid argument in case %d: %w", c.no, err)
+			tp := q.MetaData.Params[j].Type
+			if _, err := deserialize(tp, arg); err != nil {
+				return fmt.Errorf("cannot parse %s as %s", arg, tp)
 			}
 		}
 		if v, err := deserialize(resultType, c.output); err != nil {
-			return fmt.Errorf("invalid result in case %d: %w", c.no, err)
+			return fmt.Errorf("cannot parse %s as %s", c.output, resultType)
 		} else {
 			tc.cases[i].outputValue = v
 		}
@@ -134,9 +136,10 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		case strings.TrimSpace(line) == "":
 			continue
 		case strings.HasPrefix(line, testCaseTargetMark):
-			targetCase, err := strconv.Atoi(strings.TrimSpace(line[len(testCaseTargetMark):]))
+			no := strings.TrimSpace(line[len(testCaseTargetMark):])
+			targetCase, err := strconv.Atoi(no)
 			if err != nil {
-				return tc, fmt.Errorf("invalid target_case: %w", err)
+				return tc, fmt.Errorf("invalid target_case: %s is not valid number", no)
 			}
 			tc.targetCase = targetCase
 		case strings.HasPrefix(line, testCaseInputMark):
@@ -145,7 +148,7 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 			if len(input) > 0 && len(output) > 0 {
 				tc.cases = append(
 					tc.cases, testCase{
-						no:     len(tc.cases),
+						no:     len(tc.cases) + 1,
 						input:  append([]string(nil), input...),
 						output: output,
 					},
@@ -159,13 +162,16 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		case inputStarted:
 			input = append(input, line)
 		case outputStarted:
+			if len(output) > 0 {
+				return tc, errors.New("invalid test case: output should be a single line")
+			}
 			output = line
 		}
 	}
 	if len(input) > 0 && len(output) > 0 {
 		tc.cases = append(
 			tc.cases, testCase{
-				no:     len(tc.cases),
+				no:     len(tc.cases) + 1,
 				input:  append([]string(nil), input...),
 				output: output,
 			},
@@ -179,20 +185,27 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 	}
 
 	if err := checkTestCases(q, tc); err != nil {
-		return tc, err
+		return tc, fmt.Errorf("invalid test case: %w", err)
 	}
 
 	return tc, nil
 }
 
-func parseOutput(q *leetcode.QuestionData, out string) (reflect.Value, error) {
-	var outputLine string
-	for _, line := range strings.Split(out, "\n") {
+func extractOutput(s string) (string, string) {
+	var output string
+	var others []string
+	for _, line := range strings.Split(s, "\n") {
 		if strings.HasPrefix(line, testCaseOutputMark) {
-			outputLine = strings.TrimSpace(line[len(testCaseOutputMark):])
-			break
+			// If there are multiple output lines, only the last one is used.
+			output = strings.TrimSpace(line[len(testCaseOutputMark):])
+		} else {
+			others = append(others, line)
 		}
 	}
+	return output, strings.Join(others, "\n")
+}
+
+func parseOutput(q *leetcode.QuestionData, outputLine string) (reflect.Value, error) {
 	if outputLine == "" {
 		return reflect.Value{}, fmt.Errorf("no output found")
 	}
@@ -204,55 +217,112 @@ func parseOutput(q *leetcode.QuestionData, out string) (reflect.Value, error) {
 	return v, nil
 }
 
-func judgeResult(q *leetcode.QuestionData, output, expected reflect.Value) bool {
+func judgeResult(q *leetcode.QuestionData, actual, expected reflect.Value) bool {
 	// TODO compare by question rules
-	return reflect.DeepEqual(output.Interface(), expected.Interface())
+	return reflect.DeepEqual(actual.Interface(), expected.Interface())
 }
 
-func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) error {
+func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)
 	if testcaseFile == nil {
 		panic("no test cases file generated")
 	}
 	tc, err := parseTestCases(q, testcaseFile)
 	if err != nil {
-		return err
+		return false, err
+	}
+	if len(tc.cases) == 0 {
+		return false, fmt.Errorf("no test cases found")
 	}
 	var (
 		outputBuf bytes.Buffer
+		ran       int
 		passed    int
 	)
 	for _, c := range tc.cases {
-		if tc.targetCase != 0 && c.no != tc.targetCase {
-			continue
-		}
-		outputBuf.Reset()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		func() {
+			if tc.targetCase != 0 && c.no != tc.targetCase {
+				fmt.Printf("\nCase %d:    Skipped", c.no)
+				return
+			}
+			ran++
+			if ran > 1 {
+				fmt.Println()
+			}
+			outputBuf.Reset()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 
-		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-		cmd.Dir = outDir
-		cmd.Stdin = strings.NewReader(c.Input())
-		cmd.Stdout = io.MultiWriter(&outputBuf, os.Stdout)
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			// todo show error
-			cancel()
-			continue
-		}
+			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+			cmd.Dir = outDir
+			cmd.Stdin = strings.NewReader(c.Input())
+			cmd.Stdout = &outputBuf
+			cmd.Stderr = &outputBuf
+			err = cmd.Start()
+			if err != nil {
+				fmt.Printf("\nCase %d:    %s", c.no, "Failed to start")
+				return
+			}
+			done := make(chan error, 1)
+			go func() {
+				done <- cmd.Wait()
+			}()
+			select {
+			case <-ctx.Done():
+			case err = <-done:
+			}
 
-		output, err := parseOutput(q, outputBuf.String())
-		if err != nil {
-			// show error
-			cancel()
-			continue
-		}
+			actualOutput, stdout := extractOutput(outputBuf.String())
+			stdoutStr := ""
+			lastLineTableSymbol := "└"
+			if stdout != "" {
+				lastLineTableSymbol = "├"
+				stdoutStr = fmt.Sprintf("\n└ Stdout:    %s", strings.ReplaceAll(stdout, "\n", "↩ "))
+			}
 
-		if judgeResult(q, output, c.outputValue) {
-			passed++
-		}
-		cancel()
+			if ctx.Err() != nil {
+				fmt.Print(
+					fmt.Sprintf("\nCase %d:      %s", c.no, "Time limit exceeded"),
+					fmt.Sprintf("\n%s Input:     %s", lastLineTableSymbol, strings.ReplaceAll(c.Input(), "\n", "↩ ")),
+					stdoutStr,
+				)
+				return
+			}
+			if err != nil {
+				fmt.Print(
+					fmt.Sprintf("\nCase %d:      %s", c.no, "Runtime error"),
+					fmt.Sprintf("\n%s Input:     %s", lastLineTableSymbol, strings.ReplaceAll(c.Input(), "\n", "↩ ")),
+					stdoutStr,
+				)
+				return
+			}
+			actualOutputValue, err := parseOutput(q, actualOutput)
+			if err != nil {
+				fmt.Print(
+					fmt.Sprintf("\nCase %d:      %s", c.no, "Invalid output"),
+					fmt.Sprintf("\n├ Input:     %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")),
+					fmt.Sprintf("\n%s Output:    %s", lastLineTableSymbol, actualOutput),
+					stdoutStr,
+				)
+				return
+			}
+
+			if judgeResult(q, actualOutputValue, c.outputValue) {
+				passed++
+				fmt.Printf("\nCase %d:    %s", c.no, "Accepted")
+			} else {
+				fmt.Print(
+					fmt.Sprintf("\nCase %d:      %s", c.no, "Wrong answer"),
+					fmt.Sprintf("\n├ Input:     %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")),
+					fmt.Sprintf("\n├ Output:    %s", actualOutput),
+					fmt.Sprintf("\n%s Expected:  %s", lastLineTableSymbol, c.output),
+					stdoutStr,
+				)
+			}
+		}()
 	}
-
-	return nil
+	if passed == ran {
+		return true, nil
+	}
+	return false, nil
 }

@@ -141,8 +141,7 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	genResult.SetOutDir(outDir)
 
 	args := []string{"go", "run", "./" + genResult.SubDir}
-	err = runTest(q, genResult, args, outDir)
-	return err == nil, nil
+	return runTest(q, genResult, args, outDir)
 }
 
 // convertToGoType converts LeetCode type name to Go type name.
