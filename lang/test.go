@@ -148,15 +148,16 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		return tc, err
 	}
 	var (
-		input         []string
+		inputLines    []string
 		output        string
 		inputStarted  bool
 		outputStarted bool
 	)
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {
+		line := strings.TrimSpace(line)
 		switch {
-		case strings.TrimSpace(line) == "":
+		case line == "":
 			continue
 		case strings.HasPrefix(line, testCaseTargetMark):
 			no := strings.TrimSpace(line[len(testCaseTargetMark):])
@@ -168,22 +169,22 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		case strings.HasPrefix(line, testCaseInputMark):
 			inputStarted = true
 			outputStarted = false
-			if len(input) > 0 && len(output) > 0 {
+			if len(inputLines) > 0 && len(output) > 0 {
 				tc.cases = append(
 					tc.cases, testCase{
 						no:     len(tc.cases) + 1,
-						input:  append([]string(nil), input...),
+						input:  append([]string(nil), inputLines...),
 						output: output,
 					},
 				)
-				input = input[:0]
+				inputLines = inputLines[:0]
 				output = ""
 			}
 		case strings.HasPrefix(line, testCaseOutputMark):
 			outputStarted = true
 			inputStarted = false
 		case inputStarted:
-			input = append(input, line)
+			inputLines = append(inputLines, line)
 		case outputStarted:
 			if len(output) > 0 {
 				return tc, errors.New("invalid test case: output should be a single line")
@@ -191,11 +192,11 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 			output = line
 		}
 	}
-	if len(input) > 0 && len(output) > 0 {
+	if len(inputLines) > 0 && len(output) > 0 {
 		tc.cases = append(
 			tc.cases, testCase{
 				no:     len(tc.cases) + 1,
-				input:  append([]string(nil), input...),
+				input:  append([]string(nil), inputLines...),
 				output: output,
 			},
 		)
