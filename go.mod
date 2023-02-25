@@ -21,6 +21,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
+	github.com/j178/kooky v0.0.0-20230225090305-5bc7062de47d
 	github.com/jedib0t/go-pretty/v6 v6.4.4
 	github.com/k3a/html2text v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -32,11 +33,8 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/zalando/go-keyring v0.2.2
-	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/zellyn/kooky => github.com/j178/kooky v0.0.0-20230225081128-82fa502a9b9e
 
 require (
 	github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd // indirect
