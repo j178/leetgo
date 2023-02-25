@@ -15,6 +15,7 @@ import (
 	"github.com/j178/leetgo/leetcode"
 	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
+	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
@@ -239,16 +240,16 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		ran       int
 		passed    int
 	)
+	l := list.NewWriter()
+	l.SetStyle(list.StyleBulletCircle)
+
 	for _, c := range tc.cases {
 		func() {
 			if tc.targetCase != 0 && c.no != tc.targetCase {
-				fmt.Printf("\nCase %d:    Skipped", c.no)
+				l.AppendItem(fmt.Sprintf("Case %d:    Skipped", c.no))
 				return
 			}
 			ran++
-			if ran > 1 {
-				fmt.Println()
-			}
 			outputBuf.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
@@ -260,7 +261,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			cmd.Stderr = &outputBuf
 			err = cmd.Start()
 			if err != nil {
-				fmt.Printf("\nCase %d:    %s", c.no, "Failed to start")
+				l.AppendItem(fmt.Sprintf("Case %d:    Failed to start", c.no))
 				return
 			}
 			done := make(chan error, 1)
@@ -273,54 +274,57 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 
 			actualOutput, stdout := extractOutput(outputBuf.String())
-			stdoutStr := ""
-			lastLineTableSymbol := "└"
-			if stdout != "" {
-				lastLineTableSymbol = "├"
-				stdoutStr = fmt.Sprintf("\n└ Stdout:    %s", strings.ReplaceAll(stdout, "\n", "↩ "))
-			}
-
 			if ctx.Err() != nil {
-				fmt.Print(
-					fmt.Sprintf("\nCase %d:      %s", c.no, "Time limit exceeded"),
-					fmt.Sprintf("\n%s Input:     %s", lastLineTableSymbol, strings.ReplaceAll(c.Input(), "\n", "↩ ")),
-					stdoutStr,
-				)
+				l.AppendItem(fmt.Sprintf("Case %d:    Time limit exceeded", c.no))
+				l.Indent()
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				if stdout != "" {
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", strings.ReplaceAll(stdout, "\n", "↩ ")))
+				}
+				l.UnIndent()
 				return
 			}
 			if err != nil {
-				fmt.Print(
-					fmt.Sprintf("\nCase %d:      %s", c.no, "Runtime error"),
-					fmt.Sprintf("\n%s Input:     %s", lastLineTableSymbol, strings.ReplaceAll(c.Input(), "\n", "↩ ")),
-					stdoutStr,
-				)
+				l.AppendItem(fmt.Sprintf("Case %d:    Runtime error", c.no))
+				l.Indent()
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				if stdout != "" {
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", strings.ReplaceAll(stdout, "\n", "↩ ")))
+				}
+				l.UnIndent()
 				return
 			}
 			actualOutputValue, err := parseOutput(q, actualOutput)
 			if err != nil {
-				fmt.Print(
-					fmt.Sprintf("\nCase %d:      %s", c.no, "Invalid output"),
-					fmt.Sprintf("\n├ Input:     %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")),
-					fmt.Sprintf("\n%s Output:    %s", lastLineTableSymbol, actualOutput),
-					stdoutStr,
-				)
+				l.AppendItem(fmt.Sprintf("Case %d:    Invalid output", c.no))
+				l.Indent()
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
+				if stdout != "" {
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", strings.ReplaceAll(stdout, "\n", "↩ ")))
+				}
+				l.UnIndent()
 				return
 			}
 
 			if judgeResult(q, actualOutputValue, c.outputValue) {
 				passed++
-				fmt.Printf("\nCase %d:    %s", c.no, "Accepted")
+				l.AppendItem(fmt.Sprintf("Case %d:    Accepted", c.no))
 			} else {
-				fmt.Print(
-					fmt.Sprintf("\nCase %d:      %s", c.no, "Wrong answer"),
-					fmt.Sprintf("\n├ Input:     %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")),
-					fmt.Sprintf("\n├ Output:    %s", actualOutput),
-					fmt.Sprintf("\n%s Expected:  %s", lastLineTableSymbol, c.output),
-					stdoutStr,
-				)
+				l.AppendItem(fmt.Sprintf("Case %d:    Wrong answer", c.no))
+				l.Indent()
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
+				l.AppendItem(fmt.Sprintf("Expected:   %s", c.output))
+				if stdout != "" {
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", strings.ReplaceAll(stdout, "\n", "↩ ")))
+				}
+				l.UnIndent()
 			}
 		}()
 	}
+	fmt.Println(l.Render())
+
 	if passed == ran {
 		return true, nil
 	}
