@@ -231,6 +231,10 @@ github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLf
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
 github.com/j178/kooky v0.0.0-20230225090305-5bc7062de47d h1:jFI9Jy2PG6WPjAGoxi5WRuPiF8uu0gC7f6wzf3zE0us=
 github.com/j178/kooky v0.0.0-20230225090305-5bc7062de47d/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
+github.com/j178/kooky v0.0.0-20230225091032-0ebed9201315 h1:TT6kEH3xOaY3SMXJuFMCeplHWlVwz7pqq8941dEV37I=
+github.com/j178/kooky v0.0.0-20230225091032-0ebed9201315/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
+github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88 h1:x0BMg5C+3E4UuZ0t5R5BsEzSnpjlV6bhmn7oSWJ0/PY=
+github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
 github.com/jedib0t/go-pretty/v6 v6.4.4 h1:N+gz6UngBPF4M288kiMURPHELDMIhF/Em35aYuKrsSc=
 github.com/jedib0t/go-pretty/v6 v6.4.4/go.mod h1:MgmISkTWDSFu0xOqiZ0mKNntMQ2mDgOcwOkwBEkMDJI=
 github.com/joefitzgerald/rainbow-reporter v0.1.0/go.mod h1:481CNgqmVHQZzdIbN52CupLJyoVwB10FQ/IQlF1pdL8=
