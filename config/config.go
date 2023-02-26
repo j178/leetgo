@@ -101,7 +101,6 @@ type BaseLangConfig struct {
 
 type GoConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	GoModPath      string `yaml:"go_mod_path" mapstructure:"go_mod_path" comment:"Go module path for the generated code"`
 }
 
 type Credentials struct {
@@ -193,16 +192,6 @@ func Default() *Config {
 			Go: GoConfig{
 				BaseLangConfig: BaseLangConfig{
 					OutDir: "go",
-					Blocks: []Block{
-						{
-							Name: "beforeMarker", Template: fmt.Sprintf(
-								`package main
-
-{{ if .NeedsDefinition -}} import . "%s" {{- end }}
-`, GoTestUtilsModPath,
-							),
-						},
-					},
 					Modifiers: []Modifier{
 						{Name: "removeUselessComments"},
 						{Name: "changeReceiverName"},

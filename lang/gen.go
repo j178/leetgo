@@ -3,7 +3,6 @@ package lang
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -14,67 +13,6 @@ import (
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
-
-const (
-	testCaseInputMark  = "input:"
-	testCaseOutputMark = "output:"
-)
-
-type GenerateResult struct {
-	Question *leetcode.QuestionData
-	Lang     Lang
-	Files    []FileOutput
-}
-
-type FileOutput struct {
-	Path    string
-	Content string
-	Written bool
-	Type    FileType
-}
-
-type FileType int
-
-const (
-	CodeFile FileType = iota
-	TestFile
-	DocFile
-	OtherFile
-)
-
-func (r *GenerateResult) GetCodeFile() *FileOutput {
-	for _, f := range r.Files {
-		if f.Type == CodeFile {
-			return &f
-		}
-	}
-	return nil
-}
-
-func (r *GenerateResult) PrependPath(dir string) {
-	for i, f := range r.Files {
-		r.Files[i].Path = filepath.Join(dir, f.Path)
-	}
-}
-
-type Lang interface {
-	Name() string
-	ShortName() string
-	Slug() string
-	LineComment() string
-	// Generate generates code files for the question.
-	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
-	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
-}
-
-type NeedInitialization interface {
-	HasInitialized(dir string) (bool, error)
-	Initialize(dir string) error
-}
-
-type LocalTestable interface {
-	RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error)
-}
 
 func GetGenerator(lang string) (Lang, error) {
 	lang = strings.ToLower(lang)
@@ -142,12 +80,12 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	result.PrependPath(outDir)
+	result.SetOutDir(outDir)
 	// Write files
 	for i, file := range result.Files {
-		written, err := tryWrite(file.Path, file.Content)
+		written, err := tryWrite(file.GetPath(), file.Content)
 		if err != nil {
-			log.Error("failed to write file", "path", file.Path, "err", err)
+			log.Error("failed to write file", "path", file.GetPath(), "err", err)
 			continue
 		}
 		result.Files[i].Written = written
@@ -240,7 +178,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	outDir := getOutDir(q, gen)
-	result.PrependPath(outDir)
+	result.SetOutDir(outDir)
 	return result, nil
 }
 
@@ -249,19 +187,15 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	codeFile := result.GetCodeFile()
+	codeFile := result.GetFile(CodeFile)
 	if codeFile == nil {
 		return "", fmt.Errorf("no code file generated")
 	}
-	if !utils.IsExist(codeFile.Path) {
-		return "", fmt.Errorf("code file %s does not exist", codeFile.Path)
-	}
-	code, err := os.ReadFile(codeFile.Path)
+	code, err := codeFile.GetContent()
 	if err != nil {
 		return "", err
 	}
-
-	codeLines := strings.Split(string(code), "\n")
+	codeLines := strings.Split(code, "\n")
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
@@ -284,7 +218,7 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		}
 	}
 	if nonEmptyLines == 0 {
-		return "", fmt.Errorf("no code found in %s", codeFile.Path)
+		return "", fmt.Errorf("no code found in %s", codeFile.GetPath())
 	}
 
 	return strings.Join(codeLinesToKeep, "\n"), nil
@@ -295,19 +229,15 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	if err != nil {
 		return err
 	}
-	codeFile := result.GetCodeFile()
+	codeFile := result.GetFile(CodeFile)
 	if codeFile == nil {
 		return fmt.Errorf("no code file generated")
 	}
-	if !utils.IsExist(codeFile.Path) {
-		return fmt.Errorf("code file %s does not exist", codeFile.Path)
-	}
-	code, err := os.ReadFile(codeFile.Path)
+	code, err := codeFile.GetContent()
 	if err != nil {
 		return err
 	}
-
-	lines := strings.Split(string(code), "\n")
+	lines := strings.Split(code, "\n")
 	var newLines []string
 	skip := false
 	for _, line := range lines {
@@ -324,30 +254,10 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	}
 
 	newContent := strings.Join(newLines, "\n")
-	err = os.WriteFile(codeFile.Path, []byte(newContent), 0o644)
+	err = os.WriteFile(codeFile.GetPath(), []byte(newContent), 0o644)
 	if err != nil {
 		return err
 	}
-	log.Info("updated", "file", utils.RelToCwd(codeFile.Path))
+	log.Info("updated", "file", utils.RelToCwd(codeFile.GetPath()))
 	return nil
-}
-
-func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
-	cfg := config.Get()
-	gen, err := GetGenerator(cfg.Code.Lang)
-	if err != nil {
-		return false, err
-	}
-
-	tester, ok := gen.(LocalTestable)
-	if !ok {
-		return false, fmt.Errorf("language %s does not support local test", gen.Slug())
-	}
-
-	outDir := getOutDir(q, gen)
-	if !utils.IsExist(outDir) {
-		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
-	}
-
-	return tester.RunLocalTest(q, outDir)
 }

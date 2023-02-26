@@ -32,6 +32,30 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 `leetgo` supports code generation for most languages, and local testing for some languages.
 
+In the Go language, running `leetgo pick 257` will generate the following code:
+
+```go
+// Omitted some code...
+// @lc code=begin
+
+func binaryTreePaths(root *TreeNode) (ans []string) {
+
+	return
+}
+
+// @lc code=end
+
+func main() {
+	stdin := bufio.NewReader(os.Stdin)
+	root := Deserialize[*TreeNode](ReadLine(stdin))
+	ans := binaryTreePaths(root)
+	fmt.Println("output: " + Serialize(ans))
+}
+```
+
+This is a complete and runnable program. You can run it directly, input the test cases, and compare the results. 
+`leetgo test -L` will automatically run this program with the test cases in `testcases.txt` and compare the results.
+
 Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
 
 Local testing requires more work to implement for each language, so not all languages are supported.
@@ -168,21 +192,12 @@ code:
     out_dir: go
     # Overrides the default code.filename_template
     filename_template: ""
-    # Replace some blocks of the generated code
-    blocks:
-      - name: beforeMarker
-        template: |
-          package main
-
-          {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
       - name: changeReceiverName
       - name: addNamedReturn
       - name: addMod
-    # Go module path for the generated code
-    go_mod_path: ""
   python3:
     out_dir: python
     # Overrides the default code.filename_template

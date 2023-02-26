@@ -61,9 +61,10 @@ type MetaDataParam struct {
 }
 
 type MetaDataReturn struct {
-	Type    string `json:"type"`
-	Size    int    `json:"size"`
-	Dealloc bool   `json:"dealloc"`
+	Type string `json:"type"`
+	// Size    *int   `json:"size"`
+	// ColSize *int `json:"colsize"`
+	Dealloc bool `json:"dealloc"`
 }
 
 type MetaDataOutput struct {
@@ -151,8 +152,8 @@ type MetaDataConstructor struct {
 type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
-	Return MetaDataReturn  `json:"return"`
-	Output MetaDataOutput  `json:"output"`
+	Return *MetaDataReturn `json:"return"`
+	Output *MetaDataOutput `json:"output"`
 	// System design problems related
 	SystemDesign bool                `json:"systemdesign"`
 	ClassName    string              `json:"classname"`
@@ -164,6 +165,34 @@ type MetaData struct {
 
 type metaDataNoMethods MetaData
 
+// Type name in metadata is not consistent, we need to normalize it.
+func normalizeType(ty string) string {
+	switch {
+	case strings.HasPrefix(ty, "list<"):
+		return normalizeType(ty[5:len(ty)-1]) + "[]" // "list<int>" -> "int[]"
+	case ty == "String":
+		return "string"
+	case ty == "":
+		return "void"
+	}
+	return ty
+}
+
+func (m *MetaData) normalize() {
+	for i, param := range m.Params {
+		m.Params[i].Type = normalizeType(param.Type)
+	}
+	if m.Return != nil {
+		m.Return.Type = normalizeType(m.Return.Type)
+	}
+	for _, method := range m.Methods {
+		for i, param := range method.Params {
+			method.Params[i].Type = normalizeType(param.Type)
+		}
+		method.Return.Type = normalizeType(method.Return.Type)
+	}
+}
+
 func (m *MetaData) UnmarshalJSON(data []byte) error {
 	// Ignore error, when we load from sqlite, no need to unquote it.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
@@ -174,7 +203,23 @@ func (m *MetaData) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	m.normalize()
 	return nil
+}
+
+func (m *MetaData) NArg() int {
+	if m.SystemDesign {
+		return 2
+	}
+	return len(m.Params)
+}
+
+func (m *MetaData) ResultType() string {
+	if m.Return != nil && m.Return.Type != "void" {
+		return m.Return.Type
+	} else {
+		return m.Params[m.Output.ParamIndex].Type
+	}
 }
 
 type JsonExampleTestCases []string

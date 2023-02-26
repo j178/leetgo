@@ -229,12 +229,10 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLfbgNxrN4=
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
-github.com/j178/kooky v0.0.0-20230225090305-5bc7062de47d h1:jFI9Jy2PG6WPjAGoxi5WRuPiF8uu0gC7f6wzf3zE0us=
-github.com/j178/kooky v0.0.0-20230225090305-5bc7062de47d/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
-github.com/j178/kooky v0.0.0-20230225091032-0ebed9201315 h1:TT6kEH3xOaY3SMXJuFMCeplHWlVwz7pqq8941dEV37I=
-github.com/j178/kooky v0.0.0-20230225091032-0ebed9201315/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
 github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88 h1:x0BMg5C+3E4UuZ0t5R5BsEzSnpjlV6bhmn7oSWJ0/PY=
 github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
+github.com/j178/leetgo/testutils/go v0.1.0-alpha h1:mXse8WbvKWeMBtsdOk3KWXDzGh5e4Q1NyPpFo+EZodM=
+github.com/j178/leetgo/testutils/go v0.1.0-alpha/go.mod h1:Nwd7mblpQsRDCXay0vw206Tqocrxph9enVukW8nkgn4=
 github.com/jedib0t/go-pretty/v6 v6.4.4 h1:N+gz6UngBPF4M288kiMURPHELDMIhF/Em35aYuKrsSc=
 github.com/jedib0t/go-pretty/v6 v6.4.4/go.mod h1:MgmISkTWDSFu0xOqiZ0mKNntMQ2mDgOcwOkwBEkMDJI=
 github.com/joefitzgerald/rainbow-reporter v0.1.0/go.mod h1:481CNgqmVHQZzdIbN52CupLJyoVwB10FQ/IQlF1pdL8=
@@ -293,6 +291,8 @@ github.com/microcosm-cc/bluemonday v1.0.21 h1:dNH3e4PSyE4vNX+KlRGHT5KrSvjeUkoNPw
 github.com/microcosm-cc/bluemonday v1.0.21/go.mod h1:ytNkv4RrDrLJ2pqlsSI46O6IVXmZOBBD4SaJyDwwTkM=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
+github.com/mitchellh/go-ps v1.0.0 h1:i6ampVEEF4wQFF+bkYfwYgY+F/uYJDktmvLPf7qIgjc=
+github.com/mitchellh/go-ps v1.0.0/go.mod h1:J4lOc8z8yJs6vUwklHw2XEIiT4z4C40KtWVN3nvg8Pg=
 github.com/mitchellh/go-wordwrap v1.0.1 h1:TLuKupo69TCn6TQSyGxwI1EblZZEsQ0vMlAFQflz0v0=
 github.com/mitchellh/go-wordwrap v1.0.1/go.mod h1:R62XHJLzvMFRBbcrT7m7WgmE1eOyTSsCt+hzestvNj0=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=

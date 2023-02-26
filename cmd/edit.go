@@ -28,7 +28,7 @@ var editCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return editor.Open(result.Files)
+		return editor.Open(result)
 	},
 }
 
