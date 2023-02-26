@@ -26,7 +26,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 - Support for both leetcode.com and leetcode.cn
 - Automatically read cookies from browser, no need to enter password
 - Automatically open question files in your favourite editor
-- Use OpenAI to automatically discover and fix issues in the code. (Experimental)
+- Use OpenAI to automatically discover and fix issues in the code (Experimental)
 
 ## Language support
 
@@ -363,6 +363,8 @@ Some common problems can be found in the [Q&A](https://github.com/j178/leetgo/di
 
 [Good First Issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start, 
 and you can also check out some [Help Wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
+
+If you want to add local testing support for a new language, please refer to [#112](https://github.com/j178/leetgo/issues/112).
 
 Before submitting a PR, please run `golangci-lint run --fix` to fix lint errors.
 
