@@ -31,6 +31,29 @@
 
 `leetgo` 可以为大多数语言生成样例代码，以及为部分语言生成本地测试代码。
 
+以 Go 语言为例，`leetgo pick 257` 会生成如下代码：
+
+```go
+// 省略一些代码...
+// @lc code=begin
+
+func binaryTreePaths(root *TreeNode) (ans []string) {
+
+	return
+}
+
+// @lc code=end
+
+func main() {
+	stdin := bufio.NewReader(os.Stdin)
+	root := Deserialize[*TreeNode](ReadLine(stdin))
+	ans := binaryTreePaths(root)
+	fmt.Println("output: " + Serialize(ans))
+}
+```
+
+这是一个完整的可运行的程序，你可以直接运行它，输入测试样例，比对结果。`leetgo test -L` 会自动按照 `testcases.txt` 中的 case 运行这个程序，并且比对结果。
+
 本地测试意味着你可以在你的机器上运行你的代码，输入测试样例比对结果，你可以使用 Debugger 来单步调试你的代码，更容易的找出代码中的问题。
 
 本地测试需要为每一种语言做单独的适配，所以目前仅支持部分语言(其实只支持 Go)，下表是目前的支持情况：

@@ -31,6 +31,30 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 `leetgo` supports code generation for most languages, and local testing for some languages.
 
+In the Go language, running `leetgo pick 257` will generate the following code:
+
+```go
+// Omitted some code...
+// @lc code=begin
+
+func binaryTreePaths(root *TreeNode) (ans []string) {
+
+	return
+}
+
+// @lc code=end
+
+func main() {
+	stdin := bufio.NewReader(os.Stdin)
+	root := Deserialize[*TreeNode](ReadLine(stdin))
+	ans := binaryTreePaths(root)
+	fmt.Println("output: " + Serialize(ans))
+}
+```
+
+This is a complete and runnable program. You can run it directly, input the test cases, and compare the results. 
+`leetgo test -L` will automatically run this program with the test cases in `testcases.txt` and compare the results.
+
 Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
 
 Local testing requires more work to implement for each language, so not all languages are supported.
