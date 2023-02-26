@@ -26,6 +26,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 - Support for both leetcode.com and leetcode.cn
 - Automatically read cookies from browser, no need to enter password
 - Automatically open question files in your favourite editor
+- Use OpenAI to automatically discover and fix issues in the code. (Experimental)
 
 ## Language support
 

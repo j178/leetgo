@@ -26,6 +26,7 @@
 - 同时支持 leetcode.com (美国站) 和 leetcode.cn (中国站)
 - 自动从浏览器中读取 LeetCode 的 Cookie，无需手动提供
 - 自动在你喜欢的编辑器中打开生成的代码文件
+- 使用 OpenAI 发现并自动修复你代码中问题 (Experimental)
 
 ## 编程语言支持
 
