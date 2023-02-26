@@ -254,6 +254,7 @@ var (
 	passedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#00b300"))
 	errorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
 	failedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff6600"))
+	stdoutStyle  = lipgloss.NewStyle().Faint(true)
 )
 
 func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) (bool, error) {
@@ -309,13 +310,16 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 
 			actualOutput, stdout := extractOutput(outputBuf.String())
+			mayAppendStdout := func() {
+				if stdout != "" {
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdoutStyle.Render(stdout)))
+				}
+			}
 			if ctx.Err() != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Time limit exceeded")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
-				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdout))
-				}
+				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
@@ -323,9 +327,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Runtime error")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
-				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdout))
-				}
+				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
@@ -335,9 +337,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
-				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdout))
-				}
+				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
@@ -351,9 +351,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
 				l.AppendItem(fmt.Sprintf("Expected:   %s", c.output))
-				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdout))
-				}
+				mayAppendStdout()
 				l.UnIndent()
 			}
 		}()
