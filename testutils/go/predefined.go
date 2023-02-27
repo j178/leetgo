@@ -1,10 +1,15 @@
-package common
+package goutils
 
 import (
 	"encoding/json"
 	"strconv"
 	"strings"
 )
+
+/*
+Much appreciated to EndlessCheng
+Adapted from https://github.com/EndlessCheng/codeforces-go/blob/ae5b312f3f/leetcode/testutil/leetcode.go
+*/
 
 type ListNode struct {
 	Val  int
@@ -130,7 +135,6 @@ func (t *TreeNode) ToString() string {
 	return sb.String()
 }
 
-// NaryTreeNode N 叉树
 type NaryTreeNode struct {
 	Val      int
 	Children []*NaryTreeNode

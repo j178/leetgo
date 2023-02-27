@@ -1,230 +1,18 @@
 package lang
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"text/template"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
-
-const (
-	testCaseInputMark  = "input:"
-	testCaseOutputMark = "output:"
-)
-
-type GenerateResult struct {
-	Question *leetcode.QuestionData
-	Lang     Lang
-	Files    []FileOutput
-}
-
-type FileOutput struct {
-	Path    string
-	Content string
-	Written bool
-	Type    FileType
-}
-
-type FileType int
-
-const (
-	CodeFile FileType = iota
-	TestFile
-	DocFile
-	OtherFile
-)
-
-func (r *GenerateResult) GetCodeFile() *FileOutput {
-	for _, f := range r.Files {
-		if f.Type == CodeFile {
-			return &f
-		}
-	}
-	return nil
-}
-
-func (r *GenerateResult) PrependPath(dir string) {
-	for i, f := range r.Files {
-		r.Files[i].Path = filepath.Join(dir, f.Path)
-	}
-}
-
-type Lang interface {
-	Name() string
-	ShortName() string
-	Slug() string
-	LineComment() string
-	// Generate generates code files for the question.
-	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
-	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
-}
-
-type NeedInitialization interface {
-	HasInitialized(dir string) (bool, error)
-	Initialize(dir string) error
-}
-
-type LocalTestable interface {
-	RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error)
-}
-
-type baseLang struct {
-	name              string
-	slug              string
-	shortName         string
-	extension         string
-	lineComment       string
-	blockCommentStart string
-	blockCommentEnd   string
-}
-
-func (l baseLang) Name() string {
-	return l.name
-}
-
-func (l baseLang) Slug() string {
-	return l.slug
-}
-
-func (l baseLang) ShortName() string {
-	return l.shortName
-}
-
-func (l baseLang) LineComment() string {
-	return l.lineComment
-}
-
-func (l baseLang) generateContent(q *leetcode.QuestionData, blocks []config.Block, modifiers []ModifierFunc) (
-	string,
-	error,
-) {
-	code := q.GetCodeSnippet(l.Slug())
-	tmpl := template.New("root")
-	tmpl.Funcs(
-		template.FuncMap{
-			"runModifiers": func(code string) string {
-				for _, m := range modifiers {
-					code = m(code, q)
-				}
-				return code
-			},
-		},
-	)
-	_, err := tmpl.Parse(contentTemplate)
-	if err != nil {
-		return "", err
-	}
-
-	for _, block := range blocks {
-		if _, ok := validBlocks[block.Name]; !ok {
-			return "", fmt.Errorf("invalid block name: %s", block.Name)
-		}
-		_, err := tmpl.New(block.Name).Parse(block.Template)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	cfg := config.Get()
-	data := &contentData{
-		Question:          q,
-		Author:            cfg.Author,
-		Time:              time.Now().Format("2006/01/02 15:04"),
-		LineComment:       l.lineComment,
-		BlockCommentStart: l.blockCommentStart,
-		BlockCommentEnd:   l.blockCommentEnd,
-		CodeBeginMarker:   config.CodeBeginMarker,
-		CodeEndMarker:     config.CodeEndMarker,
-		Code:              code,
-		NeedsDefinition:   needsDefinition(code),
-	}
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, data)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func (l baseLang) generateTestCases(q *leetcode.QuestionData) string {
-	cases := q.GetTestCases()
-	outputs := q.ParseExampleOutputs()
-	argsNum := 0
-	if q.MetaData.SystemDesign {
-		argsNum = 2
-	} else {
-		argsNum = len(q.MetaData.Params)
-	}
-
-	// Assume all questions output are single.
-	var caseAndOutputs []string
-	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
-		input := strings.Join(cases[i:i+argsNum], "\n")
-		caseAndOutputs = append(
-			caseAndOutputs,
-			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, input, testCaseOutputMark, outputs[i/argsNum]),
-		)
-	}
-	return strings.Join(caseAndOutputs, "\n\n")
-}
-
-func (l baseLang) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
-	filenameTmpl := getFilenameTemplate(q, l)
-	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
-	if err != nil {
-		return nil, err
-	}
-
-	file := FileOutput{
-		Path: baseFilename + l.extension,
-		Type: CodeFile,
-	}
-	return &GenerateResult{
-		Question: q,
-		Lang:     l,
-		Files:    []FileOutput{file},
-	}, nil
-}
-
-func (l baseLang) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	blocks := getBlocks(l)
-	modifiers, err := getModifiers(l, builtinModifiers)
-	if err != nil {
-		return nil, err
-	}
-	content, err := l.generateContent(q, blocks, modifiers)
-	if err != nil {
-		return nil, err
-	}
-
-	filenameTmpl := getFilenameTemplate(q, l)
-	baseFilename, err := q.GetFormattedFilename(l.slug, filenameTmpl)
-	if err != nil {
-		return nil, err
-	}
-
-	file := FileOutput{
-		Path:    baseFilename + l.extension,
-		Content: content,
-		Type:    CodeFile,
-	}
-	return &GenerateResult{
-		Question: q,
-		Lang:     l,
-		Files:    []FileOutput{file},
-	}, nil
-}
 
 func GetGenerator(lang string) (Lang, error) {
 	lang = strings.ToLower(lang)
@@ -244,39 +32,6 @@ func GetGenerator(lang string) (Lang, error) {
 		}
 	}
 	return nil, fmt.Errorf("language %s is not supported yet, welcome to send a PR", lang)
-}
-
-func getCodeConfig(lang Lang, key string) string {
-	ans := viper.GetString("code." + lang.Slug() + "." + key)
-	if ans != "" {
-		return ans
-	}
-	return viper.GetString("code." + lang.ShortName() + "." + key)
-}
-
-func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
-	if q.IsContest() {
-		return config.Get().Contest.FilenameTemplate
-	}
-	ans := getCodeConfig(gen, "filename_template")
-	if ans != "" {
-		return ans
-	}
-	return config.Get().Code.FilenameTemplate
-}
-
-func getOutDir(q *leetcode.QuestionData, lang Lang) string {
-	if q.IsContest() {
-		return config.Get().Contest.OutDir
-	}
-	cfg := config.Get()
-	outDir := getCodeConfig(lang, "out_dir")
-	// If outDir is not set, use the language slug as the outDir.
-	if outDir == "" {
-		outDir = lang.Slug()
-	}
-	outDir = filepath.Join(cfg.ProjectRoot(), outDir)
-	return outDir
 }
 
 func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
@@ -312,7 +67,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 			}
 		}
 		if err != nil {
-			hclog.L().Error(
+			log.Error(
 				"check initialization failed, skip initialization",
 				"lang", gen.Slug(),
 				"err", err,
@@ -325,12 +80,12 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	result.PrependPath(outDir)
+	result.SetOutDir(outDir)
 	// Write files
 	for i, file := range result.Files {
-		written, err := tryWrite(file.Path, file.Content)
+		written, err := tryWrite(file.GetPath(), file.Content)
 		if err != nil {
-			hclog.L().Error("failed to write file", "path", file.Path, "err", err)
+			log.Error("failed to write file", "path", file.GetPath(), "err", err)
 			continue
 		}
 		result.Files[i].Written = written
@@ -365,7 +120,7 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	for _, q := range qs {
 		_, result, err := generate(q)
 		if err != nil {
-			hclog.L().Error("failed to generate", "question", q.TitleSlug, "err", err)
+			log.Error("failed to generate", "question", q.TitleSlug, "err", err)
 			continue
 		}
 		results = append(results, result)
@@ -405,7 +160,7 @@ func tryWrite(file string, content string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	hclog.L().Info("generated", "file", relPath)
+	log.Info("generated", "file", relPath)
 	return true, nil
 }
 
@@ -423,7 +178,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	outDir := getOutDir(q, gen)
-	result.PrependPath(outDir)
+	result.SetOutDir(outDir)
 	return result, nil
 }
 
@@ -432,19 +187,15 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	codeFile := result.GetCodeFile()
+	codeFile := result.GetFile(CodeFile)
 	if codeFile == nil {
 		return "", fmt.Errorf("no code file generated")
 	}
-	if !utils.IsExist(codeFile.Path) {
-		return "", fmt.Errorf("code file %s does not exist", codeFile.Path)
-	}
-	code, err := os.ReadFile(codeFile.Path)
+	code, err := codeFile.GetContent()
 	if err != nil {
 		return "", err
 	}
-
-	codeLines := strings.Split(string(code), "\n")
+	codeLines := strings.Split(code, "\n")
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
@@ -467,28 +218,46 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 		}
 	}
 	if nonEmptyLines == 0 {
-		return "", fmt.Errorf("no code found in %s", codeFile.Path)
+		return "", fmt.Errorf("no code found in %s", codeFile.GetPath())
 	}
 
 	return strings.Join(codeLinesToKeep, "\n"), nil
 }
 
-func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
-	cfg := config.Get()
-	gen, err := GetGenerator(cfg.Code.Lang)
+func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
+	result, err := GeneratePathsOnly(q)
 	if err != nil {
-		return false, err
+		return err
+	}
+	codeFile := result.GetFile(CodeFile)
+	if codeFile == nil {
+		return fmt.Errorf("no code file generated")
+	}
+	code, err := codeFile.GetContent()
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(code, "\n")
+	var newLines []string
+	skip := false
+	for _, line := range lines {
+		if strings.Contains(line, config.CodeBeginMarker) {
+			newLines = append(newLines, line)
+			newLines = append(newLines, newCode)
+			skip = true
+		} else if strings.Contains(line, config.CodeEndMarker) {
+			newLines = append(newLines, line)
+			skip = false
+		} else if !skip {
+			newLines = append(newLines, line)
+		}
 	}
 
-	tester, ok := gen.(LocalTestable)
-	if !ok {
-		return false, fmt.Errorf("language %s does not support local test", gen.Slug())
+	newContent := strings.Join(newLines, "\n")
+	err = os.WriteFile(codeFile.GetPath(), []byte(newContent), 0o644)
+	if err != nil {
+		return err
 	}
-
-	outDir := getOutDir(q, gen)
-	if !utils.IsExist(outDir) {
-		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
-	}
-
-	return tester.RunLocalTest(q, outDir)
+	log.Info("updated", "file", utils.RelToCwd(codeFile.GetPath()))
+	return nil
 }

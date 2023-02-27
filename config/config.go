@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -18,7 +18,7 @@ import (
 const (
 	CmdName               = "leetgo"
 	globalConfigFile      = "config.yaml"
-	ProjectConfigFilename = CmdName + ".yaml"
+	ProjectConfigFilename = "leetgo.yaml"
 	questionCacheBaseName = "leetcode-questions"
 	stateFilename         = "state.json"
 	CodeBeginMarker       = "@lc code=begin"
@@ -78,28 +78,29 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang             string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
-	FilenameTemplate string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
-	Blocks           []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers        []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
-	Go               GoConfig       `yaml:"go" mapstructure:"go"`
-	Python           PythonConfig   `yaml:"python3" mapstructure:"python3"`
-	Cpp              BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
-	Java             BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust             BaseLangConfig `yaml:"rust" mapstructure:"rust"`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
+	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
+	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
+	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
+	Python                  PythonConfig `yaml:"python3" mapstructure:"python3"`
+	Cpp                     BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Rust                    BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
 }
 
 type BaseLangConfig struct {
-	OutDir           string     `yaml:"out_dir" mapstructure:"out_dir"`
-	FilenameTemplate string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
-	Blocks           []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers        []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir"`
+	FilenameTemplate        string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
+	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
+	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
+	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 }
 
 type GoConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	GoModPath      string `yaml:"go_mod_path" mapstructure:"go_mod_path" comment:"Go module path for the generated code"`
 }
 
 type PythonConfig struct {
@@ -187,24 +188,15 @@ func Default() *Config {
 		Author:   "Bob",
 		Language: ZH,
 		Code: CodeConfig{
-			Lang:             "go",
-			FilenameTemplate: `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			Lang:                    "go",
+			FilenameTemplate:        `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
+			SeparateDescriptionFile: false,
 			Modifiers: []Modifier{
 				{Name: "removeUselessComments"},
 			},
 			Go: GoConfig{
 				BaseLangConfig: BaseLangConfig{
 					OutDir: "go",
-					Blocks: []Block{
-						{
-							Name: "beforeMarker", Template: fmt.Sprintf(
-								`package main
-
-{{ if .NeedsDefinition -}} import . "%s" {{- end }}
-`, GoTestUtilsModPath,
-							),
-						},
-					},
 					Modifiers: []Modifier{
 						{Name: "removeUselessComments"},
 						{Name: "changeReceiverName"},
@@ -321,7 +313,7 @@ func Load(init bool) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			if !init {
-				hclog.L().Warn(
+				log.Warn(
 					"global config file not found, have you ran `leetgo init`?",
 					"file",
 					cfg.GlobalConfigFile(),
@@ -339,7 +331,7 @@ func Load(init bool) error {
 		err = viper.MergeInConfig()
 		if err != nil {
 			if os.IsNotExist(err) {
-				hclog.L().Warn(
+				log.Warn(
 					fmt.Sprintf("%s not found, use global config only", ProjectConfigFilename),
 					"file",
 					cfg.GlobalConfigFile(),

@@ -78,6 +78,7 @@ type SubmitCheckResult struct {
 }
 
 var (
+	// TODO replace with lipgloss
 	colorGreen  = color.New(color.FgHiGreen, color.Bold)
 	colorYellow = color.New(color.FgHiYellow, color.Bold)
 	colorFaint  = color.New(color.Faint)

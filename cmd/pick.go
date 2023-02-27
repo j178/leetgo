@@ -107,7 +107,7 @@ leetgo pick two-sum`,
 				return err
 			}
 			if len(qs) > 1 {
-				return fmt.Errorf("`leetgo pick` cannot handle multiple contest questions, use `leetgo contest` instead.")
+				return fmt.Errorf("`leetgo pick` cannot handle multiple contest questions, use `leetgo contest` instead")
 			}
 			q = qs[0]
 		} else {
@@ -130,7 +130,7 @@ leetgo pick two-sum`,
 		if err != nil {
 			return err
 		}
-		err = editor.Open(result.Files)
+		err = editor.Open(result)
 		return err
 	},
 }

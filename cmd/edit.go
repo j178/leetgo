@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
@@ -17,7 +16,6 @@ var editCmd = &cobra.Command{
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg := config.Get()
 		c := leetcode.NewClient()
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
@@ -26,22 +24,19 @@ var editCmd = &cobra.Command{
 		if len(qs) > 1 {
 			return fmt.Errorf("multiple questions found")
 		}
-		_, err = lang.GetGenerator(cfg.Code.Lang)
-		if err != nil {
-			return err
-		}
 		result, err := lang.GeneratePathsOnly(qs[0])
 		if err != nil {
 			return err
 		}
-		return editor.Open(result.Files)
+		return editor.Open(result)
 	},
 }
 
 var extractCmd = &cobra.Command{
-	Use:   "extract qid",
-	Short: "Extract solution code from generated file",
-	Args:  cobra.ExactArgs(1),
+	Use:    "extract qid",
+	Short:  "Extract solution code from generated file",
+	Args:   cobra.ExactArgs(1),
+	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
 		qs, err := leetcode.ParseQID(args[0], c)

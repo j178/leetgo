@@ -19,17 +19,42 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 ## Highlight of features
 
-- Generate description, skeleton code and testg code for a question
+- Generate description, skeleton code and testing code for a question
 - Customize the code template for generated code, use modifiers to pre-process code
 - Execute test cases on your local machine
 - Wait and generate contest questions just in time, test and submit all at once
 - Support for both leetcode.com and leetcode.cn
 - Automatically read cookies from browser, no need to enter password
 - Automatically open question files in your favourite editor
+- Use OpenAI to automatically discover and fix issues in the code (Experimental)
 
 ## Language support
 
 `leetgo` supports code generation for most languages, and local testing for some languages.
+
+In the Go language, running `leetgo pick 257` will generate the following code:
+
+```go
+// Omitted some code...
+// @lc code=begin
+
+func binaryTreePaths(root *TreeNode) (ans []string) {
+
+	return
+}
+
+// @lc code=end
+
+func main() {
+	stdin := bufio.NewReader(os.Stdin)
+	root := Deserialize[*TreeNode](ReadLine(stdin))
+	ans := binaryTreePaths(root)
+	fmt.Println("output: " + Serialize(ans))
+}
+```
+
+This is a complete and runnable program. You can run it directly, input the test cases, and compare the results. 
+`leetgo test -L` will automatically run this program with the test cases in `testcases.txt` and compare the results.
 
 Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
 
@@ -44,6 +69,7 @@ Local testing requires more work to implement for each language, so not all lang
 | Rust | :white_check_mark: | Not yet |
 | Java | :white_check_mark: | Not yet |
 | JavaScript | :white_check_mark: | Not yet |
+| TypeScript | :white_check_mark: | Not yet |
 | PHP | :white_check_mark: | Not yet |
 | C | :white_check_mark: | Not yet |
 | C# | :white_check_mark: | Not yet |
@@ -64,8 +90,7 @@ You can download the latest binary from the [release page](https://github.com/j1
 ### Install via go
 
 ```shell
-git clone git@github.com:j178/leetgo.git
-cd leetgo && go install
+go install github.com/j178/leetgo@latest
 ```
 
 ### Install via [HomeBrew](https://brew.sh/) on macOS/Linux
@@ -93,11 +118,12 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
+  fix                     Use OpenAI GPT-3 API to fix your solution code (just for fun)
   edit                    Open solution in editor
-  extract                 Extract solution code from generated file
   contest                 Generate contest questions
   cache                   Manage local questions cache
   config                  Show configurations
+  open                    Open one or multiple question pages in a browser
   help                    Help about any command
 
 Flags:
@@ -157,6 +183,8 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  # Generate question description into a separate file
+  separate_description_file: false
   # Functions that modify the generated code
   modifiers:
     - name: removeUselessComments
@@ -164,21 +192,12 @@ code:
     out_dir: go
     # Overrides the default code.filename_template
     filename_template: ""
-    # Replace some blocks of the generated code
-    blocks:
-      - name: beforeMarker
-        template: |
-          package main
-
-          {{ if .NeedsDefinition -}} import . "github.com/j178/leetgo/testutils/go" {{- end }}
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
       - name: changeReceiverName
       - name: addNamedReturn
       - name: addMod
-    # Go module path for the generated code
-    go_mod_path: ""
   python3:
     out_dir: python
     # Overrides the default code.filename_template
@@ -347,6 +366,8 @@ Some common problems can be found in the [Q&A](https://github.com/j178/leetgo/di
 [Good First Issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start,
 and you can also check out some [Help Wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues.
 
+If you want to add local testing support for a new language, please refer to [#112](https://github.com/j178/leetgo/issues/112).
+
 Before submitting a PR, please run `golangci-lint run --fix` to fix lint errors.
 
 ## Credits
@@ -358,4 +379,4 @@ Here are some awesome projects that inspired me to create this project:
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
 
-[^1]: For Safari on MacOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
+[^1]: For Safari on macOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.
