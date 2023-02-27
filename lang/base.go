@@ -2,7 +2,6 @@ package lang
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -455,11 +454,6 @@ func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename strin
 		Content:  content,
 		Type:     TestCasesFile,
 	}, nil
-}
-
-// nolint: unused
-func (l baseLang) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
-	return FileOutput{}, errors.New("not implemented")
 }
 
 func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
