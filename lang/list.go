@@ -79,6 +79,15 @@ var (
 		blockCommentStart: "/*",
 		blockCommentEnd:   "*/",
 	}
+	tsGen = baseLang{
+		name:              "TypeScript",
+		slug:              "typescript",
+		shortName:         "ts",
+		extension:         ".ts",
+		lineComment:       "//",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
 	phpGen = baseLang{
 		name:              "PHP",
 		slug:              "php",
@@ -151,7 +160,7 @@ var (
 		blockCommentStart: ">>COMMENT",
 		blockCommentEnd:   "\nCOMMENT",
 	}
-	// TODO scala, typescript, erlang, dart, racket
+	// TODO scala, erlang, dart, racket, Elixir
 	SupportedLangs = []Lang{
 		golangGen,
 		python3Gen,
@@ -159,6 +168,7 @@ var (
 		rustGen,
 		javaGen,
 		jsGen,
+		tsGen,
 		phpGen,
 		cGen,
 		csharpGen,

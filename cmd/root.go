@@ -6,8 +6,7 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/fatih/color"
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	cc "github.com/ivanpirog/coloredcobra"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -63,8 +62,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, color.New(color.FgHiRed).Sprint("Error:"), err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -74,25 +72,19 @@ func UsageString() string {
 
 func initWorkDir() error {
 	if dir := os.Getenv("LEETGO_WORKDIR"); dir != "" {
-		hclog.L().Info("change workdir to LEETGO_WORKDIR", "dir", dir)
+		log.Debug("change workdir to LEETGO_WORKDIR", "dir", dir)
 		return os.Chdir(dir)
 	}
 	return nil
 }
 
 func initLogger() {
-	opts := &hclog.LoggerOptions{
-		Level:           hclog.Info,
-		DisableTime:     true,
-		Color:           hclog.AutoColor,
-		ColorHeaderOnly: true,
-	}
+	log.SetReportTimestamp(false)
+	log.SetLevel(log.InfoLevel)
 	if config.Debug {
-		opts.Level = hclog.Trace
-		opts.DisableTime = false
-		opts.Color = hclog.ColorOff
+		log.SetReportTimestamp(true)
+		log.SetLevel(log.DebugLevel)
 	}
-	hclog.SetDefault(hclog.New(opts))
 }
 
 func initCommands() {
@@ -113,6 +105,7 @@ func initCommands() {
 		infoCmd,
 		testCmd,
 		submitCmd,
+		fixCmd,
 		editCmd,
 		extractCmd,
 		contestCmd,
@@ -121,6 +114,7 @@ func initCommands() {
 		gitCmd,
 		inspectCmd,
 		whoamiCmd,
+		openCmd,
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false

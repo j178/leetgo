@@ -9,11 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
-	"github.com/zellyn/kooky"
-	_ "github.com/zellyn/kooky/browser/chrome"
-	_ "github.com/zellyn/kooky/browser/firefox"
-	_ "github.com/zellyn/kooky/browser/safari"
+	"github.com/charmbracelet/log"
+	"github.com/j178/kooky"
+	_ "github.com/j178/kooky/browser/chrome"
+	_ "github.com/j178/kooky/browser/edge"
+	_ "github.com/j178/kooky/browser/firefox"
+	_ "github.com/j178/kooky/browser/safari"
 
 	"github.com/j178/leetgo/config"
 )
@@ -85,7 +86,7 @@ func (p *passwordAuth) AddCredentials(req *http.Request) error {
 	defer p.mu.Unlock()
 
 	if !p.hasAuth() {
-		hclog.L().Info("logging in with username and password")
+		log.Info("logging in with username and password")
 		resp, err := p.c.Login(p.username, p.password)
 		if err != nil {
 			return err
@@ -134,10 +135,10 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		hclog.L().Info("reading cookies from browser", "domain", domain)
+		log.Info("reading cookies from browser", "domain", domain)
 
 		defer func(start time.Time) {
-			hclog.L().Trace("finished read cookies from browser", "elapsed", time.Since(start))
+			log.Debug("finished read cookies from browser", "elapsed", time.Since(start))
 		}(time.Now())
 
 		cookies := kooky.ReadCookies(

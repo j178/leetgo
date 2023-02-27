@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-hclog"
 
 	"github.com/j178/leetgo/utils"
 )
@@ -62,15 +62,15 @@ func (c *jsonCache) load() {
 	c.once.Do(
 		func() {
 			defer func(now time.Time) {
-				hclog.L().Trace("cache loaded", "path", c.path, "elapsed", time.Since(now))
+				log.Debug("cache loaded", "path", c.path, "elapsed", time.Since(now))
 			}(time.Now())
 			err := c.doLoad()
 			if err != nil {
-				hclog.L().Error("failed to load cache, try updating with `leetgo cache update`", "err", err)
+				log.Error("failed to load cache, try updating with `leetgo cache update`", "err", err)
 				return
 			}
 			if c.Outdated() {
-				hclog.L().Warn("cache is too old, try updating with `leetgo cache update`")
+				log.Warn("cache is too old, try updating with `leetgo cache update`")
 			}
 		},
 	)
@@ -104,7 +104,7 @@ func (c *jsonCache) Update() error {
 	if err != nil {
 		return err
 	}
-	hclog.L().Info("cache updated", "path", c.path)
+	log.Info("cache updated", "path", c.path)
 	return nil
 }
 

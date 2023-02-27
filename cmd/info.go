@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -21,13 +21,14 @@ var infoCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"i"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		cred := leetcode.CredentialsFromConfig()
+		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		var questions []*leetcode.QuestionData
 
 		for _, qid := range args {
 			qs, err := leetcode.ParseQID(qid, c)
 			if err != nil {
-				hclog.L().Error("failed to get question", "qid", qid, "err", err)
+				log.Error("failed to get question", "qid", qid, "err", err)
 				continue
 			}
 			questions = append(questions, qs...)

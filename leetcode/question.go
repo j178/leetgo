@@ -40,18 +40,18 @@ type Stats struct {
 	ACRate             string `json:"acRate"`
 }
 
+type statsNoMethods Stats
+
 func (s *Stats) UnmarshalJSON(data []byte) error {
 	// Cannot use `var v Stats` here, because it will cause infinite recursion.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias Stats
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*statsNoMethods)(s))
+	if err != nil {
 		return err
 	}
-	*s = Stats(v)
 	return nil
 }
 
@@ -61,9 +61,14 @@ type MetaDataParam struct {
 }
 
 type MetaDataReturn struct {
-	Type    string `json:"type"`
-	Size    int    `json:"size"`
-	Dealloc bool   `json:"dealloc"`
+	Type string `json:"type"`
+	// Size    *int   `json:"size"`
+	// ColSize *int `json:"colsize"`
+	Dealloc bool `json:"dealloc"`
+}
+
+type MetaDataOutput struct {
+	ParamIndex int `json:"paramindex"`
 }
 
 type MetaDataMethod struct {
@@ -147,7 +152,8 @@ type MetaDataConstructor struct {
 type MetaData struct {
 	Name   string          `json:"name"`
 	Params []MetaDataParam `json:"params"`
-	Return MetaDataReturn  `json:"return"`
+	Return *MetaDataReturn `json:"return"`
+	Output *MetaDataOutput `json:"output"`
 	// System design problems related
 	SystemDesign bool                `json:"systemdesign"`
 	ClassName    string              `json:"classname"`
@@ -157,34 +163,77 @@ type MetaData struct {
 	Manual bool `json:"manual"`
 }
 
+type metaDataNoMethods MetaData
+
+// Type name in metadata is not consistent, we need to normalize it.
+func normalizeType(ty string) string {
+	switch {
+	case strings.HasPrefix(ty, "list<"):
+		return normalizeType(ty[5:len(ty)-1]) + "[]" // "list<int>" -> "int[]"
+	case ty == "String":
+		return "string"
+	case ty == "":
+		return "void"
+	}
+	return ty
+}
+
+func (m *MetaData) normalize() {
+	for i, param := range m.Params {
+		m.Params[i].Type = normalizeType(param.Type)
+	}
+	if m.Return != nil {
+		m.Return.Type = normalizeType(m.Return.Type)
+	}
+	for _, method := range m.Methods {
+		for i, param := range method.Params {
+			method.Params[i].Type = normalizeType(param.Type)
+		}
+		method.Return.Type = normalizeType(method.Return.Type)
+	}
+}
+
 func (m *MetaData) UnmarshalJSON(data []byte) error {
-	// Ignore error, when we loads from sqlite, no need to unquote it.
+	// Ignore error, when we load from sqlite, no need to unquote it.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias MetaData
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*metaDataNoMethods)(m))
+	if err != nil {
 		return err
 	}
-	*m = MetaData(v)
+	m.normalize()
 	return nil
 }
 
+func (m *MetaData) NArg() int {
+	if m.SystemDesign {
+		return 2
+	}
+	return len(m.Params)
+}
+
+func (m *MetaData) ResultType() string {
+	if m.Return != nil && m.Return.Type != "void" {
+		return m.Return.Type
+	} else {
+		return m.Params[m.Output.ParamIndex].Type
+	}
+}
+
 type JsonExampleTestCases []string
+
+type jsonExampleTestCasesNoMethods JsonExampleTestCases
 
 func (j *JsonExampleTestCases) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	var v []any
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*jsonExampleTestCasesNoMethods)(j))
+	if err != nil {
 		return err
-	}
-	for _, c := range v {
-		*j = append(*j, c.(string))
 	}
 	return nil
 }
@@ -198,17 +247,17 @@ type SimilarQuestion struct {
 
 type SimilarQuestions []SimilarQuestion
 
+type similarQuestionsNoMethods SimilarQuestions
+
 func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
 	}
-	type alias SimilarQuestions
-	var v alias
-	if err := json.Unmarshal(utils.StringToBytes(unquoted), &v); err != nil {
+	err = json.Unmarshal(utils.StringToBytes(unquoted), (*similarQuestionsNoMethods)(s))
+	if err != nil {
 		return err
 	}
-	*s = SimilarQuestions(v)
 	return nil
 }
 
@@ -348,7 +397,7 @@ func (q *QuestionData) GetFormattedContent() string {
 		maxWidth = 60
 	}
 	content = wordwrap.WrapString(content, maxWidth)
-	content = utils.RemoveEmptyLine(content)
+	content = utils.CondenseEmptyLines(content)
 	return content
 }
 
@@ -481,7 +530,7 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 			"upper": strings.ToUpper,
 			"trim":  strings.TrimSpace,
 			"padWithZero": func(n int, s string) string {
-				return fmt.Sprintf("%0"+strconv.Itoa(n)+"s", s)
+				return fmt.Sprintf("%0*s", n, s)
 			},
 			"toUnderscore": func(s string) string {
 				return strings.ReplaceAll(s, "-", "_")

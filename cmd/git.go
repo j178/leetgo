@@ -21,15 +21,12 @@ var gitCmd = &cobra.Command{
 }
 
 var gitPushCmd = &cobra.Command{
-	Use:   "push [qid]",
-	Short: "Add, commit and push your code to remote repository",
-	Args:  cobra.MaximumNArgs(1),
+	Use:   "push qid",
+	Short: "Add, commit and push your solution to remote repository",
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient()
-		qid := "today"
-		if len(args) > 0 {
-			qid = args[0]
-		}
+		qid := args[0]
 		qs, err := leetcode.ParseQID(qid, c)
 		if err != nil {
 			return err
@@ -53,7 +50,7 @@ func init() {
 func gitAddCommitPush(genResult *lang.GenerateResult) error {
 	files := make([]string, 0, len(genResult.Files))
 	for _, f := range genResult.Files {
-		files = append(files, f.Path)
+		files = append(files, f.GetPath())
 	}
 	err := runCmd("git", "add", files...)
 	if err != nil {
