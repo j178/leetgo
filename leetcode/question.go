@@ -398,6 +398,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	}
 	content = wordwrap.WrapString(content, maxWidth)
 	content = utils.CondenseEmptyLines(content)
+	content = utils.EnsureTrailingNewline(content)
 	return content
 }
 

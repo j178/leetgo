@@ -17,7 +17,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 [![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
 
-## Highlight of features
+## Features
 
 - Generate description, skeleton code and testing code for a question
 - Customize the code template for generated code, use modifiers to pre-process code

@@ -458,6 +458,7 @@ func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename strin
 
 func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	tmpl := `# [%s. %s](%s) (%s)
+
 %s`
 	url := ""
 	if q.IsContest() {
