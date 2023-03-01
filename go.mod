@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/JohannesKaufmann/html-to-markdown v1.3.6
-	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/PullRequestInc/go-gpt3 v1.1.11
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.21.0
