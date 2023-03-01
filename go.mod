@@ -23,7 +23,7 @@ require (
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88
 	github.com/j178/leetgo/testutils/go v0.1.0
-	github.com/jedib0t/go-pretty/v6 v6.4.4
+	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/k3a/html2text v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/go-homedir v1.1.0
