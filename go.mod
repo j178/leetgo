@@ -6,7 +6,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/JohannesKaufmann/html-to-markdown v1.3.6
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/PullRequestInc/go-gpt3 v1.1.11
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.22.0
 	github.com/charmbracelet/bubbles v0.15.0
@@ -29,6 +28,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/sashabaranov/go-gpt3 v1.3.1
 	github.com/sosedoff/ansible-vault-go v0.1.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0

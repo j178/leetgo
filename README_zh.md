@@ -117,7 +117,7 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
-  fix                     Use OpenAI GPT-3 API to fix your solution code (just for fun)
+  fix                     Use ChatGPT API to fix your solution code (just for fun)
   edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache

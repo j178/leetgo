@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/PullRequestInc/go-gpt3"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/log"
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
+	gpt3 "github.com/sashabaranov/go-gpt3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -21,12 +21,12 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-// Use OpenAI GPT-3 API to fix solution code
+// Use ChatGPT API to fix solution code
 
 var fixCmd = &cobra.Command{
 	Use:   "fix qid",
-	Short: "Use OpenAI GPT-3 API to fix your solution code (just for fun)",
-	Long: `Use OpenAI GPT-3 API to fix your solution code.
+	Short: "Use ChatGPT API to fix your solution code (just for fun)",
+	Long: `Use ChatGPT API to fix your solution code.
 Set OPENAI_API_KEY environment variable to your OpenAI API key before using this command.`,
 	Example: `leetgo fix 429`,
 	Args:    cobra.ExactArgs(1),
@@ -95,7 +95,7 @@ I have written the following solution:
 %s
 
 Please identify any issues or inefficiencies in my code and to help me fix or improve it.
-I want you to only reply with pure code without <code> tags, and nothing else. Do not write explanations.
+I want you to only reply with pure code without <code> or markdown tags, and nothing else. Do not write explanations.
 `
 
 var errNoFix = errors.New("no fix found")
@@ -120,11 +120,15 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	resp, err := client.CompletionWithEngine(
-		ctx, gpt3.TextDavinci003Engine, gpt3.CompletionRequest{
-			Prompt:      []string{prompt},
-			MaxTokens:   gpt3.IntPtr(3000),
-			Temperature: gpt3.Float32Ptr(0),
+	resp, err := client.CreateChatCompletion(
+		ctx, gpt3.ChatCompletionRequest{
+			Model: gpt3.GPT3Dot5Turbo,
+			Messages: []gpt3.ChatCompletionMessage{
+				{Role: "system", Content: "Help solve LeetCode questions and fix the code"},
+				{Role: "user", Content: prompt},
+			},
+			MaxTokens:   1000,
+			Temperature: 0,
 		},
 	)
 	if err != nil {
@@ -134,7 +138,7 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 		return "", errNoFix
 	}
 	log.Debug("got response from openai", "response", resp.Choices)
-	text := resp.Choices[0].Text
+	text := resp.Choices[0].Message.Content
 	text = utils.EnsureTrailingNewline(text)
 	return text, nil
 }
