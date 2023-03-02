@@ -1,16 +1,11 @@
 package lang
 
 import (
-	"context"
-	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/fatih/color"
 
 	"github.com/j178/leetgo/leetcode"
 	cppTestUtils "github.com/j178/leetgo/testutils/cpp"
@@ -22,20 +17,22 @@ type cpp struct {
 }
 
 var cppTypes = map[string]string{
-	"void":     "void",
-	"integer":  "int",
-	"long":     "int64_t",
-	"string":   "string",
-	"double":   "double",
-	"ListNode": "ListNode*",
-	"TreeNode": "TreeNode*",
+	"void":      "void",
+	"integer":   "int",
+	"long":      "int64_t",
+	"string":    "string",
+	"double":    "double",
+	"ListNode":  "ListNode*",
+	"TreeNode":  "TreeNode*",
+	"boolean":   "bool",
+	"character": "char",
 }
 
 const (
 	objectName            = "obj"
 	returnName            = "res"
 	inputStreamName       = "cin"
-	outputStreamName      = "ofs"
+	outputStreamName      = "cout"
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
 	cppTestFileTemplate   = `#include "` + cppTestUtils.HeaderName + `"
@@ -46,16 +43,7 @@ using namespace std;
 #include "solution.h"
 
 // main func
-int main(int argc, char **argv) {
-	if (argc != 2) {
-		return 1;
-	}
-
-	ofstream ` + outputStreamName + `(argv[1]);
-	if (!` + outputStreamName + `.is_open()) {
-		return 1;
-	}
-
+int main() {
 	// scan input args
 %s
 
@@ -71,7 +59,6 @@ int main(int argc, char **argv) {
 	// delete object
 	delete ` + objectName + `;
 
-	` + outputStreamName + `.close();
 	return 0;
 }
 `
@@ -247,188 +234,90 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) string {
 	return fmt.Sprintf("\t%s\n", c.getPrintCodeForType(dimCnt, cppType, returnName, outputStreamName))
 }
 
-func (c cpp) generateTest(q *leetcode.QuestionData, testcases string) string {
-	content := fmt.Sprintf(testFileHeader, c.lineComment)
-	content += fmt.Sprintf(
+func (c cpp) generateTestContent(q *leetcode.QuestionData) string {
+	return fmt.Sprintf(
 		cppTestFileTemplate,
 		c.generateScanCode(q),
 		c.generateInitCode(q),
 		c.generateCallCode(q),
 		c.generatePrintCode(q),
 	)
-	return content
 }
 
-func (c cpp) getJudgeResult(dimCnt int, returnType string, expectedOutput string, actualOutput string) (eq bool) {
-	// type specific judge
-	//  * double - not needed at this time, as all double results are sanitized as "%.5f"
-	//  * integer, long, string - raw string comparison is enough
-	/*if returnType == "double" {
-		eps := 1e-5
-		if dimCnt > 0 {
-			return false
-		}
-		a, _ := strconv.ParseFloat(expectedOutput, 32)
-		b, _ := strconv.ParseFloat(actualOutput, 32)
-		eq = math.Abs(a-b) < eps
-	} else*/{
-		eq = expectedOutput == actualOutput
-	}
-	return
+func (c cpp) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
+	content := c.generateTestContent(q)
+	return FileOutput{
+		Filename: filename,
+		Content:  content,
+		Type:     TestFile,
+	}, nil
 }
 
-func (c cpp) RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error) {
-	red := color.New(color.FgRed).Add(color.Bold)
-	green := color.New(color.FgGreen).Add(color.Bold)
-	magenta := color.New(color.FgMagenta).Add(color.Bold)
-	yellow := color.New(color.FgYellow).Add(color.Bold)
-	blue := color.New(color.FgBlue).Add(color.Bold)
-
-	// manage non-temporary files
-	filenameTmpl := getFilenameTemplate(q, c)
-	baseFilename, err := q.GetFormattedFilename(c.slug, filenameTmpl)
+func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+	genResult, err := c.GeneratePaths(q)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("generate paths failed: %w", err)
 	}
-	testFile := filepath.Join(dir, baseFilename, "solution.cpp")
-	testCasesFile := filepath.Join(dir, baseFilename, "testcases.txt")
+	genResult.SetOutDir(outDir)
 
-	// manage temporary files
-	outputFile := filepath.Join(dir, "output.txt")
-	execFile := filepath.Join(dir, "solution.exec")
-	removeTempFiles := func(b bool, err error) (bool, error) {
-		defer os.Remove(outputFile)
-		defer os.Remove(execFile)
-		return b, err
-	}
+	testFile := outDir + "/" + genResult.SubDir + "/solution.cpp"
+	execFile := outDir + "/" + genResult.SubDir + "/solution.exec"
 
-	// compile
-	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", dir, "-o", execFile, testFile)
+	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", outDir, "-o", execFile, testFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	compileStart := time.Now()
 	err = cmd.Run()
 	if err != nil {
-		yellow.Print("[CE]")
-		fmt.Println(" Compile Error! :(")
-		return removeTempFiles(false, err)
-	} else {
-		elapsed := time.Since(compileStart)
-		fmt.Println("Compilation Finished in", elapsed)
+		return false, fmt.Errorf("compilation failed: %w", err)
 	}
 
-	// parse input.txt
-	filebuffer, err := os.ReadFile(testCasesFile)
-	if err != nil {
-		return removeTempFiles(false, err)
-	}
-	inputs, outputs := c.parseGeneratedTestCases(string(filebuffer))
-
-	// execute
-	for caseId := 0; caseId < len(inputs); caseId++ {
-		// setup input & output
-		input := inputs[caseId]
-		expectedOutput := outputs[caseId]
-		if len(expectedOutput) == 0 {
-			expectedOutput = "[Not Implemented] to be retrieved from LC online testing..."
-		}
-
-		// setup command
-		timeLimit := 3000 * time.Millisecond
-		ctx, cancel := context.WithTimeout(context.Background(), timeLimit)
-		defer cancel()
-		cmd = exec.CommandContext(ctx, execFile, outputFile)
-		cmd.Stdin = strings.NewReader(input)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-
-		// execute test program
-		executeStart := time.Now()
-		err = cmd.Run()
-		elapsed := time.Since(executeStart)
-		if ctx.Err() != nil {
-			blue.Print("[TLE]")
-			fmt.Printf(" Case %d - Time Limit (%s) Exceeded! :(\n", caseId, timeLimit)
-			continue
-		}
-		if err != nil {
-			magenta.Print("[RE]")
-			fmt.Printf(" Case %d - Runtime Error! :(\n", caseId)
-			continue
-		}
-
-		// read test result
-		filebuffer, err := os.ReadFile(outputFile)
-		if err != nil {
-			return removeTempFiles(false, err)
-		}
-		actualOutput := string(filebuffer)
-
-		// judge & show result
-		dimCnt, returnType := c.getCppTypeName(q.MetaData.Return.Type)
-		if c.getJudgeResult(dimCnt, returnType, expectedOutput, actualOutput) {
-			green.Print("[AC]")
-			fmt.Printf(" Case %d - %s\n", caseId, elapsed)
-			fmt.Printf(" - Input:      %s\n", strings.ReplaceAll(input, "\n", "↩ "))
-			fmt.Printf(" - Output:     %s\n", actualOutput)
-		} else {
-			red.Print("[WA]")
-			fmt.Printf(" Case %d - %s\n", caseId, elapsed)
-			fmt.Printf(" - Input:      %s\n", strings.ReplaceAll(input, "\n", "↩ "))
-			fmt.Printf(" - Output:     %s\n", actualOutput)
-			fmt.Printf(" - Expected:   %s\n", expectedOutput)
-		}
-	}
-
-	return removeTempFiles(true, nil)
+	args := []string{execFile}
+	return runTest(q, genResult, args, outDir)
 }
 
 func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
+	filenameTmpl := getFilenameTemplate(q, c)
+	baseFilename, err := q.GetFormattedFilename(c.slug, filenameTmpl)
+	if err != nil {
+		return nil, err
+	}
+	genResult := &GenerateResult{
+		Question: q,
+		Lang:     c,
+		SubDir:   baseFilename,
+	}
+
+	separateDescriptionFile := separateDescriptionFile(c)
 	blocks := getBlocks(c)
 	modifiers, err := getModifiers(c, goBuiltinModifiers)
 	if err != nil {
 		return nil, err
 	}
-	codeContent, err := c.generateContent(q, blocks, modifiers)
+	codeFile, err := c.generateCodeFile(q, "solution.h", blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
-
-	testcaseStr := c.generateTestCases(q)
-	testContent := c.generateTest(q, testcaseStr)
-
-	filenameTmpl := getFilenameTemplate(q, c)
-	baseFilename, err := q.GetFormattedFilename(c.slug, filenameTmpl)
+	testFile, err := c.generateTestFile(q, "solution.cpp")
 	if err != nil {
 		return nil, err
 	}
-	codeFile := filepath.Join(baseFilename, "solution.h")
-	testFile := filepath.Join(baseFilename, "solution.cpp")
-	testCasesFile := filepath.Join(baseFilename, "testcases.txt")
+	testcaseFile, err := c.generateTestCasesFile(q, "testcases.txt")
+	if err != nil {
+		return nil, err
+	}
+	genResult.AddFile(codeFile)
+	genResult.AddFile(testFile)
+	genResult.AddFile(testcaseFile)
 
-	files := []FileOutput{
-		{
-			Path:    codeFile,
-			Content: codeContent,
-			Type:    CodeFile,
-		},
-		{
-			Path:    testFile,
-			Content: testContent,
-			Type:    TestFile,
-		},
-		{
-			Path:    testCasesFile,
-			Content: testcaseStr,
-			Type:    TestCasesFile,
-		},
+	if separateDescriptionFile {
+		docFile, err := c.generateDescriptionFile(q, "question.md")
+		if err != nil {
+			return nil, err
+		}
+		genResult.AddFile(docFile)
 	}
 
-	return &GenerateResult{
-		Question: q,
-		Lang:     c,
-		Files:    files,
-	}, nil
+	return genResult, nil
 }
 
 func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
@@ -437,30 +326,38 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	codeFile := filepath.Join(baseFilename, "solution.h")
-	testFile := filepath.Join(baseFilename, "solution.cpp")
-	testCasesFile := filepath.Join(baseFilename, "testcases.txt")
-
-	files := []FileOutput{
-		{
-			Path: codeFile,
-			Type: CodeFile,
-		},
-		{
-			Path: testFile,
-			Type: TestFile,
-		},
-		{
-			Path: testCasesFile,
-			Type: TestCasesFile,
-		},
-	}
-
-	return &GenerateResult{
+	genResult := &GenerateResult{
+		SubDir:   baseFilename,
 		Question: q,
 		Lang:     c,
-		Files:    files,
-	}, nil
+	}
+	genResult.AddFile(
+		FileOutput{
+			Filename: "solution.h",
+			Type:     CodeFile,
+		},
+	)
+	genResult.AddFile(
+		FileOutput{
+			Filename: "solution.cpp",
+			Type:     TestFile,
+		},
+	)
+	genResult.AddFile(
+		FileOutput{
+			Filename: "testcases.txt",
+			Type:     TestCasesFile,
+		},
+	)
+	if separateDescriptionFile(c) {
+		genResult.AddFile(
+			FileOutput{
+				Filename: "question.md",
+				Type:     DocFile,
+			},
+		)
+	}
+	return genResult, nil
 }
 
 func (c cpp) Initialize(outDir string) error {
