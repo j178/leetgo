@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jedib0t/go-pretty/v6/list"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
-	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
@@ -111,14 +112,20 @@ func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 			if len(c.input) != narg {
 				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
 			}
-			if _, err := deserialize("[]string", c.input[0]); err != nil {
+			l1, err := deserialize("[]string", c.input[0])
+			if err != nil {
 				return fmt.Errorf("cannot parse %s as []string", c.input[0])
 			}
-			if _, err := goutils.SplitArray(c.input[1]); err != nil {
+			l2, err := goutils.SplitArray(c.input[1])
+			if err != nil {
 				return fmt.Errorf("%s is not a valid list", c.input[0])
 			}
-			if _, err := goutils.SplitArray(c.output); err != nil {
+			l3, err := goutils.SplitArray(c.output)
+			if err != nil {
 				return fmt.Errorf("%s is not a valid list", c.input[0])
+			}
+			if l1.Len() != len(l2) || l1.Len() != len(l3) {
+				return fmt.Errorf("input and output should have the same length")
 			}
 		}
 		return nil

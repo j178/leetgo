@@ -398,6 +398,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	}
 	content = wordwrap.WrapString(content, maxWidth)
 	content = utils.CondenseEmptyLines(content)
+	content = utils.EnsureTrailingNewline(content)
 	return content
 }
 
@@ -486,10 +487,12 @@ func (q *QuestionData) formatQuestionId() (string, bool) {
 		cid := strings.TrimSpace(id[len("剑指 Offer")+1:])
 		cid = strings.ReplaceAll(cid, " ", "-")
 		cid = strings.ReplaceAll(cid, "---", "-")
-		id = "剑指Offer-" + cid
+		id = "Offer-" + cid
 	case strings.HasPrefix(id, "面试题"):
 		slugValid = false
-		id = strings.ReplaceAll(id, " ", "-")
+		cid := strings.TrimSpace(id[len("面试题")+1:])
+		cid = strings.ReplaceAll(cid, " ", "-")
+		id = "Interview-" + cid
 	case strings.HasPrefix(id, "LCP"), strings.HasPrefix(id, "LCS"):
 		slugValid = false
 		id = strings.ReplaceAll(id, " ", "-")

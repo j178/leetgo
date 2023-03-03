@@ -2,7 +2,6 @@ package lang
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -457,13 +456,9 @@ func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename strin
 	}, nil
 }
 
-// nolint: unused
-func (l baseLang) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
-	return FileOutput{}, errors.New("not implemented")
-}
-
 func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	tmpl := `# [%s. %s](%s) (%s)
+
 %s`
 	url := ""
 	if q.IsContest() {

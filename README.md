@@ -17,7 +17,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 
 [![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
 
-## Highlight of features
+## Features
 
 - Generate description, skeleton code and testing code for a question
 - Customize the code template for generated code, use modifiers to pre-process code
@@ -118,7 +118,7 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
-  fix                     Use OpenAI GPT-3 API to fix your solution code (just for fun)
+  fix                     Use ChatGPT API to fix your solution code (just for fun)
   edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache
@@ -257,9 +257,8 @@ editor:
 There are three ways to make cookies available to `leetgo`:
 
 - Read cookies from browser automatically.
-  
+
   Currently, `leetgo` supports Chrome, FireFox, Safari[^1], Edge.
-  If you want to support other browsers, please let us know!
 
   ```yaml
   leetcode:

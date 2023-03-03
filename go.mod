@@ -1,19 +1,18 @@
 module github.com/j178/leetgo
 
-go 1.19
+go 1.20
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/JohannesKaufmann/html-to-markdown v1.3.6
-	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/PullRequestInc/go-gpt3 v1.1.11
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/briandowns/spinner v1.21.0
+	github.com/briandowns/spinner v1.22.0
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.6.0
-	github.com/charmbracelet/log v0.1.0
+	github.com/charmbracelet/log v0.1.2
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230216180835-5937a312edda
 	github.com/fatih/color v1.14.1
@@ -23,12 +22,13 @@ require (
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/j178/kooky v0.0.0-20230225091234-c0b5404b0b88
 	github.com/j178/leetgo/testutils/go v0.1.0
-	github.com/jedib0t/go-pretty/v6 v6.4.4
+	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/k3a/html2text v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/sashabaranov/go-gpt3 v1.3.1
 	github.com/sosedoff/ansible-vault-go v0.1.1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0

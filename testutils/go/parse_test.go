@@ -1,158 +1,137 @@
 package goutils
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDeserialize(t *testing.T) {
-	v1, err := Deserialize[int]("123")
-	assert.NoError(t, err)
-	assert.Equal(t, 123, v1)
-
-	v2, err := Deserialize[string](`"abc"`)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", v2)
-
-	v3, err := Deserialize[byte](`'a'`)
-	assert.NoError(t, err)
-	assert.Equal(t, byte('a'), v3)
-
-	v4, err := Deserialize[[]int]("[]")
-	assert.NoError(t, err)
-	assert.Equal(t, []int{}, v4)
-
-	v5, err := Deserialize[[]int]("[1,2,3]")
-	assert.NoError(t, err)
-	assert.Equal(t, []int{1, 2, 3}, v5)
-
-	v6, err := Deserialize[[]string](`["a","b","c"]`)
-	assert.NoError(t, err)
-	assert.Equal(t, []string{"a", "b", "c"}, v6)
-
-	v7, err := Deserialize[*TreeNode]("[1,2,3]")
-	assert.NoError(t, err)
-	assert.Equal(t, v7.Val, 1)
-	assert.Equal(t, v7.Left.Val, 2)
-	assert.Equal(t, v7.Right.Val, 3)
-
-	v8, err := Deserialize[*ListNode]("[1,2,3]")
-	assert.NoError(t, err)
-	assert.Equal(t, v8.Val, 1)
-	assert.Equal(t, v8.Next.Val, 2)
-	assert.Equal(t, v8.Next.Next.Val, 3)
-
-	v9, err := Deserialize[float64]("1.2")
-	assert.NoError(t, err)
-	assert.Equal(t, 1.2, v9)
-
-	v10, err := Deserialize[bool]("true")
-	assert.NoError(t, err)
-	assert.Equal(t, true, v10)
-
-	v11, err := Deserialize[bool]("false")
-	assert.NoError(t, err)
-	assert.Equal(t, false, v11)
-
-	v12, err := Deserialize[[][]int]("[[1,2],[3,4]]")
-	assert.NoError(t, err)
-	assert.Equal(t, [][]int{{1, 2}, {3, 4}}, v12)
-
-	v13, err := Deserialize[[]*TreeNode]("[[1,2,3],[4,5,6]]")
-	assert.NoError(t, err)
-	assert.Len(t, v13, 2)
-
-	_, err = Deserialize[bool]("True")
-	assert.Error(t, err)
-
-	_, err = Deserialize[func()]("")
-	assert.Error(t, err)
-
-	_, err = Deserialize[int](`"1.2"`)
-	assert.Error(t, err)
+	assert.NotPanics(
+		t, func() {
+			v1 := Deserialize[int]("123")
+			assert.Equal(t, 123, v1)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v2 := Deserialize[string](`"abc"`)
+			assert.Equal(t, "abc", v2)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v3 := Deserialize[byte](`'a'`)
+			assert.Equal(t, byte('a'), v3)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v4 := Deserialize[[]int]("[]")
+			assert.Equal(t, []int{}, v4)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v5 := Deserialize[[]int]("[1,2,3]")
+			assert.Equal(t, []int{1, 2, 3}, v5)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v6 := Deserialize[[]string](`["a","b","c"]`)
+			assert.Equal(t, []string{"a", "b", "c"}, v6)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v7 := Deserialize[*TreeNode]("[1,2,3]")
+			assert.Equal(t, 1, v7.Val)
+			assert.Equal(t, 2, v7.Left.Val)
+			assert.Equal(t, 3, v7.Right.Val)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v8 := Deserialize[*ListNode]("[1,2,3]")
+			assert.Equal(t, 1, v8.Val)
+			assert.Equal(t, 2, v8.Next.Val)
+			assert.Equal(t, 3, v8.Next.Next.Val)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v9 := Deserialize[float64]("1.2")
+			assert.Equal(t, 1.2, v9)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v10 := Deserialize[bool]("true")
+			assert.Equal(t, true, v10)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v11 := Deserialize[bool]("false")
+			assert.Equal(t, false, v11)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v12 := Deserialize[[][]int]("[[1,2],[3,4]]")
+			assert.Equal(t, [][]int{{1, 2}, {3, 4}}, v12)
+		},
+	)
+	assert.NotPanics(
+		t, func() {
+			v13 := Deserialize[[]*TreeNode]("[[1,2,3],[4,5,6]]")
+			assert.Len(t, v13, 2)
+		},
+	)
+	assert.Panics(t, func() { Deserialize[bool]("True") })
+	assert.Panics(t, func() { Deserialize[func()]("1") })
+	assert.Panics(t, func() { Deserialize[int](`"1.2"`) })
 }
 
-func TestDeserializeByGoType(t *testing.T) {
-	v1, err := DeserializeByGoType("int", "123")
-	assert.NoError(t, err)
-	assert.EqualValues(t, 123, v1.Int())
+func sliceEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
 
-	v2, err := DeserializeByGoType("string", `"abc"`)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", v2.String())
+func TestSplitArray(t *testing.T) {
+	tests := []struct {
+		input string
+		want  []string
+		err   error
+	}{
+		{"[]", []string{}, nil},
+		{"[1]", []string{"1"}, nil},
+		{"[[1], [2]]", []string{"[1]", "[2]"}, nil},
+		{"[1,2,3]", []string{"1", "2", "3"}, nil},
+		{"[1, 2, 3]", []string{"1", "2", "3"}, nil},
+		{" [1,2,3] ", []string{"1", "2", "3"}, nil},
+		{`[1, "2, 3"]`, []string{"1", `"2, 3"`}, nil},
+		{"[1,2,3,]", nil, fmt.Errorf("invalid array: [1,2,3,]")},   // trailing comma
+		{"[1,2,3", nil, fmt.Errorf("invalid array: [1,2,3")},       // missing closing bracket
+		{"1,2,3", nil, fmt.Errorf("invalid array: 1,2,3")},         // no brackets
+		{`[1,2,"[","[]"]`, []string{"1", "2", `"["`, `"[]"`}, nil}, // string contains brackets
+		{`[null,1,2,null]`, []string{"null", "1", "2", "null"}, nil},
+	}
 
-	v3, err := DeserializeByGoType("byte", `'a'`)
-	assert.NoError(t, err)
-	assert.Equal(t, uint8('a'), uint8(v3.Uint()))
+	for _, tc := range tests {
+		got, err := SplitArray(tc.input)
 
-	v4, err := DeserializeByGoType("[]int", "[]")
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.Slice, v4.Type().Kind())
-	assert.Equal(t, reflect.Int, v4.Type().Elem().Kind())
-	var v4Slice []int
-	reflect.ValueOf(&v4Slice).Elem().Set(v4)
-	assert.Equal(t, []int{}, v4Slice)
-
-	v5, err := DeserializeByGoType("[]int", "[1,2,3]")
-	assert.NoError(t, err)
-	assert.Equal(t, reflect.Slice, v4.Type().Kind())
-	assert.Equal(t, reflect.Int, v4.Type().Elem().Kind())
-	var v5Slice []int
-	reflect.ValueOf(&v5Slice).Elem().Set(v5)
-	assert.Equal(t, []int{1, 2, 3}, v5Slice)
-
-	v6, err := DeserializeByGoType("[]string", `["a","b","c"]`)
-	assert.NoError(t, err)
-	var v6Slice []string
-	reflect.ValueOf(&v6Slice).Elem().Set(v6)
-	assert.Equal(t, []string{"a", "b", "c"}, v6Slice)
-
-	v7, err := DeserializeByGoType("*TreeNode", "[1,2,3]")
-	assert.NoError(t, err)
-	var v7Node *TreeNode
-	reflect.ValueOf(&v7Node).Elem().Set(v7)
-	assert.Equal(t, v7Node.Val, 1)
-	assert.Equal(t, v7Node.Left.Val, 2)
-	assert.Equal(t, v7Node.Right.Val, 3)
-
-	v8, err := DeserializeByGoType("*ListNode", "[1,2,3]")
-	assert.NoError(t, err)
-	var v8Node *ListNode
-	reflect.ValueOf(&v8Node).Elem().Set(v8)
-	assert.Equal(t, v8Node.Val, 1)
-	assert.Equal(t, v8Node.Next.Val, 2)
-	assert.Equal(t, v8Node.Next.Next.Val, 3)
-
-	v9, err := DeserializeByGoType("float64", "1.2")
-	assert.NoError(t, err)
-	assert.Equal(t, float64(1.2), v9.Float())
-
-	v10, err := DeserializeByGoType("bool", "true")
-	assert.NoError(t, err)
-	assert.Equal(t, true, v10.Bool())
-
-	v11, err := DeserializeByGoType("bool", "false")
-	assert.NoError(t, err)
-	assert.Equal(t, false, v11.Bool())
-
-	v12, err := DeserializeByGoType("[][]int", "[[1,2],[3,4]]")
-	assert.NoError(t, err)
-	var v12Slice [][]int
-	reflect.ValueOf(&v12Slice).Elem().Set(v12)
-	assert.Equal(t, [][]int{{1, 2}, {3, 4}}, v12Slice)
-
-	v13, err := DeserializeByGoType("[]*TreeNode", "[[1,2,3],[4,5,6]]")
-	assert.NoError(t, err)
-	assert.Equal(t, v13.Len(), 2)
-
-	_, err = DeserializeByGoType("bool", "True")
-	assert.Error(t, err)
-
-	_, err = DeserializeByGoType("func()", "")
-	assert.Error(t, err)
-
-	_, err = DeserializeByGoType("int", `"1.2"`)
-	assert.Error(t, err)
+		if !sliceEqual(tc.want, got) || (err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
+			t.Errorf("SplitArray(%q) = (%q, %v), want (%q, %v)", tc.input, got, err, tc.want, tc.err)
+		}
+	}
 }
