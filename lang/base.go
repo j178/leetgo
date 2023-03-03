@@ -140,10 +140,13 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	return outDir
 }
 
-func getTempBinFile(q *leetcode.QuestionData, lang Lang) string {
+func getTempBinFile(q *leetcode.QuestionData, lang Lang) (string, error) {
 	tmpDir := config.Get().TempDir()
+	if err := utils.CreateIfNotExists(tmpDir, true); err != nil {
+		return "", err
+	}
 	filename := fmt.Sprintf("%s-%s.exec", q.TitleSlug, lang.Slug())
-	return filepath.Join(tmpDir, filename)
+	return filepath.Join(tmpDir, filename), nil
 }
 
 func separateDescriptionFile(lang Lang) bool {
