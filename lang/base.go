@@ -140,6 +140,15 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	return outDir
 }
 
+func getTempBinFile(q *leetcode.QuestionData, lang Lang) (string, error) {
+	tmpDir := config.Get().TempDir()
+	if err := utils.CreateIfNotExists(tmpDir, true); err != nil {
+		return "", err
+	}
+	filename := fmt.Sprintf("%s-%s.exec", q.TitleSlug, lang.Slug())
+	return filepath.Join(tmpDir, filename), nil
+}
+
 func separateDescriptionFile(lang Lang) bool {
 	ans := viper.Get("code." + lang.Slug() + ".separate_description_file")
 	if ans != nil {

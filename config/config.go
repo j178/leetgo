@@ -128,6 +128,10 @@ func (c *Config) CacheDir() string {
 	return filepath.Join(c.ConfigDir(), "cache")
 }
 
+func (c *Config) TempDir() string {
+	return filepath.Join(os.TempDir(), CmdName)
+}
+
 func (c *Config) GlobalConfigFile() string {
 	return filepath.Join(c.ConfigDir(), globalConfigFile)
 }
