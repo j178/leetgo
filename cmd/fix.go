@@ -105,7 +105,12 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 	if apiKey == "" {
 		return "", errors.New("missing OPENAI_API_KEY environment variable")
 	}
-	client := gpt3.NewClient(apiKey)
+	baseURI := os.Getenv("OPENAI_API_ENDPOINT")
+	config := gpt3.DefaultConfig(apiKey)
+	if baseURI != "" {
+		config.BaseURL = baseURI
+	}
+	client := gpt3.NewClientWithConfig(config)
 	prompt := fmt.Sprintf(
 		fixPrompt,
 		q.Title,
