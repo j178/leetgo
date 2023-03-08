@@ -42,7 +42,7 @@ const (
 #include <bits/stdc++.h>
 using namespace std;
 
-#include "solution.h"
+%s
 
 // main func
 int main() {
@@ -242,22 +242,18 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	return
 }
 
-func (c cpp) generateTestContent(q *leetcode.QuestionData) string {
-	return fmt.Sprintf(
-		cppTestFileTemplate,
-		c.generateScanCode(q),
-		c.generateInitCode(q),
-		c.generateCallCode(q),
-		c.generatePrintCode(q),
-	)
-}
-
-func (c cpp) generateTestFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
-	content := c.generateTestContent(q)
+func (c cpp) generateTestFile(q *leetcode.QuestionData, filename string, codeContent string) (FileOutput, error) {
 	return FileOutput{
 		Filename: filename,
-		Content:  content,
-		Type:     TestFile,
+		Content: fmt.Sprintf(
+			cppTestFileTemplate,
+			codeContent,
+			c.generateScanCode(q),
+			c.generateInitCode(q),
+			c.generateCallCode(q),
+			c.generatePrintCode(q),
+		),
+		Type: CodeFile | TestFile,
 	}, nil
 }
 
@@ -304,11 +300,11 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	codeFile, err := c.generateCodeFile(q, "solution.h", blocks, modifiers, separateDescriptionFile)
+	codeContent, err := c.generateCodeContent(q, blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
-	testFile, err := c.generateTestFile(q, "solution.cpp")
+	testFile, err := c.generateTestFile(q, "solution.cpp", codeContent)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +312,6 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	genResult.AddFile(codeFile)
 	genResult.AddFile(testFile)
 	genResult.AddFile(testcaseFile)
 
@@ -344,14 +339,8 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	genResult.AddFile(
 		FileOutput{
-			Filename: "solution.h",
-			Type:     CodeFile,
-		},
-	)
-	genResult.AddFile(
-		FileOutput{
 			Filename: "solution.cpp",
-			Type:     TestFile,
+			Type:     CodeFile | TestFile,
 		},
 	)
 	genResult.AddFile(
