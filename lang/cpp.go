@@ -264,8 +264,11 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 	}
 	genResult.SetOutDir(outDir)
 
-	testFile := outDir + "/" + genResult.SubDir + "/solution.cpp"
-	execFile := outDir + "/" + genResult.SubDir + "/solution.exec"
+	testFile := filepath.Join(outDir, genResult.SubDir, "solution.cpp")
+	execFile, err := getTempBinFile(q, c)
+	if err != nil {
+		return false, fmt.Errorf("generate temporary binary file path failed: %w", err)
+	}
 
 	cfg := config.Get()
 	compiler := cfg.Code.Cpp.CXX
