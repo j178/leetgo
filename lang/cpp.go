@@ -316,7 +316,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 
 	cfg := config.Get()
 	compiler := cfg.Code.Cpp.CXX
-	compilerFlags := cfg.Code.Cpp.CXXFLAGS
+	compilerFlags := append([]string(nil), cfg.Code.Cpp.CXXFLAGS...)
 	compilerFlags = append(compilerFlags, "-I", outDir, "-o", execFile, testFile)
 
 	cmd := exec.Command(compiler, compilerFlags...)
