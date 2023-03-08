@@ -437,7 +437,7 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
 	for _, f := range found {
-		output := strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>")
+		output := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(f[1]), "<code>"), "</pre>")
 		output = html2text.HTMLEntitiesToText(output)
 		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)
