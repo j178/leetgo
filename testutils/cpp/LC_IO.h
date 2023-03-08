@@ -43,11 +43,13 @@ L3: return is;
  */
 std::ostream &operator<<(std::ostream &os, ListNode *node) {
     os << '[';
-    while (node != nullptr) {
-        os << node->val << ',';
-        node = node->next;
+    if (node != nullptr) {
+        do {
+            os << node->val << ',';
+            node = node->next;
+        } while(node != nullptr);
+        os.seekp(-1, std::ios_base::end);
     }
-    os.seekp(-1, std::ios_base::end);
     os << ']';
     return os;
 }
@@ -120,7 +122,7 @@ std::ostream &operator<<(std::ostream &os, TreeNode *node) {
     os << '[';
     if (node != nullptr) {
         push(node);
-        while (cnt_not_null_nodes > 0) { pop();    }
+        while (cnt_not_null_nodes > 0) { pop(); }
         os.seekp(-1, std::ios_base::end);
     }
     os << ']';
@@ -140,6 +142,10 @@ L1: switch (is.peek()) {
     default : v.emplace_back();
               if constexpr (std::is_same_v<T, std::string>) {
                   is >> quoted(v.back());
+              } else if constexpr (std::is_same_v<T, bool>) {
+                  bool t = is.get() == 't';
+                  v.back() = t;
+                  is.ignore(4 - t);
               } else {
                   is >> v.back();
               }
@@ -159,16 +165,18 @@ L3: return is;
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
     os << '[';
-    if constexpr (std::is_same_v<T, std::string>) {
-        for (auto &&x : v) { os << quoted(x) << ','; }
-    } else if constexpr (std::is_same_v<T, double>) {
-        for (auto &&x : v) {
+    for (auto &&x : v) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            os << quoted(x) << ',';
+        } else if constexpr (std::is_same_v<T, double>) {
             char buf[320]; sprintf(buf, "%.5f,", x); os << buf;
+        } else if constexpr (std::is_same_v<T, bool>) {
+            const char *buf = "false,\0\0true,"; os << buf + (x << 3);
+        } else {
+            os << x << ',';
         }
-    } else {
-        for (auto &&x : v) { os << x << ','; }
     }
-    os.seekp(-1, std::ios_base::end);
+    os.seekp(-!v.empty(), std::ios_base::end);
     os << ']';
     return os;
 }
