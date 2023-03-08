@@ -276,11 +276,8 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	if len(tc.cases) == 0 {
 		return false, fmt.Errorf("no test cases found")
 	}
-	var (
-		outputBuf bytes.Buffer
-		ran       int
-		passed    int
-	)
+
+	var ran, passed int
 	for _, c := range tc.cases {
 		func() {
 			l := list.NewWriter()
@@ -293,33 +290,27 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 			ran++
-			outputBuf.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 
+			outputBuf := new(bytes.Buffer)
 			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 			cmd.Dir = outDir
 			cmd.Stdin = strings.NewReader(c.Input())
-			cmd.Stdout = &outputBuf
-			cmd.Stderr = &outputBuf
+			cmd.Stdout = outputBuf
+			cmd.Stderr = outputBuf
 			err = cmd.Start()
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Failed to start")))
 				return
 			}
-			done := make(chan error, 1)
-			go func() {
-				done <- cmd.Wait()
-			}()
-			select {
-			case <-ctx.Done():
-			case err = <-done:
-			}
+			err = cmd.Wait()
 
 			actualOutput, stdout := extractOutput(outputBuf.String())
 			mayAppendStdout := func() {
 				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdoutStyle.Render(stdout)))
+					out := stdoutStyle.Render(strings.ReplaceAll(stdout, "\n", "↩ "))
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
 				}
 			}
 			if ctx.Err() != nil {
