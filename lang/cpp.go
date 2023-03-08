@@ -71,17 +71,31 @@ func (c cpp) getScanCodeForType(d int, t string, n string, ifs string) string {
 		if t == "string" {
 			return fmt.Sprintf("%s >> quoted(%s);", ifs, n)
 		}
+		if t == "bool" {
+			return fmt.Sprintf("%s = %s.get() == 't'; is.ignore(4 - %s);", n, ifs, n)
+		}
+		if t == "char" {
+			return fmt.Sprintf("%s.ignore(); %s = %s.get(); %s.ignore();", ifs, n, ifs, ifs)
+		}
 	}
 	return fmt.Sprintf("%s >> %s;", ifs, n)
 }
 
 func (c cpp) getPrintCodeForType(d int, t string, n string, ofs string) string {
+	/* assumes one invocation for each printed variable */
+	/* (parameter "n" could be a function call, which we only wish to call once) */
 	if d == 0 {
 		if t == "string" {
 			return fmt.Sprintf("%s << quoted(%s);", ofs, n)
 		}
 		if t == "double" {
-			return fmt.Sprintf("{ char buf[320]; sprintf(buf, \"%%.5f\", %s); %s << string(buf); }", n, ofs)
+			return fmt.Sprintf("{ char buf[320]; sprintf(buf, \"%%.5f\", %s); %s << buf; }", n, ofs)
+		}
+		if t == "bool" {
+			return fmt.Sprintf("{ const char *buf = \"false\\0\\0\\0true\"; %s << buf + (%s << 3); }", ofs, n)
+		}
+		if t == "char" {
+			return fmt.Sprintf("%s << '\"' << %s << '\"'", ofs, n)
 		}
 	}
 	return fmt.Sprintf("%s << %s;", ofs, n)
@@ -231,7 +245,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	const template = `int main() {
 	ios_base::sync_with_stdio(false);
-	ostringstream ` + outputStreamName + `;
+	stringstream ` + outputStreamName + `;
 
 %s
 
