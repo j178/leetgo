@@ -106,7 +106,7 @@ type GoConfig struct {
 type CppConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
 	CXX            string `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
-	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags"`
+	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
 }
 
 type Credentials struct {
