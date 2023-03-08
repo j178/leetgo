@@ -143,9 +143,9 @@ L1: switch (is.peek()) {
               if constexpr (std::is_same_v<T, std::string>) {
                   is >> quoted(v.back());
               } else if constexpr (std::is_same_v<T, bool>) {
-                  bool t = is.get() == 't';
-                  v.back() = t;
-                  is.ignore(4 - t);
+                  bool t = is.get() == 't'; v.back() = t; is.ignore(4 - t);
+              } else if cconstexpr (std::is_same_v<T, char>) {
+                  is.ignore(); v.back() = is.get(); is.ignore();
               } else {
                   is >> v.back();
               }
@@ -172,6 +172,8 @@ std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
             char buf[320]; sprintf(buf, "%.5f,", x); os << buf;
         } else if constexpr (std::is_same_v<T, bool>) {
             const char *buf = "false,\0\0true,"; os << buf + (x << 3);
+        } else if cconstexpr (std::is_same_v<T, char>) {
+            os << '"' << x << "\",";
         } else {
             os << x << ',';
         }
