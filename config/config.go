@@ -105,8 +105,8 @@ type GoConfig struct {
 
 type CppConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	CXX            string `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
-	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
+	CXX            string   `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
+	CXXFLAGS       []string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
 }
 
 type Credentials struct {
@@ -213,7 +213,7 @@ func Default() *Config {
 			Cpp: CppConfig{
 				BaseLangConfig: BaseLangConfig{OutDir: "cpp"},
 				CXX:            "g++",
-				CXXFLAGS:       "-O2 -std=c++17",
+				CXXFLAGS:       []string{"-O2", "-std=c++17"},
 			},
 			Python: BaseLangConfig{OutDir: "python"},
 			Java:   BaseLangConfig{OutDir: "java"},

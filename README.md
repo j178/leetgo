@@ -209,7 +209,9 @@ code:
     # C++ compiler
     cxx: g++
     # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
-    cxxflags: -O2 -std=c++17
+    cxxflags:
+      - -O2
+      - -std=c++17
   java:
     out_dir: java
     # Overrides the default code.filename_template

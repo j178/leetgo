@@ -7,14 +7,29 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-	cppTestUtils "github.com/j178/leetgo/testutils/cpp"
+	cppUtils "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
 )
 
 type cpp struct {
 	baseLang
+}
+
+func (c cpp) Initialize(outDir string) error {
+	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
+	if _, err := tryWrite(headerPath, cppUtils.HeaderContent); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c cpp) HasInitialized(outDir string) (bool, error) {
+	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
+	return utils.IsExist(headerPath), nil
 }
 
 var cppTypes = map[string]string{
@@ -37,39 +52,6 @@ const (
 	systemDesignMethodMapName  = "method"
 	systemDesignMethodNameName = "method_name"
 	systemDesignMethodListName = "method_names"
-	cppTestFileTemplate        = `#include "` + cppTestUtils.HeaderName + `"
-
-#include <bits/stdc++.h>
-using namespace std;
-
-%s
-
-// main func
-int main() {
-	// global init
-	ios_base::sync_with_stdio(false);
-	stringstream ` + outputStreamName + `;
-
-
-	// scan input args
-%s
-
-	// initialize object
-%s
-
-	// call methods
-%s
-
-	// print result
-%s
-
-	// delete object
-	delete ` + objectName + `;
-
-
-	return 0;
-}
-`
 )
 
 func (c cpp) getCppTypeName(t string) (int, string) {
@@ -169,7 +151,10 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 		)
 	} else {
 		/* define methods */ {
-			callCode = fmt.Sprintf("\tconst unordered_map<string, function<void()>> %s = {\n", systemDesignMethodMapName)
+			callCode = fmt.Sprintf(
+				"\tconst unordered_map<string, function<void()>> %s = {\n",
+				systemDesignMethodMapName,
+			)
 			/* operations in constructor function call */ {
 				callCode += fmt.Sprintf("\t\t{ \"%s\", [&]() {\n", q.MetaData.ClassName)
 				generateParamScanningCode(q.MetaData.Constructor.Params)
@@ -210,7 +195,8 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 			callCode += "\t};"
 		}
 		/* invoke methods */ {
-			callCode += fmt.Sprintf(`
+			callCode += fmt.Sprintf(
+				`
 	%s << '[';
 	for (auto &&%s : %s) {
 		%s.ignore(2);
@@ -238,22 +224,80 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
 		printCode += fmt.Sprintf("\t%s << %s;\n", outputStreamName, returnName)
 	}
-	printCode += fmt.Sprintf("\tcout << \"%s\" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
+	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
 	return
 }
 
-func (c cpp) generateTestFile(q *leetcode.QuestionData, filename string, codeContent string) (FileOutput, error) {
+func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
+	const template = `int main() {
+	ios_base::sync_with_stdio(false);
+	stringstream ` + outputStreamName + `;
+
+%s
+
+%s
+
+%s
+
+%s
+
+	delete ` + objectName + `;
+	return 0;
+}`
+	return fmt.Sprintf(
+		template,
+		c.generateScanCode(q),
+		c.generateInitCode(q),
+		c.generateCallCode(q),
+		c.generatePrintCode(q),
+	), nil
+}
+
+func (c cpp) generateCodeFile(
+	q *leetcode.QuestionData,
+	filename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
+) (
+	FileOutput,
+	error,
+) {
+	codeHeader := fmt.Sprintf(
+		`#include <bits/stdc++.h>
+#include "%s"
+using namespace std;
+
+`, cppUtils.HeaderName,
+	)
+	testContent, err := c.generateTestContent(q)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	blocks = append(
+		blocks,
+		config.Block{
+			Name:     internalBeforeMarker,
+			Template: codeHeader,
+		},
+		config.Block{
+			Name:     internalAfterMarker,
+			Template: testContent,
+		},
+	)
+	content, err := c.generateCodeContent(
+		q,
+		blocks,
+		modifiers,
+		separateDescriptionFile,
+	)
+	if err != nil {
+		return FileOutput{}, err
+	}
 	return FileOutput{
 		Filename: filename,
-		Content: fmt.Sprintf(
-			cppTestFileTemplate,
-			codeContent,
-			c.generateScanCode(q),
-			c.generateInitCode(q),
-			c.generateCallCode(q),
-			c.generatePrintCode(q),
-		),
-		Type: CodeFile | TestFile,
+		Content:  content,
+		Type:     CodeFile | TestFile,
 	}, nil
 }
 
@@ -273,10 +317,12 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 	cfg := config.Get()
 	compiler := cfg.Code.Cpp.CXX
 	compilerFlags := cfg.Code.Cpp.CXXFLAGS
+	compilerFlags = append(compilerFlags, "-I", outDir, "-o", execFile, testFile)
 
-	cmd := exec.Command(compiler, append(strings.Split(compilerFlags, " "), "-I", outDir, "-o", execFile, testFile)...)
+	cmd := exec.Command(compiler, compilerFlags...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	log.Info("compiling", "cmd", cmd.String())
 	err = cmd.Run()
 	if err != nil {
 		return false, fmt.Errorf("compilation failed: %w", err)
@@ -299,15 +345,11 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 
 	separateDescriptionFile := separateDescriptionFile(c)
 	blocks := getBlocks(c)
-	modifiers, err := getModifiers(c, goBuiltinModifiers)
+	modifiers, err := getModifiers(c, builtinModifiers)
 	if err != nil {
 		return nil, err
 	}
-	codeContent, err := c.generateCodeContent(q, blocks, modifiers, separateDescriptionFile)
-	if err != nil {
-		return nil, err
-	}
-	testFile, err := c.generateTestFile(q, "solution.cpp", codeContent)
+	codeFile, err := c.generateCodeFile(q, "solution.cpp", blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +357,7 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	genResult.AddFile(testFile)
+	genResult.AddFile(codeFile)
 	genResult.AddFile(testcaseFile)
 
 	if separateDescriptionFile {
@@ -361,17 +403,4 @@ func (c cpp) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 		)
 	}
 	return genResult, nil
-}
-
-func (c cpp) Initialize(outDir string) error {
-	headerPath := filepath.Join(outDir, cppTestUtils.HeaderName)
-	if _, err := tryWrite(headerPath, cppTestUtils.HeaderContent); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c cpp) HasInitialized(outDir string) (bool, error) {
-	headerPath := filepath.Join(outDir, cppTestUtils.HeaderName)
-	return utils.IsExist(headerPath), nil
 }
