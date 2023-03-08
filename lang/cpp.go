@@ -32,7 +32,8 @@ const (
 	objectName            = "obj"
 	returnName            = "res"
 	inputStreamName       = "cin"
-	outputStreamName      = "cout"
+	outputStreamName      = "out_stream"
+	outputMarker          = "output: "
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
 	cppTestFileTemplate   = `#include "` + cppTestUtils.HeaderName + `"
@@ -44,6 +45,11 @@ using namespace std;
 
 // main func
 int main() {
+	// global init
+	ios::sync_with_stdio(false);
+	stringstream ` + outputStreamName + `;
+
+
 	// scan input args
 %s
 
@@ -77,11 +83,12 @@ func (c cpp) getDeclCodeForType(d int, t string, n string) string {
 }
 
 func (c cpp) getScanCodeForType(d int, t string, n string, ifs string) string {
-	if d == 0 && t == "string" {
-		return fmt.Sprintf("%s >> quoted(%s);", ifs, n)
-	} else {
-		return fmt.Sprintf("%s >> %s;", ifs, n)
+	if d == 0 {
+		if t == "string" {
+			return fmt.Sprintf("%s >> quoted(%s);", ifs, n)
+		}
 	}
+	return fmt.Sprintf("%s >> %s;", ifs, n)
 }
 
 func (c cpp) getPrintCodeForType(d int, t string, n string, ofs string) string {
@@ -92,10 +99,8 @@ func (c cpp) getPrintCodeForType(d int, t string, n string, ofs string) string {
 		if t == "double" {
 			return fmt.Sprintf("{ char buf[320]; sprintf(buf, \"%%.5f\", %s); %s << string(buf); }", n, ofs)
 		}
-		return fmt.Sprintf("%s << %s;", ofs, n)
-	} else {
-		return fmt.Sprintf("%s << %s;", ofs, n)
 	}
+	return fmt.Sprintf("%s << %s;", ofs, n)
 }
 
 func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
@@ -226,12 +231,12 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 	return callCode
 }
 
-func (c cpp) generatePrintCode(q *leetcode.QuestionData) string {
-	if q.MetaData.SystemDesign {
-		return ""
+func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
+	if !q.MetaData.SystemDesign {
+		printCode += fmt.Sprintf("\t%s << %s;", outputStreamName, returnName)
 	}
-	dimCnt, cppType := c.getCppTypeName(q.MetaData.Return.Type)
-	return fmt.Sprintf("\t%s\n", c.getPrintCodeForType(dimCnt, cppType, returnName, outputStreamName))
+	printCode += fmt.Sprintf("\tcout << \"%s\" << %s.rdbuf();", outputMarker, outputStreamName)
+	return
 }
 
 func (c cpp) generateTestContent(q *leetcode.QuestionData) string {
