@@ -14,7 +14,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
 	"github.com/k3a/html2text"
-	"github.com/mitchellh/go-wordwrap"
+	"github.com/muesli/reflow/wrap"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
@@ -356,7 +356,7 @@ func (q *QuestionData) GetContent() (string, config.Language) {
 }
 
 func (q *QuestionData) GetFormattedContent() string {
-	content, lang := q.GetContent()
+	content, _ := q.GetContent()
 
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
@@ -392,11 +392,8 @@ func (q *QuestionData) GetFormattedContent() string {
 	content = replacer.Replace(content)
 
 	// Wrap and remove blank lines
-	maxWidth := uint(100)
-	if lang == config.ZH {
-		maxWidth = 60
-	}
-	content = wordwrap.WrapString(content, maxWidth)
+	maxWidth := 100
+	content = wrap.String(content, maxWidth)
 	content = utils.CondenseEmptyLines(content)
 	content = utils.EnsureTrailingNewline(content)
 	return content

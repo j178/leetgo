@@ -103,9 +103,14 @@ var errNoFix = errors.New("no fix found")
 func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (string, error) {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
-		return "", errors.New("missing OPENAI_API_KEY environment variable")
+		return "", errors.New("missing OPENAI_API_KEY environment variable, you can find or create your API key here: https://platform.openai.com/account/api-keys")
 	}
-	client := gpt3.NewClient(apiKey)
+	baseURI := os.Getenv("OPENAI_API_ENDPOINT")
+	config := gpt3.DefaultConfig(apiKey)
+	if baseURI != "" {
+		config.BaseURL = baseURI
+	}
+	client := gpt3.NewClientWithConfig(config)
 	prompt := fmt.Sprintf(
 		fixPrompt,
 		q.Title,
