@@ -85,7 +85,7 @@ type CodeConfig struct {
 	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
 	Python                  BaseLangConfig `yaml:"python3" mapstructure:"python3"`
-	Cpp                     BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
 	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
 	Rust                    BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
@@ -101,6 +101,12 @@ type BaseLangConfig struct {
 
 type GoConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+}
+
+type CppConfig struct {
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+	CXX            string `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
+	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags"`
 }
 
 type Credentials struct {
@@ -204,8 +210,12 @@ func Default() *Config {
 					},
 				},
 			},
+			Cpp: CppConfig{
+				BaseLangConfig: BaseLangConfig{OutDir: "cpp"},
+				CXX:            "g++",
+				CXXFLAGS:       "-O2 -std=c++17",
+			},
 			Python: BaseLangConfig{OutDir: "python"},
-			Cpp:    BaseLangConfig{OutDir: "cpp"},
 			Java:   BaseLangConfig{OutDir: "java"},
 			Rust:   BaseLangConfig{OutDir: "rust"},
 			// Add more languages here

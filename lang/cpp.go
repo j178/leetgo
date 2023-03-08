@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	cppTestUtils "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
@@ -270,7 +271,11 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 	testFile := outDir + "/" + genResult.SubDir + "/solution.cpp"
 	execFile := outDir + "/" + genResult.SubDir + "/solution.exec"
 
-	cmd := exec.Command("g++", "-O2", "-std=c++17", "-I", outDir, "-o", execFile, testFile)
+	cfg := config.Get()
+	compiler := cfg.Code.Cpp.CXX
+	compilerFlags := cfg.Code.Cpp.CXXFLAGS
+
+	cmd := exec.Command(compiler, append(strings.Split(compilerFlags, " "), "-I", outDir, "-o", execFile, testFile)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -278,8 +283,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 		return false, fmt.Errorf("compilation failed: %w", err)
 	}
 
-	args := []string{execFile}
-	return runTest(q, genResult, args, outDir)
+	return runTest(q, genResult, []string{execFile}, outDir)
 }
 
 func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
