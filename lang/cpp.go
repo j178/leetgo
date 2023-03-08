@@ -49,7 +49,7 @@ const (
 	returnName                 = "res"
 	inputStreamName            = "cin"
 	outputStreamName           = "out_stream"
-	systemDesignMethodMapName  = "method"
+	systemDesignMethodMapName  = "methods"
 	systemDesignMethodNameName = "method_name"
 	systemDesignMethodListName = "method_names"
 )
@@ -231,7 +231,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	const template = `int main() {
 	ios_base::sync_with_stdio(false);
-	stringstream ` + outputStreamName + `;
+	ostringstream ` + outputStreamName + `;
 
 %s
 
