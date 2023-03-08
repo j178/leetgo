@@ -33,7 +33,6 @@ const (
 	returnName            = "res"
 	inputStreamName       = "cin"
 	outputStreamName      = "out_stream"
-	outputMarker          = "output: "
 	systemDesignFuncName  = "sys_design_func"
 	systemDesignFuncNames = "sys_design_funcs"
 	cppTestFileTemplate   = `#include "` + cppTestUtils.HeaderName + `"
@@ -46,7 +45,7 @@ using namespace std;
 // main func
 int main() {
 	// global init
-	ios::sync_with_stdio(false);
+	ios_base::sync_with_stdio(false);
 	stringstream ` + outputStreamName + `;
 
 
@@ -64,6 +63,7 @@ int main() {
 
 	// delete object
 	delete ` + objectName + `;
+
 
 	return 0;
 }
@@ -161,20 +161,12 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 
 	if q.MetaData.SystemDesign {
 		className := q.MetaData.ClassName
-		callCode += fmt.Sprintf("\tauto hash_value_%s = hash<string>()(\"%s\");\n", className, className)
-		for _, method := range q.MetaData.Methods {
-			callCode += fmt.Sprintf("\tauto hash_value_%s = hash<string>()(\"%s\");\n", method.Name, method.Name)
-		}
 		callCode += fmt.Sprintf("\t%s.ignore(); %s << '[';\n", inputStreamName, outputStreamName)
 		callCode += fmt.Sprintf("\tfor (auto &&%s : %s) {\n", systemDesignFuncName, systemDesignFuncNames)
 		/* iterate thru all function calls */ {
-			callCode += fmt.Sprintf(
-				"\t\t%s.ignore(); auto hash_value = hash<string>()(%s);\n",
-				inputStreamName,
-				systemDesignFuncName,
-			)
+			callCode += fmt.Sprintf("\t\t%s.ignore();\n", inputStreamName)
 			/* operations in constructor function call */ {
-				callCode += fmt.Sprintf("\t\tif (hash_value == hash_value_%s) {\n", className)
+				callCode += fmt.Sprintf("\t\tif (%s == \"%s\") {\n", systemDesignFuncName, className)
 				generateParamScanningCode(q.MetaData.Constructor.Params)
 				callCode += fmt.Sprintf(
 					"\t\t\t%s = new %s(%s);\n",
@@ -186,7 +178,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 			}
 			/* operations in member function calls */
 			for _, method := range q.MetaData.Methods {
-				callCode += fmt.Sprintf(" else if (hash_value == hash_value_%s) {\n", method.Name)
+				callCode += fmt.Sprintf(" else if (%s == \"%s\") {\n", systemDesignFuncName, method.Name)
 				generateParamScanningCode(method.Params)
 				dimCnt, returnType := c.getCppTypeName(method.Return.Type)
 				functionCall := fmt.Sprintf(
@@ -233,9 +225,9 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 
 func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
-		printCode += fmt.Sprintf("\t%s << %s;", outputStreamName, returnName)
+		printCode += fmt.Sprintf("\t%s << %s;\n", outputStreamName, returnName)
 	}
-	printCode += fmt.Sprintf("\tcout << \"%s\" << %s.rdbuf();", outputMarker, outputStreamName)
+	printCode += fmt.Sprintf("\tcout << \"%s\" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
 	return
 }
 
