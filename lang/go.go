@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 )
@@ -140,8 +142,23 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	}
 	genResult.SetOutDir(outDir)
 
-	args := []string{"go", "run", "./" + genResult.SubDir}
-	return runTest(q, genResult, args, outDir)
+	testFile := genResult.GetFile(TestFile).GetPath()
+	execFile, err := getTempBinFile(q, g)
+	if err != nil {
+		return false, fmt.Errorf("get temp bin file failed: %w", err)
+	}
+
+	build := exec.Command("go", "build", "-o", execFile, testFile)
+	build.Dir = outDir
+	build.Stdout = os.Stdout
+	build.Stderr = os.Stderr
+	log.Info("building", "cmd", build.String())
+	err = build.Run()
+	if err != nil {
+		return false, fmt.Errorf("build failed: %w", err)
+	}
+
+	return runTest(q, genResult, []string{execFile}, outDir)
 }
 
 // convertToGoType converts LeetCode type name to Go type name.

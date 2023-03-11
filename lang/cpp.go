@@ -322,7 +322,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 	}
 	genResult.SetOutDir(outDir)
 
-	testFile := filepath.Join(outDir, genResult.SubDir, "solution.cpp")
+	testFile := genResult.GetFile(TestFile).GetPath()
 	execFile, err := getTempBinFile(q, c)
 	if err != nil {
 		return false, fmt.Errorf("generate temporary binary file path failed: %w", err)
@@ -334,6 +334,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 	compilerFlags = append(compilerFlags, "-I", outDir, "-o", execFile, testFile)
 
 	cmd := exec.Command(compiler, compilerFlags...)
+	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	log.Info("compiling", "cmd", cmd.String())
