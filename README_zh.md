@@ -64,7 +64,7 @@ func main() {
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
 | Python | :white_check_mark: | Not yet |
-| C++ | :white_check_mark: | Not yet |
+| C++ | :white_check_mark: | :white_check_mark: |
 | Rust | :white_check_mark: | Not yet |
 | Java | :white_check_mark: | Not yet |
 | JavaScript | :white_check_mark: | Not yet |
@@ -200,6 +200,12 @@ code:
     out_dir: cpp
     # Overrides the default code.filename_template
     filename_template: ""
+    # C++ compiler
+    cxx: g++
+    # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
+    cxxflags:
+      - -O2
+      - -std=c++17
   java:
     out_dir: java
     # Overrides the default code.filename_template

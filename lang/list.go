@@ -23,14 +23,16 @@ var (
 			blockCommentEnd:   `"""`,
 		},
 	}
-	cppGen = baseLang{
-		name:              "C++",
-		slug:              "cpp",
-		shortName:         "cpp",
-		extension:         ".cpp",
-		lineComment:       "//",
-		blockCommentStart: "/*",
-		blockCommentEnd:   "*/",
+	cppGen = cpp{
+		baseLang{
+			name:              "C++",
+			slug:              "cpp",
+			shortName:         "cpp",
+			extension:         ".cpp",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
 	}
 	rustGen = baseLang{
 		name:              "Rust",
