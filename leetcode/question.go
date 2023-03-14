@@ -436,6 +436,7 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	}
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
+	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/
 	for _, f := range found {
 		output := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(f[1]), "<code>"), "</pre>")
 		output = html2text.HTMLEntitiesToText(output)
