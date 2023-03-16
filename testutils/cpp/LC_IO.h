@@ -1,7 +1,7 @@
 #ifndef LC_IO_H
 #define LC_IO_H
 
-#include <iostream>
+#include <iomanip>
 #include <queue>
 
 /**
@@ -16,45 +16,6 @@ struct ListNode {
 };
 
 /**
- * Function for deserializing a singly-linked list.
- */
-std::istream &operator>>(std::istream &is, ListNode *&node) {
-    node = nullptr;
-    ListNode *now = nullptr;
-L0: is.ignore();
-L1: switch (is.peek()) {
-    case ' ':
-    case ',': is.ignore(); goto L1;
-    case ']': is.ignore(); goto L2;
-    default : int x; is >> x;
-              now = (now ? now->next : node) = new ListNode(x);
-              goto L1;
-    }
-L2: switch (is.peek()) {
-    case '\r': is.ignore(); goto L2;
-    case '\n': is.ignore(); goto L3;
-    case EOF : goto L3;
-    }
-L3: return is;
-}
-
-/**
- * Function for serializing a singly-linked list.
- */
-std::ostream &operator<<(std::ostream &os, ListNode *node) {
-    os << '[';
-    if (node != nullptr) {
-        do {
-            os << node->val << ',';
-            node = node->next;
-        } while(node != nullptr);
-        os.seekp(-1, std::ios_base::end);
-    }
-    os << ']';
-    return os;
-}
-
-/**
  * Definition for a binary tree node.
  */
 struct TreeNode {
@@ -65,122 +26,193 @@ struct TreeNode {
     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
 };
 
-/**
- * Function for deserializing a binary tree.
- */
-std::istream &operator>>(std::istream &is, TreeNode *&node) {
-    std::deque<TreeNode *> dq;
-L0: is.ignore();
-L1: switch (is.peek()) {
-    case ' ':
-    case ',': is.ignore(); goto L1;
-    case 'n': is.ignore(4); dq.emplace_back(nullptr);
-              goto L1;
-    case ']': is.ignore(); goto L2;
-    default : int x; is >> x;
-              dq.emplace_back(new TreeNode(x));
-              goto L1;
-    }
-L2: switch (is.peek()) {
-    case '\r': is.ignore(); goto L2;
-    case '\n': is.ignore(); goto L3;
-    case EOF : goto L3;
-    }
-L3: int n = dq.size();
-    for (int i = 0, j = 1; i < n; ++i) {
-        auto root = dq[i];
-        if (root == nullptr) { continue; }
-        root->left = j < n ? dq[j] : nullptr;
-        root->right = j + 1 < n ? dq[j + 1] : nullptr;
-        j += 2;
-    }
-    node = n ? dq[0] : nullptr;
-    return is;
-}
-
-/**
- * Function for serializing a binary tree.
- */
-std::ostream &operator<<(std::ostream &os, TreeNode *node) {
-    std::queue<TreeNode *> q;
-    int cnt_not_null_nodes = 0;
-    auto push = [&](TreeNode *node) {
-        q.emplace(node);
-        if (node != nullptr) { ++cnt_not_null_nodes; }
-    };
-    auto pop = [&]() {
-        auto front = q.front(); q.pop();
-        if (front != nullptr) {
-            --cnt_not_null_nodes;
-            push(front->left);
-            push(front->right);
-            os << front->val << ',';
-        } else {
-            os << "null,";
+namespace LeetCodeIO {
+    namespace Helper {
+        /**
+         * Function for deserializing a singly-linked list.
+         */
+        inline void scan_list(std::istream &is, ListNode *&node) {
+            node = nullptr;
+            ListNode *now = nullptr;
+        [[maybe_unused]]
+        L0: is.ignore();
+        L1: switch (is.peek()) {
+            case ' ':
+            case ',': is.ignore(); goto L1;
+            case ']': is.ignore(); goto L2;
+            default : int x; is >> x;
+                      now = (now ? now->next : node) = new ListNode(x);
+                      goto L1;
+            }
+        L2: switch (is.peek()) {
+            case '\r': is.ignore(); goto L2;
+            case '\n': is.ignore(); goto L3;
+            case EOF : goto L3;
+            }
+        L3: return;
         }
-    };
-    os << '[';
-    if (node != nullptr) {
-        push(node);
-        while (cnt_not_null_nodes > 0) { pop(); }
-        os.seekp(-1, std::ios_base::end);
-    }
-    os << ']';
-    return os;
-}
 
-/**
- * Function for deserializing an array.
- */
-template <typename T>
-std::istream &operator>>(std::istream &is, std::vector<T> &v) {
-L0: is.ignore();
-L1: switch (is.peek()) {
-    case ' ':
-    case ',': is.ignore(); goto L1;
-    case ']': is.ignore(); goto L2;
-    default : v.emplace_back();
-              if constexpr (std::is_same_v<T, std::string>) {
-                  is >> quoted(v.back());
-              } else if constexpr (std::is_same_v<T, bool>) {
-                  bool t = is.get() == 't'; v.back() = t; is.ignore(4 - t);
-              } else if constexpr (std::is_same_v<T, char>) {
-                  is.ignore(); v.back() = is.get(); is.ignore();
-              } else {
-                  is >> v.back();
-              }
-              goto L1;
-    }
-L2: switch (is.peek()) {
-    case '\r': is.ignore(); goto L2;
-    case '\n': is.ignore(); goto L3;
-    case EOF : goto L3;
-}
-L3: return is;
-}
+        /**
+         * Function for deserializing a binary tree.
+         */
+        inline void scan_tree(std::istream &is, TreeNode *&node) {
+            std::deque<TreeNode *> dq;
+        [[maybe_unused]]
+        L0: is.ignore();
+        L1: switch (is.peek()) {
+            case ' ':
+            case ',': is.ignore(); goto L1;
+            case 'n': is.ignore(4); dq.emplace_back(nullptr);
+                        goto L1;
+            case ']': is.ignore(); goto L2;
+            default : int x; is >> x;
+                      dq.emplace_back(new TreeNode(x));
+                      goto L1;
+            }
+        L2: switch (is.peek()) {
+            case '\r': is.ignore(); goto L2;
+            case '\n': is.ignore(); goto L3;
+            case EOF : goto L3;
+            }
+        L3: int n = dq.size();
+            for (int i = 0, j = 1; i < n; ++i) {
+                auto root = dq[i];
+                if (root == nullptr) { continue; }
+                root->left = j < n ? dq[j] : nullptr;
+                root->right = j + 1 < n ? dq[j + 1] : nullptr;
+                j += 2;
+            }
+            node = n ? dq[0] : nullptr;
+            return;
+        }
 
-/**
- * Function for serializing an array.
- */
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const std::vector<T> &v) {
-    os << '[';
-    for (auto &&x : v) {
+        /**
+         * Function for serializing a singly-linked list.
+         */
+        inline void print_list(std::ostream &os, ListNode *node) {
+            os.put('[');
+            if (node != nullptr) {
+                do {
+                    os << node->val; os.put(',');
+                    node = node->next;
+                } while(node != nullptr);
+                os.seekp(-1, std::ios_base::end);
+            }
+            os.put(']');
+            return;
+        }
+
+        /**
+         * Function for serializing a binary tree.
+         */
+        inline void print_tree(std::ostream &os, TreeNode *node) {
+            std::queue<TreeNode *> q;
+            int cnt_not_null_nodes = 0;
+            auto push = [&](TreeNode *node) {
+                q.emplace(node);
+                if (node != nullptr) { ++cnt_not_null_nodes; }
+            };
+            auto pop = [&]() {
+                auto front = q.front(); q.pop();
+                if (front != nullptr) {
+                    --cnt_not_null_nodes;
+                    push(front->left);
+                    push(front->right);
+                    os << front->val; os.put(',');
+                } else {
+                    os << "null,";
+                }
+            };
+            os.put('[');
+            if (node != nullptr) {
+                push(node);
+                while (cnt_not_null_nodes > 0) { pop(); }
+                os.seekp(-1, std::ios_base::end);
+            }
+            os.put(']');
+            return;
+        }
+    }
+
+    /**
+     * Function for scanning a variable.
+     */
+    template<typename T>
+    void scan(std::istream &is, T &x) {
         if constexpr (std::is_same_v<T, std::string>) {
-            os << quoted(x) << ',';
-        } else if constexpr (std::is_same_v<T, double>) {
-            char buf[320]; sprintf(buf, "%.5f,", x); os << buf;
+            is >> std::quoted(x);
         } else if constexpr (std::is_same_v<T, bool>) {
-            const char *buf = "false,\0\0true,"; os << buf + (x << 3);
+            x = is.get() == 't'; is.ignore(4 - x);
         } else if constexpr (std::is_same_v<T, char>) {
-            os << '"' << x << "\",";
+            is.ignore(); x = is.get(); is.ignore();
+        } else if constexpr (std::is_same_v<T, ListNode *>) {
+            Helper::scan_list(is, x);
+        } else if constexpr (std::is_same_v<T, TreeNode *>) {
+            Helper::scan_tree(is, x);
         } else {
-            os << x << ',';
+            is >> x;
         }
     }
-    os.seekp(-!v.empty(), std::ios_base::end);
-    os << ']';
-    return os;
-}
+
+    /**
+     * Function for deserializing an array.
+     */
+    template <typename T>
+    void scan(std::istream &is, std::vector<T> &v) {
+    [[maybe_unused]]
+    L0: is.ignore();
+    L1: switch (is.peek()) {
+        case ' ':
+        case ',': is.ignore(); goto L1;
+        case ']': is.ignore(); goto L2;
+        default : v.emplace_back();
+                  scan(is, v.back());
+                  goto L1;
+        }
+    L2: switch (is.peek()) {
+        case '\r': is.ignore(); goto L2;
+        case '\n': is.ignore(); goto L3;
+        case EOF : goto L3;
+        }
+    L3: return;
+    }
+
+    /**
+     * Function for printing a variable.
+     */
+    template<typename T>
+    void print(std::ostream &os, const T& x) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            os.put('"'); os << x; os.put('"');
+        } else if constexpr (std::is_same_v<T, double>) {
+            constexpr int siz = 320;
+            char buf[siz]; snprintf(buf, siz, "%.5f", x); os << buf;
+        } else if constexpr (std::is_same_v<T, bool>) {
+            os.write(&"false\0"/**/"OR"/**/"true"[x << 3], 5 - x);
+        } else if constexpr (std::is_same_v<T, char>) {
+            os.put('"'); os.put(x); os.put('"');
+        } else if constexpr (std::is_same_v<T, ListNode *>) {
+            Helper::print_list(os, x);
+        } else if constexpr (std::is_same_v<T, TreeNode *>) {
+            Helper::print_tree(os, x);
+        } else {
+            os << x;
+        }
+    }
+
+    /**
+     * Function for serializing an array.
+     */
+    template <typename T>
+    void print(std::ostream &os, const std::vector<T> &v) {
+        os.put('[');
+        for (auto &&x : v) {
+            print(os, x);
+            os.put(',');
+        }
+        os.seekp(-!v.empty(), std::ios_base::end);
+        os.put(']');
+    }
+};
 
 #endif
