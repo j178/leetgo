@@ -1,32 +1,29 @@
 use std::collections::VecDeque;
 use std::io::Write;
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::Visitor;
 use serde::ser::SerializeSeq;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[allow(dead_code)]
 struct LeetCodeSerializer<W: Write> {
     writer: W,
 }
 
+#[derive(Debug)]
 pub struct ListNode {
     pub val: i32,
     pub next: Option<Box<ListNode>>,
 }
 
-impl ListNode {
-    pub fn new(val: i32) -> Self {
-        Self {
-            next: None,
-            val,
-        }
-    }
-}
-
+#[derive(Debug)]
 struct LinkedList(Option<Box<ListNode>>);
 
 impl Serialize for LinkedList {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut seq = serializer.serialize_seq(None)?;
         let mut current = &self.0;
         while let Some(ref node) = current {
@@ -37,28 +34,54 @@ impl Serialize for LinkedList {
     }
 }
 
-// impl Deserialize<'_> for LinkedList {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'_> {
-//         let mut current = None;
-//         for val in Vec::<i32>::deserialize(deserializer)? {
-//             let mut node = ListNode::new(val);
-//             node.next = current;
-//             current = Some(Box::new(node));
-//         }
-//         Ok(LinkedList(current))
-//     }
-// }
+struct LinkedListVisitor;
 
+impl<'de> Visitor<'de> for LinkedListVisitor {
+    type Value = LinkedList;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a list of integers")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::SeqAccess<'de>,
+    {
+        let mut head = None;
+        let mut current = &mut head;
+        while let Some(val) = seq.next_element()? {
+            let node = ListNode { val, next: None };
+            *current = Some(Box::new(node));
+            current = &mut current.as_mut().unwrap().next;
+        }
+        Ok(LinkedList(head))
+    }
+}
+
+impl<'de> Deserialize<'de> for LinkedList {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_seq(LinkedListVisitor)
+    }
+}
+
+#[derive(Debug)]
 pub struct TreeNode {
     pub val: i32,
     pub left: Option<Box<TreeNode>>,
     pub right: Option<Box<TreeNode>>,
 }
 
+#[derive(Debug)]
 struct BinaryTree(Option<Box<TreeNode>>);
 
 impl Serialize for BinaryTree {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut queue: VecDeque<&Option<Box<TreeNode>>> = VecDeque::new();
         let mut nodes: Vec<&Option<Box<TreeNode>>> = Vec::new();
         queue.push_back(&self.0);
@@ -90,15 +113,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_list() {
+    fn test_list_serialize() {
         let head = ListNode {
             val: 1,
             next: Some(Box::new(ListNode {
                 val: 2,
-                next: Some(Box::new(ListNode {
-                    val: 3,
-                    next: None,
-                })),
+                next: Some(Box::new(ListNode { val: 3, next: None })),
             })),
         };
         let list = LinkedList(Some(Box::new(head)));
@@ -108,7 +128,28 @@ mod tests {
     }
 
     #[test]
-    fn test_tree() {
+    fn test_list_deserialize() {
+        let serialized = "[1,2,3]";
+        let list: LinkedList = serde_json::from_str(serialized).unwrap();
+        let mut current = &list.0;
+        let mut i = 1;
+        while let Some(ref node) = current {
+            assert_eq!(node.val, i);
+            current = &node.next;
+            i += 1;
+        }
+
+        let serialized = "[]";
+        let list: LinkedList = serde_json::from_str(serialized).unwrap();
+        assert!(list.0.is_none());
+
+        let serialized = "[true]";
+        let list = serde_json::from_str::<LinkedList>(serialized);
+        assert!(list.is_err());
+    }
+
+    #[test]
+    fn test_tree_serialize() {
         let root = TreeNode {
             val: 1,
             left: Some(Box::new(TreeNode {
