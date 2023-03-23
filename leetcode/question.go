@@ -442,7 +442,10 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	result := make([]string, 0, len(found))
 	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/
 	for _, f := range found {
-		output := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(f[1]), "<code>"), "</pre>")
+		output := strings.TrimSpace(f[1])
+		output = strings.TrimPrefix(output, "<code>")
+		output = strings.TrimSuffix(output, "</pre>")
+		output = strings.TrimSuffix(output, "</code>")
 		output = html2text.HTMLEntitiesToText(output)
 		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)
