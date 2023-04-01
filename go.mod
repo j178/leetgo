@@ -16,7 +16,7 @@ require (
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230216180835-5937a312edda
 	github.com/fatih/color v1.14.1
-	github.com/goccy/go-json v0.10.0
+	github.com/goccy/go-json v0.10.2
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
