@@ -7,7 +7,7 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.3.7
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/briandowns/spinner v1.22.0
+	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/glamour v0.6.0
