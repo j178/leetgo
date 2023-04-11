@@ -211,7 +211,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 
 func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
-		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n";
+		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
 	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
 	return
