@@ -24,7 +24,7 @@ inline void test_all() {
     LC_IO_TEST_MACRO(int64_t, "1989060419890604");
     LC_IO_TEST_MACRO(bool, "true");
     LC_IO_TEST_MACRO(char, "\"a\"");
-    LC_IO_TEST_MACRO(std::string, "\"hello\"");
+    LC_IO_TEST_MACRO(std::string, "\"he\\\"llo\"");
     LC_IO_TEST_MACRO(double, "1.98964");
     LC_IO_TEST_MACRO(ListNode *, "[19,89,0,6,0,4]");
     LC_IO_TEST_MACRO(TreeNode *, "[1989,null,6,null,4]");
