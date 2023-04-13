@@ -183,13 +183,15 @@ namespace LeetCodeIO {
     template<typename T>
     void print(std::ostream &os, const T& x) {
         if constexpr (std::is_same_v<T, std::string>) {
-            os.put('"'); os << x; os.put('"');
+            os << std::quoted(x);
         } else if constexpr (std::is_same_v<T, double>) {
             constexpr int siz = 320;
             char buf[siz]; snprintf(buf, siz, "%.5f", x); os << buf;
         } else if constexpr (std::is_same_v<T, bool>) {
-            os.write(&"false\0"/**/"OR"/**/"true"[x << 3], 5 - x);
+            static const char tab[2][8] = {"false", "true"};
+            os.write(tab[x], x ? 4 : 5);
         } else if constexpr (std::is_same_v<T, char>) {
+            // TODO: escaped characters
             os.put('"'); os.put(x); os.put('"');
         } else if constexpr (std::is_same_v<T, ListNode *>) {
             Helper::print_list(os, x);
