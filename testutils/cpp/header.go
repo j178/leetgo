@@ -2,7 +2,7 @@ package cpp
 
 import _ "embed"
 
-//go:embed testutils.h
+//go:embed LC_IO.h
 var HeaderContent string
 
-const HeaderName = "testutils.h"
+const HeaderName = "LC_IO.h"
