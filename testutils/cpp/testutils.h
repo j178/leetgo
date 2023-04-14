@@ -191,7 +191,6 @@ namespace LeetCodeIO {
             static const char tab[2][8] = {"false", "true"};
             os.write(tab[x], x ? 4 : 5);
         } else if constexpr (std::is_same_v<T, char>) {
-            // TODO: escaped characters
             os.put('"'); os.put(x); os.put('"');
         } else if constexpr (std::is_same_v<T, ListNode *>) {
             Helper::print_list(os, x);
