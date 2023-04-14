@@ -66,39 +66,14 @@ func (c cpp) getDeclCodeForType(d int, t string, n string) string {
 	return fmt.Sprintf("%s %s;", c.getVectorTypeName(d, t), n)
 }
 
-func (c cpp) getScanCodeForType(d int, t string, n string, ifs string) string {
-	if d == 0 {
-		if t == "string" {
-			return fmt.Sprintf("%s >> quoted(%s);", ifs, n)
-		}
-		if t == "bool" {
-			return fmt.Sprintf("%s = %s.get() == 't'; is.ignore(4 - %s);", n, ifs, n)
-		}
-		if t == "char" {
-			return fmt.Sprintf("%s.ignore(); %s = %s.get(); %s.ignore();", ifs, n, ifs, ifs)
-		}
-	}
-	return fmt.Sprintf("%s >> %s;", ifs, n)
+func (c cpp) getScanCodeForType(n string, ifs string) string {
+	return fmt.Sprintf("LeetCodeIO::scan(%s, %s);", ifs, n)
 }
 
-func (c cpp) getPrintCodeForType(d int, t string, n string, ofs string) string {
+func (c cpp) getPrintCodeForType(n string, ofs string) string {
 	/* assumes one invocation for each printed variable */
 	/* (parameter "n" could be a function call, which we only wish to call once) */
-	if d == 0 {
-		if t == "string" {
-			return fmt.Sprintf("%s << quoted(%s);", ofs, n)
-		}
-		if t == "double" {
-			return fmt.Sprintf("{ char buf[320]; sprintf(buf, \"%%.5f\", %s); %s << buf; }", n, ofs)
-		}
-		if t == "bool" {
-			return fmt.Sprintf("{ const char *buf = \"false\\0\\0\\0true\"; %s << buf + (%s << 3); }", ofs, n)
-		}
-		if t == "char" {
-			return fmt.Sprintf("%s << '\"' << %s << '\"'", ofs, n)
-		}
-	}
-	return fmt.Sprintf("%s << %s;", ofs, n)
+	return fmt.Sprintf("LeetCodeIO::print(%s, %s);", ofs, n)
 }
 
 func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
@@ -114,7 +89,7 @@ func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 		return fmt.Sprintf(
 			"\t%s %s\n",
 			c.getDeclCodeForType(1, "string", systemDesignMethodListName),
-			c.getScanCodeForType(1, "string", systemDesignMethodListName, inputStreamName),
+			c.getScanCodeForType(systemDesignMethodListName, inputStreamName),
 		)
 	}
 
@@ -124,7 +99,7 @@ func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 		scanCode += fmt.Sprintf(
 			"\t%s %s\n",
 			c.getDeclCodeForType(dimCnt, cppType, param.Name),
-			c.getScanCodeForType(dimCnt, cppType, param.Name, inputStreamName),
+			c.getScanCodeForType(param.Name, inputStreamName),
 		)
 	}
 	return scanCode
@@ -146,7 +121,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 				callCode += fmt.Sprintf(
 					"\t\t\t%s %s %s.ignore();\n",
 					c.getDeclCodeForType(dimCnt, cppType, param.Name),
-					c.getScanCodeForType(dimCnt, cppType, param.Name, inputStreamName),
+					c.getScanCodeForType(param.Name, inputStreamName),
 					inputStreamName,
 				)
 			}
@@ -157,7 +132,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 
 	if !q.MetaData.SystemDesign {
 		callCode = fmt.Sprintf(
-			"\tauto &&%s = %s->%s(%s);\n",
+			"\tauto %s = %s->%s(%s);\n",
 			returnName,
 			objectName,
 			q.MetaData.Name,
@@ -184,7 +159,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 			for _, method := range q.MetaData.Methods {
 				callCode += fmt.Sprintf("\t\t{ \"%s\", [&]() {\n", method.Name)
 				generateParamScanningCode(method.Params)
-				dimCnt, returnType := c.getCppTypeName(method.Return.Type)
+				_, returnType := c.getCppTypeName(method.Return.Type)
 				functionCall := fmt.Sprintf(
 					"%s->%s(%s)",
 					objectName,
@@ -194,7 +169,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 				if returnType != "void" {
 					callCode += fmt.Sprintf(
 						"\t\t\t%s %s << ',';\n",
-						c.getPrintCodeForType(dimCnt, returnType, functionCall, outputStreamName),
+						c.getPrintCodeForType(functionCall, outputStreamName),
 						outputStreamName,
 					)
 				} else {
@@ -236,7 +211,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 
 func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
-		printCode += fmt.Sprintf("\t%s << %s;\n", outputStreamName, returnName)
+		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
 	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
 	return

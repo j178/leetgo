@@ -6,3 +6,5 @@ leetgo.yaml
 completions/
 dist/
 /out
+go.work.sum
+
