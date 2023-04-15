@@ -253,7 +253,11 @@ func (c cpp) generateCodeFile(
 	error,
 ) {
 	codeHeader := fmt.Sprintf(
-		`#include "%s"
+		`#if defined(__GNUC__) && !defined(__clang__)
+	#include <bits/stdc++.h>
+#endif
+
+#include "%s"
 using namespace std;
 
 `, cppUtils.HeaderName,
