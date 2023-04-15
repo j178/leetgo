@@ -343,15 +343,17 @@ import (
 	}
 	// TODO warn user that should delete global config and init again
 	blocks = append(
-		blocks,
-		config.Block{
-			Name:     internalBeforeMarker,
-			Template: codeHeader,
+		[]config.Block{
+			{
+				Name:     beforeBeforeMarker,
+				Template: codeHeader,
+			},
+			{
+				Name:     afterAfterMarker,
+				Template: testContent,
+			},
 		},
-		config.Block{
-			Name:     internalAfterMarker,
-			Template: testContent,
-		},
+		blocks...,
 	)
 	content, err := g.generateCodeContent(
 		q,

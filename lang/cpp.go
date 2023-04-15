@@ -264,15 +264,17 @@ using namespace std;
 		return FileOutput{}, err
 	}
 	blocks = append(
-		blocks,
-		config.Block{
-			Name:     internalBeforeMarker,
-			Template: codeHeader,
+		[]config.Block{
+			{
+				Name:     beforeBeforeMarker,
+				Template: codeHeader,
+			},
+			{
+				Name:     afterAfterMarker,
+				Template: testContent,
+			},
 		},
-		config.Block{
-			Name:     internalAfterMarker,
-			Template: testContent,
-		},
+		blocks...,
 	)
 	content, err := c.generateCodeContent(
 		q,
