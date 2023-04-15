@@ -1,6 +1,11 @@
 #ifndef LC_IO_H
 #define LC_IO_H
 
+#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
+#if GCC_COMPILER
+    #include <bits/stdc++.h>
+#endif
+
 #include <iomanip>
 #include <queue>
 

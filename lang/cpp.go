@@ -213,7 +213,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
 		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
-	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf();\n", testCaseOutputMark, outputStreamName)
+	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
 	return
 }
 
@@ -253,8 +253,7 @@ func (c cpp) generateCodeFile(
 	error,
 ) {
 	codeHeader := fmt.Sprintf(
-		`#include <bits/stdc++.h>
-#include "%s"
+		`#include "%s"
 using namespace std;
 
 `, cppUtils.HeaderName,
