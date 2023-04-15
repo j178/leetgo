@@ -153,14 +153,11 @@ func tryWrite(file string, content string) (bool, error) {
 		return false, nil
 	}
 
-	err := utils.CreateIfNotExists(file, false)
+	err := utils.WriteFile(file, []byte(content))
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(file, utils.StringToBytes(content), 0o644)
-	if err != nil {
-		return false, err
-	}
+
 	log.Info("generated", "file", relPath)
 	return true, nil
 }

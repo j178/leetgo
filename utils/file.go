@@ -42,6 +42,18 @@ func CreateIfNotExists(path string, isDir bool) error {
 	return nil
 }
 
+func WriteFile(file string, content []byte) error {
+	err := CreateIfNotExists(file, false)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(file, content, 0o644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func RemoveIfExist(path string) error {
 	err := os.Remove(path)
 	if os.IsNotExist(err) {

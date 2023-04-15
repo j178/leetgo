@@ -22,7 +22,8 @@ type cpp struct {
 
 func (c cpp) Initialize(outDir string) error {
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	if _, err := tryWrite(headerPath, cppUtils.HeaderContent); err != nil {
+	err := utils.WriteFile(headerPath, cppUtils.HeaderContent)
+	if err != nil {
 		return err
 	}
 	return nil

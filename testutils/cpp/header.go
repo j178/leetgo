@@ -10,8 +10,8 @@ import (
 const HeaderName = "LC_IO.h"
 
 //go:embed LC_IO.h
-var HeaderContent string
+var HeaderContent []byte
 
 func init() {
-	HeaderContent = fmt.Sprintf("// version: %s\n", constants.Version) + HeaderContent
+	HeaderContent = fmt.Appendf(nil, "// version: %s\n%s", constants.Version, HeaderContent)
 }
