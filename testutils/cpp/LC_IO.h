@@ -1,11 +1,6 @@
 #ifndef LC_IO_H
 #define LC_IO_H
 
-#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
-#if GCC_COMPILER
-    #include <bits/stdc++.h>
-#endif
-
 #include <iomanip>
 #include <queue>
 
@@ -42,19 +37,13 @@ namespace LeetCodeIO {
         [[maybe_unused]]
         L0: is.ignore();
         L1: switch (is.peek()) {
-            case ' ':
             case ',': is.ignore(); goto L1;
             case ']': is.ignore(); goto L2;
             default : int x; is >> x;
                       now = (now ? now->next : node) = new ListNode(x);
                       goto L1;
             }
-        L2: switch (is.peek()) {
-            case '\r': is.ignore(); goto L2;
-            case '\n': is.ignore(); goto L3;
-            case EOF : goto L3;
-            }
-        L3: return;
+        L2: return;
         }
 
         /**
@@ -65,7 +54,6 @@ namespace LeetCodeIO {
         [[maybe_unused]]
         L0: is.ignore();
         L1: switch (is.peek()) {
-            case ' ':
             case ',': is.ignore(); goto L1;
             case 'n': is.ignore(4); dq.emplace_back(nullptr);
                       goto L1;
@@ -74,12 +62,7 @@ namespace LeetCodeIO {
                       dq.emplace_back(new TreeNode(x));
                       goto L1;
             }
-        L2: switch (is.peek()) {
-            case '\r': is.ignore(); goto L2;
-            case '\n': is.ignore(); goto L3;
-            case EOF : goto L3;
-            }
-        L3: int n = dq.size();
+        L2: int n = dq.size();
             for (int i = 0, j = 1; i < n; ++i) {
                 auto root = dq[i];
                 if (root == nullptr) { continue; }
@@ -144,16 +127,20 @@ namespace LeetCodeIO {
      */
     template<typename T>
     void scan(std::istream &is, T &x) {
+        /**
+         * operator >> disgards leading whitespaces by default
+         * when not using operator >>, they must be discarded explicitly
+         */
         if constexpr (std::is_same_v<T, std::string>) {
             is >> std::quoted(x);
         } else if constexpr (std::is_same_v<T, bool>) {
-            x = is.get() == 't'; is.ignore(4 - x);
+            is >> std::ws; x = is.get() == 't'; is.ignore(4 - x);
         } else if constexpr (std::is_same_v<T, char>) {
-            is.ignore(); x = is.get(); is.ignore();
+            is >> std::ws; is.ignore(); x = is.get(); is.ignore();
         } else if constexpr (std::is_same_v<T, ListNode *>) {
-            Helper::scan_list(is, x);
+            is >> std::ws; Helper::scan_list(is, x);
         } else if constexpr (std::is_same_v<T, TreeNode *>) {
-            Helper::scan_tree(is, x);
+            is >> std::ws; Helper::scan_tree(is, x);
         } else {
             is >> x;
         }
@@ -165,21 +152,16 @@ namespace LeetCodeIO {
     template <typename T>
     void scan(std::istream &is, std::vector<T> &v) {
     [[maybe_unused]]
-    L0: is.ignore();
+    L0: is >> std::ws;
+        is.ignore();
     L1: switch (is.peek()) {
-        case ' ':
         case ',': is.ignore(); goto L1;
         case ']': is.ignore(); goto L2;
         default : v.emplace_back();
                   scan(is, v.back());
                   goto L1;
         }
-    L2: switch (is.peek()) {
-        case '\r': is.ignore(); goto L2;
-        case '\n': is.ignore(); goto L3;
-        case EOF : goto L3;
-        }
-    L3: return;
+    L2: return;
     }
 
     /**
@@ -188,7 +170,7 @@ namespace LeetCodeIO {
     template<typename T>
     void print(std::ostream &os, const T& x) {
         if constexpr (std::is_same_v<T, std::string>) {
-            os << std::quoted(x);
+            os.put('"'); os << x; os.put('"'); 
         } else if constexpr (std::is_same_v<T, double>) {
             constexpr int siz = 320;
             char buf[siz]; snprintf(buf, siz, "%.5f", x); os << buf;
