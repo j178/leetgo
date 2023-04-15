@@ -1,6 +1,8 @@
 #ifndef LC_IO_H
 #define LC_IO_H
-
+#ifndef __APPLE__
+    #include <bits/stdc++.h>
+#endif
 #include <iomanip>
 #include <queue>
 
