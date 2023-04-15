@@ -24,6 +24,10 @@ func (c cpp) Initialize(outDir string) error {
 	if _, err := tryWrite(headerPath, cppUtils.HeaderContent); err != nil {
 		return err
 	}
+	stdcxxPath := filepath.Join(outDir, "bits", "stdc++.h")
+	if _, err := tryWrite(stdcxxPath, cppUtils.StdcxxContent); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -253,10 +257,7 @@ func (c cpp) generateCodeFile(
 	error,
 ) {
 	codeHeader := fmt.Sprintf(
-		`#if defined(__GNUC__) && !defined(__clang__)
-	#include <bits/stdc++.h>
-#endif
-
+		`#include <bits/stdc++.h>
 #include "%s"
 using namespace std;
 
