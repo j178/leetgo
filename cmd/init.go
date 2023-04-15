@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
@@ -91,7 +92,7 @@ func createConfigFiles(dir string) error {
 		log.Info("global config file created", "file", globalFile)
 	}
 
-	projectFile := filepath.Join(dir, config.ProjectConfigFilename)
+	projectFile := filepath.Join(dir, constants.ProjectConfigFilename)
 	f, err := os.Create(projectFile)
 	if err != nil {
 		return err

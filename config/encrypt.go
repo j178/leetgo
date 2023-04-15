@@ -8,12 +8,14 @@ import (
 
 	vault "github.com/sosedoff/ansible-vault-go"
 	"github.com/zalando/go-keyring"
+
+	"github.com/j178/leetgo/constants"
 )
 
 const (
 	originVaultHeader = "$ANSIBLE_VAULT;1.1;AES256"
 	vaultHeader       = "$LEETGO_VAULT;1.1;AES256"
-	serviceName       = CmdName
+	serviceName       = constants.CmdName
 	keyName           = "encryption_key"
 )
 

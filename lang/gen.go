@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
@@ -152,14 +153,11 @@ func tryWrite(file string, content string) (bool, error) {
 		return false, nil
 	}
 
-	err := utils.CreateIfNotExists(file, false)
+	err := utils.WriteFile(file, []byte(content))
 	if err != nil {
 		return false, err
 	}
-	err = os.WriteFile(file, utils.StringToBytes(content), 0o644)
-	if err != nil {
-		return false, err
-	}
+
 	log.Info("generated", "file", relPath)
 	return true, nil
 }
@@ -199,11 +197,11 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	var codeLinesToKeep []string
 	inCode := false
 	for _, line := range codeLines {
-		if !inCode && strings.Contains(line, config.CodeBeginMarker) {
+		if !inCode && strings.Contains(line, constants.CodeBeginMarker) {
 			inCode = true
 			continue
 		}
-		if inCode && strings.Contains(line, config.CodeEndMarker) {
+		if inCode && strings.Contains(line, constants.CodeEndMarker) {
 			break
 		}
 		if inCode {
@@ -241,11 +239,11 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	var newLines []string
 	skip := false
 	for _, line := range lines {
-		if strings.Contains(line, config.CodeBeginMarker) {
+		if strings.Contains(line, constants.CodeBeginMarker) {
 			newLines = append(newLines, line)
 			newLines = append(newLines, newCode)
 			skip = true
-		} else if strings.Contains(line, config.CodeEndMarker) {
+		} else if strings.Contains(line, constants.CodeEndMarker) {
 			newLines = append(newLines, line)
 			skip = false
 		} else if !skip {
