@@ -249,7 +249,7 @@ func usingGCC() bool {
 	if err != nil {
 		return true
 	}
-	return !strings.Contains(string(output), "clang")
+	return strings.Contains(string(output), "gcc")
 }
 
 func (c cpp) generateCodeFile(
