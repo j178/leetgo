@@ -242,16 +242,6 @@ func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	), nil
 }
 
-func usingGCC() bool {
-	cxx := config.Get().Code.Cpp.CXX
-	cmd := exec.Command(cxx, "--version")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return true
-	}
-	return strings.Contains(string(output), "gcc")
-}
-
 func (c cpp) generateCodeFile(
 	q *leetcode.QuestionData,
 	filename string,
@@ -262,20 +252,13 @@ func (c cpp) generateCodeFile(
 	FileOutput,
 	error,
 ) {
-	var stdCppHeader string
-	if usingGCC() {
-		stdCppHeader = "#include <bits/stdc++.h>\n"
-	}
-
 	codeHeader := fmt.Sprintf(
-		`%s#include "%s"
+		`#include <bits/stdc++.h>
+#include "%s"
 using namespace std;
 
-`,
-		stdCppHeader,
-		cppUtils.HeaderName,
+`, cppUtils.HeaderName,
 	)
-
 	testContent, err := c.generateTestContent(q)
 	if err != nil {
 		return FileOutput{}, err
