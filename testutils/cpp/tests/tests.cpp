@@ -16,7 +16,7 @@ void test_scan_print(const char *raw) {
     if (in.str() == out.str()) {
         printf("passed\n");
     } else {
-        printf("want: %s, got: %s", raw, out.str().c_str());
+        printf("want: %s, got: %s\n", raw, out.str().c_str());
         main_ret = 1;
     }
 }
@@ -26,7 +26,7 @@ void test_all() {
     test_scan_print<int64_t>("1989060419890604");
     test_scan_print<bool>("true");
     test_scan_print<char>("\"a\"");
-    test_scan_print<string>("\"he\\\"llo\"");
+    test_scan_print<string>("\"hello\"");
     test_scan_print<double>("1.98964");
     test_scan_print<ListNode*>("[19,89,0,6,0,4]");
     test_scan_print<TreeNode*>("[1989,null,6,null,4]");
