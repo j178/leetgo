@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 )
 
@@ -100,7 +101,7 @@ func addMod(code string, q *leetcode.QuestionData) string {
 }
 
 func (g golang) HasInitialized(outDir string) (bool, error) {
-	cmd := exec.Command("go", "list", "-m", "-json", config.GoTestUtilsModPath)
+	cmd := exec.Command("go", "list", "-m", "-json", constants.GoTestUtilsModPath)
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -127,7 +128,7 @@ func (g golang) Initialize(outDir string) error {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", config.GoTestUtilsModPath)
+	cmd = exec.Command("go", "get", constants.GoTestUtilsModPath)
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -335,7 +336,7 @@ import (
 	"os"
 
 	. "%s"
-)`, config.GoTestUtilsModPath,
+)`, constants.GoTestUtilsModPath,
 	)
 	testContent, err := g.generateTestContent(q)
 	if err != nil {

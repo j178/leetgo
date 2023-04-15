@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	cppUtils "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
@@ -21,7 +22,8 @@ type cpp struct {
 
 func (c cpp) Initialize(outDir string) error {
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	if _, err := tryWrite(headerPath, cppUtils.HeaderContent); err != nil {
+	err := utils.WriteFile(headerPath, cppUtils.HeaderContent)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -29,7 +31,19 @@ func (c cpp) Initialize(outDir string) error {
 
 func (c cpp) HasInitialized(outDir string) (bool, error) {
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	return utils.IsExist(headerPath), nil
+	if !utils.IsExist(headerPath) {
+		return false, nil
+	}
+
+	version, err := ReadVersion(headerPath)
+	if err != nil {
+		return false, err
+	}
+	currVersion := constants.Version
+	if version != currVersion {
+		return false, nil
+	}
+	return true, nil
 }
 
 var cppTypes = map[string]string{
