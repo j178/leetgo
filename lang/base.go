@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
@@ -390,8 +391,8 @@ func (l baseLang) generateCodeContent(
 		LineComment:             l.lineComment,
 		BlockCommentStart:       l.blockCommentStart,
 		BlockCommentEnd:         l.blockCommentEnd,
-		CodeBeginMarker:         config.CodeBeginMarker,
-		CodeEndMarker:           config.CodeEndMarker,
+		CodeBeginMarker:         constants.CodeBeginMarker,
+		CodeEndMarker:           constants.CodeEndMarker,
 		Code:                    code,
 		SeparateDescriptionFile: separateDescriptionFile,
 		NeedsDefinition:         needsDefinition(code),

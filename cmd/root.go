@@ -12,21 +12,16 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
-)
-
-var (
-	version = "0.0.1"
-	commit  = "HEAD"
-	date    = "unknown"
+	"github.com/j178/leetgo/constants"
 )
 
 func buildVersion() string {
-	result := version
-	if commit != "" {
-		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
+	result := constants.Version
+	if constants.Commit != "" {
+		result = fmt.Sprintf("%s\ncommit: %s", result, constants.Commit)
 	}
-	if date != "" {
-		result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
+	if constants.BuildDate != "" {
+		result = fmt.Sprintf("%s\nbuilt at: %s", result, constants.BuildDate)
 	}
 	result = fmt.Sprintf("%s\ngoos: %s\ngoarch: %s", result, runtime.GOOS, runtime.GOARCH)
 	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
@@ -36,10 +31,10 @@ func buildVersion() string {
 }
 
 var rootCmd = &cobra.Command{
-	Use:           config.CmdName,
+	Use:           constants.CmdName,
 	Short:         "Leetcode",
 	Long:          "Leetcode friend for geek.",
-	Version:       buildVersion() + "\n\n" + config.ProjectURL,
+	Version:       buildVersion() + "\n\n" + constants.ProjectURL,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
