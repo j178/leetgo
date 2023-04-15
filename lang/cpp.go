@@ -253,8 +253,7 @@ func (c cpp) generateCodeFile(
 	error,
 ) {
 	codeHeader := fmt.Sprintf(
-		`#include <bits/stdc++.h>
-#include "%s"
+		`#include "%s"
 using namespace std;
 
 `, cppUtils.HeaderName,
