@@ -39,6 +39,10 @@ func (c cpp) HasInitialized(outDir string) (bool, error) {
 	if !utils.IsExist(headerPath) {
 		return false, nil
 	}
+	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
+	if !utils.IsExist(stdCxxPath) {
+		return false, nil
+	}
 
 	version, err := ReadVersion(headerPath)
 	if err != nil {
