@@ -205,6 +205,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 		/* invoke methods */ {
 			callCode += fmt.Sprintf(
 				`
+	%s >> ws;
 	%s << '[';
 	for (auto &&%s : %s) {
 		%s.ignore(2);
@@ -213,6 +214,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 	%s.ignore();
 	%s.seekp(-1, ios_base::end); %s << ']';
 `,
+				inputStreamName,
 				outputStreamName,
 				systemDesignMethodNameName,
 				systemDesignMethodListName,
