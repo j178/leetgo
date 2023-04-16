@@ -37,6 +37,7 @@ namespace LeetCodeIO {
         [[maybe_unused]]
         L0: is.ignore();
         L1: switch (is.peek()) {
+            case ' ':
             case ',': is.ignore(); goto L1;
             case ']': is.ignore(); goto L2;
             default : int x; is >> x;
@@ -54,6 +55,7 @@ namespace LeetCodeIO {
         [[maybe_unused]]
         L0: is.ignore();
         L1: switch (is.peek()) {
+            case ' ':
             case ',': is.ignore(); goto L1;
             case 'n': is.ignore(4); dq.emplace_back(nullptr);
                       goto L1;
@@ -155,6 +157,7 @@ namespace LeetCodeIO {
     L0: is >> std::ws;
         is.ignore();
     L1: switch (is.peek()) {
+        case ' ':
         case ',': is.ignore(); goto L1;
         case ']': is.ignore(); goto L2;
         default : v.emplace_back();
