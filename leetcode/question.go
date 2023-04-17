@@ -14,6 +14,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
 	"github.com/k3a/html2text"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
 
 	"github.com/j178/leetgo/config"
@@ -356,7 +357,7 @@ func (q *QuestionData) GetContent() (string, config.Language) {
 }
 
 func (q *QuestionData) GetFormattedContent() string {
-	content, _ := q.GetContent()
+	content, lang := q.GetContent()
 
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
@@ -392,8 +393,11 @@ func (q *QuestionData) GetFormattedContent() string {
 	content = replacer.Replace(content)
 
 	// Wrap and remove blank lines
-	maxWidth := 100
-	content = wrap.String(content, maxWidth)
+	if lang == config.EN {
+		content = wordwrap.String(content, 100)
+	} else {
+		content = wrap.String(content, 60)
+	}
 	content = utils.CondenseEmptyLines(content)
 	content = utils.EnsureTrailingNewline(content)
 	return content
@@ -438,7 +442,10 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	result := make([]string, 0, len(found))
 	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/
 	for _, f := range found {
-		output := strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(f[1]), "<code>"), "</pre>")
+		output := strings.TrimSpace(f[1])
+		output = strings.TrimPrefix(output, "<code>")
+		output = strings.TrimSuffix(output, "</pre>")
+		output = strings.TrimSuffix(output, "</code>")
 		output = html2text.HTMLEntitiesToText(output)
 		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)

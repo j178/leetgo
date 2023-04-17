@@ -8,23 +8,12 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/j178/leetgo/constants"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
 	"github.com/j178/leetgo/utils"
-)
-
-const (
-	CmdName               = "leetgo"
-	globalConfigFile      = "config.yaml"
-	ProjectConfigFilename = "leetgo.yaml"
-	questionCacheBaseName = "leetcode-questions"
-	stateFilename         = "state.json"
-	CodeBeginMarker       = "@lc code=begin"
-	CodeEndMarker         = "@lc code=end"
-	GoTestUtilsModPath    = "github.com/j178/leetgo/testutils/go"
-	ProjectURL            = "https://github.com/j178/leetgo"
 )
 
 var (
@@ -125,7 +114,7 @@ type LeetCodeConfig struct {
 func (c *Config) ConfigDir() string {
 	if c.dir == "" {
 		home, _ := homedir.Dir()
-		c.dir = filepath.Join(home, ".config", CmdName)
+		c.dir = filepath.Join(home, ".config", constants.CmdName)
 	}
 	return c.dir
 }
@@ -135,11 +124,11 @@ func (c *Config) CacheDir() string {
 }
 
 func (c *Config) TempDir() string {
-	return filepath.Join(os.TempDir(), CmdName)
+	return filepath.Join(os.TempDir(), constants.CmdName)
 }
 
 func (c *Config) GlobalConfigFile() string {
-	return filepath.Join(c.ConfigDir(), globalConfigFile)
+	return filepath.Join(c.ConfigDir(), constants.GlobalConfigFilename)
 }
 
 func (c *Config) ProjectRoot() string {
@@ -147,7 +136,7 @@ func (c *Config) ProjectRoot() string {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
 		for {
-			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
+			if utils.IsExist(filepath.Join(dir, constants.ProjectConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
@@ -163,15 +152,15 @@ func (c *Config) ProjectRoot() string {
 }
 
 func (c *Config) ProjectConfigFile() string {
-	return filepath.Join(c.ProjectRoot(), ProjectConfigFilename)
+	return filepath.Join(c.ProjectRoot(), constants.ProjectConfigFilename)
 }
 
 func (c *Config) StateFile() string {
-	return filepath.Join(c.CacheDir(), stateFilename)
+	return filepath.Join(c.CacheDir(), constants.StateFilename)
 }
 
 func (c *Config) QuestionCacheFile(ext string) string {
-	return filepath.Join(c.CacheDir(), questionCacheBaseName+ext)
+	return filepath.Join(c.CacheDir(), constants.QuestionCacheBaseName+ext)
 }
 
 func (c *Config) Write(w io.Writer, withComments bool) error {
@@ -338,7 +327,7 @@ func Load(init bool) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				log.Warn(
-					fmt.Sprintf("%s not found, use global config only", ProjectConfigFilename),
+					fmt.Sprintf("%s not found, use global config only", constants.ProjectConfigFilename),
 					"file",
 					cfg.GlobalConfigFile(),
 				)

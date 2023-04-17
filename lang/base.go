@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
@@ -176,7 +177,7 @@ const codeContentTemplate = `
 {{ .BlockCommentEnd }}
 {{ end }}
 {{ end }}
-{{ block "_internalBeforeMarker" . }}{{ end }}
+{{ block "beforeBeforeMarker" . }}{{ end }}
 {{ block "beforeMarker" . }}{{ end }}
 {{ .LineComment }} {{ .CodeBeginMarker }}
 {{ block "beforeCode" . }}{{ end }}
@@ -184,7 +185,7 @@ const codeContentTemplate = `
 {{ block "afterCode" . }}{{ end }}
 {{ .LineComment }} {{ .CodeEndMarker }}
 {{ block "afterMarker" . }}{{ end }}
-{{ block "_internalAfterMarker" . }}{{ end }}
+{{ block "afterAfterMarker" . }}{{ end }}
 `
 
 type codeContentData struct {
@@ -201,6 +202,11 @@ type codeContentData struct {
 	NeedsDefinition         bool
 }
 
+const (
+	beforeBeforeMarker = "beforeBeforeMarker"
+	afterAfterMarker   = "afterAfterMarker"
+)
+
 var validBlocks = map[string]bool{
 	"header":       true,
 	"description":  true,
@@ -210,17 +216,9 @@ var validBlocks = map[string]bool{
 	"code":         true,
 	"afterCode":    true,
 	"afterMarker":  true,
-}
-
-// internal blocks are used to generate code for internal use.
-const (
-	internalBeforeMarker = "_internalBeforeMarker"
-	internalAfterMarker  = "_internalAfterMarker"
-)
-
-var internalBlocks = map[string]bool{
-	internalBeforeMarker: true,
-	internalAfterMarker:  true,
+	// Mostly for internal use, but remain possible to be used by users.
+	beforeBeforeMarker: true,
+	afterAfterMarker:   true,
 }
 
 var builtinModifiers = map[string]ModifierFunc{
@@ -376,7 +374,7 @@ func (l baseLang) generateCodeContent(
 		return "", err
 	}
 	for _, block := range blocks {
-		if !validBlocks[block.Name] && !internalBlocks[block.Name] {
+		if !validBlocks[block.Name] {
 			return "", fmt.Errorf("invalid block name: %s", block.Name)
 		}
 		_, err := tmpl.New(block.Name).Parse(block.Template)
@@ -393,8 +391,8 @@ func (l baseLang) generateCodeContent(
 		LineComment:             l.lineComment,
 		BlockCommentStart:       l.blockCommentStart,
 		BlockCommentEnd:         l.blockCommentEnd,
-		CodeBeginMarker:         config.CodeBeginMarker,
-		CodeEndMarker:           config.CodeEndMarker,
+		CodeBeginMarker:         constants.CodeBeginMarker,
+		CodeEndMarker:           constants.CodeEndMarker,
 		Code:                    code,
 		SeparateDescriptionFile: separateDescriptionFile,
 		NeedsDefinition:         needsDefinition(code),
