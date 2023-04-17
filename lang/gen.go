@@ -82,6 +82,14 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 		return nil, nil, err
 	}
 	result.SetOutDir(outDir)
+
+	for _, hook := range result.ResultHooks {
+		err := hook(result)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	// Write files
 	for i, file := range result.Files {
 		written, err := tryWrite(file.GetPath(), file.Content)

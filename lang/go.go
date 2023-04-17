@@ -117,7 +117,7 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 }
 
 func (g golang) Initialize(outDir string) error {
-	modPath := "leetcode-solutions"
+	const modPath = "leetcode-solutions"
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
 	cmd.Dir = outDir

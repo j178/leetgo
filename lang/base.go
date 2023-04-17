@@ -26,12 +26,13 @@ const (
 )
 
 type GenerateResult struct {
-	Question *leetcode.QuestionData
-	Lang     Lang
-	OutDir   string
-	SubDir   string
-	Files    []FileOutput
-	mask     int
+	mask        int
+	Question    *leetcode.QuestionData
+	Lang        Lang
+	OutDir      string
+	SubDir      string
+	Files       []FileOutput
+	ResultHooks []func(*GenerateResult) error
 }
 
 type FileOutput struct {
