@@ -126,7 +126,7 @@ func addBinSection(result *GenerateResult) error {
 	}
 	sort.Slice(
 		bins, func(i, j int) bool {
-			return bins[i].(map[string]any)["name"].(string) < bins[j].(map[string]any)["name"].(string)
+			return bins[i].(map[string]any)["path"].(string) < bins[j].(map[string]any)["path"].(string)
 		},
 	)
 	mapping["bin"] = bins
