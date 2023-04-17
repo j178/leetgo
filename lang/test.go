@@ -75,7 +75,7 @@ func typeNameToType(ty string) reflect.Type {
 
 func deserialize(tpName string, raw string) (reflect.Value, error) {
 	raw = strings.TrimSpace(raw)
-	goTpName := convertToGoType(tpName)
+	goTpName := toGoType(tpName)
 	ty := typeNameToType(goTpName)
 	if ty == nil {
 		return reflect.Value{}, fmt.Errorf("unknown type: %s", tpName)

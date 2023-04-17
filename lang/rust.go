@@ -71,7 +71,7 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error
 	return runTest(q, genResult, []string{"cargo", "run", "--bin", q.TitleSlug}, outDir)
 }
 
-func convertToRustType(typeName string) string {
+func toRustType(typeName string) string {
 	switch typeName {
 	case "integer":
 		return "i32"
@@ -93,26 +93,38 @@ func convertToRustType(typeName string) string {
 		return "LinkedList"
 	default:
 		if strings.HasSuffix(typeName, "[]") {
-			return "Vec<" + convertToRustType(typeName[:len(typeName)-2]) + ">"
+			return "Vec<" + toRustType(typeName[:len(typeName)-2]) + ">"
 		}
 	}
 	return typeName
 }
 
 func toRustVarName(name string) string {
-	var sb strings.Builder
-	first := true
-	for _, c := range name {
-		if unicode.IsUpper(c) {
-			if !first {
-				sb.WriteRune('_')
-			} else {
-				first = false
-			}
+	var snakeStrBuilder strings.Builder
+
+	for i, r := range name {
+		if i > 0 && unicode.IsUpper(r) && !unicode.IsUpper([]rune(name)[i-1]) {
+			snakeStrBuilder.WriteRune('_')
 		}
-		sb.WriteRune(c)
+		snakeStrBuilder.WriteRune(unicode.ToLower(r))
 	}
-	return strings.ToLower(sb.String())
+
+	return snakeStrBuilder.String()
+}
+
+func formatCallArgs(argTypes, args []string) string {
+	if len(args) == 0 {
+		return ""
+	}
+	res := make([]string, 0, len(args))
+	for i, arg := range args {
+		if argTypes[i] == "BinaryTree" || argTypes[i] == "LinkedList" {
+			res = append(res, arg+".into()")
+		} else {
+			res = append(res, arg)
+		}
+	}
+	return strings.Join(res, ", ")
 }
 
 func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
@@ -121,27 +133,32 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	Ok(())
 }`
 	code := ""
+	paramTypes := make([]string, 0, len(q.MetaData.Params))
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
+		varName := toRustVarName(param.Name)
+		varType := toRustType(param.Type)
 		code += fmt.Sprintf(
 			"\tlet %s: %s = deserialize(&read_line()?)?;\n",
-			toRustVarName(param.Name),
-			convertToRustType(param.Type),
+			varName,
+			varType,
 		)
-		paramNames = append(paramNames, toRustVarName(param.Name))
+		paramNames = append(paramNames, varName)
+		paramTypes = append(paramTypes, varType)
 	}
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
 			"\tlet ans = Solution::%s(%s);\n",
 			toRustVarName(q.MetaData.Name),
-			strings.Join(paramNames, ", "),
+			formatCallArgs(paramTypes, paramNames),
 		)
 	} else {
+		// TODO: input param should be mut ref
 		code += fmt.Sprintf(
 			"\tSolution::%s(%s);\n",
 			toRustVarName(q.MetaData.Name),
-			strings.Join(paramNames, ", "),
+			formatCallArgs(paramTypes, paramNames),
 		)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tlet ans = %s;\n", ansName)
@@ -183,7 +200,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 			prepareCode += fmt.Sprintf(
 				"\tlet %s: %s = deserialize(&constructor_params[%d])?;\n",
 				toRustVarName(param.Name),
-				convertToRustType(param.Type),
+				toRustType(param.Type),
 				i,
 			)
 			paramNames = append(paramNames, toRustVarName(param.Name))
@@ -201,27 +218,32 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		if len(method.Params) > 0 {
 			methodCall += "\t\t\t\tlet method_params = split_array(&params[i])?;\n"
 		}
-		var methodParamNames []string
+		methodParamNames := make([]string, 0, len(method.Params))
+		methodParamTypes := make([]string, 0, len(method.Params))
 		for i, param := range method.Params {
+			varName := toRustVarName(param.Name)
+			varType := toRustType(param.Type)
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet %s: %s = deserialize(&method_params[%d])?;\n",
-				toRustVarName(param.Name),
-				convertToRustType(param.Type),
+				varName,
+				varType,
 				i,
 			)
-			methodParamNames = append(methodParamNames, toRustVarName(param.Name))
+			methodParamNames = append(methodParamNames, varName)
+			methodParamTypes = append(methodParamTypes, varType)
 		}
+
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet ans = serialize(obj.%s(%s))?;\n\t\t\t\toutput.push(ans);\n",
 				toRustVarName(method.Name),
-				strings.Join(methodParamNames, ", "),
+				formatCallArgs(methodParamTypes, methodParamNames),
 			)
 		} else {
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tobj.%s(%s);\n",
 				toRustVarName(method.Name),
-				strings.Join(methodParamNames, ", "),
+				formatCallArgs(methodParamTypes, methodParamNames),
 			)
 			methodCall += "\t\t\t\toutput.push(\"null\");\n"
 		}

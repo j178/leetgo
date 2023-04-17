@@ -1,6 +1,5 @@
-use std::ops::Deref;
-use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::Visitor;
 use serde::ser::SerializeSeq;
 
 type ListLink = Option<Box<ListNode>>;
