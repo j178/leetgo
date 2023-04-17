@@ -130,7 +130,7 @@ namespace LeetCodeIO {
     template<typename T>
     void scan(std::istream &is, T &x) {
         /**
-         * operator >> disgards leading whitespaces by default
+         * operator >> discards leading whitespaces by default
          * when not using operator >>, they must be discarded explicitly
          */
         if constexpr (std::is_same_v<T, std::string>) {
