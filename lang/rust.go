@@ -6,8 +6,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/j178/leetgo/leetcode"
@@ -35,6 +38,15 @@ func (r rust) Initialize(outDir string) error {
 	if err != nil {
 		return err
 	}
+
+	cmd = exec.Command("cargo", "add", "serde", "serde_json", "anyhow", constants.RustTestUtilsCrate)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = outDir
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -56,6 +68,146 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error
 	}
 
 	return runTest(q, genResult, []string{"cargo", "run", "--bin", q.TitleSlug}, outDir)
+}
+
+func convertToRustType(typeName string) string {
+	switch typeName {
+	case "integer":
+		return "i32"
+	case "string":
+		return "String"
+	case "long":
+		return "i64"
+	case "double":
+		return "f64"
+	case "boolean":
+		return "bool"
+	case "character":
+		return "char"
+	case "void":
+		return "!"
+	case "TreeNode":
+		return "BinaryTree"
+	case "ListNode":
+		return "LinkedList"
+	default:
+		if strings.HasSuffix(typeName, "[]") {
+			return "Vec<" + convertToGoType(typeName[:len(typeName)-2]) + ">"
+		}
+	}
+	return typeName
+}
+
+func toRustFuncName(name string) string {
+	var sb strings.Builder
+	for i, c := range name {
+		if i > 0 && c >= 'A' && c <= 'Z' {
+			sb.WriteRune('_')
+		}
+		sb.WriteRune(c)
+	}
+	return strings.ToLower(sb.String())
+}
+
+func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
+	const template = `fn main() -> Result<()> {
+%s
+
+	Ok(())
+}`
+	code := ""
+	paramNames := make([]string, 0, len(q.MetaData.Params))
+	for _, param := range q.MetaData.Params {
+		code += fmt.Sprintf(
+			"\tlet %s: %s = deserialize(read_line()?)?;\n",
+			toRustFuncName(param.Name),
+			convertToRustType(param.Type),
+		)
+		paramNames = append(paramNames, toRustFuncName(param.Name))
+	}
+
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		code += fmt.Sprintf(
+			"\tlet ans = Solution::%s(%s);\n",
+			toRustFuncName(q.MetaData.Name),
+			strings.Join(paramNames, ", "),
+		)
+	} else {
+		code += fmt.Sprintf(
+			"\tSolution::%s(%s);\n",
+			toRustFuncName(q.MetaData.Name),
+			strings.Join(paramNames, ", "),
+		)
+		ansName := paramNames[q.MetaData.Output.ParamIndex]
+		code += fmt.Sprintf("\tlet ans = %s;\n", ansName)
+	}
+	code += fmt.Sprintf(
+		"\tprintln!(\"%s {}\", serialize(ans)?);\n",
+		testCaseOutputMark,
+	)
+
+	testContent := fmt.Sprintf(template, code)
+	return testContent, nil
+}
+
+func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
+	return "", nil
+}
+
+func (r rust) generateTestContent(q *leetcode.QuestionData) (string, error) {
+	if q.MetaData.SystemDesign {
+		return r.generateSystemDesignTestCode(q)
+	}
+	return r.generateNormalTestCode(q)
+}
+
+func (r rust) generateCodeFile(
+	q *leetcode.QuestionData,
+	filename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
+) (
+	FileOutput,
+	error,
+) {
+	codeHeader := fmt.Sprintf(
+		`use anyhow::Result;
+
+use %s::*;
+`, constants.RustTestUtilsCrate,
+	)
+	testContent, err := r.generateTestContent(q)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	blocks = append(
+		[]config.Block{
+			{
+				Name:     beforeBeforeMarker,
+				Template: codeHeader,
+			},
+			{
+				Name:     afterAfterMarker,
+				Template: testContent,
+			},
+		},
+		blocks...,
+	)
+	content, err := r.generateCodeContent(
+		q,
+		blocks,
+		modifiers,
+		separateDescriptionFile,
+	)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	return FileOutput{
+		Filename: filename,
+		Content:  content,
+		Type:     CodeFile | TestFile,
+	}, nil
 }
 
 func (r rust) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {

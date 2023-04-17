@@ -1,16 +1,12 @@
-use std::error::Error;
-use std::str::FromStr;
-
-use serde::Deserialize;
+use anyhow::{Result, bail};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{ListNode, TreeNode};
-
-pub fn split_array(raw: &str) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn split_array(raw: &str) -> Result<Vec<String>> {
     let trimmed = raw.trim();
 
     if trimmed.len() <= 1 || !trimmed.starts_with('[') || !trimmed.ends_with(']') {
-        return Err(format!("Invalid array: {}", trimmed).into());
+        bail!("invalid array: {}", trimmed);
     }
 
     let splits: Vec<Value> = serde_json::from_str(trimmed)?;
@@ -18,22 +14,13 @@ pub fn split_array(raw: &str) -> Result<Vec<String>, Box<dyn Error>> {
     Ok(res)
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Array<T>(pub Vec<T>);
-
-impl<'de, T: Deserialize<'de>> Deserialize<'de> for Array<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::de::Deserializer<'de>,
-    {
-        let splits = split_array(&String::deserialize(deserializer)?).unwrap();
-        let res: Result<Vec<T>, D::Error> = splits.iter().map(|s| T::deserialize(s)).collect();
-        Ok(Array(res.unwrap()))
-    }
+pub fn deserialize<'de, T: Deserialize<'de>>(s: &'de str) -> Result<T> {
+    let res: T = serde_json::from_str(s)?;
+    Ok(res)
 }
 
-pub fn parse<'de, T: Deserialize<'de>>(s: &str) -> Result<T, Box<dyn Error>> {
-    let res: T = serde_json::from_str(s)?;
+pub fn serialize<T: Serialize>(v: T) -> Result<String> {
+    let res = serde_json::to_string(&v)?;
     Ok(res)
 }
 
@@ -60,13 +47,5 @@ mod tests {
                 Err(_) => panic!("Test failed for input: {}", input),
             }
         }
-    }
-
-    #[test]
-    fn test_parse_basic() {
-        let result = parse::<i32>("1");
-        assert_eq!(result.unwrap(), 1);
-        let result = parse::<Array<i32>>("[1, 2, 3]");
-        assert_eq!(result.unwrap(), Array(vec![1, 2, 3]));
     }
 }
