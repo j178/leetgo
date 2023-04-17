@@ -117,7 +117,7 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 }
 
 func (g golang) Initialize(outDir string) error {
-	modPath := "leetcode-solutions"
+	const modPath = "leetcode-solutions"
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
 	cmd.Dir = outDir
@@ -162,8 +162,8 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	return runTest(q, genResult, []string{execFile}, outDir)
 }
 
-// convertToGoType converts LeetCode type name to Go type name.
-func convertToGoType(typeName string) string {
+// toGoType converts LeetCode type name to Go type name.
+func toGoType(typeName string) string {
 	switch typeName {
 	case "integer":
 		return "int"
@@ -183,7 +183,7 @@ func convertToGoType(typeName string) string {
 		return "*ListNode"
 	default:
 		if strings.HasSuffix(typeName, "[]") {
-			return "[]" + convertToGoType(typeName[:len(typeName)-2])
+			return "[]" + toGoType(typeName[:len(typeName)-2])
 		}
 	}
 	return typeName
@@ -201,7 +201,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		code += fmt.Sprintf(
 			"\t%s := Deserialize[%s](ReadLine(stdin))\n",
 			param.Name,
-			convertToGoType(param.Type),
+			toGoType(param.Type),
 		)
 		paramNames = append(paramNames, param.Name)
 	}
@@ -260,7 +260,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 			prepareCode += fmt.Sprintf(
 				"\t%s := Deserialize[%s](constructorParams[%d])\n",
 				param.Name,
-				convertToGoType(param.Type),
+				toGoType(param.Type),
 				i,
 			)
 			paramNames = append(paramNames, param.Name)
@@ -279,7 +279,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 			methodCall += fmt.Sprintf(
 				"\t\t\t%s := Deserialize[%s](methodParams[%d])\n",
 				param.Name,
-				convertToGoType(param.Type),
+				toGoType(param.Type),
 				i,
 			)
 			methodParamNames = append(methodParamNames, param.Name)

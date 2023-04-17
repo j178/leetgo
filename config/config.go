@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
-	"github.com/j178/leetgo/constants"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+
+	"github.com/j178/leetgo/constants"
 
 	"github.com/j178/leetgo/utils"
 )
@@ -75,8 +76,8 @@ type CodeConfig struct {
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
 	Python                  BaseLangConfig `yaml:"python3" mapstructure:"python3"`
 	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
+	Rust                    RustConfig     `yaml:"rust" mapstructure:"rust"`
 	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust                    BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
 }
 
@@ -96,6 +97,10 @@ type CppConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
 	CXX            string   `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
 	CXXFLAGS       []string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
+}
+
+type RustConfig struct {
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
 }
 
 type Credentials struct {
@@ -206,7 +211,7 @@ func Default() *Config {
 			},
 			Python: BaseLangConfig{OutDir: "python"},
 			Java:   BaseLangConfig{OutDir: "java"},
-			Rust:   BaseLangConfig{OutDir: "rust"},
+			Rust:   RustConfig{BaseLangConfig: BaseLangConfig{OutDir: "rust"}},
 			// Add more languages here
 		},
 		LeetCode: LeetCodeConfig{

@@ -34,14 +34,16 @@ var (
 			blockCommentEnd:   "*/",
 		},
 	}
-	rustGen = baseLang{
-		name:              "Rust",
-		slug:              "rust",
-		shortName:         "rs",
-		extension:         ".rs",
-		lineComment:       "//",
-		blockCommentStart: "/*",
-		blockCommentEnd:   "*/",
+	rustGen = rust{
+		baseLang{
+			name:              "Rust",
+			slug:              "rust",
+			shortName:         "rs",
+			extension:         ".rs",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
 	}
 	javaGen = baseLang{
 		name:              "Java",
