@@ -10,10 +10,10 @@ import (
 	"unicode"
 
 	"github.com/charmbracelet/log"
-	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/constants"
 	"github.com/pelletier/go-toml/v2"
 
+	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
