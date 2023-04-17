@@ -4,11 +4,12 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize, Serializer};
+use serde::de::SeqAccess;
 use serde::ser::SerializeSeq;
 
 // LeetCode use `Option<Rc<RefCell<TreeNode>>>` for tree links, but `Option<Box<TreeNode>>` should be enough.
 // https://github.com/pretzelhammer/rust-blog/blob/master/posts/learning-rust-in-2020.md#leetcode
-pub type TreeLink = Option<Rc<RefCell<TreeNode>>>;
+type TreeLink = Option<Rc<RefCell<TreeNode>>>;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TreeNode {
@@ -17,14 +18,26 @@ pub struct TreeNode {
     pub right: TreeLink,
 }
 
+#[macro_export]
+macro_rules! tree {
+    () => {
+        None
+    };
+    ($e:expr) => {
+        Some(Rc::new(RefCell::new(TreeNode {
+            val: $e,
+            left: None,
+            right: None,
+        })))
+    };
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct BinaryTree(TreeLink);
+pub struct BinaryTree(TreeLink);
 
-impl Deref for BinaryTree {
-    type Target = TreeLink;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl From<BinaryTree> for TreeLink {
+    fn from(tree: BinaryTree) -> Self {
+        tree.0
     }
 }
 
@@ -59,80 +72,56 @@ impl Serialize for BinaryTree {
     }
 }
 
-// struct BinaryTreeVisitor;
-//
-// impl<'de> serde::de::Visitor<'de> for BinaryTreeVisitor {
-//     type Value = BinaryTree;
-//
-//     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-//         formatter.write_str("a list of integers")
-//     }
-//
-//     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-//         where
-//             A: serde::de::SeqAccess<'de>,
-//     {
-//         let mut nodes = Vec::new();
-//         while let Some(val) = seq.next_element()? {
-//             nodes.push(val);
-//         }
-//         let mut queue = VecDeque::new();
-//         let mut root = None;
-//         if nodes.len() > 0 {
-//             root = Some(Rc::new(RefCell::new(TreeNode {
-//                 val: nodes[0],
-//                 left: None,
-//                 right: None,
-//             })));
-//             queue.push_back(root.clone());
-//         }
-//         let mut i = 1;
-//         while let Some(node) = queue.pop_front() {
-//             if i < nodes.len() {
-//                 let left = if nodes[i] == None {
-//                     None
-//                 } else {
-//                     Some(Rc::new(RefCell::new(TreeNode {
-//                         val: nodes[i].unwrap(),
-//                         left: None,
-//                         right: None,
-//                     })))
-//                 };
-//                 node.as_ref().unwrap().borrow_mut().left = left.clone();
-//                 if left.is_some() {
-//                     queue.push_back(left);
-//                 }
-//                 i += 1;
-//             }
-//             if i < nodes.len() {
-//                 let right = if nodes[i] == None {
-//                     None
-//                 } else {
-//                     Some(Rc::new(RefCell::new(TreeNode {
-//                         val: nodes[i].unwrap(),
-//                         left: None,
-//                         right: None,
-//                     })))
-//                 };
-//                 node.as_ref().unwrap().borrow_mut().right = right.clone();
-//                 if right.is_some() {
-//                     queue.push_back(right);
-//                 }
-//                 i += 1;
-//             }
-//         }
-//         Ok(BinaryTree(root))
-//     }
-// }
-//
-// impl<'de> Deserialize<'de> for BinaryTree {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//         where
-//             D: serde::Deserializer<'de>,
-//     {
-//         deserializer.deserialize_seq(BinaryTreeVisitor)
-//     }
-// }
+struct BinaryTreeVisitor;
+
+impl<'de> serde::de::Visitor<'de> for BinaryTreeVisitor {
+    type Value = BinaryTree;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a list of optional integers")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: SeqAccess<'de>,
+    {
+        let mut nodes: Vec<TreeLink> = Vec::new();
+
+        while let Some(val) = seq.next_element::<Option<i32>>()? {
+            nodes.push(val.map(|v: i32| Rc::new(RefCell::new(TreeNode {
+                val: v,
+                left: None,
+                right: None,
+            }))));
+        }
+
+        let root = nodes[0].clone();
+        let (mut i, mut j) = (0, 1);
+
+        while j < nodes.len() {
+            if let Some(ref current_node) = nodes[i] {
+                current_node.borrow_mut().left = nodes[j].clone();
+                j += 1;
+                if j < nodes.len() {
+                    current_node.borrow_mut().right = nodes[j].clone();
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+
+        Ok(BinaryTree(root))
+    }
+}
+
+impl<'de> Deserialize<'de> for BinaryTree {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_seq(BinaryTreeVisitor)
+    }
+}
 
 #[cfg(test)]
 mod tests {

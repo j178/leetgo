@@ -3,7 +3,7 @@ use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::ser::SerializeSeq;
 
-pub type ListLink = Option<Box<ListNode>>;
+type ListLink = Option<Box<ListNode>>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ListNode {
@@ -31,13 +31,11 @@ macro_rules! list {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct LinkedList(ListLink);
+pub struct LinkedList(ListLink);
 
-impl Deref for LinkedList {
-    type Target = ListLink;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl From<LinkedList> for Option<Box<ListNode>> {
+    fn from(list: LinkedList) -> Self {
+        list.0
     }
 }
 

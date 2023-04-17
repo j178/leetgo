@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/charmbracelet/log"
 	"github.com/j178/leetgo/config"
@@ -98,11 +99,16 @@ func convertToRustType(typeName string) string {
 	return typeName
 }
 
-func toRustFuncName(name string) string {
+func toRustVarName(name string) string {
 	var sb strings.Builder
-	for i, c := range name {
-		if i > 0 && c >= 'A' && c <= 'Z' {
-			sb.WriteRune('_')
+	first := true
+	for _, c := range name {
+		if unicode.IsUpper(c) {
+			if !first {
+				sb.WriteRune('_')
+			} else {
+				first = false
+			}
 		}
 		sb.WriteRune(c)
 	}
@@ -111,7 +117,6 @@ func toRustFuncName(name string) string {
 
 func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `fn main() -> Result<()> {
-
 %s
 	Ok(())
 }`
@@ -120,29 +125,29 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	for _, param := range q.MetaData.Params {
 		code += fmt.Sprintf(
 			"\tlet %s: %s = deserialize(&read_line()?)?;\n",
-			toRustFuncName(param.Name),
+			toRustVarName(param.Name),
 			convertToRustType(param.Type),
 		)
-		paramNames = append(paramNames, toRustFuncName(param.Name))
+		paramNames = append(paramNames, toRustVarName(param.Name))
 	}
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
 			"\tlet ans = Solution::%s(%s);\n",
-			toRustFuncName(q.MetaData.Name),
+			toRustVarName(q.MetaData.Name),
 			strings.Join(paramNames, ", "),
 		)
 	} else {
 		code += fmt.Sprintf(
 			"\tSolution::%s(%s);\n",
-			toRustFuncName(q.MetaData.Name),
+			toRustVarName(q.MetaData.Name),
 			strings.Join(paramNames, ", "),
 		)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tlet ans = %s;\n", ansName)
 	}
 	code += fmt.Sprintf(
-		"\tprintln!(\"%s {}\", serialize(ans)?);\n",
+		"\n\tprintln!(\"%s {}\", serialize(ans)?);",
 		testCaseOutputMark,
 	)
 
@@ -154,7 +159,6 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 	const template = `fn main() -> Result<()> {
 	let ops: Vec<String> = deserialize(&read_line()?)?;
 	let params = split_array(&read_line()?)?;
-	#[warn(unused_mut)]
 	let mut output = Vec::with_capacity(ops.len());
 	output.push("null".to_string());
 
@@ -178,14 +182,18 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		for i, param := range q.MetaData.Constructor.Params {
 			prepareCode += fmt.Sprintf(
 				"\tlet %s: %s = deserialize(&constructor_params[%d])?;\n",
-				toRustFuncName(param.Name),
+				toRustVarName(param.Name),
 				convertToRustType(param.Type),
 				i,
 			)
-			paramNames = append(paramNames, toRustFuncName(param.Name))
+			paramNames = append(paramNames, toRustVarName(param.Name))
 		}
 	}
-	prepareCode += fmt.Sprintf("\tlet mut obj = %s::new(%s);", q.MetaData.ClassName, strings.Join(paramNames, ", "))
+	prepareCode += fmt.Sprintf(
+		"\t#[warn(unused_mut)]\n\tlet mut obj = %s::new(%s);",
+		q.MetaData.ClassName,
+		strings.Join(paramNames, ", "),
+	)
 
 	callCode := ""
 	for _, method := range q.MetaData.Methods {
@@ -197,22 +205,22 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		for i, param := range method.Params {
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet %s: %s = deserialize(&method_params[%d])?;\n",
-				toRustFuncName(param.Name),
+				toRustVarName(param.Name),
 				convertToRustType(param.Type),
 				i,
 			)
-			methodParamNames = append(methodParamNames, toRustFuncName(param.Name))
+			methodParamNames = append(methodParamNames, toRustVarName(param.Name))
 		}
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet ans = serialize(obj.%s(%s))?;\n\t\t\t\toutput.push(ans);\n",
-				toRustFuncName(method.Name),
+				toRustVarName(method.Name),
 				strings.Join(methodParamNames, ", "),
 			)
 		} else {
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tobj.%s(%s);\n",
-				toRustFuncName(method.Name),
+				toRustVarName(method.Name),
 				strings.Join(methodParamNames, ", "),
 			)
 			methodCall += "\t\t\t\toutput.push(\"null\");\n"
@@ -254,7 +262,6 @@ func (r rust) generateCodeFile(
 	}
 	codeHeader := fmt.Sprintf(
 		`use anyhow::Result;
-
 use %s::*;
 %s
 `, constants.RustTestUtilsCrate,
