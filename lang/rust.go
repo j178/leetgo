@@ -92,7 +92,7 @@ func convertToRustType(typeName string) string {
 		return "LinkedList"
 	default:
 		if strings.HasSuffix(typeName, "[]") {
-			return "Vec<" + convertToGoType(typeName[:len(typeName)-2]) + ">"
+			return "Vec<" + convertToRustType(typeName[:len(typeName)-2]) + ">"
 		}
 	}
 	return typeName
@@ -111,15 +111,15 @@ func toRustFuncName(name string) string {
 
 func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `fn main() -> Result<()> {
-%s
 
+%s
 	Ok(())
 }`
 	code := ""
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
 		code += fmt.Sprintf(
-			"\tlet %s: %s = deserialize(read_line()?)?;\n",
+			"\tlet %s: %s = deserialize(&read_line()?)?;\n",
 			toRustFuncName(param.Name),
 			convertToRustType(param.Type),
 		)
@@ -151,7 +151,84 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 }
 
 func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
-	return "", nil
+	const template = `fn main() -> Result<()> {
+	let ops: Vec<String> = deserialize(&read_line()?)?;
+	let params = split_array(&read_line()?)?;
+	#[warn(unused_mut)]
+	let mut output = Vec::with_capacity(ops.len());
+	output.push("null".to_string());
+
+%s
+
+	for i in 1..ops.len() {
+		match ops[i].as_str() {
+%s
+			_ => panic!("unknown op"),
+		}
+	}
+
+	println!("%s {}", join_array(output));
+	Ok(())
+}
+`
+	var prepareCode string
+	var paramNames []string
+	if len(q.MetaData.Constructor.Params) > 0 {
+		prepareCode += "\tlet constructor_params = split_array(&params[0])?;\n"
+		for i, param := range q.MetaData.Constructor.Params {
+			prepareCode += fmt.Sprintf(
+				"\tlet %s: %s = deserialize(&constructor_params[%d])?;\n",
+				toRustFuncName(param.Name),
+				convertToRustType(param.Type),
+				i,
+			)
+			paramNames = append(paramNames, toRustFuncName(param.Name))
+		}
+	}
+	prepareCode += fmt.Sprintf("\tlet mut obj = %s::new(%s);", q.MetaData.ClassName, strings.Join(paramNames, ", "))
+
+	callCode := ""
+	for _, method := range q.MetaData.Methods {
+		methodCall := fmt.Sprintf("\t\t\t\"%s\" => {\n", method.Name)
+		if len(method.Params) > 0 {
+			methodCall += "\t\t\t\tlet method_params = split_array(&params[i])?;\n"
+		}
+		var methodParamNames []string
+		for i, param := range method.Params {
+			methodCall += fmt.Sprintf(
+				"\t\t\t\tlet %s: %s = deserialize(&method_params[%d])?;\n",
+				toRustFuncName(param.Name),
+				convertToRustType(param.Type),
+				i,
+			)
+			methodParamNames = append(methodParamNames, toRustFuncName(param.Name))
+		}
+		if method.Return.Type != "" && method.Return.Type != "void" {
+			methodCall += fmt.Sprintf(
+				"\t\t\t\tlet ans = serialize(obj.%s(%s))?;\n\t\t\t\toutput.push(ans);\n",
+				toRustFuncName(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+		} else {
+			methodCall += fmt.Sprintf(
+				"\t\t\t\tobj.%s(%s);\n",
+				toRustFuncName(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+			methodCall += "\t\t\t\toutput.push(\"null\");\n"
+		}
+		methodCall += "\t\t\t}\n"
+		callCode += methodCall
+	}
+
+	callCode = callCode[:len(callCode)-1] // remove last newline
+	testContent := fmt.Sprintf(
+		template,
+		prepareCode,
+		callCode,
+		testCaseOutputMark,
+	)
+	return testContent, nil
 }
 
 func (r rust) generateTestContent(q *leetcode.QuestionData) (string, error) {
@@ -171,11 +248,17 @@ func (r rust) generateCodeFile(
 	FileOutput,
 	error,
 ) {
+	var emptySolution string
+	if !q.MetaData.SystemDesign {
+		emptySolution = "\nstruct Solution;\n"
+	}
 	codeHeader := fmt.Sprintf(
 		`use anyhow::Result;
 
 use %s::*;
+%s
 `, constants.RustTestUtilsCrate,
+		emptySolution,
 	)
 	testContent, err := r.generateTestContent(q)
 	if err != nil {
