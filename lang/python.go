@@ -16,9 +16,7 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-var (
-	requirements = fmt.Sprintf("sortedcontainers\n%s\n", constants.PythonTestUtilsMode)
-)
+var requirements = fmt.Sprintf("sortedcontainers\n%s\n", constants.PythonTestUtilsMode)
 
 type python struct {
 	baseLang
