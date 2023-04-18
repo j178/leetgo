@@ -113,22 +113,17 @@ func toPythonType(typeName string) string {
 	return typeName
 }
 
-func toPythonName(name string) string {
-	return utils.CamelToSnake(name)
-}
-
 func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `if __name__ == "__main__":
 %s
-}
 `
 	code := ""
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
-		varName := toPythonName(param.Name)
+		varName := param.Name
 		varType := toPythonType(param.Type)
 		code += fmt.Sprintf(
-			"\t%s: %s = deserialize(%s, read_line())\n",
+			"\t%s: %s = deserialize(\"%s\", read_line())\n",
 			varName,
 			varType,
 			varType,
@@ -137,21 +132,21 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
-			"\tans = %s(%s)\n",
-			toPythonName(q.MetaData.Name),
+			"\tans = Solution().%s(%s)\n",
+			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
 	} else {
 		code += fmt.Sprintf(
 			"\t%s(%s)\n",
-			toPythonName(q.MetaData.Name),
+			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tans = %s\n", ansName)
 	}
 	code += fmt.Sprintf(
-		"\tprint(\"%s\", str(ans))",
+		"\tprint(\"%s\", serialize(ans))",
 		testCaseOutputMark,
 	)
 
@@ -172,17 +167,16 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 %s
 
 	print("%s " + join_array(output))
-}
 `
 	var prepareCode string
 	paramNames := make([]string, 0, len(q.MetaData.Constructor.Params))
 	if len(q.MetaData.Constructor.Params) > 0 {
 		prepareCode += "\tconstructor_params = split_array(params[0])\n"
 		for i, param := range q.MetaData.Constructor.Params {
-			varName := toPythonName(param.Name)
+			varName := param.Name
 			varType := toPythonType(param.Type)
 			prepareCode += fmt.Sprintf(
-				"\t%s: %s = deserialize(%s, constructor_params[%d])\n",
+				"\t%s: %s = deserialize(\"%s\", constructor_params[%d])\n",
 				varName,
 				varType,
 				varType,
@@ -205,10 +199,10 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		}
 		methodParamNames := make([]string, 0, len(method.Params))
 		for i, param := range method.Params {
-			varName := toPythonName(param.Name)
+			varName := param.Name
 			varType := toPythonType(param.Type)
 			methodCall += fmt.Sprintf(
-				"\t\t\t%s: %s = deserialize(%s, method_params[%d])\n",
+				"\t\t\t%s: %s = deserialize(\"%s\", method_params[%d])\n",
 				varName,
 				varType,
 				varType,
@@ -218,8 +212,8 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		}
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			methodCall += fmt.Sprintf(
-				"\t\t\tans = obj.%s(%s)\n\t\t\toutput.append(str(ans))\n",
-				toPythonName(method.Name),
+				"\t\t\tans = serialize(obj.%s(%s))\n\t\t\toutput.append(ans)\n",
+				method.Name,
 				strings.Join(methodParamNames, ", "),
 			)
 		} else {
@@ -289,6 +283,7 @@ from %s import *`, constants.PythonTestUtilsMode,
 	if err != nil {
 		return FileOutput{}, err
 	}
+	content = strings.ReplaceAll(content, "\t", "    ")
 	return FileOutput{
 		Filename: filename,
 		Content:  content,
