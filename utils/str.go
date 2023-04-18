@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/hex"
 	"strings"
+	"unicode"
 	"unicode/utf16"
 	"unsafe"
 )
@@ -40,6 +41,19 @@ func EnsureTrailingNewline(s string) string {
 		return s + "\n"
 	}
 	return s
+}
+
+func CamelToSnake(name string) string {
+	var snakeStrBuilder strings.Builder
+
+	for i, r := range name {
+		if i > 0 && unicode.IsUpper(r) && !unicode.IsUpper([]rune(name)[i-1]) {
+			snakeStrBuilder.WriteRune('_')
+		}
+		snakeStrBuilder.WriteRune(unicode.ToLower(r))
+	}
+
+	return snakeStrBuilder.String()
 }
 
 var (

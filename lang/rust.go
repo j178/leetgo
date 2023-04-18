@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"unicode"
 
 	"github.com/charmbracelet/log"
 	"github.com/pelletier/go-toml/v2"
@@ -32,6 +31,7 @@ func (r rust) HasInitialized(outDir string) (bool, error) {
 func (r rust) Initialize(outDir string) error {
 	const packageName = "leetcode-solutions"
 	cmd := exec.Command("cargo", "init", "--bin", "--name", packageName, outDir)
+	log.Info("cargo init", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = outDir
@@ -39,8 +39,8 @@ func (r rust) Initialize(outDir string) error {
 	if err != nil {
 		return err
 	}
-
 	cmd = exec.Command("cargo", "add", "serde", "serde_json", "anyhow", constants.RustTestUtilsCrate)
+	log.Info("cargo add", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = outDir
@@ -100,16 +100,7 @@ func toRustType(typeName string) string {
 }
 
 func toRustVarName(name string) string {
-	var snakeStrBuilder strings.Builder
-
-	for i, r := range name {
-		if i > 0 && unicode.IsUpper(r) && !unicode.IsUpper([]rune(name)[i-1]) {
-			snakeStrBuilder.WriteRune('_')
-		}
-		snakeStrBuilder.WriteRune(unicode.ToLower(r))
-	}
-
-	return snakeStrBuilder.String()
+	return utils.CamelToSnake(name)
 }
 
 func formatCallArgs(argTypes, args []string) string {
@@ -193,23 +184,27 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 }
 `
 	var prepareCode string
-	var paramNames []string
+	paramNames := make([]string, 0, len(q.MetaData.Constructor.Params))
+	paramTypes := make([]string, 0, len(q.MetaData.Constructor.Params))
 	if len(q.MetaData.Constructor.Params) > 0 {
 		prepareCode += "\tlet constructor_params = split_array(&params[0])?;\n"
 		for i, param := range q.MetaData.Constructor.Params {
+			varName := toRustVarName(param.Name)
+			varType := toRustType(param.Type)
 			prepareCode += fmt.Sprintf(
 				"\tlet %s: %s = deserialize(&constructor_params[%d])?;\n",
-				toRustVarName(param.Name),
-				toRustType(param.Type),
+				varName,
+				varType,
 				i,
 			)
-			paramNames = append(paramNames, toRustVarName(param.Name))
+			paramNames = append(paramNames, varName)
+			paramTypes = append(paramTypes, varType)
 		}
 	}
 	prepareCode += fmt.Sprintf(
 		"\t#[warn(unused_mut)]\n\tlet mut obj = %s::new(%s);",
 		q.MetaData.ClassName,
-		strings.Join(paramNames, ", "),
+		formatCallArgs(paramTypes, paramNames),
 	)
 
 	callCode := ""
@@ -437,7 +432,7 @@ func (r rust) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 
 	separateDescriptionFile := separateDescriptionFile(r)
 	blocks := getBlocks(r)
-	modifiers, err := getModifiers(r, goBuiltinModifiers)
+	modifiers, err := getModifiers(r, builtinModifiers)
 	if err != nil {
 		return nil, err
 	}

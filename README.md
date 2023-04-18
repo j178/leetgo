@@ -64,7 +64,7 @@ Local testing requires more work to implement for each language, so not all lang
 |  | Generation | Local testing |
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
-| Python | :white_check_mark: | Not yet |
+| Python | :white_check_mark: | :white_check_mark: |
 | C++ | :white_check_mark: | :white_check_mark: |
 | Rust | :white_check_mark: | :white_check_mark: |
 | Java | :white_check_mark: | Not yet |
@@ -202,6 +202,8 @@ code:
     out_dir: python
     # Overrides the default code.filename_template
     filename_template: ""
+    # Python executable to run the generated code
+    executable: python3
   cpp:
     out_dir: cpp
     # Overrides the default code.filename_template

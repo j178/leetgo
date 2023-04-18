@@ -1,0 +1,23 @@
+
+[tool.poetry]
+name = "leetgo-py"
+version = "0.2.0"
+description = "Python test utils for leetgo"
+authors = ["j178 <10510431+j178@users.noreply.github.com>"]
+license = "MIT"
+homepage = "https://github.com/j178/leetgo"
+repository = "https://github.com/j178/leetgo"
+keywords = ["leetcode"]
+
+packages = [
+    { include = "leetgo_py", from = "src"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
