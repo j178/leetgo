@@ -197,7 +197,7 @@ code:
     # Overrides the default code.filename_template
     filename_template: ""
     # Python executable to run the generated code
-    python_executable: python3
+    executable: python3
   cpp:
     out_dir: cpp
     # Overrides the default code.filename_template
