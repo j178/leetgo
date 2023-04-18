@@ -94,8 +94,8 @@ type GoConfig struct {
 }
 
 type PythonConfig struct {
-	BaseLangConfig   `yaml:",inline" mapstructure:",squash"`
-	PythonExecutable string `yaml:"python_executable" mapstructure:"python_executable" comment:"Python executable to run the generated code"`
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable to run the generated code"`
 }
 
 type CppConfig struct {
@@ -215,11 +215,11 @@ func Default() *Config {
 				CXXFLAGS:       []string{"-O2", "-std=c++17"},
 			},
 			Python: PythonConfig{
-				BaseLangConfig:   BaseLangConfig{OutDir: "python"},
-				PythonExecutable: DefaultPython,
+				BaseLangConfig: BaseLangConfig{OutDir: "python"},
+				Executable:     constants.DefaultPython,
 			},
-			Java:   BaseLangConfig{OutDir: "java"},
-			Rust:   RustConfig{BaseLangConfig: BaseLangConfig{OutDir: "rust"}},
+			Java: BaseLangConfig{OutDir: "java"},
+			Rust: RustConfig{BaseLangConfig: BaseLangConfig{OutDir: "rust"}},
 			// Add more languages here
 		},
 		LeetCode: LeetCodeConfig{

@@ -1,6 +1,6 @@
 //go:build !windows
 
-package config
+package constants
 
 const (
 	DefaultPython = "python3"

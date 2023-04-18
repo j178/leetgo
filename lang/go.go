@@ -120,6 +120,7 @@ func (g golang) Initialize(outDir string) error {
 	const modPath = "leetcode-solutions"
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
+	log.Info("go mod init", "cmd", cmd.String())
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
@@ -129,6 +130,7 @@ func (g golang) Initialize(outDir string) error {
 	}
 
 	cmd = exec.Command("go", "get", constants.GoTestUtilsModPath)
+	log.Info("go get", "cmd", cmd.String())
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -189,6 +191,11 @@ func toGoType(typeName string) string {
 	return typeName
 }
 
+// nolint: staticcheck
+func toGoFuncName(f string) string {
+	return strings.Title(f)
+}
+
 func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
@@ -227,11 +234,6 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 
 	testContent := fmt.Sprintf(template, code)
 	return testContent, nil
-}
-
-// nolint: staticcheck
-func toGoFuncName(f string) string {
-	return strings.Title(f)
 }
 
 func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {

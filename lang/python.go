@@ -1,84 +1,23 @@
 package lang
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 )
 
-const (
-	requirements = "pytest>=7\n"
-	confTest     = `import json
-
-
-def _parse_test_cases(test_cases_str):
-	inputs, outputs = [], []
-	current = inputs
-	for line in test_cases_str.splitlines():
-		line = line.strip()
-		if not line:
-			if inputs:
-				yield inputs, outputs
-				inputs, outputs = [], []
-		elif line.startswith("input:"):
-			current = inputs
-		elif line.startswith("output:"):
-			current = outputs
-		else:
-			current.append(json.loads(line))
-	if inputs:
-		yield inputs, outputs
-
-
-def pytest_generate_tests(metafunc):
-	if "input_args" not in metafunc.fixturenames:
-		return
-	arg_names = ["input_args", "expected"]
-	if "methods" in metafunc.fixturenames:
-		arg_names.append("methods")
-	matrix = []
-	for inputs, outputs in _parse_test_cases(metafunc.module.TEST_CASES):
-		if "methods" in metafunc.fixturenames:
-			methods, inputs = inputs
-			matrix.append([inputs, outputs[0], methods])
-		else:
-			# Assume there is only one output value
-			matrix.append([inputs, outputs[0]])
-	metafunc.parametrize(arg_names, matrix)
-`
-	pytestTemplate = `from solution import Solution
-
-TEST_CASES = """\
-%s
-"""
-
-
-def test_solution(input_args, expected):
-	result = Solution().%s(*input_args)
-	assert result == expected
-`
-	pytestSystemTemplate = `from solution import Solution
-
-TEST_CASES = """\
-%s
-"""
-
-
-def test_solution(input_args, expected, methods):
-    assert methods[0] == "Solution"
-    solution = Solution(*input_args[0])
-    results = [None]
-    for method, args in zip(methods[1:], input_args[1:]):
-        result = getattr(solution, method)(*args)
-        results.append(result)
-    assert results == expected
-`
+var (
+	requirements = fmt.Sprintf("sortedcontainers\n%s\n", constants.PythonTestUtilsMode)
 )
 
 type python struct {
@@ -86,106 +25,277 @@ type python struct {
 }
 
 func (p python) Initialize(outDir string) error {
-	python := config.Get().Code.Python.PythonExecutable
+	pythonExe := config.Get().Code.Python.Executable
 
-	pythonExe, err := exec.LookPath(python)
-	if err != nil {
-		return fmt.Errorf("python executable %v not found in PATH", python)
-	}
-
-	_, err = tryWrite(path.Join(outDir, "requirements.txt"), requirements)
+	cmd := exec.Command(pythonExe, "--version")
+	log.Info("checking python version", "cmd", cmd.String())
+	versionOutput, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
-	_, err = tryWrite(path.Join(outDir, "conftest.py"), confTest)
+	pythonVersion := strings.TrimPrefix(string(versionOutput), "Python ")
+	if !strings.HasPrefix(pythonVersion, "3.") {
+		return errors.New("python version must be 3.x")
+	}
+
+	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(requirements))
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(pythonExe, "-m", "venv", path.Join(outDir, ".venv"))
+
+	cmd = exec.Command(pythonExe, "-m", "venv", ".venv")
+	log.Info("creating venv", "cmd", cmd.String())
+	cmd.Dir = outDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err = cmd.Run(); err != nil {
 		return err
 	}
-	cmd = exec.Command(path.Join(outDir, ".venv", config.VenvPython), "-m", "pip", "install", "-Ur", "requirements.txt")
+
+	_ = utils.WriteFile(path.Join(outDir, ".venv", ".gitignore"), []byte("*\n"))
+
+	cmd = exec.Command(
+		path.Join(outDir, ".venv", constants.VenvPython),
+		"-m",
+		"pip",
+		"install",
+		"--disable-pip-version-check",
+		"-Ur",
+		"requirements.txt",
+	)
+	log.Info("pip install", "cmd", cmd.String())
 	cmd.Dir = outDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	return err
 }
 
 func (p python) HasInitialized(outDir string) (bool, error) {
-	_, err := os.Stat(path.Join(outDir, ".venv"))
-	return !os.IsNotExist(err), nil
+	return utils.IsExist(path.Join(outDir, ".venv")), nil
 }
 
-func (g python) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
-	blocks := getBlocks(g)
-	modifiers, err := getModifiers(g, goBuiltinModifiers)
+func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+	genResult, err := p.GeneratePaths(q)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	codeContent, err := g.generateContent(q, blocks, modifiers)
-	if err != nil {
-		return nil, err
-	}
+	genResult.SetOutDir(outDir)
 
-	testcaseStr := g.generateTestCases(q)
-	testContent := g.generateTest(q, testcaseStr)
-
-	filenameTmpl := getFilenameTemplate(q, g)
-	baseFilename, err := q.GetFormattedFilename(g.slug, filenameTmpl)
-	if err != nil {
-		return nil, err
-	}
-	codeFile := filepath.Join(baseFilename, "solution.py")
-	testFile := filepath.Join(baseFilename, "solution_test.py")
-
-	files := []FileOutput{
-		{
-			Path:    codeFile,
-			Content: codeContent,
-			Type:    CodeFile,
-		},
-		{
-			Path:    testFile,
-			Content: testContent,
-			Type:    TestFile,
-		},
-	}
-
-	return &GenerateResult{
-		Question: q,
-		Lang:     g,
-		Files:    files,
-	}, nil
+	testFile := genResult.GetFile(TestFile).GetPath()
+	cmd := []string{path.Join(outDir, ".venv", constants.VenvPython), testFile}
+	return runTest(q, genResult, cmd, outDir)
 }
 
-func (p python) generateTest(q *leetcode.QuestionData, testcases string) string {
-	if q.MetaData.SystemDesign {
-		return fmt.Sprintf(pytestSystemTemplate, testcases)
-	} else {
-		return fmt.Sprintf(pytestTemplate, testcases, q.MetaData.Name)
+func toPythonType(typeName string) string {
+	switch typeName {
+	case "integer":
+		return "int"
+	case "string":
+		return "str"
+	case "long":
+		return "int"
+	case "double":
+		return "float"
+	case "boolean":
+		return "bool"
+	case "character":
+		return "str"
+	case "void":
+		return ""
+	case "TreeNode":
+		return "TreeNode"
+	case "ListNode":
+		return "ListNode"
+	default:
+		if strings.HasSuffix(typeName, "[]") {
+			return "List[" + toPythonType(typeName[:len(typeName)-2]) + "]"
+		}
 	}
+	return typeName
 }
 
-func (p python) generateTestCases(q *leetcode.QuestionData) string {
-	cases := q.GetTestCases()
-	outputs := q.ParseExampleOutputs()
-	argsNum := 0
-	if q.MetaData.SystemDesign {
-		argsNum = 2
-	} else {
-		argsNum = len(q.MetaData.Params)
-	}
+func toPythonName(name string) string {
+	return utils.CamelToSnake(name)
+}
 
-	// Assume all questions output are single.
-	var caseAndOutputs []string
-	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
-		input := strings.Join(cases[i:i+argsNum], "\n")
-		caseAndOutputs = append(
-			caseAndOutputs,
-			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, input, testCaseOutputMark, outputs[i/argsNum]),
+func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
+	const template = `if __name__ == "__main__":
+%s
+}
+`
+	code := ""
+	paramNames := make([]string, 0, len(q.MetaData.Params))
+	for _, param := range q.MetaData.Params {
+		varName := toPythonName(param.Name)
+		varType := toPythonType(param.Type)
+		code += fmt.Sprintf(
+			"\t%s: %s = deserialize(%s, read_line())\n",
+			varName,
+			varType,
+			varType,
 		)
+		paramNames = append(paramNames, param.Name)
 	}
-	return strings.Join(caseAndOutputs, "\n\n")
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		code += fmt.Sprintf(
+			"\tans = %s(%s)\n",
+			toPythonName(q.MetaData.Name),
+			strings.Join(paramNames, ", "),
+		)
+	} else {
+		code += fmt.Sprintf(
+			"\t%s(%s)\n",
+			toPythonName(q.MetaData.Name),
+			strings.Join(paramNames, ", "),
+		)
+		ansName := paramNames[q.MetaData.Output.ParamIndex]
+		code += fmt.Sprintf("\tans = %s\n", ansName)
+	}
+	code += fmt.Sprintf(
+		"\tprint(\"%s\", str(ans))",
+		testCaseOutputMark,
+	)
+
+	testContent := fmt.Sprintf(template, code)
+	return testContent, nil
+}
+
+func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
+	const template = `if __name__ == "__main__":
+	ops: List[str] = deserialize(List[str], read_line())
+	params = split_array(read_line())
+	output = ["null"]
+
+%s
+
+	for op in ops[1:]:
+		match op:
+%s
+
+	print("%s " + join_array(output))
+}
+`
+	var prepareCode string
+	paramNames := make([]string, 0, len(q.MetaData.Constructor.Params))
+	if len(q.MetaData.Constructor.Params) > 0 {
+		prepareCode += "\tconstructor_params = split_array(params[0])\n"
+		for i, param := range q.MetaData.Constructor.Params {
+			varName := toPythonName(param.Name)
+			varType := toPythonType(param.Type)
+			prepareCode += fmt.Sprintf(
+				"\t%s: %s = deserialize(%s, constructor_params[%d])\n",
+				varName,
+				varType,
+				varType,
+				i,
+			)
+			paramNames = append(paramNames, varName)
+		}
+	}
+	prepareCode += fmt.Sprintf(
+		"\tobj = %s(%s)",
+		q.MetaData.ClassName,
+		strings.Join(paramNames, ", "),
+	)
+
+	callCode := ""
+	for _, method := range q.MetaData.Methods {
+		methodCall := "\t\tcase \"" + method.Name + "\":\n"
+		if len(method.Params) > 0 {
+			methodCall += "\t\t\tmethod_params = split_array(params[i])\n"
+		}
+		methodParamNames := make([]string, 0, len(method.Params))
+		for i, param := range method.Params {
+			varName := toPythonName(param.Name)
+			varType := toPythonType(param.Type)
+			methodCall += fmt.Sprintf(
+				"\t\t\t%s: %s = deserialize(%s, method_params[%d])\n",
+				varName,
+				varType,
+				varType,
+				i,
+			)
+			methodParamNames = append(methodParamNames, varName)
+		}
+		if method.Return.Type != "" && method.Return.Type != "void" {
+			methodCall += fmt.Sprintf(
+				"\t\t\tans = obj.%s(%s)\n\t\t\toutput.append(str(ans))\n",
+				toPythonName(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+		} else {
+			methodCall += fmt.Sprintf(
+				"\t\t\tobj.%s(%s)\n",
+				toPythonType(method.Name),
+				strings.Join(methodParamNames, ", "),
+			)
+			methodCall += "\t\t\toutput.append(\"null\")\n"
+		}
+		callCode += methodCall
+	}
+	callCode = callCode[:len(callCode)-1] // remove last newline
+	testContent := fmt.Sprintf(
+		template,
+		prepareCode,
+		callCode,
+		testCaseOutputMark,
+	)
+	return testContent, nil
+}
+
+func (p python) generateTestContent(q *leetcode.QuestionData) (string, error) {
+	if q.MetaData.SystemDesign {
+		return p.generateSystemDesignTestCode(q)
+	}
+	return p.generateNormalTestCode(q)
+}
+
+func (p python) generateCodeFile(
+	q *leetcode.QuestionData,
+	filename string,
+	blocks []config.Block,
+	modifiers []ModifierFunc,
+	separateDescriptionFile bool,
+) (
+	FileOutput,
+	error,
+) {
+	codeHeader := fmt.Sprintf(
+		`from typing import *
+from %s import *`, constants.PythonTestUtilsMode,
+	)
+	testContent, err := p.generateTestContent(q)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	blocks = append(
+		[]config.Block{
+			{
+				Name:     beforeBeforeMarker,
+				Template: codeHeader,
+			},
+			{
+				Name:     afterAfterMarker,
+				Template: testContent,
+			},
+		},
+		blocks...,
+	)
+	content, err := p.generateCodeContent(
+		q,
+		blocks,
+		modifiers,
+		separateDescriptionFile,
+	)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	return FileOutput{
+		Filename: filename,
+		Content:  content,
+		Type:     CodeFile | TestFile,
+	}, nil
 }
 
 func (p python) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
@@ -194,38 +304,70 @@ func (p python) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 	if err != nil {
 		return nil, err
 	}
-	codeFile := filepath.Join(baseFilename, "solution.py")
-	testFile := filepath.Join(baseFilename, "solution_test.py")
-
-	files := []FileOutput{
-		{
-			Path: codeFile,
-			Type: CodeFile,
-		},
-		{
-			Path: testFile,
-			Type: TestFile,
-		},
-	}
-
-	return &GenerateResult{
+	genResult := &GenerateResult{
+		SubDir:   baseFilename,
 		Question: q,
 		Lang:     p,
-		Files:    files,
-	}, nil
+	}
+	genResult.AddFile(
+		FileOutput{
+			Filename: "solution.py",
+			Type:     CodeFile | TestFile,
+		},
+	)
+	genResult.AddFile(
+		FileOutput{
+			Filename: "testcases.txt",
+			Type:     TestCasesFile,
+		},
+	)
+	if separateDescriptionFile(p) {
+		genResult.AddFile(
+			FileOutput{
+				Filename: "question.md",
+				Type:     DocFile,
+			},
+		)
+	}
+	return genResult, nil
 }
 
-func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+func (p python) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	filenameTmpl := getFilenameTemplate(q, p)
 	baseFilename, err := q.GetFormattedFilename(p.slug, filenameTmpl)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	cmd := exec.Command(path.Join(outDir, ".venv", config.VenvPython), "-m", "pytest", baseFilename)
-	cmd.Dir = outDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
+	genResult := &GenerateResult{
+		Question: q,
+		Lang:     p,
+		SubDir:   baseFilename,
+	}
 
-	return err == nil, nil
+	separateDescriptionFile := separateDescriptionFile(p)
+	blocks := getBlocks(p)
+	modifiers, err := getModifiers(p, builtinModifiers)
+	if err != nil {
+		return nil, err
+	}
+	codeFile, err := p.generateCodeFile(q, "solution.py", blocks, modifiers, separateDescriptionFile)
+	if err != nil {
+		return nil, err
+	}
+	testcaseFile, err := p.generateTestCasesFile(q, "testcases.txt")
+	if err != nil {
+		return nil, err
+	}
+	genResult.AddFile(codeFile)
+	genResult.AddFile(testcaseFile)
+
+	if separateDescriptionFile {
+		docFile, err := p.generateDescriptionFile(q, "question.md")
+		if err != nil {
+			return nil, err
+		}
+		genResult.AddFile(docFile)
+	}
+
+	return genResult, nil
 }
