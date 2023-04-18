@@ -10,7 +10,7 @@ def split_array(s: str) -> List[str]:
         raise Exception("Invalid array: " + s)
 
     splits = json.loads(s)
-    res = [str(split) for split in splits]
+    res = [json.dumps(split) for split in splits]
     return res
 
 

@@ -156,14 +156,14 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 
 func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `if __name__ == "__main__":
-	ops: List[str] = deserialize(List[str], read_line())
+	ops: List[str] = deserialize("List[str]", read_line())
 	params = split_array(read_line())
 	output = ["null"]
 
 %s
 
-	for op in ops[1:]:
-		match op:
+	for i in range(1, len(ops)):
+		match ops[i]:
 %s
 
 	print("%s " + join_array(output))
@@ -193,16 +193,16 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 
 	callCode := ""
 	for _, method := range q.MetaData.Methods {
-		methodCall := "\t\tcase \"" + method.Name + "\":\n"
+		methodCall := "\t\t\tcase \"" + method.Name + "\":\n"
 		if len(method.Params) > 0 {
-			methodCall += "\t\t\tmethod_params = split_array(params[i])\n"
+			methodCall += "\t\t\t\tmethod_params = split_array(params[i])\n"
 		}
 		methodParamNames := make([]string, 0, len(method.Params))
 		for i, param := range method.Params {
 			varName := param.Name
 			varType := toPythonType(param.Type)
 			methodCall += fmt.Sprintf(
-				"\t\t\t%s: %s = deserialize(\"%s\", method_params[%d])\n",
+				"\t\t\t\t%s: %s = deserialize(\"%s\", method_params[%d])\n",
 				varName,
 				varType,
 				varType,
@@ -212,17 +212,17 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		}
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			methodCall += fmt.Sprintf(
-				"\t\t\tans = serialize(obj.%s(%s))\n\t\t\toutput.append(ans)\n",
+				"\t\t\t\tans = serialize(obj.%s(%s))\n\t\t\t\toutput.append(ans)\n",
 				method.Name,
 				strings.Join(methodParamNames, ", "),
 			)
 		} else {
 			methodCall += fmt.Sprintf(
-				"\t\t\tobj.%s(%s)\n",
+				"\t\t\t\tobj.%s(%s)\n",
 				toPythonType(method.Name),
 				strings.Join(methodParamNames, ", "),
 			)
-			methodCall += "\t\t\toutput.append(\"null\")\n"
+			methodCall += "\t\t\t\toutput.append(\"null\")\n"
 		}
 		callCode += methodCall
 	}
