@@ -64,8 +64,8 @@ func main() {
 | --- | --- | --- |
 | Go | :white_check_mark: | :white_check_mark: |
 | Python | :white_check_mark: | :white_check_mark: |
-| C++ | :white_check_mark: | Not yet |
-| Rust | :white_check_mark: | Not yet |
+| C++ | :white_check_mark: | :white_check_mark: |
+| Rust | :white_check_mark: | :white_check_mark: |
 | Java | :white_check_mark: | Not yet |
 | JavaScript | :white_check_mark: | Not yet |
 | TypeScript | :white_check_mark: | Not yet |
@@ -87,7 +87,7 @@ func main() {
 你可以直接从 [release 页面](https://github.com/j178/leetgo/releases) 下载最新的可执行程序，添加可执行权限、加入 `PATH` 后使用。
 
 ### 使用 `go install`
- 
+
 ```shell
 go install github.com/j178/leetgo@latest
 ```
@@ -117,7 +117,7 @@ Available Commands:
   info                    Show question info
   test                    Run question test cases
   submit                  Submit solution
-  fix                     Use OpenAI GPT-3 API to fix your solution code (just for fun)
+  fix                     Use ChatGPT API to fix your solution code (just for fun)
   edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache
@@ -202,12 +202,18 @@ code:
     out_dir: cpp
     # Overrides the default code.filename_template
     filename_template: ""
-  java:
-    out_dir: java
-    # Overrides the default code.filename_template
-    filename_template: ""
+    # C++ compiler
+    cxx: g++
+    # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
+    cxxflags:
+      - -O2
+      - -std=c++17
   rust:
     out_dir: rust
+    # Overrides the default code.filename_template
+    filename_template: ""
+  java:
+    out_dir: java
     # Overrides the default code.filename_template
     filename_template: ""
 # LeetCode configuration
@@ -252,10 +258,8 @@ editor:
 有三种方式为 `leetgo` 提供认证:
 
 - 从浏览器中直接读取。
-  
-  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox，Safari[^1]，Edge。
 
-  如果你需要其他浏览器的支持，请告诉我们~
+  这是最方便的方法，也是默认的行为。目前支持 Chrome，FireFox，Safari[^1]，Edge。
 
   ```yaml
   leetcode:
@@ -298,7 +302,7 @@ editor:
 ## 进阶用法
 
 1. template 相关
-  
+
     `leetgo` 的配置中有许多支持 Go template，如果你熟悉 Go template 语法的话，可以配置出更加个性化的文件名和代码模板。
 
 2. Blocks
@@ -340,7 +344,7 @@ editor:
         - script: |
             function modify(code) {
               return "// hello world\n" + code;
-            } 
+            }
     ```
 
 ## FAQ

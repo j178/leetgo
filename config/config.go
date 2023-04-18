@@ -12,19 +12,9 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
-	"github.com/j178/leetgo/utils"
-)
+	"github.com/j178/leetgo/constants"
 
-const (
-	CmdName               = "leetgo"
-	globalConfigFile      = "config.yaml"
-	ProjectConfigFilename = "leetgo.yaml"
-	questionCacheBaseName = "leetcode-questions"
-	stateFilename         = "state.json"
-	CodeBeginMarker       = "@lc code=begin"
-	CodeEndMarker         = "@lc code=end"
-	GoTestUtilsModPath    = "github.com/j178/leetgo/testutils/go"
-	ProjectURL            = "https://github.com/j178/leetgo"
+	"github.com/j178/leetgo/utils"
 )
 
 var (
@@ -84,10 +74,10 @@ type CodeConfig struct {
 	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
 	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
-	Python                  PythonConfig `yaml:"python3" mapstructure:"python3"`
-	Cpp                     BaseLangConfig `yaml:"cpp" mapstructure:"cpp"`
+	Python                  PythonConfig   `yaml:"python3" mapstructure:"python3"`
+	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
+	Rust                    RustConfig     `yaml:"rust" mapstructure:"rust"`
 	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
-	Rust                    BaseLangConfig `yaml:"rust" mapstructure:"rust"`
 	// Add more languages here
 }
 
@@ -108,6 +98,16 @@ type PythonConfig struct {
 	PythonExecutable string `yaml:"python_executable" mapstructure:"python_executable" comment:"Python executable to run the generated code"`
 }
 
+type CppConfig struct {
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+	CXX            string   `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
+	CXXFLAGS       []string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
+}
+
+type RustConfig struct {
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+}
+
 type Credentials struct {
 	From      string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
 	Session   string `yaml:"session" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
@@ -124,7 +124,7 @@ type LeetCodeConfig struct {
 func (c *Config) ConfigDir() string {
 	if c.dir == "" {
 		home, _ := homedir.Dir()
-		c.dir = filepath.Join(home, ".config", CmdName)
+		c.dir = filepath.Join(home, ".config", constants.CmdName)
 	}
 	return c.dir
 }
@@ -133,8 +133,12 @@ func (c *Config) CacheDir() string {
 	return filepath.Join(c.ConfigDir(), "cache")
 }
 
+func (c *Config) TempDir() string {
+	return filepath.Join(os.TempDir(), constants.CmdName)
+}
+
 func (c *Config) GlobalConfigFile() string {
-	return filepath.Join(c.ConfigDir(), globalConfigFile)
+	return filepath.Join(c.ConfigDir(), constants.GlobalConfigFilename)
 }
 
 func (c *Config) ProjectRoot() string {
@@ -142,7 +146,7 @@ func (c *Config) ProjectRoot() string {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
 		for {
-			if utils.IsExist(filepath.Join(dir, ProjectConfigFilename)) {
+			if utils.IsExist(filepath.Join(dir, constants.ProjectConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
@@ -158,15 +162,15 @@ func (c *Config) ProjectRoot() string {
 }
 
 func (c *Config) ProjectConfigFile() string {
-	return filepath.Join(c.ProjectRoot(), ProjectConfigFilename)
+	return filepath.Join(c.ProjectRoot(), constants.ProjectConfigFilename)
 }
 
 func (c *Config) StateFile() string {
-	return filepath.Join(c.CacheDir(), stateFilename)
+	return filepath.Join(c.CacheDir(), constants.StateFilename)
 }
 
 func (c *Config) QuestionCacheFile(ext string) string {
-	return filepath.Join(c.CacheDir(), questionCacheBaseName+ext)
+	return filepath.Join(c.CacheDir(), constants.QuestionCacheBaseName+ext)
 }
 
 func (c *Config) Write(w io.Writer, withComments bool) error {
@@ -205,13 +209,17 @@ func Default() *Config {
 					},
 				},
 			},
+			Cpp: CppConfig{
+				BaseLangConfig: BaseLangConfig{OutDir: "cpp"},
+				CXX:            "g++",
+				CXXFLAGS:       []string{"-O2", "-std=c++17"},
+			},
 			Python: PythonConfig{
 				BaseLangConfig:   BaseLangConfig{OutDir: "python"},
 				PythonExecutable: DefaultPython,
 			},
-			Cpp:  BaseLangConfig{OutDir: "cpp"},
-			Java: BaseLangConfig{OutDir: "java"},
-			Rust: BaseLangConfig{OutDir: "rust"},
+			Java:   BaseLangConfig{OutDir: "java"},
+			Rust:   RustConfig{BaseLangConfig: BaseLangConfig{OutDir: "rust"}},
 			// Add more languages here
 		},
 		LeetCode: LeetCodeConfig{
@@ -332,7 +340,7 @@ func Load(init bool) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				log.Warn(
-					fmt.Sprintf("%s not found, use global config only", ProjectConfigFilename),
+					fmt.Sprintf("%s not found, use global config only", constants.ProjectConfigFilename),
 					"file",
 					cfg.GlobalConfigFile(),
 				)

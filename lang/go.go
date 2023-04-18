@@ -8,7 +8,10 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 )
 
@@ -98,7 +101,7 @@ func addMod(code string, q *leetcode.QuestionData) string {
 }
 
 func (g golang) HasInitialized(outDir string) (bool, error) {
-	cmd := exec.Command("go", "list", "-m", "-json", config.GoTestUtilsModPath)
+	cmd := exec.Command("go", "list", "-m", "-json", constants.GoTestUtilsModPath)
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -114,7 +117,7 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 }
 
 func (g golang) Initialize(outDir string) error {
-	modPath := "leetcode-solutions"
+	const modPath = "leetcode-solutions"
 	var stderr bytes.Buffer
 	cmd := exec.Command("go", "mod", "init", modPath)
 	cmd.Dir = outDir
@@ -125,7 +128,7 @@ func (g golang) Initialize(outDir string) error {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", config.GoTestUtilsModPath)
+	cmd = exec.Command("go", "get", constants.GoTestUtilsModPath)
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -140,12 +143,27 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 	}
 	genResult.SetOutDir(outDir)
 
-	args := []string{"go", "run", "./" + genResult.SubDir}
-	return runTest(q, genResult, args, outDir)
+	testFile := genResult.GetFile(TestFile).GetPath()
+	execFile, err := getTempBinFile(q, g)
+	if err != nil {
+		return false, fmt.Errorf("get temp bin file failed: %w", err)
+	}
+
+	build := exec.Command("go", "build", "-o", execFile, testFile)
+	build.Dir = outDir
+	build.Stdout = os.Stdout
+	build.Stderr = os.Stderr
+	log.Info("building", "cmd", build.String())
+	err = build.Run()
+	if err != nil {
+		return false, fmt.Errorf("build failed: %w", err)
+	}
+
+	return runTest(q, genResult, []string{execFile}, outDir)
 }
 
-// convertToGoType converts LeetCode type name to Go type name.
-func convertToGoType(typeName string) string {
+// toGoType converts LeetCode type name to Go type name.
+func toGoType(typeName string) string {
 	switch typeName {
 	case "integer":
 		return "int"
@@ -165,7 +183,7 @@ func convertToGoType(typeName string) string {
 		return "*ListNode"
 	default:
 		if strings.HasSuffix(typeName, "[]") {
-			return "[]" + convertToGoType(typeName[:len(typeName)-2])
+			return "[]" + toGoType(typeName[:len(typeName)-2])
 		}
 	}
 	return typeName
@@ -183,7 +201,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		code += fmt.Sprintf(
 			"\t%s := Deserialize[%s](ReadLine(stdin))\n",
 			param.Name,
-			convertToGoType(param.Type),
+			toGoType(param.Type),
 		)
 		paramNames = append(paramNames, param.Name)
 	}
@@ -242,7 +260,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 			prepareCode += fmt.Sprintf(
 				"\t%s := Deserialize[%s](constructorParams[%d])\n",
 				param.Name,
-				convertToGoType(param.Type),
+				toGoType(param.Type),
 				i,
 			)
 			paramNames = append(paramNames, param.Name)
@@ -261,7 +279,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 			methodCall += fmt.Sprintf(
 				"\t\t\t%s := Deserialize[%s](methodParams[%d])\n",
 				param.Name,
-				convertToGoType(param.Type),
+				toGoType(param.Type),
 				i,
 			)
 			methodParamNames = append(methodParamNames, param.Name)
@@ -318,7 +336,7 @@ import (
 	"os"
 
 	. "%s"
-)`, config.GoTestUtilsModPath,
+)`, constants.GoTestUtilsModPath,
 	)
 	testContent, err := g.generateTestContent(q)
 	if err != nil {
@@ -326,15 +344,17 @@ import (
 	}
 	// TODO warn user that should delete global config and init again
 	blocks = append(
-		blocks,
-		config.Block{
-			Name:     internalBeforeMarker,
-			Template: codeHeader,
+		[]config.Block{
+			{
+				Name:     beforeBeforeMarker,
+				Template: codeHeader,
+			},
+			{
+				Name:     afterAfterMarker,
+				Template: testContent,
+			},
 		},
-		config.Block{
-			Name:     internalAfterMarker,
-			Template: testContent,
-		},
+		blocks...,
 	)
 	content, err := g.generateCodeContent(
 		q,

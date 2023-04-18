@@ -18,9 +18,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/j178/leetgo/cmd.version={{.Version}}
-      - -X github.com/j178/leetgo/cmd.commit={{.Commit}}
-      - -X github.com/j178/leetgo/cmd.date={{.Date}}
+      - -X github.com/j178/leetgo/constants.Version={{.Version}}
+      - -X github.com/j178/leetgo/constants.Commit={{.Commit}}
+      - -X github.com/j178/leetgo/constants.BuildDate={{.Date}}
 
 archives:
   - format: tar.gz

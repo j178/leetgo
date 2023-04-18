@@ -5,10 +5,12 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/goccy/go-json"
 )
 
+// MustSplitArray is a wrapper of Deserialize which panics if an error occurs.
 func MustSplitArray(raw string) []string {
-	raw = strings.TrimSpace(raw)
 	splits, err := SplitArray(raw)
 	if err != nil {
 		panic(err)
@@ -16,7 +18,9 @@ func MustSplitArray(raw string) []string {
 	return splits
 }
 
-func SplitArray(raw string) (splits []string, err error) {
+// SplitArray splits a comma separated array string which may contain different types into a slice of strings.
+func SplitArray(raw string) ([]string, error) {
+	raw = strings.TrimSpace(raw)
 	invalidErr := fmt.Errorf("invalid array: %s", raw)
 
 	// check [] at leftmost and rightmost
@@ -24,37 +28,15 @@ func SplitArray(raw string) (splits []string, err error) {
 		return nil, invalidErr
 	}
 
-	// ignore [] at leftmost and rightmost
-	raw = raw[1 : len(raw)-1]
-	if raw == "" {
-		return
-	}
-
-	var depth, quote int
-	for i := 0; i < len(raw); {
-		j := i
-	outer:
-		for ; j < len(raw); j++ {
-			switch raw[j] {
-			case '[':
-				depth++
-			case ']':
-				depth--
-			case '"':
-				quote++
-			case ',':
-				if depth == 0 && quote%2 == 0 {
-					break outer
-				}
-			}
-		}
-		splits = append(splits, strings.TrimSpace(raw[i:j]))
-		i = j + 1 // skip sep
-	}
-	if depth != 0 || quote%2 != 0 {
+	var splits []json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &splits); err != nil {
 		return nil, invalidErr
 	}
-	return
+	res := make([]string, len(splits))
+	for i, v := range splits {
+		res[i] = string(v)
+	}
+	return res, nil
 }
 
 // DeserializeValue deserialize a string to a reflect.Value
@@ -192,6 +174,7 @@ func serialize(v reflect.Value) (string, error) {
 	}
 }
 
+// Serialize serialize a value to a string.
 func Serialize(v any) string {
 	vt := reflect.ValueOf(v)
 	s, err := serialize(vt)

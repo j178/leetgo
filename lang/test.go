@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jedib0t/go-pretty/v6/list"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
-	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
@@ -74,7 +75,7 @@ func typeNameToType(ty string) reflect.Type {
 
 func deserialize(tpName string, raw string) (reflect.Value, error) {
 	raw = strings.TrimSpace(raw)
-	goTpName := convertToGoType(tpName)
+	goTpName := toGoType(tpName)
 	ty := typeNameToType(goTpName)
 	if ty == nil {
 		return reflect.Value{}, fmt.Errorf("unknown type: %s", tpName)
@@ -111,14 +112,20 @@ func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
 			if len(c.input) != narg {
 				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
 			}
-			if _, err := deserialize("[]string", c.input[0]); err != nil {
+			l1, err := deserialize("[]string", c.input[0])
+			if err != nil {
 				return fmt.Errorf("cannot parse %s as []string", c.input[0])
 			}
-			if _, err := goutils.SplitArray(c.input[1]); err != nil {
+			l2, err := goutils.SplitArray(c.input[1])
+			if err != nil {
 				return fmt.Errorf("%s is not a valid list", c.input[0])
 			}
-			if _, err := goutils.SplitArray(c.output); err != nil {
+			l3, err := goutils.SplitArray(c.output)
+			if err != nil {
 				return fmt.Errorf("%s is not a valid list", c.input[0])
+			}
+			if l1.Len() != len(l2) || l1.Len() != len(l3) {
+				return fmt.Errorf("input and output should have the same length")
 			}
 		}
 		return nil
@@ -269,11 +276,8 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	if len(tc.cases) == 0 {
 		return false, fmt.Errorf("no test cases found")
 	}
-	var (
-		outputBuf bytes.Buffer
-		ran       int
-		passed    int
-	)
+
+	var ran, passed int
 	for _, c := range tc.cases {
 		func() {
 			l := list.NewWriter()
@@ -286,33 +290,27 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 			ran++
-			outputBuf.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 
+			outputBuf := new(bytes.Buffer)
 			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 			cmd.Dir = outDir
 			cmd.Stdin = strings.NewReader(c.Input())
-			cmd.Stdout = &outputBuf
-			cmd.Stderr = &outputBuf
+			cmd.Stdout = outputBuf
+			cmd.Stderr = outputBuf
 			err = cmd.Start()
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Failed to start")))
 				return
 			}
-			done := make(chan error, 1)
-			go func() {
-				done <- cmd.Wait()
-			}()
-			select {
-			case <-ctx.Done():
-			case err = <-done:
-			}
+			err = cmd.Wait()
 
 			actualOutput, stdout := extractOutput(outputBuf.String())
 			mayAppendStdout := func() {
 				if stdout != "" {
-					l.AppendItem(fmt.Sprintf("Stdout:     %s", stdoutStyle.Render(stdout)))
+					out := stdoutStyle.Render(strings.ReplaceAll(stdout, "\n", "↩ "))
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
 				}
 			}
 			if ctx.Err() != nil {

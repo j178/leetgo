@@ -54,7 +54,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		if state.LastQuestion.Slug != "" {
 			q, err = QuestionBySlug(state.LastQuestion.Slug, c)
 		} else {
-			err = errors.New("no last generated question")
+			err = errors.New("invalid qid: last generated question not found")
 		}
 	case qid == "today":
 		q, err = c.GetTodayQuestion()
@@ -65,7 +65,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		err = nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
+		return nil, fmt.Errorf("invalid qid: %w", err)
 	}
 	if q == nil && len(qs) == 0 {
 		q, err = QuestionBySlug(qid, c)
@@ -73,14 +73,14 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 			q, err = QuestionFromCacheByID(qid, c)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("invalid qid \"%s\": %w", qid, err)
+			return nil, fmt.Errorf("invalid qid: %w", err)
 		}
 	}
 	if q != nil {
 		qs = []*QuestionData{q}
 	}
 	if len(qs) == 0 {
-		return nil, fmt.Errorf("invalid qid \"%s\": no such question", qid)
+		return nil, errors.New("invalid qid: no such question")
 	}
 	return qs, nil
 }
@@ -108,7 +108,7 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 		if contestSlug == "last" {
 			state := config.LoadState()
 			if state.LastContest == "" {
-				return nil, nil, errors.New("no last generated contest")
+				return nil, nil, errors.New("invalid contest qid: last contest not found")
 			}
 			contestSlug = state.LastContest
 		}
@@ -122,7 +122,7 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 	if len(parts[1]) > 0 {
 		questionNum, err = strconv.Atoi(parts[1])
 		if err != nil {
-			return nil, nil, fmt.Errorf("%s is not a number", parts[1])
+			return nil, nil, fmt.Errorf("invalid contest qid: %s is not a number", parts[1])
 		}
 	}
 	contest, err := c.GetContest(contestSlug)

@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/lang"
 )
 
@@ -26,13 +27,13 @@ var editors = map[string]Opener{
 	"vim": &commonMultiEditor{
 		commonEditor{
 			command: "vim",
-			args:    []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)},
+			args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker)},
 		},
 	},
 	"neovim": &commonMultiEditor{
 		commonEditor{
 			command: "nvim",
-			args:    []string{"-p", fmt.Sprintf("+/%s", config.CodeBeginMarker)},
+			args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker)},
 		},
 	},
 	"vscode": &commonMultiEditor{commonEditor{command: "code"}},

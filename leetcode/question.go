@@ -14,7 +14,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
 	"github.com/k3a/html2text"
-	"github.com/mitchellh/go-wordwrap"
+	"github.com/muesli/reflow/wordwrap"
+	"github.com/muesli/reflow/wrap"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
@@ -392,12 +393,13 @@ func (q *QuestionData) GetFormattedContent() string {
 	content = replacer.Replace(content)
 
 	// Wrap and remove blank lines
-	maxWidth := uint(100)
-	if lang == config.ZH {
-		maxWidth = 60
+	if lang == config.EN {
+		content = wordwrap.String(content, 100)
+	} else {
+		content = wrap.String(content, 60)
 	}
-	content = wordwrap.WrapString(content, maxWidth)
 	content = utils.CondenseEmptyLines(content)
+	content = utils.EnsureTrailingNewline(content)
 	return content
 }
 
@@ -438,8 +440,12 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 	}
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
+	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/
 	for _, f := range found {
-		output := strings.TrimSuffix(strings.TrimSpace(f[1]), "</pre>")
+		output := strings.TrimSpace(f[1])
+		output = strings.TrimPrefix(output, "<code>")
+		output = strings.TrimSuffix(output, "</pre>")
+		output = strings.TrimSuffix(output, "</code>")
 		output = html2text.HTMLEntitiesToText(output)
 		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)
@@ -486,10 +492,12 @@ func (q *QuestionData) formatQuestionId() (string, bool) {
 		cid := strings.TrimSpace(id[len("剑指 Offer")+1:])
 		cid = strings.ReplaceAll(cid, " ", "-")
 		cid = strings.ReplaceAll(cid, "---", "-")
-		id = "剑指Offer-" + cid
+		id = "Offer-" + cid
 	case strings.HasPrefix(id, "面试题"):
 		slugValid = false
-		id = strings.ReplaceAll(id, " ", "-")
+		cid := strings.TrimSpace(id[len("面试题")+1:])
+		cid = strings.ReplaceAll(cid, " ", "-")
+		id = "Interview-" + cid
 	case strings.HasPrefix(id, "LCP"), strings.HasPrefix(id, "LCS"):
 		slugValid = false
 		id = strings.ReplaceAll(id, " ", "-")
