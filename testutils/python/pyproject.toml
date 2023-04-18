@@ -1,7 +1,7 @@
 
 [tool.poetry]
 name = "leetgo-py"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python test utils for leetgo"
 authors = ["j178 <10510431+j178@users.noreply.github.com>"]
 license = "MIT"
