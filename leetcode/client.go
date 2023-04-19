@@ -52,6 +52,7 @@ type Client interface {
 	GetQuestionData(slug string) (*QuestionData, error)
 	GetAllQuestions() ([]*QuestionData, error)
 	GetTodayQuestion() (*QuestionData, error)
+	GetQuestionOfDate(date time.Time) (*QuestionData, error)
 	GetQuestionsByFilter(f QuestionFilter, limit int, skip int) (QuestionList, error)
 	GetQuestionTags() ([]QuestionTag, error)
 	RunCode(q *QuestionData, lang string, code string, dataInput string) (
@@ -544,6 +545,42 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 	}
 	slug := resp.Get("data.todayRecord.0.question.titleSlug").Str
 	return c.GetQuestionData(slug)
+}
+
+func (c *cnClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
+	query := `
+	query dailyQuestionRecords($year: Int!, $month: Int!) {
+	    dailyQuestionRecords(year: $year, month: $month) {
+			date
+			userStatus
+			question {
+	            titleSlug
+	        }
+	    }
+	}`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{
+			query: query,
+			variables: map[string]any{
+				"year":  date.Year(),
+				"month": int(date.Month()),
+			},
+		},
+		&resp, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	dateStr := date.Format("2006-01-02")
+	qs := resp.Get("data.dailyQuestionRecords").Array()
+	for _, q := range qs {
+		if q.Get("date").Str == dateStr {
+			slug := q.Get("question.titleSlug").Str
+			return c.GetQuestionData(slug)
+		}
+	}
+	return nil, ErrQuestionNotFound
 }
 
 func (c *cnClient) getContest(contestSlug string) (*Contest, error) {

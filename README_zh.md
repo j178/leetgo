@@ -143,6 +143,8 @@ Use "leetgo [command] --help" for more information about a command.
 leetgo pick two-sum          # two-sum 是题目的 slug，是最准确的 qid
 leetgo pick 1                # 1 是题目的 ID
 leetgo pick today            # today 表示今天的每日一题
+leetgo pick yesterday        # `yesterday` 表示昨天的每日一题
+leetgo pick today-1          # `today-1` 表示昨天的每日一题，与 `yesterday` 一样. `today-2`, `today-3` 等同理。
 leetgo contest weekly100     # weekly100 表示第100场周赛
 leetgo test last             # last 表示最近一个生成的题目
 leetgo test weekly100/1      # weekly100/1 表示第100场周赛的第一个题目
