@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/j178/leetgo/config"
 )
@@ -58,6 +59,14 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		}
 	case qid == "today":
 		q, err = c.GetTodayQuestion()
+	case qid == "yesterday":
+		q, err = c.GetQuestionOfDate(time.Now().AddDate(0, 0, -1))
+	case strings.HasPrefix(qid, "today-"):
+		var n int
+		n, err = strconv.Atoi(qid[6:])
+		if err == nil {
+			q, err = c.GetQuestionOfDate(time.Now().AddDate(0, 0, -n))
+		}
 	case strings.Contains(qid, "/"):
 		_, qs, err = ParseContestQID(qid, c, true)
 	}

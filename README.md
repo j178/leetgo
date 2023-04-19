@@ -145,6 +145,8 @@ identifier defined by leetgo, which includes the following forms (using the two-
 leetgo pick two-sum          # `two-sum` is the question slug
 leetgo pick 1                # `1` is the question id
 leetgo pick today            # `today` means daily question
+leetgo pick yesterday        # `yesterday` means the question of yesterday
+leetgo pick today-1          # `today-1` means the question of yesterday, same as `yesterday`. `today-2`, `today-3` etc are also supported.
 leetgo contest weekly100     # `weekly100` means the 100th weekly contest
 leetgo test last             # `last` means the last generated question
 leetgo test weekly100/1      # `weekly100/1` means the first question of the 100th weekly contest
