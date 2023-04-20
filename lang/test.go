@@ -136,7 +136,7 @@ func CheckTestCases(q *leetcode.QuestionData, tc TestCases) error {
 	if q.MetaData.SystemDesign {
 		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
 		// different types. We just check if it's a valid list.
-		// Input:
+		// input:
 		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
 		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
 		// output:
