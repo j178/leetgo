@@ -83,74 +83,107 @@ func deserialize(tpName string, raw string) (reflect.Value, error) {
 	return goutils.DeserializeValue(ty, raw)
 }
 
-type testCase struct {
-	no     int
-	input  []string
-	output string
+type TestCase struct {
+	No     int
+	Input  []string
+	Output string
 }
 
-func (c testCase) Input() string {
-	return utils.EnsureTrailingNewline(strings.Join(c.input, "\n"))
+func (c TestCase) InputString() string {
+	return utils.EnsureTrailingNewline(strings.Join(c.Input, "\n"))
 }
 
-type testCases struct {
-	cases      []testCase
-	targetCase int
+type TestCases struct {
+	Cases      []TestCase
+	TargetCase int
 }
 
-func checkTestCases(q *leetcode.QuestionData, tc testCases) error {
+func (tc *TestCases) AddCase(c TestCase) {
+	tc.Cases = append(tc.Cases, c)
+}
+
+func (tc *TestCases) Contains(c TestCase) bool {
+	for _, tc := range tc.Cases {
+		if reflect.DeepEqual(c.Input, tc.Input) {
+			return true
+		}
+	}
+	return false
+}
+
+func (tc *TestCases) String() string {
+	buf := new(bytes.Buffer)
+	_, _ = fmt.Fprintf(buf, "%s %d\n\n", testCaseTargetMark, tc.TargetCase)
+	for i, c := range tc.Cases {
+		_, _ = fmt.Fprintln(buf, testCaseInputMark)
+		_, _ = fmt.Fprint(buf, c.InputString())
+		_, _ = fmt.Fprintln(buf, testCaseOutputMark)
+		_, _ = fmt.Fprintln(buf, c.Output)
+		if i != len(tc.Cases)-1 {
+			_, _ = fmt.Fprintln(buf)
+		}
+	}
+	return buf.String()
+}
+
+func CheckTestCases(q *leetcode.QuestionData, tc TestCases) error {
+	err := q.Fulfill()
+	if err != nil {
+		return fmt.Errorf("failed to get question data: %w", err)
+	}
+
 	narg := q.MetaData.NArg()
 	if q.MetaData.SystemDesign {
 		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
 		// different types. We just check if it's a valid list.
-		// input:
+		// Input:
 		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
 		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
 		// output:
 		// [null,null,null,1,null,-1,null,-1,3,4]
-		for _, c := range tc.cases {
-			if len(c.input) != narg {
-				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
+		for _, c := range tc.Cases {
+			if len(c.Input) != narg {
+				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
 			}
-			l1, err := deserialize("[]string", c.input[0])
+			l1, err := deserialize("[]string", c.Input[0])
 			if err != nil {
-				return fmt.Errorf("cannot parse %s as []string", c.input[0])
+				return fmt.Errorf("cannot parse %s as []string", c.Input[0])
 			}
-			l2, err := goutils.SplitArray(c.input[1])
+			l2, err := goutils.SplitArray(c.Input[1])
 			if err != nil {
-				return fmt.Errorf("%s is not a valid list", c.input[0])
+				return fmt.Errorf("%s is not a valid list", c.Input[0])
 			}
-			l3, err := goutils.SplitArray(c.output)
+			l3, err := goutils.SplitArray(c.Output)
 			if err != nil {
-				return fmt.Errorf("%s is not a valid list", c.input[0])
+				return fmt.Errorf("%s is not a valid list", c.Input[0])
 			}
 			if l1.Len() != len(l2) || l1.Len() != len(l3) {
-				return fmt.Errorf("input and output should have the same length")
+				return fmt.Errorf("Input and output should have the same length")
 			}
 		}
 		return nil
 	}
 
 	resultType := q.MetaData.ResultType()
-	for _, c := range tc.cases {
-		if len(c.input) != narg {
-			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.input))
+	for _, c := range tc.Cases {
+		if len(c.Input) != narg {
+			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
 		}
-		for j, arg := range c.input {
+		for j, arg := range c.Input {
 			tp := q.MetaData.Params[j].Type
 			if _, err := deserialize(tp, arg); err != nil {
 				return fmt.Errorf("cannot parse %s as %s", arg, tp)
 			}
 		}
-		if _, err := deserialize(resultType, c.output); err != nil {
-			return fmt.Errorf("cannot parse %s as %s", c.output, resultType)
+		if _, err := deserialize(resultType, c.Output); err != nil {
+			return fmt.Errorf("cannot parse %s as %s", c.Output, resultType)
 		}
 	}
 	return nil
 }
 
-func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) {
-	tc := testCases{}
+func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) {
+	tc := TestCases{}
 	content, err := f.GetContent()
 	if err != nil {
 		return tc, err
@@ -173,16 +206,16 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 			if err != nil {
 				return tc, fmt.Errorf("invalid target_case: %s is not valid number", no)
 			}
-			tc.targetCase = targetCase
+			tc.TargetCase = targetCase
 		case strings.HasPrefix(line, testCaseInputMark):
 			inputStarted = true
 			outputStarted = false
 			if len(inputLines) > 0 && len(output) > 0 {
-				tc.cases = append(
-					tc.cases, testCase{
-						no:     len(tc.cases) + 1,
-						input:  append([]string(nil), inputLines...),
-						output: output,
+				tc.Cases = append(
+					tc.Cases, TestCase{
+						No:     len(tc.Cases) + 1,
+						Input:  append([]string(nil), inputLines...),
+						Output: output,
 					},
 				)
 				inputLines = inputLines[:0]
@@ -201,22 +234,22 @@ func parseTestCases(q *leetcode.QuestionData, f *FileOutput) (testCases, error) 
 		}
 	}
 	if len(inputLines) > 0 && len(output) > 0 {
-		tc.cases = append(
-			tc.cases, testCase{
-				no:     len(tc.cases) + 1,
-				input:  append([]string(nil), inputLines...),
-				output: output,
+		tc.Cases = append(
+			tc.Cases, TestCase{
+				No:     len(tc.Cases) + 1,
+				Input:  append([]string(nil), inputLines...),
+				Output: output,
 			},
 		)
 	}
-	if tc.targetCase > len(tc.cases) {
-		return tc, fmt.Errorf("invalid target_case: %d, maximum is %d", tc.targetCase, len(tc.cases))
+	if tc.TargetCase > len(tc.Cases) {
+		return tc, fmt.Errorf("invalid target_case: %d, maximum is %d", tc.TargetCase, len(tc.Cases))
 	}
-	if tc.targetCase < 0 {
-		tc.targetCase += len(tc.cases) + 1
+	if tc.TargetCase < 0 {
+		tc.TargetCase += len(tc.Cases) + 1
 	}
 
-	if err := checkTestCases(q, tc); err != nil {
+	if err := CheckTestCases(q, tc); err != nil {
 		return tc, fmt.Errorf("invalid test case: %w", err)
 	}
 
@@ -269,24 +302,24 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	if testcaseFile == nil {
 		panic("no test cases file generated")
 	}
-	tc, err := parseTestCases(q, testcaseFile)
+	tc, err := ParseTestCases(q, testcaseFile)
 	if err != nil {
 		return false, err
 	}
-	if len(tc.cases) == 0 {
+	if len(tc.Cases) == 0 {
 		return false, fmt.Errorf("no test cases found")
 	}
 
 	var ran, passed int
-	for _, c := range tc.cases {
+	for _, c := range tc.Cases {
 		func() {
 			l := list.NewWriter()
 			l.SetStyle(list.StyleBulletCircle)
 			defer func() {
 				fmt.Println(l.Render())
 			}()
-			if tc.targetCase != 0 && c.no != tc.targetCase {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, skippedStyle.Render("Skipped")))
+			if tc.TargetCase != 0 && c.No != tc.TargetCase {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, skippedStyle.Render("Skipped")))
 				return
 			}
 			ran++
@@ -296,12 +329,12 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			outputBuf := new(bytes.Buffer)
 			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 			cmd.Dir = outDir
-			cmd.Stdin = strings.NewReader(c.Input())
+			cmd.Stdin = strings.NewReader(c.InputString())
 			cmd.Stdout = outputBuf
 			cmd.Stderr = outputBuf
 			err = cmd.Start()
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Failed to start")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Failed to start")))
 				return
 			}
 			err = cmd.Wait()
@@ -314,41 +347,41 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				}
 			}
 			if ctx.Err() != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Time limit exceeded")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Time limit exceeded")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Runtime error")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Runtime error")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
 			err = checkOutput(q, actualOutput)
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, errorStyle.Render("Invalid output")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Invalid output")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
 				mayAppendStdout()
 				l.UnIndent()
 				return
 			}
 
-			if judgeResult(q, actualOutput, c.output) {
+			if judgeResult(q, actualOutput, c.Output) {
 				passed++
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, passedStyle.Render("Accepted")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Accepted")))
 			} else {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.no, failedStyle.Render("Wrong answer")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, failedStyle.Render("Wrong answer")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.Input(), "\n", "↩ ")))
+				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
-				l.AppendItem(fmt.Sprintf("Expected:   %s", c.output))
+				l.AppendItem(fmt.Sprintf("Expected:   %s", c.Output))
 				mayAppendStdout()
 				l.UnIndent()
 			}
