@@ -53,8 +53,8 @@ leetgo submit w330/
 			cmd.Print(result.Display(qs[0]))
 
 			if !result.Accepted() {
-				err = appendToTestCases(q, result)
-				if err == nil {
+				added, _ := appendToTestCases(q, result)
+				if added {
 					log.Info("added failed case to testcases.txt", "question", q.TitleSlug)
 				}
 			}
@@ -100,16 +100,17 @@ func submitSolution(
 	return testResult.(*leetcode.SubmitCheckResult), nil
 }
 
-func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckResult) error {
+func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckResult) (bool, error) {
 	genResult, err := lang.GeneratePathsOnly(q)
 	if err != nil {
-		return err
+		return false, err
 	}
 	testCasesFile := genResult.GetFile(lang.TestCasesFile)
 	if !utils.IsExist(testCasesFile.GetPath()) {
-		return nil
+		return false, nil
 	}
 
+	// TODO: some test cases are hidden during contest
 	failedCase := lang.TestCase{
 		Input:  strings.Split(result.LastTestcase, "\n"),
 		Output: result.ExpectedOutput,
@@ -117,14 +118,14 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 
 	tc, err := lang.ParseTestCases(q, testCasesFile)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if tc.Contains(failedCase) {
-		return nil
+		return false, nil
 	}
 	tc.AddCase(failedCase)
 
 	content := []byte(tc.String())
 	err = utils.WriteFile(testCasesFile.GetPath(), content)
-	return err
+	return true, err
 }
