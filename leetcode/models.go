@@ -138,6 +138,10 @@ func (r *SubmitCheckResult) GetState() string {
 	return r.State
 }
 
+func (r *SubmitCheckResult) Accepted() bool {
+	return r.StatusCode == int(Accepted)
+}
+
 type RunCheckResult struct {
 	InputData              string
 	State                  string   `json:"state"` // STARTED, SUCCESS

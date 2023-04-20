@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -50,6 +51,13 @@ leetgo submit w330/
 				continue
 			}
 			cmd.Print(result.Display(qs[0]))
+
+			if !result.Accepted() {
+				err = appendToTestCases(q, result)
+				if err == nil {
+					log.Info("added failed case to testcases.txt", "question", q.TitleSlug)
+				}
+			}
 		}
 
 		return nil
@@ -90,4 +98,33 @@ func submitSolution(
 		return nil, fmt.Errorf("failed to wait submit result: %w", err)
 	}
 	return testResult.(*leetcode.SubmitCheckResult), nil
+}
+
+func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckResult) error {
+	genResult, err := lang.GeneratePathsOnly(q)
+	if err != nil {
+		return err
+	}
+	testCasesFile := genResult.GetFile(lang.TestCasesFile)
+	if !utils.IsExist(testCasesFile.GetPath()) {
+		return nil
+	}
+
+	failedCase := lang.TestCase{
+		Input:  strings.Split(result.LastTestcase, "\n"),
+		Output: result.ExpectedOutput,
+	}
+
+	tc, err := lang.ParseTestCases(q, testCasesFile)
+	if err != nil {
+		return err
+	}
+	if tc.Contains(failedCase) {
+		return nil
+	}
+	tc.AddCase(failedCase)
+
+	content := []byte(tc.String())
+	err = utils.WriteFile(testCasesFile.GetPath(), content)
+	return err
 }
