@@ -110,10 +110,14 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 		return false, nil
 	}
 
-	// TODO: some test cases are hidden during contest
 	failedCase := lang.TestCase{
 		Input:  strings.Split(result.LastTestcase, "\n"),
 		Output: result.ExpectedOutput,
+	}
+	// some test cases are hidden during contest, they can be excluded by checking
+	err = failedCase.Check()
+	if err != nil {
+		return false, err
 	}
 
 	tc, err := lang.ParseTestCases(q, testCasesFile)
