@@ -84,18 +84,68 @@ func deserialize(tpName string, raw string) (reflect.Value, error) {
 }
 
 type TestCase struct {
-	No     int
-	Input  []string
-	Output string
+	Question *leetcode.QuestionData
+	No       int
+	Input    []string
+	Output   string
 }
 
-func (c TestCase) InputString() string {
+func (c *TestCase) Check() error {
+	q := c.Question
+	narg := q.MetaData.NArg()
+	if q.MetaData.SystemDesign {
+		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
+		// different types. We just check if it's a valid list.
+		// input:
+		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
+		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
+		// output:
+		// [null,null,null,1,null,-1,null,-1,3,4]
+		if len(c.Input) != narg {
+			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
+		}
+		l1, err := deserialize("[]string", c.Input[0])
+		if err != nil {
+			return fmt.Errorf("cannot parse %s as []string", c.Input[0])
+		}
+		l2, err := goutils.SplitArray(c.Input[1])
+		if err != nil {
+			return fmt.Errorf("%s is not a valid list", c.Input[0])
+		}
+		l3, err := goutils.SplitArray(c.Output)
+		if err != nil {
+			return fmt.Errorf("%s is not a valid list", c.Input[0])
+		}
+		if l1.Len() != len(l2) || l1.Len() != len(l3) {
+			return fmt.Errorf("Input and output should have the same length")
+		}
+		return nil
+	}
+
+	resultType := q.MetaData.ResultType()
+	if len(c.Input) != narg {
+		return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
+	}
+	for j, arg := range c.Input {
+		tp := q.MetaData.Params[j].Type
+		if _, err := deserialize(tp, arg); err != nil {
+			return fmt.Errorf("cannot parse %s as %s", arg, tp)
+		}
+	}
+	if _, err := deserialize(resultType, c.Output); err != nil {
+		return fmt.Errorf("cannot parse %s as %s", c.Output, resultType)
+	}
+	return nil
+}
+
+func (c *TestCase) InputString() string {
 	return utils.EnsureTrailingNewline(strings.Join(c.Input, "\n"))
 }
 
 type TestCases struct {
-	Cases      []TestCase
 	TargetCase int
+	Cases      []TestCase
+	Question   *leetcode.QuestionData
 }
 
 func (tc *TestCases) AddCase(c TestCase) {
@@ -126,64 +176,27 @@ func (tc *TestCases) String() string {
 	return buf.String()
 }
 
-func CheckTestCases(q *leetcode.QuestionData, tc TestCases) error {
+func (tc *TestCases) Check() error {
+	q := tc.Question
 	err := q.Fulfill()
 	if err != nil {
 		return fmt.Errorf("failed to get question data: %w", err)
 	}
 
-	narg := q.MetaData.NArg()
-	if q.MetaData.SystemDesign {
-		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
-		// different types. We just check if it's a valid list.
-		// input:
-		// ["LRUCache","put","put","get","put","get","put","get","get","get"]
-		// [[2],[1,1],[2,2],[1],[3,3],[2],[4,4],[1],[3],[4]]
-		// output:
-		// [null,null,null,1,null,-1,null,-1,3,4]
-		for _, c := range tc.Cases {
-			if len(c.Input) != narg {
-				return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
-			}
-			l1, err := deserialize("[]string", c.Input[0])
-			if err != nil {
-				return fmt.Errorf("cannot parse %s as []string", c.Input[0])
-			}
-			l2, err := goutils.SplitArray(c.Input[1])
-			if err != nil {
-				return fmt.Errorf("%s is not a valid list", c.Input[0])
-			}
-			l3, err := goutils.SplitArray(c.Output)
-			if err != nil {
-				return fmt.Errorf("%s is not a valid list", c.Input[0])
-			}
-			if l1.Len() != len(l2) || l1.Len() != len(l3) {
-				return fmt.Errorf("Input and output should have the same length")
-			}
-		}
-		return nil
+	if tc.TargetCase < 0 || tc.TargetCase >= len(tc.Cases) {
+		return fmt.Errorf("target_case %d is out of range", tc.TargetCase)
 	}
-
-	resultType := q.MetaData.ResultType()
-	for _, c := range tc.Cases {
-		if len(c.Input) != narg {
-			return fmt.Errorf("should have %d arguments, got %d", narg, len(c.Input))
-		}
-		for j, arg := range c.Input {
-			tp := q.MetaData.Params[j].Type
-			if _, err := deserialize(tp, arg); err != nil {
-				return fmt.Errorf("cannot parse %s as %s", arg, tp)
-			}
-		}
-		if _, err := deserialize(resultType, c.Output); err != nil {
-			return fmt.Errorf("cannot parse %s as %s", c.Output, resultType)
+	for i, c := range tc.Cases {
+		if err := c.Check(); err != nil {
+			return fmt.Errorf("case %d: %w", i, err)
 		}
 	}
 	return nil
 }
 
 func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) {
-	tc := TestCases{}
+	tc := TestCases{Question: q}
+
 	content, err := f.GetContent()
 	if err != nil {
 		return tc, err
@@ -213,9 +226,10 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 			if len(inputLines) > 0 && len(output) > 0 {
 				tc.Cases = append(
 					tc.Cases, TestCase{
-						No:     len(tc.Cases) + 1,
-						Input:  append([]string(nil), inputLines...),
-						Output: output,
+						Question: q,
+						No:       len(tc.Cases) + 1,
+						Input:    append([]string(nil), inputLines...),
+						Output:   output,
 					},
 				)
 				inputLines = inputLines[:0]
@@ -236,20 +250,18 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 	if len(inputLines) > 0 && len(output) > 0 {
 		tc.Cases = append(
 			tc.Cases, TestCase{
-				No:     len(tc.Cases) + 1,
-				Input:  append([]string(nil), inputLines...),
-				Output: output,
+				Question: q,
+				No:       len(tc.Cases) + 1,
+				Input:    append([]string(nil), inputLines...),
+				Output:   output,
 			},
 		)
-	}
-	if tc.TargetCase > len(tc.Cases) {
-		return tc, fmt.Errorf("invalid target_case: %d, maximum is %d", tc.TargetCase, len(tc.Cases))
 	}
 	if tc.TargetCase < 0 {
 		tc.TargetCase += len(tc.Cases) + 1
 	}
 
-	if err := CheckTestCases(q, tc); err != nil {
+	if err := tc.Check(); err != nil {
 		return tc, fmt.Errorf("invalid test case: %w", err)
 	}
 
