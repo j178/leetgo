@@ -465,7 +465,9 @@ func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename strin
 }
 
 func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
-	tmpl := `# [%s. %s](%s) (%s)
+	tmpl := `# [%s. %s][link] (%s)
+
+[link]: %s
 
 %s`
 	url := ""
@@ -478,8 +480,8 @@ func (l baseLang) generateDescriptionFile(q *leetcode.QuestionData, filename str
 		tmpl,
 		q.QuestionFrontendId,
 		q.GetTitle(),
-		url,
 		q.Difficulty,
+		url,
 		q.GetFormattedContent(),
 	)
 	return FileOutput{
