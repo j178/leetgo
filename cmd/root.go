@@ -44,13 +44,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		err = config.Load(cmd == initCmd)
-		if err != nil {
-			return fmt.Errorf(
-				"%w\nSeems like your configuration is not a valid YAML file, please paste your configuration to tools like https://www.yamllint.com/ to fix it.",
-				err,
-			)
-		}
-		return nil
+		return err
 	},
 }
 
@@ -89,9 +83,11 @@ func initCommands() {
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().StringP("lang", "l", "", "language of code to generate: cpp, go, python ...")
+	rootCmd.PersistentFlags().StringP("site", "s", "", "leetcode site: cn, us")
 	rootCmd.PersistentFlags().BoolP("yes", "y", false, "answer yes to all prompts")
 	rootCmd.InitDefaultHelpFlag()
 	_ = viper.BindPFlag("code.lang", rootCmd.PersistentFlags().Lookup("lang"))
+	_ = viper.BindPFlag("leetcode.site", rootCmd.PersistentFlags().Lookup("site"))
 	_ = viper.BindPFlag("yes", rootCmd.PersistentFlags().Lookup("yes"))
 
 	commands := []*cobra.Command{
