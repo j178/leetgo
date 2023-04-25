@@ -248,13 +248,19 @@ func Get() *Config {
 
 func verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
-		return fmt.Errorf("invalid language: %s", c.Language)
+		return fmt.Errorf("invalid `language` value: %s", c.Language)
 	}
 	if c.Code.Lang == "" {
-		return fmt.Errorf("code.lang is empty")
+		return fmt.Errorf("`code.lang` is empty")
+	}
+	switch strings.ToLower(string(c.LeetCode.Site)) {
+	case "cn":
+		c.LeetCode.Site = LeetCodeCN
+	case "us":
+		c.LeetCode.Site = LeetCodeUS
 	}
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
-		return fmt.Errorf("invalid leetcode.site: %s", c.LeetCode.Site)
+		return fmt.Errorf("invalid `leetcode.site` value: %s", c.LeetCode.Site)
 	}
 	credentialFrom := map[string]bool{
 		"browser":  true,
@@ -263,15 +269,15 @@ func verify(c *Config) error {
 		"none":     true,
 	}
 	if !credentialFrom[c.LeetCode.Credentials.From] {
-		return fmt.Errorf("invalid leetcode.credentials.from: %s", c.LeetCode.Credentials.From)
+		return fmt.Errorf("invalid `leetcode.credentials.from` value: %s", c.LeetCode.Credentials.From)
 	}
 
 	if c.LeetCode.Credentials.From == "cookies" {
 		if c.LeetCode.Credentials.Session == "" {
-			return fmt.Errorf("leetcode.credentials.session is empty")
+			return fmt.Errorf("`leetcode.credentials.session` is empty")
 		}
 		if c.LeetCode.Credentials.CsrfToken == "" {
-			return fmt.Errorf("leetcode.credentials.csrftoken is empty")
+			return fmt.Errorf("`leetcode.credentials.csrftoken` is empty")
 		}
 	}
 
@@ -280,10 +286,10 @@ func verify(c *Config) error {
 			return fmt.Errorf("username/password authentication is not supported for leetcode.com")
 		}
 		if c.LeetCode.Credentials.Username == "" {
-			return fmt.Errorf("leetcode.credentials.username is empty")
+			return fmt.Errorf("`leetcode.credentials.username` is empty")
 		}
 		if c.LeetCode.Credentials.Password == "" {
-			return fmt.Errorf("leetcode.credentials.password is empty")
+			return fmt.Errorf("`leetcode.credentials.password` is empty")
 		}
 		if !strings.HasPrefix(
 			c.LeetCode.Credentials.Password,
@@ -307,10 +313,6 @@ func verify(c *Config) error {
 func Load(init bool) error {
 	if globalCfg != nil {
 		return nil
-	}
-	// Convenient way to switch site during development
-	if err := viper.BindEnv("leetcode.site", "LEETGO_SITE"); err != nil {
-		return err
 	}
 
 	// load global configuration
@@ -352,10 +354,11 @@ func Load(init bool) error {
 
 	err = viper.Unmarshal(cfg)
 	if err != nil {
-		return fmt.Errorf("config file is invalid: %s", err)
+		return fmt.Errorf("unmarshal config failed: %s", err)
 	}
+
 	if err = verify(cfg); err != nil {
-		return fmt.Errorf("config file is invalid: %w", err)
+		return fmt.Errorf("verify config failed: %s", err)
 	}
 
 	globalCfg = cfg
