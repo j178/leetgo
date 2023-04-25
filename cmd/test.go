@@ -112,6 +112,13 @@ leetgo test w330/`,
 					log.Error("failed to submit solution", "question", q.TitleSlug, "err", err)
 				} else {
 					cmd.Print(result.Display(q))
+
+					if !result.Accepted() {
+						added, _ := appendToTestCases(q, result)
+						if added {
+							log.Info("added failed case to testcases.txt", "question", q.TitleSlug)
+						}
+					}
 				}
 			}
 		}
