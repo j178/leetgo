@@ -129,6 +129,7 @@ Available Commands:
 Flags:
   -v, --version       version for leetgo
   -l, --lang string   language of code to generate: cpp, go, python ...
+  -s, --site string   leetcode site: cn, us
   -y, --yes           answer yes to all prompts
   -h, --help          help for leetgo
 
