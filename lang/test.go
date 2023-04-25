@@ -92,6 +92,10 @@ type TestCase struct {
 
 func (c *TestCase) Check() error {
 	q := c.Question
+	err := q.Fulfill()
+	if err != nil {
+		return fmt.Errorf("failed to get question data: %w", err)
+	}
 	narg := q.MetaData.NArg()
 	if q.MetaData.SystemDesign {
 		// System design questions have two inputs, the first one is a list of strings, but the second is a list of
