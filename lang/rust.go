@@ -202,7 +202,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		}
 	}
 	prepareCode += fmt.Sprintf(
-		"\t#[warn(unused_mut)]\n\tlet mut obj = %s::new(%s);",
+		"\t#[allow(unused_mut)]\n\tlet mut obj = %s::new(%s);",
 		q.MetaData.ClassName,
 		formatCallArgs(paramTypes, paramNames),
 	)
@@ -240,7 +240,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 				toRustVarName(method.Name),
 				formatCallArgs(methodParamTypes, methodParamNames),
 			)
-			methodCall += "\t\t\t\toutput.push(\"null\");\n"
+			methodCall += "\t\t\t\toutput.push(\"null\".to_string());\n"
 		}
 		methodCall += "\t\t\t}\n"
 		callCode += methodCall
