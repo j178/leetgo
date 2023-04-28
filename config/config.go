@@ -194,7 +194,7 @@ func Default() *Config {
 		Code: CodeConfig{
 			Lang:                    "go",
 			FilenameTemplate:        `{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}`,
-			SeparateDescriptionFile: false,
+			SeparateDescriptionFile: true,
 			Modifiers: []Modifier{
 				{Name: "removeUselessComments"},
 			},

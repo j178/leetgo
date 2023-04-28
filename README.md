@@ -187,7 +187,7 @@ code:
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
   # Generate question description into a separate file
-  separate_description_file: false
+  separate_description_file: true
   # Functions that modify the generated code
   modifiers:
     - name: removeUselessComments
@@ -206,7 +206,7 @@ code:
     # Overrides the default code.filename_template
     filename_template: ""
     # Python executable to run the generated code
-    executable: python3
+    executable: python
   cpp:
     out_dir: cpp
     # Overrides the default code.filename_template
