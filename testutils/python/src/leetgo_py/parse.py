@@ -15,14 +15,14 @@ def split_array(s: str) -> List[str]:
 
 
 def serialize(val: Any) -> str:
-    if isinstance(val, int):
+    if isinstance(val, bool):
+        return "true" if val else "false"
+    elif isinstance(val, int):
         return str(val)
     elif isinstance(val, float):
         return str(val)
     elif isinstance(val, str):
         return '"' + val + '"'
-    elif isinstance(val, bool):
-        return "true" if val else "false"
     elif isinstance(val, list):
         return "[" + ",".join(serialize(v) for v in val) + "]"
     elif isinstance(val, (ListNode, TreeNode)):
