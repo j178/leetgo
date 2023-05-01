@@ -15,7 +15,7 @@ require (
 	github.com/charmbracelet/log v0.2.1
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230216180835-5937a312edda
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.15.0
 	github.com/goccy/go-json v0.10.2
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
@@ -27,6 +27,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
+	github.com/pelletier/go-toml/v2 v2.0.6
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sashabaranov/go-gpt3 v1.3.1
 	github.com/sosedoff/ansible-vault-go v0.1.1
@@ -75,7 +76,6 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.15.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
