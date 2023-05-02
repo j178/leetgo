@@ -45,35 +45,48 @@ func (j *sliceJudger) Judge(actual, expected string) bool {
 		return true
 	}
 
-	if j.ignoreOrder {
-		return j.compareIgnoringOrder(actual, expected)
+	a, _ := goutils.SplitArray(actual)
+	b, _ := goutils.SplitArray(expected)
+	if len(a) != len(b) {
+		return false
 	}
 
-	return false
+	if j.ignoreOrder {
+		return j.compareIgnoringOrder(a, b)
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // TODO improve the detection of "any order"
 func shouldIgnoreOrder(q *leetcode.QuestionData) bool {
 	content := q.GetEnglishContent()
 	content = strip.StripTags(content)
-	// nolint: gosimple
 	if strings.Contains(content, "return the answer in any order") {
+		return true
+	}
+
+	// try translated content
+	content = q.TranslatedContent
+	content = strip.StripTags(content)
+	// nolint: gosimple
+	if strings.Contains(content, "任意顺序返回答案") {
 		return true
 	}
 	return false
 }
 
-func (j *sliceJudger) compareIgnoringOrder(actual, expected string) bool {
-	a, _ := goutils.SplitArray(actual)
-	b, _ := goutils.SplitArray(expected)
-	if len(a) != len(b) {
-		return false
-	}
+func (j *sliceJudger) compareIgnoringOrder(actual, expected []string) bool {
 	cnt := map[string]int{}
-	for _, v := range a {
+	for _, v := range actual {
 		cnt[v]++
 	}
-	for _, v := range b {
+	for _, v := range expected {
 		cnt[v]--
 		if cnt[v] < 0 {
 			return false
