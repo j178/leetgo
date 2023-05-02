@@ -343,7 +343,17 @@ func (q *QuestionData) GetTitle() string {
 	return q.Title
 }
 
-func (q *QuestionData) GetContent() (string, config.Language) {
+func (q *QuestionData) GetEnglishContent() string {
+	if q.Content != "" && !strings.Contains(
+		q.Content,
+		"English description is not available for the problem.",
+	) {
+		return q.Content
+	}
+	return ""
+}
+
+func (q *QuestionData) GetPreferContent() (string, config.Language) {
 	if config.Get().Language == config.ZH && q.TranslatedContent != "" {
 		return q.TranslatedContent, config.ZH
 	}
@@ -357,7 +367,7 @@ func (q *QuestionData) GetContent() (string, config.Language) {
 }
 
 func (q *QuestionData) GetFormattedContent() string {
-	content, lang := q.GetContent()
+	content, lang := q.GetPreferContent()
 
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)

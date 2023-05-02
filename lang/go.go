@@ -69,7 +69,7 @@ func addMod(code string, q *leetcode.QuestionData) string {
 	if q.MetaData.SystemDesign {
 		return code
 	}
-	content, _ := q.GetContent()
+	content, _ := q.GetPreferContent()
 	if !needsMod(content) {
 		return code
 	}
@@ -251,7 +251,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 %s
 		}
 	}
-	fmt.Println("%s " + JoinArray(output))
+	fmt.Println("%s ", JoinArray(output))
 }
 `
 	var prepareCode string
