@@ -326,6 +326,8 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		return false, fmt.Errorf("no test cases found")
 	}
 
+	judger := GetJudger(q)
+
 	var ran, passed int
 	for _, c := range tc.Cases {
 		func() {
@@ -389,7 +391,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 
-			if judgeResult(q, actualOutput, c.Output) {
+			if judger.Judge(actualOutput, c.Output) {
 				passed++
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Accepted")))
 			} else {

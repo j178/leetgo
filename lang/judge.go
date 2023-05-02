@@ -3,11 +3,12 @@ package lang
 import (
 	"strings"
 
+	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/j178/leetgo/leetcode"
 	goutils "github.com/j178/leetgo/testutils/go"
 )
 
-type judger interface {
+type Judger interface {
 	Judge(actual, expected string) bool
 }
 
@@ -30,15 +31,20 @@ func stringCompare(actual, expected string) bool {
 }
 
 type sliceJudger struct {
-	q *leetcode.QuestionData
+	ignoreOrder bool
 }
 
-func (j sliceJudger) Judge(actual, expected string) bool {
+func newSliceJudger(q *leetcode.QuestionData) *sliceJudger {
+	ignoreOrder := shouldIgnoreOrder(q)
+	return &sliceJudger{ignoreOrder}
+}
+
+func (j *sliceJudger) Judge(actual, expected string) bool {
 	if actual == expected {
 		return true
 	}
 
-	if j.shouldIgnoreOrder() {
+	if j.ignoreOrder {
 		return j.compareIgnoringOrder(actual, expected)
 	}
 
@@ -46,16 +52,17 @@ func (j sliceJudger) Judge(actual, expected string) bool {
 }
 
 // TODO improve the detection of "any order"
-func (j sliceJudger) shouldIgnoreOrder() bool {
-	content := j.q.GetEnglishContent()
+func shouldIgnoreOrder(q *leetcode.QuestionData) bool {
+	content := q.GetEnglishContent()
+	content = strip.StripTags(content)
 	// nolint: gosimple
-	if strings.Contains(content, "return the answer in <strong>any order</strong>") {
+	if strings.Contains(content, "return the answer in any order") {
 		return true
 	}
 	return false
 }
 
-func (j sliceJudger) compareIgnoringOrder(actual, expected string) bool {
+func (j *sliceJudger) compareIgnoringOrder(actual, expected string) bool {
 	a, _ := goutils.SplitArray(actual)
 	b, _ := goutils.SplitArray(expected)
 	if len(a) != len(b) {
@@ -79,17 +86,17 @@ func (j sliceJudger) compareIgnoringOrder(actual, expected string) bool {
 	return true
 }
 
-func judgeResult(q *leetcode.QuestionData, actual, expected string) bool {
+func GetJudger(q *leetcode.QuestionData) Judger {
 	// TODO compare by question rules
 
-	var judger judger = judgeFunc(stringCompare)
+	var judger Judger = judgeFunc(stringCompare)
 	if q.MetaData.SystemDesign {
 		judger = &systemDesignJudger{q}
 	} else {
 		resultType := q.MetaData.ResultType()
 		if strings.HasSuffix(resultType, "[]") {
-			judger = &sliceJudger{q}
+			judger = newSliceJudger(q)
 		}
 	}
-	return judger.Judge(actual, expected)
+	return judger
 }
