@@ -396,7 +396,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	if lang == config.EN {
 		content = wordwrap.String(content, 100)
 	} else {
-		content = wrap.String(content, 60)
+		content = wrap.String(content, 100)
 	}
 	content = utils.CondenseEmptyLines(content)
 	content = utils.EnsureTrailingNewline(content)
