@@ -58,7 +58,7 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error
 	}
 	genResult.SetOutDir(outDir)
 
-	build := exec.Command("cargo", "build", "--bin", q.TitleSlug)
+	build := exec.Command("cargo", "build", "--quiet", "--bin", q.TitleSlug)
 	build.Dir = outDir
 	build.Stdout = os.Stdout
 	build.Stderr = os.Stderr
@@ -68,7 +68,7 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error
 		return false, fmt.Errorf("build failed: %w", err)
 	}
 
-	return runTest(q, genResult, []string{"cargo", "run", "--bin", q.TitleSlug}, outDir)
+	return runTest(q, genResult, []string{"cargo", "run", "--quiet", "--bin", q.TitleSlug}, outDir)
 }
 
 func toRustType(typeName string) string {
