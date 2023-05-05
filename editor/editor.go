@@ -141,9 +141,12 @@ func Open(result *lang.GenerateResult) error {
 
 func runCmd(command string, args []string, files ...string) error {
 	cmd := exec.Command(command, args...)
+	if log.GetLevel() <= log.DebugLevel {
+		log.Info("opening files", "command", cmd.String())
+	} else {
+		log.Info("opening files", "command", cmd.Path)
+	}
 	cmd.Args = append(cmd.Args, files...)
-	log.Info("running command", "command", cmd.Path)
-	log.Debug("command arguments", "arguments", cmd.Args)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
