@@ -54,7 +54,7 @@ type ContestConfig struct {
 type Editor struct {
 	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
 	Command string   `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
-	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command"`
+	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}}, {{.AllFiles}} will be replaced with corresponding file path"`
 }
 
 type Block struct {
