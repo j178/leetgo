@@ -256,7 +256,8 @@ editor:
   # Custom command to open files
   command: ""
   # Arguments to the command.
-  # String contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}}, {{.AllFiles}} will be replaced with corresponding file path
+  # String contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.
+  # {{.Files}} will be substituted with the list of all file paths.
   args: []
 ```
 <!-- END CONFIG -->
