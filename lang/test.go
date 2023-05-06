@@ -290,24 +290,34 @@ func ParseRange(expr string, max int) (*Range, error) {
 		case 1:
 			idx, err := strconv.Atoi(rangeParts[0])
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("invalid range: %s", part)
 			}
 			start, end = idx, idx
 		case 2:
 			var err error
-			start, err = strconv.Atoi(rangeParts[0])
-			if err != nil {
-				return nil, err
-			}
-			endStr := rangeParts[1]
-			if endStr == "" {
-				end = -1
-			} else {
-				end, err = strconv.Atoi(rangeParts[1])
+			// negative index
+			if rangeParts[0] == "" {
+				start, err = strconv.Atoi(part)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("invalid range: %s", part)
+				}
+				end = start
+			} else {
+				start, err = strconv.Atoi(rangeParts[0])
+				if err != nil {
+					return nil, fmt.Errorf("invalid range: %s", part)
+				}
+				endStr := rangeParts[1]
+				if endStr == "" {
+					end = -1
+				} else {
+					end, err = strconv.Atoi(rangeParts[1])
+					if err != nil {
+						return nil, fmt.Errorf("invalid range: %s", part)
+					}
 				}
 			}
+
 		default:
 			return nil, fmt.Errorf("invalid range: %s", part)
 		}
