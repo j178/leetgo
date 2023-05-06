@@ -277,7 +277,7 @@ func (r *Range) Contains(idx int) bool {
 func ParseRange(expr string, max int) (*Range, error) {
 	r := &Range{max: max}
 
-	if expr == "-" {
+	if expr == "" || expr == "-" {
 		r.whole = true
 		return r, nil
 	}

@@ -13,6 +13,7 @@ func TestParseRange(t *testing.T) {
 		{"1,2", 5, [][2]int{{1, 1}, {2, 2}}, false},
 		{"1,2,3", 5, [][2]int{{1, 1}, {2, 2}, {3, 3}}, false},
 		{"-", 5, [][2]int{}, true},
+		{"", 5, [][2]int{}, true},
 		{"-1", 5, [][2]int{{5, 5}}, false},
 		{"1-", 5, [][2]int{{1, 5}}, false},
 		{"1-2", 5, [][2]int{{1, 2}}, false},
@@ -54,6 +55,8 @@ func TestParseRange(t *testing.T) {
 		"100-1",
 		"1-2-3",
 		"error",
+		"----",
+		"1,,,2",
 	}
 	for _, c := range invalidCases {
 		_, err := ParseRange(c, 5)
