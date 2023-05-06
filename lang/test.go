@@ -20,7 +20,7 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
+func RunLocalTest(q *leetcode.QuestionData, targetCase string) (bool, error) {
 	cfg := config.Get()
 	gen, err := GetGenerator(cfg.Code.Lang)
 	if err != nil {
@@ -39,7 +39,7 @@ func RunLocalTest(q *leetcode.QuestionData) (bool, error) {
 		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
 	}
 
-	return tester.RunLocalTest(q, outDir)
+	return tester.RunLocalTest(q, outDir, targetCase)
 }
 
 // typeNameToType converts a Go type name to reflect.Type.
@@ -147,9 +147,8 @@ func (c *TestCase) InputString() string {
 }
 
 type TestCases struct {
-	TargetCase int
-	Cases      []TestCase
-	Question   *leetcode.QuestionData
+	Cases    []TestCase
+	Question *leetcode.QuestionData
 }
 
 func (tc *TestCases) AddCase(c TestCase) {
@@ -167,7 +166,6 @@ func (tc *TestCases) Contains(c TestCase) bool {
 
 func (tc *TestCases) String() string {
 	buf := new(bytes.Buffer)
-	_, _ = fmt.Fprintf(buf, "%s %d\n\n", testCaseTargetMark, tc.TargetCase)
 	for i, c := range tc.Cases {
 		_, _ = fmt.Fprintln(buf, testCaseInputMark)
 		_, _ = fmt.Fprint(buf, c.InputString())
@@ -185,10 +183,6 @@ func (tc *TestCases) Check() error {
 	err := q.Fulfill()
 	if err != nil {
 		return fmt.Errorf("failed to get question data: %w", err)
-	}
-
-	if tc.TargetCase < 0 || tc.TargetCase >= len(tc.Cases) {
-		return fmt.Errorf("target_case %d is out of range", tc.TargetCase)
 	}
 	for i, c := range tc.Cases {
 		if err := c.Check(); err != nil {
@@ -217,13 +211,6 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 		switch {
 		case line == "":
 			continue
-		case strings.HasPrefix(line, testCaseTargetMark):
-			no := strings.TrimSpace(line[len(testCaseTargetMark):])
-			targetCase, err := strconv.Atoi(no)
-			if err != nil {
-				return tc, fmt.Errorf("invalid target_case: %s is not valid number", no)
-			}
-			tc.TargetCase = targetCase
 		case strings.HasPrefix(line, testCaseInputMark):
 			inputStarted = true
 			outputStarted = false
@@ -261,15 +248,90 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 			},
 		)
 	}
-	if tc.TargetCase < 0 {
-		tc.TargetCase += len(tc.Cases) + 1
-	}
 
 	if err := tc.Check(); err != nil {
 		return tc, fmt.Errorf("invalid test case: %w", err)
 	}
 
 	return tc, nil
+}
+
+type Range struct {
+	whole  bool
+	max    int
+	ranges [][2]int
+}
+
+func (r *Range) Contains(idx int) bool {
+	if r.whole {
+		return true
+	}
+	for _, rg := range r.ranges {
+		if idx >= rg[0] && idx <= rg[1] {
+			return true
+		}
+	}
+	return false
+}
+
+func ParseRange(expr string, max int) (*Range, error) {
+	r := &Range{max: max}
+
+	// empty or 0 means whole range
+	if expr == "-" {
+		r.whole = true
+		return r, nil
+	}
+
+	parts := strings.Split(expr, ",")
+	for _, part := range parts {
+		var start, end int
+		rangeParts := strings.SplitN(part, "-", 2)
+		switch len(rangeParts) {
+		case 1:
+			idx, err := strconv.Atoi(rangeParts[0])
+			if err != nil {
+				return nil, err
+			}
+			start, end = idx, idx
+		case 2:
+			var err error
+			start, err = strconv.Atoi(rangeParts[0])
+			if err != nil {
+				return nil, err
+			}
+			endStr := rangeParts[1]
+			if endStr == "" {
+				end = -1
+			} else {
+				end, err = strconv.Atoi(rangeParts[1])
+				if err != nil {
+					return nil, err
+				}
+			}
+		default:
+			return nil, fmt.Errorf("invalid range: %s", part)
+		}
+
+		if start < 0 {
+			start = max + start + 1
+		}
+		if end < 0 {
+			end = max + end + 1
+		}
+		if start <= 0 || start > max {
+			return nil, fmt.Errorf("invalid range: %s", part)
+		}
+		if end <= 0 || end > max {
+			return nil, fmt.Errorf("invalid range: %s", part)
+		}
+		if start > end {
+			return nil, fmt.Errorf("invalid range: %s", part)
+		}
+		r.ranges = append(r.ranges, [2]int{start, end})
+	}
+
+	return r, nil
 }
 
 func extractOutput(s string) (string, string) {
@@ -313,7 +375,7 @@ var (
 	stdoutStyle  = lipgloss.NewStyle().Faint(true)
 )
 
-func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, outDir string) (bool, error) {
+func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, targetCaseStr string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)
 	if testcaseFile == nil {
 		panic("no test cases file generated")
@@ -324,6 +386,10 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	}
 	if len(tc.Cases) == 0 {
 		return false, fmt.Errorf("no test cases found")
+	}
+	caseRange, err := ParseRange(targetCaseStr, len(tc.Cases))
+	if err != nil {
+		return false, err
 	}
 
 	judger := GetJudger(q)
@@ -336,7 +402,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			defer func() {
 				fmt.Println(l.Render())
 			}()
-			if tc.TargetCase != 0 && c.No != tc.TargetCase {
+			if !caseRange.Contains(c.No) {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, skippedStyle.Render("Skipped")))
 				return
 			}
@@ -346,7 +412,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 
 			outputBuf := new(bytes.Buffer)
 			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-			cmd.Dir = outDir
+			cmd.Dir = genResult.OutDir
 			cmd.Stdin = strings.NewReader(c.InputString())
 			cmd.Stdout = outputBuf
 			cmd.Stderr = outputBuf

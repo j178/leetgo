@@ -317,7 +317,7 @@ using namespace std;
 	}, nil
 }
 
-func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
 	genResult, err := c.GeneratePaths(q)
 	if err != nil {
 		return false, fmt.Errorf("generate paths failed: %w", err)
@@ -345,7 +345,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error)
 		return false, fmt.Errorf("compilation failed: %w", err)
 	}
 
-	return runTest(q, genResult, []string{execFile}, outDir)
+	return runTest(q, genResult, []string{execFile}, targetCase)
 }
 
 func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {

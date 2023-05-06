@@ -51,7 +51,7 @@ func (r rust) Initialize(outDir string) error {
 	return nil
 }
 
-func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
 	genResult, err := r.GeneratePaths(q)
 	if err != nil {
 		return false, fmt.Errorf("generate paths failed: %w", err)
@@ -68,7 +68,7 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error
 		return false, fmt.Errorf("build failed: %w", err)
 	}
 
-	return runTest(q, genResult, []string{"cargo", "run", "--quiet", "--bin", q.TitleSlug}, outDir)
+	return runTest(q, genResult, []string{"cargo", "run", "--quiet", "--bin", q.TitleSlug}, targetCase)
 }
 
 func toRustType(typeName string) string {

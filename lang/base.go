@@ -22,7 +22,6 @@ import (
 const (
 	testCaseInputMark  = "input:"
 	testCaseOutputMark = "output:"
-	testCaseTargetMark = "target_case:"
 )
 
 type GenerateResult struct {
@@ -106,7 +105,7 @@ type NeedInitialization interface {
 }
 
 type LocalTestable interface {
-	RunLocalTest(q *leetcode.QuestionData, dir string) (bool, error)
+	RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error)
 }
 
 func getCodeStringConfig(lang Lang, key string) string {
@@ -441,22 +440,21 @@ func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 	argsNum := q.MetaData.NArg()
 
 	// Assume all questions output are single.
-	var caseAndOutputs []string
+	var tc TestCases
 	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
-		input := strings.Join(cases[i:i+argsNum], "\n")
-		caseAndOutputs = append(
-			caseAndOutputs,
-			fmt.Sprintf("%s\n%s\n%s\n%s", testCaseInputMark, input, testCaseOutputMark, outputs[i/argsNum]),
+		tc.Cases = append(
+			tc.Cases, TestCase{
+				No:     i/argsNum + 1,
+				Input:  cases[i : i+argsNum],
+				Output: outputs[i/argsNum],
+			},
 		)
 	}
-	content := strings.Join(caseAndOutputs, "\n\n")
-	content = utils.EnsureTrailingNewline(content)
-	return content
+	return tc.String()
 }
 
 func (l baseLang) generateTestCasesFile(q *leetcode.QuestionData, filename string) (FileOutput, error) {
 	content := l.generateTestCasesContent(q)
-	content = fmt.Sprintf("%s 0\n\n", testCaseTargetMark) + content
 	return FileOutput{
 		Filename: filename,
 		Content:  content,
