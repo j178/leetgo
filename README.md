@@ -205,7 +205,7 @@ code:
     out_dir: python
     # Overrides the default code.filename_template
     filename_template: ""
-    # Python executable to run the generated code
+    # Python executable that creates the venv
     executable: python3
   cpp:
     out_dir: cpp

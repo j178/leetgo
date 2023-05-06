@@ -95,7 +95,7 @@ type GoConfig struct {
 
 type PythonConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable to run the generated code"`
+	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable that creates the venv"`
 }
 
 type CppConfig struct {
