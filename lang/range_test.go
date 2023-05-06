@@ -22,6 +22,8 @@ func TestParseRange(t *testing.T) {
 		{"1-2,3-,5", 5, [][2]int{{1, 2}, {3, 5}, {5, 5}}, false},
 		{"1-2,3,4-5", 5, [][2]int{{1, 2}, {3, 3}, {4, 5}}, false},
 		{"1--1", 5, [][2]int{{1, 5}}, false},
+		{"-1-5", 5, [][2]int{{5, 5}}, false},
+		{"-2--1", 5, [][2]int{{4, 5}}, false},
 	}
 	for _, c := range cases {
 		r, err := ParseRange(c.input, c.max)
@@ -57,6 +59,10 @@ func TestParseRange(t *testing.T) {
 		"error",
 		"----",
 		"1,,,2",
+		"-1--2",
+		"--1",
+		"--1-2",
+		"--1--2",
 	}
 	for _, c := range invalidCases {
 		_, err := ParseRange(c, 5)

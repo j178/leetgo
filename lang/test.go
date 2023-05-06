@@ -285,6 +285,11 @@ func ParseRange(expr string, max int) (*Range, error) {
 	parts := strings.Split(expr, ",")
 	for _, part := range parts {
 		var start, end int
+		var startNegative bool
+		if strings.HasPrefix(part, "-") {
+			startNegative = true
+			part = part[1:]
+		}
 		rangeParts := strings.SplitN(part, "-", 2)
 		switch len(rangeParts) {
 		case 1:
@@ -292,32 +297,34 @@ func ParseRange(expr string, max int) (*Range, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid range: %s", part)
 			}
+			if startNegative && idx < 0 {
+				return nil, fmt.Errorf("invalid range: %s", part)
+			}
+			if startNegative {
+				idx = -idx
+			}
 			start, end = idx, idx
 		case 2:
 			var err error
-			// negative index
-			if rangeParts[0] == "" {
-				start, err = strconv.Atoi(part)
-				if err != nil {
-					return nil, fmt.Errorf("invalid range: %s", part)
-				}
-				end = start
+			start, err = strconv.Atoi(rangeParts[0])
+			if err != nil {
+				return nil, fmt.Errorf("invalid range: %s", part)
+			}
+			if startNegative && start < 0 {
+				return nil, fmt.Errorf("invalid range: %s", part)
+			}
+			if startNegative {
+				start = -start
+			}
+			endStr := rangeParts[1]
+			if endStr == "" {
+				end = -1
 			} else {
-				start, err = strconv.Atoi(rangeParts[0])
+				end, err = strconv.Atoi(rangeParts[1])
 				if err != nil {
 					return nil, fmt.Errorf("invalid range: %s", part)
-				}
-				endStr := rangeParts[1]
-				if endStr == "" {
-					end = -1
-				} else {
-					end, err = strconv.Atoi(rangeParts[1])
-					if err != nil {
-						return nil, fmt.Errorf("invalid range: %s", part)
-					}
 				}
 			}
-
 		default:
 			return nil, fmt.Errorf("invalid range: %s", part)
 		}
