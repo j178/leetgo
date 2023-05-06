@@ -54,7 +54,7 @@ type ContestConfig struct {
 type Editor struct {
 	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
 	Command string   `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
-	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command"`
+	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.\n{{.Files}} will be substituted with the list of all file paths."`
 }
 
 type Block struct {
@@ -83,7 +83,7 @@ type CodeConfig struct {
 
 type BaseLangConfig struct {
 	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir"`
-	FilenameTemplate        string     `yaml:"filename_template" mapstructure:"filename_template" comment:"Overrides the default code.filename_template"`
+	FilenameTemplate        string     `yaml:"filename_template,omitempty" mapstructure:"filename_template" comment:"Overrides the default code.filename_template, empty will be ignored"`
 	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
 	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
 	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
@@ -95,7 +95,7 @@ type GoConfig struct {
 
 type PythonConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable to run the generated code"`
+	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable that creates the venv"`
 }
 
 type CppConfig struct {

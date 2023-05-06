@@ -1,9 +1,12 @@
 package editor
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+	"text/template"
 
 	"github.com/charmbracelet/log"
 
@@ -16,28 +19,19 @@ type Opener interface {
 	Open(result *lang.GenerateResult) error
 }
 
-type MultiOpener interface {
-	Opener
-	OpenMulti(result *lang.GenerateResult) error
-}
+const specialAllFiles = "{{.Files}}"
 
-var editors = map[string]Opener{
-	"none":   &noneEditor{},
-	"custom": &customEditor{},
-	"vim": &commonMultiEditor{
-		commonEditor{
-			command: "vim",
-			args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker)},
-		},
+var knownEditors = map[string]Opener{
+	"none": &noneEditor{},
+	"vim": &editor{
+		command: "vim",
+		args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker), specialAllFiles},
 	},
-	"neovim": &commonMultiEditor{
-		commonEditor{
-			command: "nvim",
-			args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker)},
-		},
+	"neovim": &editor{
+		command: "nvim",
+		args:    []string{"-p", fmt.Sprintf("+/%s", constants.CodeBeginMarker), specialAllFiles},
 	},
-	"vscode": &commonMultiEditor{commonEditor{command: "code"}},
-	"goland": &commonEditor{command: "goland"},
+	"vscode": &editor{command: "code", args: []string{specialAllFiles}},
 }
 
 type noneEditor struct{}
@@ -47,53 +41,87 @@ func (e *noneEditor) Open(result *lang.GenerateResult) error {
 	return nil
 }
 
-type commonEditor struct {
+type editor struct {
 	command string
 	args    []string
 }
 
-func (e *commonEditor) Open(result *lang.GenerateResult) error {
-	log.Info("opening file", "command", e.command)
-	return runCmd(e.command, e.args, result.GetFile(lang.CodeFile).GetPath())
-}
-
-type commonMultiEditor struct {
-	commonEditor
-}
-
-func (e *commonMultiEditor) OpenMulti(result *lang.GenerateResult) error {
-	paths := make([]string, 0, len(result.Files))
-	for _, f := range result.Files {
-		paths = append(paths, f.GetPath())
+func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
+	getPath := func(fileType lang.FileType) string {
+		f := result.GetFile(fileType)
+		if f == nil {
+			return ""
+		}
+		return f.GetPath()
 	}
-	log.Info("opening files", "command", e.command)
-	return runCmd(e.command, e.args, paths...)
+
+	data := struct {
+		Files           string
+		CodeFile        string
+		TestFile        string
+		DescriptionFile string
+		TestCasesFile   string
+	}{
+		Files:           specialAllFiles,
+		CodeFile:        getPath(lang.CodeFile),
+		TestFile:        getPath(lang.TestFile),
+		DescriptionFile: getPath(lang.DocFile),
+		TestCasesFile:   getPath(lang.TestCasesFile),
+	}
+
+	for i, arg := range ed.args {
+		if !strings.Contains(arg, "{{") {
+			continue
+		}
+
+		tmpl := template.New("")
+		_, err := tmpl.Parse(arg)
+		if err != nil {
+			return err
+		}
+		var s bytes.Buffer
+		err = tmpl.Execute(&s, data)
+		if err != nil {
+			return err
+		}
+		ed.args[i] = s.String()
+	}
+
+	// replace the special marker with all files
+	for i, arg := range ed.args {
+		if arg == specialAllFiles {
+			allFiles := make([]string, 0, len(result.Files))
+			for _, f := range result.Files {
+				allFiles = append(allFiles, f.GetPath())
+			}
+			ed.args = append(ed.args[:i], append(allFiles, ed.args[i+1:]...)...)
+			break
+		}
+	}
+
+	return nil
 }
 
-type customEditor struct{}
-
-func (e *customEditor) Open(result *lang.GenerateResult) error {
-	cfg := config.Get()
-	if cfg.Editor.Command == "" {
-		log.Warn("editor.command is empty, skip opening files")
-		return nil
+func (ed *editor) Open(result *lang.GenerateResult) error {
+	err := ed.substituteArgs(result)
+	if err != nil {
+		return fmt.Errorf("invalid editor command: %w", err)
 	}
-	log.Info("opening files", "command", cfg.Editor.Command)
-	return runCmd(cfg.Editor.Command, cfg.Editor.Args, result.GetFile(lang.CodeFile).GetPath())
+	return runCmd(ed.command, ed.args, result.OutDir)
 }
 
 func Get(s string) Opener {
-	return editors[s]
+	if s == "custom" {
+		cfg := config.Get()
+		return &editor{
+			command: cfg.Editor.Command,
+			args:    cfg.Editor.Args,
+		}
+	}
+	return knownEditors[s]
 }
 
 func Open(result *lang.GenerateResult) error {
-	if len(result.Files) == 0 {
-		return nil
-	}
-	if result.GetFile(lang.CodeFile) == nil {
-		return fmt.Errorf("no code file found")
-	}
-
 	cfg := config.Get()
 	ed := Get(cfg.Editor.Use)
 	if ed == nil {
@@ -102,15 +130,17 @@ func Open(result *lang.GenerateResult) error {
 			cfg.Editor.Use,
 		)
 	}
-	if ed, ok := ed.(MultiOpener); ok {
-		return ed.OpenMulti(result)
-	}
 	return ed.Open(result)
 }
 
-func runCmd(command string, args []string, files ...string) error {
+func runCmd(command string, args []string, dir string) error {
 	cmd := exec.Command(command, args...)
-	cmd.Args = append(cmd.Args, files...)
+	if log.GetLevel() <= log.DebugLevel {
+		log.Info("opening files", "command", cmd.String())
+	} else {
+		log.Info("opening files", "command", cmd.Path)
+	}
+	cmd.Dir = dir
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

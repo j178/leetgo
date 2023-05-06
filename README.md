@@ -193,8 +193,6 @@ code:
     - name: removeUselessComments
   go:
     out_dir: go
-    # Overrides the default code.filename_template
-    filename_template: ""
     # Functions that modify the generated code
     modifiers:
       - name: removeUselessComments
@@ -203,14 +201,10 @@ code:
       - name: addMod
   python3:
     out_dir: python
-    # Overrides the default code.filename_template
-    filename_template: ""
-    # Python executable to run the generated code
+    # Python executable that creates the venv
     executable: python3
   cpp:
     out_dir: cpp
-    # Overrides the default code.filename_template
-    filename_template: ""
     # C++ compiler
     cxx: g++
     # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
@@ -219,12 +213,8 @@ code:
       - -std=c++17
   rust:
     out_dir: rust
-    # Overrides the default code.filename_template
-    filename_template: ""
   java:
     out_dir: java
-    # Overrides the default code.filename_template
-    filename_template: ""
 # LeetCode configuration
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
@@ -255,7 +245,9 @@ editor:
   use: none
   # Custom command to open files
   command: ""
-  # Arguments to the command
+  # Arguments to the command.
+  # String contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.
+  # {{.Files}} will be substituted with the list of all file paths.
   args: []
 ```
 <!-- END CONFIG -->
