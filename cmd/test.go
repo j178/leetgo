@@ -22,6 +22,7 @@ var (
 	runBoth     bool
 	autoSubmit  bool
 	customCases []string
+	targetCase  string
 )
 
 func init() {
@@ -41,6 +42,7 @@ func init() {
 	)
 	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "additional test cases for remote test")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
+	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
 }
 
 var testCmd = &cobra.Command{
@@ -89,7 +91,7 @@ leetgo test w330/`,
 			localPassed, remotePassed := true, true
 			if runLocally {
 				log.Info("running test locally", "question", q.TitleSlug)
-				localPassed, err = lang.RunLocalTest(q)
+				localPassed, err = lang.RunLocalTest(q, targetCase)
 				if err != nil {
 					log.Error("failed to run test locally", "question", q.TitleSlug, "err", err)
 				}

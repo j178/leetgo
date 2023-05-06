@@ -138,7 +138,7 @@ func (g golang) Initialize(outDir string) error {
 	return err
 }
 
-func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
 	genResult, err := g.GeneratePaths(q)
 	if err != nil {
 		return false, fmt.Errorf("generate paths failed: %w", err)
@@ -161,7 +161,7 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 		return false, fmt.Errorf("build failed: %w", err)
 	}
 
-	return runTest(q, genResult, []string{execFile}, outDir)
+	return runTest(q, genResult, []string{execFile}, targetCase)
 }
 
 // toGoType converts LeetCode type name to Go type name.

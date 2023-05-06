@@ -73,7 +73,7 @@ func (p python) HasInitialized(outDir string) (bool, error) {
 	return utils.IsExist(path.Join(outDir, ".venv")), nil
 }
 
-func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, error) {
+func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
 	genResult, err := p.GeneratePaths(q)
 	if err != nil {
 		return false, err
@@ -82,7 +82,7 @@ func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string) (bool, err
 
 	testFile := genResult.GetFile(TestFile).GetPath()
 	cmd := []string{path.Join(outDir, ".venv", constants.VenvPython), testFile}
-	return runTest(q, genResult, cmd, outDir)
+	return runTest(q, genResult, cmd, targetCase)
 }
 
 func toPythonType(typeName string) string {
