@@ -187,7 +187,7 @@ code:
     - name: removeUselessComments
   go:
     out_dir: go
-    # Overrides the default code.filename_template
+    # Overrides the default code.filename_template, empty will be ignored
     filename_template: ""
     # Functions that modify the generated code
     modifiers:
@@ -197,13 +197,13 @@ code:
       - name: addMod
   python3:
     out_dir: python
-    # Overrides the default code.filename_template
+    # Overrides the default code.filename_template, empty will be ignored
     filename_template: ""
     # Python executable that creates the venv
     executable: python3
   cpp:
     out_dir: cpp
-    # Overrides the default code.filename_template
+    # Overrides the default code.filename_template, empty will be ignored
     filename_template: ""
     # C++ compiler
     cxx: g++
@@ -213,11 +213,11 @@ code:
       - -std=c++17
   rust:
     out_dir: rust
-    # Overrides the default code.filename_template
+    # Overrides the default code.filename_template, empty will be ignored
     filename_template: ""
   java:
     out_dir: java
-    # Overrides the default code.filename_template
+    # Overrides the default code.filename_template, empty will be ignored
     filename_template: ""
 # LeetCode configuration
 leetcode:
