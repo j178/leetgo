@@ -2,7 +2,6 @@ package editor
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,7 +19,7 @@ type Opener interface {
 	Open(result *lang.GenerateResult) error
 }
 
-const specialAllFiles = "{{.AllFiles}}"
+const specialAllFiles = "{{.Files}}"
 
 var knownEditors = map[string]Opener{
 	"none": &noneEditor{},
@@ -56,15 +55,14 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
 		return f.GetPath()
 	}
 
-	const replaceWithAllFiles = "__all_files__"
 	data := struct {
-		AllFiles        string
+		Files           string
 		CodeFile        string
 		TestFile        string
 		DescriptionFile string
 		TestCasesFile   string
 	}{
-		AllFiles:        replaceWithAllFiles,
+		Files:           specialAllFiles,
 		CodeFile:        getPath(lang.CodeFile),
 		TestFile:        getPath(lang.TestFile),
 		DescriptionFile: getPath(lang.DocFile),
@@ -91,7 +89,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
 
 	// replace the special marker with all files
 	for i, arg := range ed.args {
-		if arg == replaceWithAllFiles {
+		if arg == specialAllFiles {
 			allFiles := make([]string, 0, len(result.Files))
 			for _, f := range result.Files {
 				allFiles = append(allFiles, f.GetPath())
@@ -109,7 +107,7 @@ func (ed *editor) Open(result *lang.GenerateResult) error {
 	if err != nil {
 		return fmt.Errorf("invalid editor command: %w", err)
 	}
-	return runCmd(ed.command, ed.args)
+	return runCmd(ed.command, ed.args, result.OutDir)
 }
 
 func Get(s string) Opener {
@@ -124,10 +122,6 @@ func Get(s string) Opener {
 }
 
 func Open(result *lang.GenerateResult) error {
-	if result.GetFile(lang.CodeFile) == nil {
-		return errors.New("no code file found, skip opening")
-	}
-
 	cfg := config.Get()
 	ed := Get(cfg.Editor.Use)
 	if ed == nil {
@@ -139,14 +133,14 @@ func Open(result *lang.GenerateResult) error {
 	return ed.Open(result)
 }
 
-func runCmd(command string, args []string, files ...string) error {
+func runCmd(command string, args []string, dir string) error {
 	cmd := exec.Command(command, args...)
 	if log.GetLevel() <= log.DebugLevel {
 		log.Info("opening files", "command", cmd.String())
 	} else {
 		log.Info("opening files", "command", cmd.Path)
 	}
-	cmd.Args = append(cmd.Args, files...)
+	cmd.Dir = dir
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
