@@ -57,8 +57,9 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 }
 
 type MetaDataParam struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	HelperParam bool   // Whether this param is a helper param.
 }
 
 type MetaDataReturn struct {
@@ -297,6 +298,21 @@ type QuestionData struct {
 	ExampleTestcaseList  []string             `json:"exampleTestcaseList"`
 	MetaData             MetaData             `json:"metaData"`
 	CodeSnippets         []CodeSnippet        `json:"codeSnippets"`
+}
+
+type questionDataNoMethods QuestionData
+
+func (q *QuestionData) UnmarshalJSON(data []byte) error {
+	err := json.Unmarshal(data, (*questionDataNoMethods)(q))
+	if err != nil {
+		return err
+	}
+
+	if md, ok := metadataFix[q.TitleSlug]; ok {
+		q.MetaData = md
+	}
+
+	return nil
 }
 
 func (q *QuestionData) Url() string {

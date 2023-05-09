@@ -1,15 +1,15 @@
 name: CI
 on:
-  - push
-  - pull_request
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 permissions:
   contents: read
 jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
-    # Prevent duplicate builds on internal PRs.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4

@@ -210,7 +210,9 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			param.Name,
 			toGoType(param.Type),
 		)
-		paramNames = append(paramNames, param.Name)
+		if !param.HelperParam {
+			paramNames = append(paramNames, param.Name)
+		}
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
