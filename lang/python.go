@@ -116,6 +116,7 @@ func toPythonType(typeName string) string {
 func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `if __name__ == "__main__":
 %s
+	print("\n%s", serialize(ans))
 `
 	code := ""
 	paramNames := make([]string, 0, len(q.MetaData.Params))
@@ -147,12 +148,8 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tans = %s\n", ansName)
 	}
-	code += fmt.Sprintf(
-		"\tprint(\"%s\", serialize(ans))",
-		testCaseOutputMark,
-	)
 
-	testContent := fmt.Sprintf(template, code)
+	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
 	return testContent, nil
 }
 
@@ -168,7 +165,7 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		match ops[i]:
 %s
 
-	print("%s " + join_array(output))
+	print("\n%s", join_array(output))
 `
 	var prepareCode string
 	paramNames := make([]string, 0, len(q.MetaData.Constructor.Params))
