@@ -14,6 +14,12 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
+var flagFull bool
+
+func init() {
+	infoCmd.Flags().BoolVarP(&flagFull, "full", "f", false, "show full question info")
+}
+
 var infoCmd = &cobra.Command{
 	Use:     "info qid...",
 	Short:   "Show question info",
@@ -65,7 +71,9 @@ var infoCmd = &cobra.Command{
 					fmt.Sprintf("%s/%s %s", q.Stats.TotalAccepted, q.Stats.TotalSubmission, q.Stats.ACRate),
 				},
 			)
-			w.AppendRow(table.Row{"Content", q.GetFormattedContent()})
+			if flagFull {
+				w.AppendRow(table.Row{"Content", q.GetFormattedContent()})
+			}
 			for _, h := range q.Hints {
 				w.AppendRow(table.Row{"Hint", h})
 			}
