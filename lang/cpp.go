@@ -238,7 +238,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
 		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
-	printCode += fmt.Sprintf("\tcout << \"%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
+	printCode += fmt.Sprintf("\tcout << \"\n%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
 	return
 }
 

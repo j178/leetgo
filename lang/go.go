@@ -200,6 +200,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 	const template = `func main() {
 	stdin := bufio.NewReader(os.Stdin)
 %s
+	fmt.Println("\n%s", Serialize(ans))
 }
 `
 	code := ""
@@ -227,12 +228,8 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tans := %s\n", ansName)
 	}
-	code += fmt.Sprintf(
-		"\tfmt.Println(\"%s \" + Serialize(ans))",
-		testCaseOutputMark,
-	)
 
-	testContent := fmt.Sprintf(template, code)
+	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
 	return testContent, nil
 }
 
@@ -251,7 +248,7 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 %s
 		}
 	}
-	fmt.Println("%s ", JoinArray(output))
+	fmt.Println("\n%s", JoinArray(output))
 }
 `
 	var prepareCode string

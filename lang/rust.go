@@ -121,6 +121,7 @@ func formatCallArgs(argTypes, args []string) string {
 func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	const template = `fn main() -> Result<()> {
 %s
+	println!("\n%s {}", serialize(ans)?);
 	Ok(())
 }`
 	code := ""
@@ -154,12 +155,8 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
 		code += fmt.Sprintf("\tlet ans = %s;\n", ansName)
 	}
-	code += fmt.Sprintf(
-		"\n\tprintln!(\"%s {}\", serialize(ans)?);",
-		testCaseOutputMark,
-	)
 
-	testContent := fmt.Sprintf(template, code)
+	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
 	return testContent, nil
 }
 
@@ -179,7 +176,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		}
 	}
 
-	println!("%s {}", join_array(output));
+	println!("\n%s {}", join_array(output));
 	Ok(())
 }
 `
