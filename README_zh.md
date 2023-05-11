@@ -202,9 +202,7 @@ code:
     # C++ compiler
     cxx: g++
     # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
-    cxxflags:
-      - -O2
-      - -std=c++17
+    cxxflags: -O2 -std=c++17
   rust:
     out_dir: rust
   java:
@@ -242,7 +240,7 @@ editor:
   # Arguments to the command.
   # String contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.
   # {{.Files}} will be substituted with the list of all file paths.
-  args: []
+  args: ""
 ```
 <!-- END CONFIG -->
 
