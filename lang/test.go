@@ -121,7 +121,7 @@ func (c *TestCase) Check() error {
 			return fmt.Errorf("%s is not a valid list", c.Input[0])
 		}
 		if l1.Len() != len(l2) || l1.Len() != len(l3) {
-			return fmt.Errorf("Input and output should have the same length")
+			return fmt.Errorf("input and output should have the same length")
 		}
 		return nil
 	}
