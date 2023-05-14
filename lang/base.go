@@ -131,7 +131,7 @@ func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
 func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	cfg := config.Get()
 	if q.IsContest() {
-		return filepath.Join(cfg.ProjectRoot(), config.Get().Contest.OutDir)
+		return filepath.Join(cfg.ProjectRoot(), cfg.Contest.OutDir)
 	}
 	outDir := getCodeStringConfig(lang, "out_dir")
 	// If outDir is not set, use the language slug as the outDir.
