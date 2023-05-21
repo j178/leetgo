@@ -205,7 +205,7 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 		inputStarted  bool
 		outputStarted bool
 	)
-	lines := strings.Split(content, "\n")
+	lines := utils.SplitLines(content)
 	for _, line := range lines {
 		line := strings.TrimSpace(line)
 		switch {
@@ -353,7 +353,7 @@ func ParseRange(expr string, max int) (*Range, error) {
 func extractOutput(s string) (string, string) {
 	var output string
 	var others []string
-	for _, line := range strings.Split(s, "\n") {
+	for _, line := range utils.SplitLines(s) {
 		if strings.HasPrefix(line, testCaseOutputMark) {
 			// If there are multiple output lines, only the last one is used.
 			output = strings.TrimSpace(line[len(testCaseOutputMark):])

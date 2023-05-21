@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/hex"
 	"strings"
 	"unicode"
@@ -21,6 +22,15 @@ func StringToBytes(s string) []byte {
 			Cap int
 		}{s, len(s)},
 	))
+}
+
+func SplitLines(s string) []string {
+	r := bufio.NewScanner(strings.NewReader(s))
+	var lines []string
+	for r.Scan() {
+		lines = append(lines, r.Text())
+	}
+	return lines
 }
 
 // CondenseEmptyLines condenses multiple consecutive empty lines in a string to a single empty line,
