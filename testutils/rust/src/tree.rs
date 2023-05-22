@@ -17,17 +17,24 @@ pub struct TreeNode {
     pub right: TreeLink,
 }
 
+impl TreeNode {
+  #[inline]
+  pub fn new(val: i32) -> Self {
+    TreeNode {
+      val,
+      left: None,
+      right: None
+    }
+  }
+}
+
 #[macro_export]
 macro_rules! tree {
     () => {
         None
     };
     ($e:expr) => {
-        Some(Rc::new(RefCell::new(TreeNode {
-            val: $e,
-            left: None,
-            right: None,
-        })))
+        Some(Rc::new(RefCell::new(TreeNode::new($e))))
     };
 }
 
@@ -37,6 +44,12 @@ pub struct BinaryTree(TreeLink);
 impl From<BinaryTree> for TreeLink {
     fn from(tree: BinaryTree) -> Self {
         tree.0
+    }
+}
+
+impl From<TreeLink> for BinaryTree {
+    fn from(link: TreeLink) -> Self {
+        BinaryTree(link)
     }
 }
 
