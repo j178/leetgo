@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/charmbracelet/glamour"
@@ -94,8 +93,8 @@ const fixPrompt = `Given a LeetCode problem %s, the problem description below is
 I have written the following solution:
 %s
 
-Please identify any issues or inefficiencies in my code and to help me fix or improve it.
-I want you to only reply with pure code without <code> or markdown tags, and nothing else. Do not write explanations.
+Please identify any issues or inefficiencies in my code and to help me fix or improve it. DO NOT rewrite it.
+I want you to only reply with pure code without <code> or markdown tags, and nothing else. DO NOT write explanations.
 `
 
 var errNoFix = errors.New("no fix found")
@@ -123,8 +122,7 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 	spin.Start()
 	defer spin.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
+	ctx := context.Background()
 	resp, err := client.CreateChatCompletion(
 		ctx, gpt3.ChatCompletionRequest{
 			Model: gpt3.GPT3Dot5Turbo,

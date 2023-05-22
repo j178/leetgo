@@ -1,3 +1,7 @@
+run:
+  skip-dirs:
+    - out
+
 linters:
   enable:
     - gofumpt
