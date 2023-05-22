@@ -127,11 +127,12 @@ func getFilenameTemplate(q *leetcode.QuestionData, gen Lang) string {
 	return config.Get().Code.FilenameTemplate
 }
 
+// getOutDir returns the absolute path of the output directory for the question.
 func getOutDir(q *leetcode.QuestionData, lang Lang) string {
-	if q.IsContest() {
-		return config.Get().Contest.OutDir
-	}
 	cfg := config.Get()
+	if q.IsContest() {
+		return filepath.Join(cfg.ProjectRoot(), cfg.Contest.OutDir)
+	}
 	outDir := getCodeStringConfig(lang, "out_dir")
 	// If outDir is not set, use the language slug as the outDir.
 	if outDir == "" {

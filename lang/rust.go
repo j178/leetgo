@@ -143,7 +143,8 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
-			"\tlet ans = Solution::%s(%s);\n",
+			"\tlet ans: %s = Solution::%s(%s).into();\n",
+			toRustType(q.MetaData.Return.Type),
 			toRustVarName(q.MetaData.Name),
 			formatCallArgs(paramTypes, paramNames),
 		)
@@ -155,7 +156,12 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			formatCallArgs(paramTypes, paramNames),
 		)
 		ansName := paramNames[q.MetaData.Output.ParamIndex]
-		code += fmt.Sprintf("\tlet ans = %s;\n", ansName)
+		ansType := paramTypes[q.MetaData.Output.ParamIndex]
+		code += fmt.Sprintf(
+			"\tlet ans: %s = %s.into();\n",
+			toRustType(ansType),
+			toRustVarName(ansName),
+		)
 	}
 
 	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
@@ -229,7 +235,8 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			methodCall += fmt.Sprintf(
-				"\t\t\t\tlet ans = serialize(obj.%s(%s))?;\n\t\t\t\toutput.push(ans);\n",
+				"\t\t\t\tlet ans: %s = obj.%s(%s).into();\n\t\t\t\toutput.push(serialize(ans)?);\n",
+				toRustType(method.Return.Type),
 				toRustVarName(method.Name),
 				formatCallArgs(methodParamTypes, methodParamNames),
 			)

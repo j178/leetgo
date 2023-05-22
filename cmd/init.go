@@ -1,9 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
+	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -14,7 +18,10 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-var initTemplate string
+var (
+	force        bool
+	initTemplate string
+)
 
 var initCmd = &cobra.Command{
 	Use:     "init [DIR]",
@@ -41,13 +48,22 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		// prevent adding leetgo.yaml to git
+		_ = addGitIgnore(dir)
+		if gitAvailable() && !isInsideGitRepo(dir) {
+			_ = initGitRepo(dir)
+		}
 		err = createQuestionCache()
-		return err
+		if err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
 func init() {
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "us", "template to use, cn or us")
+	initCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite global config file if exists")
 }
 
 func createConfigDir() error {
@@ -76,14 +92,16 @@ func createConfigFiles(dir string) error {
 	}
 
 	globalFile := cfg.GlobalConfigFile()
-	if !utils.IsExist(globalFile) {
+	if force || !utils.IsExist(globalFile) {
 		f, err := os.Create(globalFile)
 		if err != nil {
 			return err
 		}
 
+		author := defaultUser()
 		cfg.LeetCode.Site = site
 		cfg.Language = language
+		cfg.Author = author
 
 		err = cfg.Write(f, true)
 		if err != nil {
@@ -135,4 +153,68 @@ func createQuestionCache() error {
 		return err
 	}
 	return nil
+}
+
+func addGitIgnore(dir string) error {
+	gitIgnoreFile := filepath.Join(dir, ".gitignore")
+	ignoreContent := []byte(constants.ProjectConfigFilename + "\n\n")
+	if utils.IsExist(gitIgnoreFile) {
+		content, err := os.ReadFile(gitIgnoreFile)
+		if err != nil {
+			return err
+		}
+		if bytes.Contains(content, ignoreContent[:len(ignoreContent)-1]) {
+			return nil
+		}
+		if content[len(content)-1] != '\n' {
+			content = append(content, '\n')
+		}
+		content = append(content, ignoreContent...)
+		err = os.WriteFile(gitIgnoreFile, content, 0o644)
+		return err
+	}
+	err := os.WriteFile(gitIgnoreFile, ignoreContent, 0o644)
+	return err
+}
+
+func defaultUser() string {
+	username := getGitUsername()
+	if username != "" {
+		return username
+	}
+	u, err := user.Current()
+	if err == nil {
+		return u.Username
+	}
+	username = os.Getenv("USER")
+	if username != "" {
+		return username
+	}
+	return "Bob"
+}
+
+func gitAvailable() bool {
+	cmd := exec.Command("git", "--version")
+	err := cmd.Run()
+	return err == nil
+}
+
+func initGitRepo(dir string) error {
+	cmd := exec.Command("git", "init", dir)
+	return cmd.Run()
+}
+
+func isInsideGitRepo(dir string) bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree", dir)
+	err := cmd.Run()
+	return err == nil
+}
+
+func getGitUsername() string {
+	cmd := exec.Command("git", "config", "user.name")
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
