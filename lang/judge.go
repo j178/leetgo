@@ -1,6 +1,8 @@
 package lang
 
 import (
+	"math"
+	"strconv"
 	"strings"
 
 	strip "github.com/grokify/html-strip-tags-go"
@@ -100,6 +102,13 @@ func (j *sliceJudger) compareIgnoringOrder(actual, expected []string) bool {
 	return true
 }
 
+// floatCompare compares two float numbers. Returns true if the difference is less than 1e-5.
+func floatCompare(actual, expected string) bool {
+	a, _ := strconv.ParseFloat(actual, 64)
+	b, _ := strconv.ParseFloat(expected, 64)
+	return math.Abs(a-b) < 1e-5
+}
+
 func GetJudger(q *leetcode.QuestionData) Judger {
 	// TODO compare by question rules
 
@@ -108,8 +117,13 @@ func GetJudger(q *leetcode.QuestionData) Judger {
 		judger = &systemDesignJudger{q}
 	} else {
 		resultType := q.MetaData.ResultType()
-		if strings.HasSuffix(resultType, "[]") {
-			judger = newSliceJudger(q)
+		switch resultType {
+		case "double":
+			judger = judgeFunc(floatCompare)
+		default:
+			if strings.HasSuffix(resultType, "[]") {
+				judger = newSliceJudger(q)
+			}
 		}
 	}
 	return judger

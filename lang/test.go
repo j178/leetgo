@@ -487,8 +487,6 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 		}()
 	}
-	if passed == ran {
-		return true, nil
-	}
-	return false, nil
+
+	return passed == ran, nil
 }
