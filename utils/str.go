@@ -96,6 +96,11 @@ var (
 		"v": "\u1d65",
 		"x": "\u2093",
 		"y": "\u1d67",
+		"+": "\u208A",
+		"-": "\u208B",
+		"=": "\u208C",
+		"(": "\u208D",
+		")": "\u208E",
 	}
 	superscripts = map[string]string{
 		"0": "\u2070",
@@ -134,6 +139,11 @@ var (
 		"x": "\u02E3",
 		"y": "\u02B8",
 		"z": "\u1DBB",
+		"+": "\u207A",
+		"-": "\u207B",
+		"=": "\u207C",
+		"(": "\u207D",
+		")": "\u207E",
 	}
 	subReplace = func() *strings.Replacer {
 		args := make([]string, 0, len(subscripts)*2)

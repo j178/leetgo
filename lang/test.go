@@ -364,14 +364,18 @@ func extractOutput(s string) (string, string) {
 	return output, strings.Join(others, "\n")
 }
 
-func checkOutput(q *leetcode.QuestionData, outputLine string) error {
+func checkOutput(q *leetcode.QuestionData, input []string, outputLine string) error {
 	if outputLine == "" {
 		return fmt.Errorf("no output found")
 	}
 	if q.MetaData.SystemDesign {
-		_, err := goutils.SplitArray(outputLine)
+		arr, err := goutils.SplitArray(outputLine)
 		if err != nil {
 			return fmt.Errorf("invalid output: %s", outputLine)
+		}
+		inputArr, _ := goutils.SplitArray(input[0])
+		if len(arr) != len(inputArr) {
+			return fmt.Errorf("output length mismatch: expected %d, got %d", len(inputArr), len(arr))
 		}
 		return nil
 	}
@@ -462,7 +466,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.UnIndent()
 				return
 			}
-			err = checkOutput(q, actualOutput)
+			err = checkOutput(q, c.Input, actualOutput)
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Invalid output")))
 				l.Indent()
@@ -473,12 +477,13 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 
-			if judger.Judge(actualOutput, c.Output) {
+			if r := judger.Judge(c.Input, c.Output, actualOutput); r.IsAccepted() {
 				passed++
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Accepted")))
 			} else {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, failedStyle.Render("Wrong answer")))
 				l.Indent()
+				l.AppendItem(fmt.Sprintf("Reason:     %s", r.GetInfo()))
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
 				l.AppendItem(fmt.Sprintf("Expected:   %s", c.Output))
@@ -487,8 +492,6 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 		}()
 	}
-	if passed == ran {
-		return true, nil
-	}
-	return false, nil
+
+	return passed == ran, nil
 }

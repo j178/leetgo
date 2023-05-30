@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/shlex"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -52,9 +53,9 @@ type ContestConfig struct {
 }
 
 type Editor struct {
-	Use     string   `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
-	Command string   `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
-	Args    []string `yaml:"args" mapstructure:"args" comment:"Arguments to the command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.\n{{.Files}} will be substituted with the list of all file paths."`
+	Use     string `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
+	Command string `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
+	Args    string `yaml:"args" mapstructure:"args" comment:"Arguments to the command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.\n{{.Files}} will be substituted with the list of all file paths."`
 }
 
 type Block struct {
@@ -100,8 +101,8 @@ type PythonConfig struct {
 
 type CppConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	CXX            string   `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
-	CXXFLAGS       []string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
+	CXX            string `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
+	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
 }
 
 type RustConfig struct {
@@ -187,7 +188,7 @@ func (c *Config) Write(w io.Writer, withComments bool) error {
 	return err
 }
 
-func Default() *Config {
+func defaultConfig() *Config {
 	return &Config{
 		Author:   "Bob",
 		Language: ZH,
@@ -212,7 +213,7 @@ func Default() *Config {
 			Cpp: CppConfig{
 				BaseLangConfig: BaseLangConfig{OutDir: "cpp"},
 				CXX:            "g++",
-				CXXFLAGS:       []string{"-O2", "-std=c++17"},
+				CXXFLAGS:       "-O2 -std=c++17",
 			},
 			Python: PythonConfig{
 				BaseLangConfig: BaseLangConfig{OutDir: "python"},
@@ -241,7 +242,7 @@ func Default() *Config {
 
 func Get() *Config {
 	if globalCfg == nil {
-		return Default()
+		return defaultConfig()
 	}
 	return globalCfg
 }
@@ -307,6 +308,16 @@ func verify(c *Config) error {
 		}
 	}
 
+	if c.Editor.Args != "" {
+		if _, err := shlex.Split(c.Editor.Args); err != nil {
+			return fmt.Errorf("invalid `editor.args`: %w", err)
+		}
+	}
+	if c.Code.Cpp.CXXFLAGS != "" {
+		if _, err := shlex.Split(c.Code.Cpp.CXXFLAGS); err != nil {
+			return fmt.Errorf("invalid `code.cpp.cxxflags`: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -316,7 +327,7 @@ func Load(init bool) error {
 	}
 
 	// load global configuration
-	cfg := Get()
+	cfg := defaultConfig()
 
 	viper.SetConfigFile(cfg.GlobalConfigFile())
 	err := viper.ReadInConfig()
