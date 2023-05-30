@@ -272,6 +272,13 @@ const (
 	CategoryAll         CategoryTitle = ""
 )
 
+type EditorType string
+
+const (
+	EditorTypeCKEditor EditorType = "CKEDITOR"
+	EditorTypeMarkdown EditorType = "MARKDOWN"
+)
+
 type QuestionData struct {
 	client               Client
 	contest              *Contest
@@ -297,6 +304,7 @@ type QuestionData struct {
 	ExampleTestcaseList  []string             `json:"exampleTestcaseList"`
 	MetaData             MetaData             `json:"metaData"`
 	CodeSnippets         []CodeSnippet        `json:"codeSnippets"`
+	EditorType           EditorType           `json:"editorType"`
 }
 
 func (q *QuestionData) Url() string {
@@ -366,9 +374,7 @@ func (q *QuestionData) GetPreferContent() (string, config.Language) {
 	return q.Content, config.EN
 }
 
-func (q *QuestionData) GetFormattedContent() string {
-	content, lang := q.GetPreferContent()
-
+func convertHTML(html string) string {
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
@@ -393,7 +399,7 @@ func (q *QuestionData) GetFormattedContent() string {
 		},
 	}
 	converter.AddRules(replaceSub, replaceSup, replaceEm)
-	content, err := converter.ConvertString(content)
+	content, err := converter.ConvertString(html)
 	if err != nil {
 		return content
 	}
@@ -401,6 +407,16 @@ func (q *QuestionData) GetFormattedContent() string {
 	// Remove special HTML entities characters
 	replacer := strings.NewReplacer("\u00A0", " ", "\u200B", "")
 	content = replacer.Replace(content)
+
+	return content
+}
+
+func (q *QuestionData) GetFormattedContent() string {
+	content, lang := q.GetPreferContent()
+
+	if q.EditorType == EditorTypeCKEditor {
+		content = convertHTML(content)
+	}
 
 	// Wrap and remove blank lines
 	if lang == config.EN {

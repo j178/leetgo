@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"encoding/hex"
 	"strings"
 	"unicode"
@@ -21,6 +22,15 @@ func StringToBytes(s string) []byte {
 			Cap int
 		}{s, len(s)},
 	))
+}
+
+func SplitLines(s string) []string {
+	r := bufio.NewScanner(strings.NewReader(s))
+	var lines []string
+	for r.Scan() {
+		lines = append(lines, r.Text())
+	}
+	return lines
 }
 
 // CondenseEmptyLines condenses multiple consecutive empty lines in a string to a single empty line,
@@ -86,6 +96,11 @@ var (
 		"v": "\u1d65",
 		"x": "\u2093",
 		"y": "\u1d67",
+		"+": "\u208A",
+		"-": "\u208B",
+		"=": "\u208C",
+		"(": "\u208D",
+		")": "\u208E",
 	}
 	superscripts = map[string]string{
 		"0": "\u2070",
@@ -124,6 +139,11 @@ var (
 		"x": "\u02E3",
 		"y": "\u02B8",
 		"z": "\u1DBB",
+		"+": "\u207A",
+		"-": "\u207B",
+		"=": "\u207C",
+		"(": "\u207D",
+		")": "\u207E",
 	}
 	subReplace = func() *strings.Replacer {
 		args := make([]string, 0, len(subscripts)*2)

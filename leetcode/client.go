@@ -464,6 +464,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 				slug
 				translatedName
 			}
+			editorType
 		}
 	}`
 	q, err := c.getQuestionData(slug, query)

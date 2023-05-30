@@ -10,16 +10,23 @@ pub struct ListNode {
     pub next: ListLink,
 }
 
+impl ListNode {
+  #[inline]
+  fn new(val: i32) -> Self {
+    ListNode {
+      next: None,
+      val
+    }
+  }
+}
+
 #[macro_export]
 macro_rules! list {
     () => {
         None
     };
     ($e:expr) => {
-        Some(Box::new(ListNode {
-            val: $e,
-            next: None,
-        }))
+        Some(Box::new(ListNode::new($e)))
     };
     ($e:expr, $($tail:tt)*) => {
         Some(Box::new(ListNode {
@@ -32,9 +39,15 @@ macro_rules! list {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct LinkedList(ListLink);
 
-impl From<LinkedList> for Option<Box<ListNode>> {
+impl From<LinkedList> for ListLink {
     fn from(list: LinkedList) -> Self {
         list.0
+    }
+}
+
+impl From<ListLink> for LinkedList {
+    fn from(link: Option<Box<ListNode>>) -> Self {
+        LinkedList(link)
     }
 }
 
