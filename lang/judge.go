@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-json"
 	strip "github.com/grokify/html-strip-tags-go"
 
 	"github.com/j178/leetgo/leetcode"
@@ -94,6 +95,9 @@ func shouldIgnoreOrder(q *leetcode.QuestionData) bool {
 	if strings.Contains(content, "return the answer in any order") {
 		return true
 	}
+	if strings.Contains(content, "return the result in any order") {
+		return true
+	}
 
 	// try translated content
 	content = q.TranslatedContent
@@ -142,13 +146,18 @@ type systemDesignJudger struct {
 func newSystemDesignJudger(q *leetcode.QuestionData) *systemDesignJudger {
 	judgers := map[string]Judger{}
 	for _, m := range q.MetaData.Methods {
-		judgers[m.Name] = getJudger(q, m.Return.Type)
+		// TODO: if two functions both return a slice, we can't distinguish them
+		//  We just compare both function results ignoring order.
+		judgers[m.Name] = getJudger(q, m.Return.Type, true)
 	}
 	return &systemDesignJudger{judgers}
 }
 
 func (s systemDesignJudger) Judge(input []string, output, actualOutput string) JudgeResult {
-	funcs, _ := goutils.SplitArray(input[0])
+	// First line of the input is the function names
+	var funcs []string
+	_ = json.Unmarshal([]byte(input[0]), &funcs)
+	inputs, _ := goutils.SplitArray(input[1])
 	a, _ := goutils.SplitArray(output)
 	b, _ := goutils.SplitArray(actualOutput)
 
@@ -156,13 +165,15 @@ func (s systemDesignJudger) Judge(input []string, output, actualOutput string) J
 		panic("system design input/output not match")
 	}
 
+	// i == 0 is the constructor, its output is always "null", skip it.
 	for i := 1; i < len(a); i++ {
 		judger := s.judgers[funcs[i]]
 		if judger == nil {
 			panic(fmt.Sprintf("judger for %s not found", funcs[i]))
 		}
 		if r := judger.Judge(input, a[i], b[i]); !r.IsAccepted() {
-			rr := failed(r.GetInfo() + " at index " + strconv.Itoa(i))
+			param := inputs[i][1 : len(inputs[i])-1] // remove []
+			rr := failed(fmt.Sprintf("%s at index %d [%s(%s)]", r.GetInfo(), i, funcs[i], param))
 			return rr
 		}
 	}
@@ -174,10 +185,10 @@ func GetJudger(q *leetcode.QuestionData) Judger {
 		return newSystemDesignJudger(q)
 	}
 	resultType := q.MetaData.ResultType()
-	return getJudger(q, resultType)
+	return getJudger(q, resultType, true)
 }
 
-func getJudger(q *leetcode.QuestionData, tp string) Judger {
+func getJudger(q *leetcode.QuestionData, tp string, topLevel bool) Judger {
 	switch tp {
 	case "double":
 		return floatJudger{}
@@ -185,10 +196,12 @@ func getJudger(q *leetcode.QuestionData, tp string) Judger {
 		return stringJudger{}
 	default:
 		if strings.HasSuffix(tp, "[]") {
-			ignoreOrder := shouldIgnoreOrder(q)
-			subJudger := getJudger(q, tp[:len(tp)-2])
+			// Support top-level slice out-of-order comparison only.
+			ignoreOrder := topLevel && shouldIgnoreOrder(q)
+			subJudger := getJudger(q, tp[:len(tp)-2], false)
 			return newSliceJudger(ignoreOrder, subJudger)
 		}
+		// void, bool, int, long, TreeNode, etc.
 		return stringJudger{}
 	}
 }
