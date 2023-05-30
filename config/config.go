@@ -111,10 +111,10 @@ type RustConfig struct {
 
 type Credentials struct {
 	From      string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
-	Session   string `yaml:"session" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
-	CsrfToken string `yaml:"csrftoken" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
-	Username  string `yaml:"username" mapstructure:"username" comment:"LeetCode username"`
-	Password  string `yaml:"password" mapstructure:"password" comment:"Encrypted LeetCode password"`
+	Session   string `yaml:"session,omitempty" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
+	CsrfToken string `yaml:"csrftoken,omitempty" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
+	Username  string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
+	Password  string `yaml:"password,omitempty" mapstructure:"password" comment:"Encrypted LeetCode password"`
 }
 
 type LeetCodeConfig struct {

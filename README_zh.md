@@ -215,14 +215,6 @@ leetcode:
   credentials:
     # How to provide credentials: browser, cookies, password or none
     from: browser
-    # LeetCode cookie: LEETCODE_SESSION
-    session: ""
-    # LeetCode cookie: csrftoken
-    csrftoken: ""
-    # LeetCode username
-    username: ""
-    # Encrypted LeetCode password
-    password: ""
 contest:
   # Base dir to put generated contest questions
   out_dir: contest
