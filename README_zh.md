@@ -171,7 +171,6 @@ leetgo test last/            # last/ 表示最近生成的比赛的所有题目 
 author: Bob
 # Language of the question description: zh or en
 language: zh
-# Code configuration
 code:
   # Language of code generated for questions: go, python, ... 
   # (will be override by project config and flag --lang)
@@ -180,9 +179,9 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
-  # Generate question description into a separate file
+  # Default setting for separate_description_file
   separate_description_file: true
-  # Functions that modify the generated code
+  # Default modifiers for all languages
   modifiers:
     - name: removeUselessComments
   go:
@@ -207,7 +206,6 @@ code:
     out_dir: rust
   java:
     out_dir: java
-# LeetCode configuration
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
@@ -222,7 +220,7 @@ contest:
   filename_template: '{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
   # Open the contest page in browser after generating
   open_in_browser: true
-# The editor to open generated files
+# Editor settings to open generated files
 editor:
   # Use a predefined editor: vim, vscode, goland
   # Set to 'none' to disable, set to 'custom' to provide your own command

@@ -40,10 +40,10 @@ type Config struct {
 	projectRoot string
 	Author      string         `yaml:"author" mapstructure:"author" comment:"Your name"`
 	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the question description: zh or en"`
-	Code        CodeConfig     `yaml:"code" mapstructure:"code" comment:"Code configuration"`
-	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode" comment:"LeetCode configuration"`
+	Code        CodeConfig     `yaml:"code" mapstructure:"code"`
+	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode"`
 	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
-	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"The editor to open generated files"`
+	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"Editor settings to open generated files"`
 }
 
 type ContestConfig struct {
@@ -71,9 +71,9 @@ type Modifier struct {
 type CodeConfig struct {
 	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore"`
-	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
-	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Default setting for separate_description_file"`
+	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
+	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages"`
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
 	Python                  PythonConfig   `yaml:"python3" mapstructure:"python3"`
 	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
