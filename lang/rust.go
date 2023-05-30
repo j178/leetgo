@@ -135,8 +135,10 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			varName,
 			varType,
 		)
-		paramNames = append(paramNames, varName)
-		paramTypes = append(paramTypes, varType)
+		if !param.HelperParam {
+			paramNames = append(paramNames, varName)
+			paramTypes = append(paramTypes, varType)
+		}
 	}
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {

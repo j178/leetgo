@@ -103,7 +103,9 @@ func (c cpp) getPrintCodeForType(n string, ofs string) string {
 func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
 	var paramList []string
 	for _, param := range params {
-		paramList = append(paramList, param.Name)
+		if !param.HelperParam {
+			paramList = append(paramList, param.Name)
+		}
 	}
 	return strings.Join(paramList, ", ")
 }
