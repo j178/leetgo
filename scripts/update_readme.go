@@ -48,7 +48,7 @@ func updateUsage(readme []byte) []byte {
 
 func updateConfig(readme []byte) []byte {
 	buf := new(bytes.Buffer)
-	_ = config.Default().Write(buf, true)
+	_ = config.Get().Write(buf, true)
 	configStr := buf.String()
 	configStr = "\n```yaml\n" + configStr + "```\n"
 

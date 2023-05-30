@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/shlex"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/constants"
@@ -113,9 +114,10 @@ func (ed *editor) Open(result *lang.GenerateResult) error {
 func Get(s string) Opener {
 	if s == "custom" {
 		cfg := config.Get()
+		args, _ := shlex.Split(cfg.Editor.Args)
 		return &editor{
 			command: cfg.Editor.Command,
-			args:    cfg.Editor.Args,
+			args:    args,
 		}
 	}
 	return knownEditors[s]

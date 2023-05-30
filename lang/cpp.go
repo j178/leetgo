@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/shlex"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/constants"
@@ -332,7 +333,7 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase st
 
 	cfg := config.Get()
 	compiler := cfg.Code.Cpp.CXX
-	compilerFlags := append([]string(nil), cfg.Code.Cpp.CXXFLAGS...)
+	compilerFlags, _ := shlex.Split(cfg.Code.Cpp.CXXFLAGS)
 	compilerFlags = append(compilerFlags, "-I", outDir, "-o", execFile, testFile)
 
 	cmd := exec.Command(compiler, compilerFlags...)
