@@ -90,6 +90,10 @@ func (r *GenerateResult) SetOutDir(dir string) {
 	r.OutDir = dir
 }
 
+func (r *GenerateResult) TargetDir() string {
+	return filepath.Join(r.OutDir, r.SubDir)
+}
+
 type Lang interface {
 	Name() string
 	ShortName() string

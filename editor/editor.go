@@ -57,12 +57,14 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
 	}
 
 	data := struct {
+		Folder          string
 		Files           string
 		CodeFile        string
 		TestFile        string
 		DescriptionFile string
 		TestCasesFile   string
 	}{
+		Folder:          result.TargetDir(),
 		Files:           specialAllFiles,
 		CodeFile:        getPath(lang.CodeFile),
 		TestFile:        getPath(lang.TestFile),
