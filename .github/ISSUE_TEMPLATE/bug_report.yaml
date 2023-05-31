@@ -5,30 +5,15 @@ body:
   - type: checkboxes
     id: ensure
     attributes:
-      label: Verify steps
+      label: Verification steps
       description: "
 在提交之前，请确认
 Please verify that you've followed these steps
 "
       options:
         - label: "
-如果你可以自己 debug 并解决的话，提交 PR 吧
-Is this something you can **debug and fix**? Send a pull request! Bug fixes and documentation fixes are welcome.
-"
-          required: true
-        - label: "
 我已经在 [Issue Tracker](https://github.com/j178/leetgo/issues) 和 [Discussion](https://github.com/j178/leetgo/discussions) 中找过我要提出的问题
 I have searched on the [issue tracker](https://github.com/j178/leetgo/issues) and [Discussion](https://github.com/j178/leetgo/discussions) for a related issue.
-"
-          required: true
-        - label: "
-我已经使用 master 分支版本测试过，问题依旧存在
-I have tested using the master branch, and the issue still exists.
-"
-          required: true
-        - label: "
-我已经仔细看过 [Documentation](https://github.com/j178/leetgo/blob/master/README.md) 并无法自行解决问题
-I have read the [documentation](https://github.com/j178/leetgo/blob/master/README.md) and was unable to solve the issue.
 "
           required: true
   - type: textarea
