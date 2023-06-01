@@ -22,7 +22,9 @@ leetgo pick today      # 选择一道题目
 leetgo test last -L -s # 测试并提交代码
 ```
 
-[![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
+## Demo
+
+![demo](https://github.com/j178/leetgo/assets/10510431/cabc4f6b-221b-4e93-b871-e757d357b674)
 
 ## 主要特性
 
