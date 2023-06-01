@@ -15,6 +15,13 @@
 
 `leetgo` 还支持竞赛模式，自动等待比赛的开始时间，第一时间为你生成所有比赛题目，并且可以一键提交所有题目，让你的排名更进一步。
 
+日常使用 `leetgo` 非常简单:
+
+```sh
+leetgo pick today      # 选择一道题目
+leetgo test last -L -s # 测试并提交代码
+```
+
 [![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
 
 ## 主要特性

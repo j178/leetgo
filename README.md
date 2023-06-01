@@ -15,6 +15,13 @@ and you can use any IDE you like to solve problems.
 
 And `leetgo` also supports real-time generation of **contest questions**, submitting all questions at once, so your submissions are always one step ahead!
 
+Daily usage of `leetgo` is as simple as:
+
+```sh
+leetgo pick today      # Pick one question to generate
+leetgo test last -L -s # Test and submit your code
+```
+
 [![asciicast](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG.svg)](https://asciinema.org/a/7R2lnZj7T0hEuJ49SH2lZ04NG)
 
 ## Features
