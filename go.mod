@@ -26,7 +26,7 @@ require (
 	github.com/j178/leetgo/testutils/go v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/k3a/html2text v1.2.1
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/pelletier/go-toml/v2 v2.0.8
