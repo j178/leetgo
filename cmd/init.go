@@ -32,6 +32,7 @@ var initCmd = &cobra.Command{
 		if len(args) > 0 {
 			dir = args[0]
 		}
+		dir, _ = filepath.Abs(dir)
 		if initTemplate != "" && initTemplate != "us" && initTemplate != "cn" {
 			return fmt.Errorf("invalid template %s, only us or cn is supported", initTemplate)
 		}
