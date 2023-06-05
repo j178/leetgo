@@ -165,12 +165,6 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		if b.LeetcodeSession == "" || b.CsrfToken == "" {
 			return errors.New("no cookie found in browser")
 		}
-
-		// Convenient for debugging
-		if os.Getenv("LEETGO_EXPORT_COOKIES") != "" {
-			fmt.Println("LEETCODE_SESSION:", b.LeetcodeSession)
-			fmt.Println("csrftoken:", b.CsrfToken)
-		}
 	}
 
 	return b.cookiesAuth.AddCredentials(req)
