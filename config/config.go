@@ -123,7 +123,7 @@ func (c *Config) ConfigDir() string {
 		return c.dir
 	}
 	if home := os.Getenv("LEETGO_HOME"); home != "" {
-		c.dir = home
+		c.dir, _ = filepath.Abs(home)
 	}
 	if c.dir == "" {
 		home, _ := homedir.Dir()
