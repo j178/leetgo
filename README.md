@@ -269,7 +269,7 @@ There are three ways to make cookies available to `leetgo`:
 
 - Provide cookies.
 
-  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools, and set the `LEEETCODE_SESSION` and `LEETCODE_CSRFTOKEN` environment variables.
+  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools, and set the `LEETCODE_SESSION` and `LEETCODE_CSRFTOKEN` environment variables.
 
   ```yaml
   leetcode:
