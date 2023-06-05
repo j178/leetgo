@@ -119,6 +119,12 @@ type LeetCodeConfig struct {
 }
 
 func (c *Config) ConfigDir() string {
+	if c.dir != "" {
+		return c.dir
+	}
+	if home := os.Getenv("LEETGO_HOME"); home != "" {
+		c.dir, _ = filepath.Abs(home)
+	}
 	if c.dir == "" {
 		home, _ := homedir.Dir()
 		c.dir = filepath.Join(home, ".config", constants.CmdName)
