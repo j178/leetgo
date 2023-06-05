@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -276,6 +277,9 @@ func verify(c *Config) error {
 
 	if !credentialFrom[c.LeetCode.Credentials.From] {
 		return fmt.Errorf("invalid `leetcode.credentials.from` value: %s", c.LeetCode.Credentials.From)
+	}
+	if c.LeetCode.Credentials.From == "password" && c.LeetCode.Site == LeetCodeUS {
+		return errors.New("username/password authentication is not supported for leetcode.com")
 	}
 
 	if c.Editor.Args != "" {
