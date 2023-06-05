@@ -37,6 +37,9 @@ var whoamiCmd = &cobra.Command{
 		cred := leetcode.CredentialsFromConfig()
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		user, err := c.GetUserStatus()
+		if !user.IsSignedIn {
+			return leetcode.ErrUserNotSignedIn
+		}
 		if err != nil {
 			return err
 		}
