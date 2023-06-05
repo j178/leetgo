@@ -131,7 +131,7 @@ Available Commands:
   edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache
-  config                  Show configurations
+  debug                   Show debug info
   open                    Open one or multiple question pages in a browser
   help                    Help about any command
 
@@ -267,34 +267,22 @@ There are three ways to make cookies available to `leetgo`:
       from: browser
   ```
 
-- Provide cookies in config file.
+- Provide cookies.
 
-  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools.
+  You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools, and set the `LEEETCODE_SESSION` and `LEETCODE_CSRFTOKEN` environment variables.
 
   ```yaml
   leetcode:
     credentials:
       from: cookies
-      session: xxx
-      csrftoken: xx
   ```
 
-- Provide username and password in config file.
-
-  You need to run `leetgo config encrypt` to encrypt your password first, plain text password is **not allowed**.
+- Provide username and password through `LEETCODE_USERNAME` and `LEETCODE_PASSWORD` environment variables.
 
   ```yaml
   leetcode:
     credentials:
       from: password
-      username: xxx
-      password: |
-        $LEETGO_VAULT;1.1;AES256
-        61393232326161303064373437376538646432623336363563623935333863653666623633376466
-        3836633339643934383061363239333833333634373137620a303466626335633332393336326564
-        31633231333934323165376362646630643132626130626136326163333133663762356264353564
-        6562653462396335300a313761363531363961656364366634666562663061633161366463393339
-        3963
   ```
 
 > **Note**

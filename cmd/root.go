@@ -101,7 +101,7 @@ func initCommands() {
 		extractCmd,
 		contestCmd,
 		cacheCmd,
-		configCmd,
+		debugCmd,
 		gitCmd,
 		inspectCmd,
 		whoamiCmd,
