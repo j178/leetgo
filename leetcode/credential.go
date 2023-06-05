@@ -183,16 +183,40 @@ func (b *browserAuth) Reset() {
 	b.CsrfToken = ""
 }
 
-func CredentialsFromConfig() CredentialsProvider {
+func ReadCredentials() (CredentialsProvider, error) {
 	cfg := config.Get()
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
-		return NewBrowserAuth()
+		return NewBrowserAuth(), nil
 	case "password":
-		return NewPasswordAuth(cfg.LeetCode.Credentials.Username, cfg.LeetCode.Credentials.Password)
+		username, err := env("LEETCODE_USERNAME")
+		if err != nil {
+			return nil, err
+		}
+		password, err := env("LEETCODE_PASSWORD")
+		if err != nil {
+			return nil, err
+		}
+		return NewPasswordAuth(username, password), nil
 	case "cookies":
-		return NewCookiesAuth(cfg.LeetCode.Credentials.Session, cfg.LeetCode.Credentials.CsrfToken)
+		session, err := env("LEETCODE_SESSION")
+		if err != nil {
+			return nil, err
+		}
+		csrfToken, err := env("LEETCODE_CSRFTOKEN")
+		if err != nil {
+			return nil, err
+		}
+		return NewCookiesAuth(session, csrfToken), nil
 	default:
-		return NonAuth()
+		return NonAuth(), nil
 	}
+}
+
+func env(key string) (string, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return "", fmt.Errorf("environment variable %s not found", key)
+	}
+	return v, nil
 }

@@ -110,11 +110,7 @@ type RustConfig struct {
 }
 
 type Credentials struct {
-	From      string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
-	Session   string `yaml:"session,omitempty" mapstructure:"session" comment:"LeetCode cookie: LEETCODE_SESSION"`
-	CsrfToken string `yaml:"csrftoken,omitempty" mapstructure:"csrftoken" comment:"LeetCode cookie: csrftoken"`
-	Username  string `yaml:"username,omitempty" mapstructure:"username" comment:"LeetCode username"`
-	Password  string `yaml:"password,omitempty" mapstructure:"password" comment:"Encrypted LeetCode password"`
+	From string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
 }
 
 type LeetCodeConfig struct {
@@ -247,6 +243,14 @@ func Get() *Config {
 	return globalCfg
 }
 
+// define here to avoid dependency on `leetcode` package.
+var credentialFrom = map[string]bool{
+	"browser":  true,
+	"cookies":  true,
+	"password": true,
+	"none":     true,
+}
+
 func verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
 		return fmt.Errorf("invalid `language` value: %s", c.Language)
@@ -263,49 +267,9 @@ func verify(c *Config) error {
 	if c.LeetCode.Site != LeetCodeCN && c.LeetCode.Site != LeetCodeUS {
 		return fmt.Errorf("invalid `leetcode.site` value: %s", c.LeetCode.Site)
 	}
-	credentialFrom := map[string]bool{
-		"browser":  true,
-		"cookies":  true,
-		"password": true,
-		"none":     true,
-	}
+
 	if !credentialFrom[c.LeetCode.Credentials.From] {
 		return fmt.Errorf("invalid `leetcode.credentials.from` value: %s", c.LeetCode.Credentials.From)
-	}
-
-	if c.LeetCode.Credentials.From == "cookies" {
-		if c.LeetCode.Credentials.Session == "" {
-			return fmt.Errorf("`leetcode.credentials.session` is empty")
-		}
-		if c.LeetCode.Credentials.CsrfToken == "" {
-			return fmt.Errorf("`leetcode.credentials.csrftoken` is empty")
-		}
-	}
-
-	if c.LeetCode.Credentials.From == "password" {
-		if c.LeetCode.Site == LeetCodeUS {
-			return fmt.Errorf("username/password authentication is not supported for leetcode.com")
-		}
-		if c.LeetCode.Credentials.Username == "" {
-			return fmt.Errorf("`leetcode.credentials.username` is empty")
-		}
-		if c.LeetCode.Credentials.Password == "" {
-			return fmt.Errorf("`leetcode.credentials.password` is empty")
-		}
-		if !strings.HasPrefix(
-			c.LeetCode.Credentials.Password,
-			vaultHeader,
-		) {
-			return fmt.Errorf("password is not encrypted, you need to run `leetgo config encrypt` before put it in config file")
-		}
-		pw := c.LeetCode.Credentials.Password
-		if pw != "" {
-			var err error
-			c.LeetCode.Credentials.Password, err = Decrypt(pw)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	if c.Editor.Args != "" {

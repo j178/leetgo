@@ -130,7 +130,7 @@ Available Commands:
   edit                    Open solution in editor
   contest                 Generate contest questions
   cache                   Manage local questions cache
-  config                  Show configurations
+  debug                   Show debug info
   open                    Open one or multiple question pages in a browser
   help                    Help about any command
 
@@ -260,34 +260,22 @@ editor:
       from: browser
   ```
 
-- 在配置文件中提供 Cookie
+- 手动提供 Cookie
   
-  你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值。
+  你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值，设置为 `LEETCODE_SESSION` 和 `LEETCODE_CSRFTOKEN` 环境变量。
 
   ```yaml
   leetcode:
     credentials:
       from: cookies
-      session: xxx
-      csrftoken: xx
   ```
 
-- 在配置文件中提供 用户名和密码
-
-  在配置密码前，你需要使用 `leetgo config encrypt` 来加密你的密码，`leetgo` **禁止**在配置文件中使用明文密码。
+- 提供 LeetCode CN 的用户名和密码，设置 `LEETCODE_USERNAME` 和 `LEETCODE_PASSWORD` 环境变量。
 
   ```yaml
   leetcode:
     credentials:
       from: password
-      username: xxx
-      password: |
-        $LEETGO_VAULT;1.1;AES256
-        61393232326161303064373437376538646432623336363563623935333863653666623633376466
-        3836633339643934383061363239333833333634373137620a303466626335633332393336326564
-        31633231333934323165376362646630643132626130626136326163333133663762356264353564
-        6562653462396335300a313761363531363961656364366634666562663061633161366463393339
-        3963
   ```
 
 **注意**: 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.

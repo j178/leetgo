@@ -26,7 +26,10 @@ leetgo submit w330/
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Get()
-		cred := leetcode.CredentialsFromConfig()
+		cred, err := leetcode.ReadCredentials()
+		if err != nil {
+			return err
+		}
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {

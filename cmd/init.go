@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -48,8 +47,6 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// prevent adding leetgo.yaml to git
-		_ = addGitIgnore(dir)
 		if gitAvailable() && !isInsideGitRepo(dir) {
 			_ = initGitRepo(dir)
 		}
@@ -153,28 +150,6 @@ func createQuestionCache() error {
 		return err
 	}
 	return nil
-}
-
-func addGitIgnore(dir string) error {
-	gitIgnoreFile := filepath.Join(dir, ".gitignore")
-	ignoreContent := []byte(constants.ProjectConfigFilename + "\n\n")
-	if utils.IsExist(gitIgnoreFile) {
-		content, err := os.ReadFile(gitIgnoreFile)
-		if err != nil {
-			return err
-		}
-		if bytes.Contains(content, ignoreContent[:len(ignoreContent)-1]) {
-			return nil
-		}
-		if content[len(content)-1] != '\n' {
-			content = append(content, '\n')
-		}
-		content = append(content, ignoreContent...)
-		err = os.WriteFile(gitIgnoreFile, content, 0o644)
-		return err
-	}
-	err := os.WriteFile(gitIgnoreFile, ignoreContent, 0o644)
-	return err
 }
 
 func defaultUser() string {

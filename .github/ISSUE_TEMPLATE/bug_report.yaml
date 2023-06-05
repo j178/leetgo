@@ -21,8 +21,8 @@ I have searched on the [issue tracker](https://github.com/j178/leetgo/issues) an
       render: shell
       label: "leetgo config"
       description: "
-在下方附上 `leetgo config` 的输出
-Paste the output of `leetgo config` below
+在下方附上 `leetgo debug` 的输出
+Paste the output of `leetgo debug` below
 "
     validations:
       required: true
