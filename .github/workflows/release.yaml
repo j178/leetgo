@@ -26,7 +26,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           # Custom secret here since we need to access to j178/homebrew-tap and j178/scoop-bucket repo.
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

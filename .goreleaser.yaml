@@ -28,15 +28,16 @@ archives:
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
-      {{- title .Os }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}{{ end }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     # use zip for windows archives
     format_overrides:
-    - goos: windows
-      format: zip
+      - goos: windows
+        format: zip
     files:
       - LICENSE
       - README*
@@ -63,27 +64,27 @@ changelog:
       - '^test:'
       - '(?i)^Minor'
 brews:
-- tap:
-    owner: j178
-    name: homebrew-tap
-  commit_author:
-    name: goreleaserbot
-    email: bot@goreleaser.com
-  homepage: https://github.com/j178/leetgo
-  description: >-
-    leetgo is a command line tool for leetcode.com. It can help you to login,
-    submit, test, and view your submissions.
-  license: MIT
-  install: |-
-    bin.install "leetgo"
-    bash_completion.install "completions/leetgo.bash" => "leetgo"
-    zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
-    fish_completion.install "completions/leetgo.fish"
-  test: |-
-    system "#{bin}/leetgo", "-v"
+  - tap:
+      owner: j178
+      name: homebrew-tap
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    homepage: https://github.com/j178/leetgo
+    description: >-
+      leetgo is a command line tool for leetcode.com. It can help you to login,
+      submit, test, and view your submissions.
+    license: MIT
+    install: |-
+      bin.install "leetgo"
+      bash_completion.install "completions/leetgo.bash" => "leetgo"
+      zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
+      fish_completion.install "completions/leetgo.fish"
+    test: |-
+      system "#{bin}/leetgo", "-v"
 
-scoop:
-    bucket:
+scoops:
+  - bucket:
       owner: j178
       name: scoop-bucket
     commit_author:
