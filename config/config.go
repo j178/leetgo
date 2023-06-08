@@ -112,7 +112,7 @@ type RustConfig struct {
 
 type Credentials struct {
 	From     string   `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
-	Browsers []string `yaml:"browsers" mapstructure:"browsers" comment:"Browsers to get cookies from: chrome, safari, edge or firefox"`
+	Browsers []string `yaml:"browsers" mapstructure:"browsers" comment:"Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried"`
 }
 
 type LeetCodeConfig struct {
