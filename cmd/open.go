@@ -15,7 +15,7 @@ leetgo open 549
 leetgo open w330/`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qid := args[0]
 		qs, err := leetcode.ParseQID(qid, c)
 		if err != nil {

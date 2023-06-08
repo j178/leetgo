@@ -96,11 +96,7 @@ leetgo pick two-sum`,
 	Args:    cobra.MaximumNArgs(1),
 	Aliases: []string{"p"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		var q *leetcode.QuestionData
 
 		if len(args) > 0 {

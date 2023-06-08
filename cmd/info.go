@@ -27,11 +27,7 @@ var infoCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"i"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		var questions []*leetcode.QuestionData
 
 		for _, qid := range args {

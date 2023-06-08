@@ -127,14 +127,11 @@ leetgo contest left w330
 	Aliases: []string{"c"},
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		cfg := config.Get()
 
 		var qid string
+		var err error
 		if len(args) == 0 {
 			qid, err = selectUpcomingContest(c, false)
 			if err != nil {
@@ -212,13 +209,10 @@ var unregisterCmd = &cobra.Command{
 	Aliases: []string{"un", "unregister"},
 	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 
 		var qid string
+		var err error
 		if len(args) == 0 {
 			qid, err = selectUpcomingContest(c, true)
 			if err != nil {

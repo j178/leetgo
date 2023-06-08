@@ -16,7 +16,7 @@ var editCmd = &cobra.Command{
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
 			return err
@@ -38,7 +38,7 @@ var extractCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
 			return err

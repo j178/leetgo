@@ -64,11 +64,7 @@ leetgo test w330/`,
 		}
 
 		cfg := config.Get()
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
 			return err

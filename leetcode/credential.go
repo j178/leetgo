@@ -2,7 +2,6 @@ package leetcode
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,7 +37,7 @@ func NonAuth() CredentialsProvider {
 }
 
 func (n *nonAuth) AddCredentials(req *http.Request) error {
-	return nil
+	return errors.New("no credentials provided")
 }
 
 func (n *nonAuth) Reset() {}
@@ -53,6 +52,10 @@ func NewCookiesAuth(session, csrftoken string) CredentialsProvider {
 }
 
 func (c *cookiesAuth) AddCredentials(req *http.Request) error {
+	if c.LeetCodeSession == "" || c.CsrfToken == "" {
+		return errors.New("cookies not found")
+	}
+
 	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetCodeSession})
 	req.AddCookie(&http.Cookie{Name: "csrftoken", Value: c.CsrfToken})
 	req.Header.Add("x-csrftoken", c.CsrfToken)
@@ -82,6 +85,10 @@ func (p *passwordAuth) SetClient(c Client) {
 }
 
 func (p *passwordAuth) AddCredentials(req *http.Request) error {
+	if p.username == "" || p.password == "" {
+		return errors.New("username or password is empty")
+	}
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -196,40 +203,20 @@ func (b *browserAuth) Reset() {
 	b.CsrfToken = ""
 }
 
-func ReadCredentials() (CredentialsProvider, error) {
+func ReadCredentials() CredentialsProvider {
 	cfg := config.Get()
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
-		return NewBrowserAuth(cfg.LeetCode.Credentials.Browsers), nil
+		return NewBrowserAuth(cfg.LeetCode.Credentials.Browsers)
 	case "password":
-		username, err := env("LEETCODE_USERNAME")
-		if err != nil {
-			return nil, err
-		}
-		password, err := env("LEETCODE_PASSWORD")
-		if err != nil {
-			return nil, err
-		}
-		return NewPasswordAuth(username, password), nil
+		username := os.Getenv("LEETCODE_USERNAME")
+		password := os.Getenv("LEETCODE_PASSWORD")
+		return NewPasswordAuth(username, password)
 	case "cookies":
-		session, err := env("LEETCODE_SESSION")
-		if err != nil {
-			return nil, err
-		}
-		csrfToken, err := env("LEETCODE_CSRFTOKEN")
-		if err != nil {
-			return nil, err
-		}
-		return NewCookiesAuth(session, csrfToken), nil
+		session := os.Getenv("LEETCODE_SESSION")
+		csrfToken := os.Getenv("LEETCODE_CSRFTOKEN")
+		return NewCookiesAuth(session, csrfToken)
 	default:
-		return NonAuth(), nil
+		return NonAuth()
 	}
-}
-
-func env(key string) (string, error) {
-	v := os.Getenv(key)
-	if v == "" {
-		return "", fmt.Errorf("environment variable %s not found", key)
-	}
-	return v, nil
 }
