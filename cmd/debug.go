@@ -42,11 +42,11 @@ var whoamiCmd = &cobra.Command{
 		}
 		c := leetcode.NewClient(leetcode.WithCredentials(cred))
 		user, err := c.GetUserStatus()
-		if !user.IsSignedIn {
-			return leetcode.ErrUserNotSignedIn
-		}
 		if err != nil {
 			return err
+		}
+		if !user.IsSignedIn {
+			return leetcode.ErrUserNotSignedIn
 		}
 		cmd.Println(user.Whoami(c))
 		return nil
