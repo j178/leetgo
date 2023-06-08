@@ -411,7 +411,7 @@ query globalData {
 	return &userStatus, nil
 }
 
-func (c *cnClient) getQuestionData(slug string, query string) (*QuestionData, error) {
+func (c *cnClient) getQuestionData(slug string, query string, authType authType) (*QuestionData, error) {
 	var resp struct {
 		Data struct {
 			Question QuestionData `json:"question"`
@@ -422,7 +422,7 @@ func (c *cnClient) getQuestionData(slug string, query string) (*QuestionData, er
 			query:         query,
 			operationName: "questionData",
 			variables:     map[string]any{"titleSlug": slug},
-			authType:      withAuth,
+			authType:      authType,
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -474,7 +474,7 @@ func (c *cnClient) GetQuestionData(slug string) (*QuestionData, error) {
 			editorType
 		}
 	}`
-	q, err := c.getQuestionData(slug, query)
+	q, err := c.getQuestionData(slug, query, withAuth)
 	if err != nil {
 		return q, err
 	}

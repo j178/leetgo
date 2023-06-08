@@ -59,10 +59,9 @@ func (c *usClient) GetQuestionData(slug string) (*QuestionData, error) {
 				slug
 				translatedName
 			}
-			editorType
 		}
 	}`
-	q, err := c.getQuestionData(slug, query)
+	q, err := c.getQuestionData(slug, query, withAuth)
 	if err != nil {
 		return q, err
 	}

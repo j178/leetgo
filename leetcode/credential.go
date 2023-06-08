@@ -179,7 +179,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 				}
 			}
 			if session == "" || csrfToken == "" {
-				log.Debug("no cookie found", "browser", store.Browser())
+				log.Debug("no cookie found", "browser", store.Browser(), "domain", domain)
 				continue
 			}
 			b.LeetCodeSession = session
