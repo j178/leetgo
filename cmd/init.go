@@ -141,7 +141,7 @@ leetcode:
 }
 
 func createQuestionCache() error {
-	c := leetcode.NewClient()
+	c := leetcode.NewClient(leetcode.ReadCredentials())
 	cache := leetcode.GetCache(c)
 	if !cache.Outdated() {
 		return nil

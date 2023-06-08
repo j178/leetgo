@@ -30,11 +30,7 @@ Set OPENAI_API_KEY environment variable to your OpenAI API key before using this
 	Example: `leetgo fix 429`,
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)
 		if err != nil {
 			return err

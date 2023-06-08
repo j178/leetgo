@@ -17,7 +17,7 @@ var inspectCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		resp, err := c.Inspect(args[0])
 		if err != nil {
 			return err
@@ -36,11 +36,7 @@ var whoamiCmd = &cobra.Command{
 	Short:  "Print the current user",
 	Hidden: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cred, err := leetcode.ReadCredentials()
-		if err != nil {
-			return err
-		}
-		c := leetcode.NewClient(leetcode.WithCredentials(cred))
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		user, err := c.GetUserStatus()
 		if err != nil {
 			return err

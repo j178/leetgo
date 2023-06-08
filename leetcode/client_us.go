@@ -134,7 +134,7 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	}`
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query}, &resp, nil,
+		graphqlRequest{query: query, authType: withAuth}, &resp, nil,
 	)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
 	req, _ := c.http.New().Get(path).Request()
-	_, err := c.send(req, &html, nil)
+	_, err := c.send(req, requireAuth, &html, nil)
 	if err != nil {
 		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
 			return nil, ErrPaidOnlyQuestion
@@ -199,7 +199,7 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 
 	path := "_next/data/" + buildId + "/contest.json"
 	var resp gjson.Result
-	_, err = c.jsonGet(path, nil, &resp, nil)
+	_, err = c.jsonGet(path, nil, withAuth, &resp, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		Post(graphQLPath).
 		Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").
 		BodyJSON(body).Request()
-	_, err := c.send(req, &resp, nil)
+	_, err := c.send(req, withoutAuth, &resp, nil)
 	if err != nil {
 		return QuestionList{}, err
 	}
@@ -304,7 +304,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
 	var resp gjson.Result
-	_, err := c.jsonGet(problemsApiTagsPath, nil, &resp, nil)
+	_, err := c.jsonGet(problemsApiTagsPath, nil, withoutAuth, &resp, nil)
 	if err != nil {
 		return nil, err
 	}

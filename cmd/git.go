@@ -25,7 +25,7 @@ var gitPushCmd = &cobra.Command{
 	Short: "Add, commit and push your solution to remote repository",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := leetcode.NewClient()
+		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qid := args[0]
 		qs, err := leetcode.ParseQID(qid, c)
 		if err != nil {
