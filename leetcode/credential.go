@@ -108,7 +108,7 @@ func (p *passwordAuth) AddCredentials(req *http.Request) error {
 			}
 		}
 		if !p.hasAuth() {
-			return errors.New("no credential found")
+			return errors.New("login failed")
 		}
 	}
 	return p.cookiesAuth.AddCredentials(req)
@@ -143,7 +143,6 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		log.Info("reading cookies from browsers", "domain", domain)
 
 		defer func(start time.Time) {
 			log.Debug("finished reading cookies", "elapsed", time.Since(start))
@@ -185,7 +184,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			}
 			b.LeetCodeSession = session
 			b.CsrfToken = csrfToken
-			log.Debug("found cookie", "browser", store.Browser())
+			log.Info("found cookies", "browser", store.Browser(), "domain", domain)
 			break
 		}
 	}

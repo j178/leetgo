@@ -177,7 +177,7 @@ func (c *cnClient) send(req *http.Request, authType authType, result any, failur
 	case withoutAuth:
 	case withAuth:
 		if err := c.opt.cred.AddCredentials(req); err != nil {
-			log.Warn("add credentials failed", "err", err)
+			log.Warn("add credentials failed, continue requesting without credentials", "err", err)
 		}
 	case requireAuth:
 		if err := c.opt.cred.AddCredentials(req); err != nil {
@@ -546,7 +546,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 		graphqlRequest{
 			query:         query,
 			operationName: "questionOfToday",
-			authType:      withAuth,
+			authType:      withoutAuth,
 		}, &resp, nil,
 	)
 	if err != nil {
@@ -575,7 +575,7 @@ func (c *cnClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
 				"year":  date.Year(),
 				"month": int(date.Month()),
 			},
-			authType: withAuth,
+			authType: withoutAuth,
 		},
 		&resp, nil,
 	)

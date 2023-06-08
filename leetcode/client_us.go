@@ -134,7 +134,7 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	}`
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query, authType: withAuth}, &resp, nil,
+		graphqlRequest{query: query, authType: withoutAuth}, &resp, nil,
 	)
 	if err != nil {
 		return nil, err
