@@ -5,7 +5,7 @@ body:
   - type: checkboxes
     id: ensure
     attributes:
-      label: Verification steps
+      label: Verify steps
       description: "
 在提交之前，请确认
 Please verify that you've followed these steps
@@ -13,13 +13,13 @@ Please verify that you've followed these steps
       options:
         - label: "
 我已经在 [Issue Tracker](https://github.com/j178/leetgo/issues) 和 [Discussion](https://github.com/j178/leetgo/discussions) 中找过我要提出的问题
-I have searched on the [issue tracker](https://github.com/j178/leetgo/issues) and [Discussion](https://github.com/j178/leetgo/discussions) for a related issue.
+I have searched on the [Issue Tracker](https://github.com/j178/leetgo/issues) and [Discussion](https://github.com/j178/leetgo/discussions) for a related issue.
 "
           required: true
   - type: textarea
     attributes:
       render: shell
-      label: "leetgo config"
+      label: "leetgo debug"
       description: "
 在下方附上 `leetgo debug` 的输出
 Paste the output of `leetgo debug` below
