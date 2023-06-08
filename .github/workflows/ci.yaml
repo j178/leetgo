@@ -1,14 +1,13 @@
 name: CI
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 permissions:
   contents: read
 jobs:
-  ci:
-    name: CI
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,7 +19,14 @@ jobs:
         with:
           version: latest
           args: --timeout 3m0s
-
+          skip-cache: true
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.x'
       - name: check-readme
         run: |
           go run ./scripts/update_readme.go
