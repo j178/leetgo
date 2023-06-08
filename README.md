@@ -102,12 +102,6 @@ and many other languages are planned. (Help wanted, contributions welcome!)
 
 You can download the latest binary from the [release page](https://github.com/j178/leetgo/releases).
 
-### Install via go
-
-```shell
-go install github.com/j178/leetgo@latest
-```
-
 ### Install via [HomeBrew](https://brew.sh/) on macOS/Linux
 
 ```shell
@@ -119,6 +113,12 @@ brew install j178/tap/leetgo
 ```shell
 scoop bucket add j178 https://github.com/j178/scoop-bucket.git
 scoop install j178/leetgo
+```
+
+### Install via go
+
+```shell
+go install github.com/j178/leetgo@latest
 ```
 
 ## Usage

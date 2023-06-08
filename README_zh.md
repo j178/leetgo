@@ -101,12 +101,6 @@ func main() {
 
 你可以直接从 [release 页面](https://github.com/j178/leetgo/releases) 下载最新的可执行程序，添加可执行权限、加入 `PATH` 后使用。
 
-### 使用 `go install`
-
-```shell
-go install github.com/j178/leetgo@latest
-```
-
 ### macOS/Linux 使用 [HomeBrew](https://brew.sh/)
 
 ```shell
@@ -118,6 +112,12 @@ brew install j178/tap/leetgo
 ```shell
 scoop bucket add j178 https://github.com/j178/scoop-bucket.git
 scoop install j178/leetgo
+```
+
+### 使用 `go install`
+
+```shell
+go install github.com/j178/leetgo@latest
 ```
 
 ## 使用
