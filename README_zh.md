@@ -15,12 +15,18 @@
 
 `leetgo` 还支持竞赛模式，自动等待比赛的开始时间，第一时间为你生成所有比赛题目，并且可以一键提交所有题目，让你的排名更进一步。
 
-日常使用 `leetgo` 非常简单:
+## 快速开始
 
-```sh
-leetgo pick today      # 选择一道题目
-leetgo test last -L -s # 测试并提交代码
-```
+1. [安装 leetgo](#安装)
+2. 创建一个项目: `leetgo init -t <us or cn>`
+3. 编辑配置文件: `leetgo.yaml` and `~/.config/leetgo/config.yaml`
+4. 选择一个问题: `leetgo pick <id or name or today>`
+5. 测试你的代码: `leetgo test last -L`
+6. 提交你的代码: `leetgo submit last`
+
+你可以用一行命令实现测试并提交: `leetgo test last -L -s`
+
+你可以在你最喜欢的编辑器中修改代码: `leetgo edit last`
 
 ## Demo
 

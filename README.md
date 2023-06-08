@@ -15,12 +15,18 @@ and you can use any IDE you like to solve problems.
 
 And `leetgo` also supports real-time generation of **contest questions**, submitting all questions at once, so your submissions are always one step ahead!
 
-Daily usage of `leetgo` is as simple as:
+## Quick Start
 
-```sh
-leetgo pick today      # Pick one question to generate
-leetgo test last -L -s # Test and submit your code
-```
+1. [Install leetgo](#installation)
+2. Initialize leetgo: `leetgo init -t <us or cn>`
+3. Edit leetgo config file: `leetgo.yaml` and `~/.config/leetgo/config.yaml`
+4. Pick a question: `leetgo pick <id or name or today>`
+5. Test your code: `leetgo test last -L`
+6. Submit your code: `leetgo submit last`
+
+You can test and submit in one command: `leetgo test last -L -s`
+
+You can edit the question file in your favorite editor: `leetgo edit last`
 
 ## Demo
 
