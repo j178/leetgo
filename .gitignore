@@ -5,6 +5,7 @@ leetgo.exe
 leetgo.yaml
 completions/
 dist/
-/out
+out/
+go.work
 go.work.sum
 misc/*.gif

@@ -222,6 +222,8 @@ leetcode:
   credentials:
     # How to provide credentials: browser, cookies, password or none
     from: browser
+    # Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried
+    browsers: []
 contest:
   # Base dir to put generated contest questions
   out_dir: contest

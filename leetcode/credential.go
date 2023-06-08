@@ -44,16 +44,16 @@ func (n *nonAuth) AddCredentials(req *http.Request) error {
 func (n *nonAuth) Reset() {}
 
 type cookiesAuth struct {
-	LeetcodeSession string
+	LeetCodeSession string
 	CsrfToken       string
 }
 
 func NewCookiesAuth(session, csrftoken string) CredentialsProvider {
-	return &cookiesAuth{LeetcodeSession: session, CsrfToken: csrftoken}
+	return &cookiesAuth{LeetCodeSession: session, CsrfToken: csrftoken}
 }
 
 func (c *cookiesAuth) AddCredentials(req *http.Request) error {
-	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetcodeSession})
+	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetCodeSession})
 	req.AddCookie(&http.Cookie{Name: "csrftoken", Value: c.CsrfToken})
 	req.Header.Add("x-csrftoken", c.CsrfToken)
 	return nil
@@ -62,7 +62,7 @@ func (c *cookiesAuth) AddCredentials(req *http.Request) error {
 func (c *cookiesAuth) Reset() {}
 
 func (c *cookiesAuth) hasAuth() bool {
-	return c.LeetcodeSession != "" && c.CsrfToken != ""
+	return c.LeetCodeSession != "" && c.CsrfToken != ""
 }
 
 type passwordAuth struct {
@@ -94,7 +94,7 @@ func (p *passwordAuth) AddCredentials(req *http.Request) error {
 		cookies := resp.Cookies()
 		for _, cookie := range cookies {
 			if cookie.Name == "LEETCODE_SESSION" {
-				p.LeetcodeSession = cookie.Value
+				p.LeetCodeSession = cookie.Value
 			}
 			if cookie.Name == "csrftoken" {
 				p.CsrfToken = cookie.Value
@@ -110,18 +110,19 @@ func (p *passwordAuth) AddCredentials(req *http.Request) error {
 func (p *passwordAuth) Reset() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.LeetcodeSession = ""
+	p.LeetCodeSession = ""
 	p.CsrfToken = ""
 }
 
 type browserAuth struct {
 	cookiesAuth
-	mu sync.Mutex
-	c  Client
+	mu       sync.Mutex
+	c        Client
+	browsers []string
 }
 
-func NewBrowserAuth() CredentialsProvider {
-	return &browserAuth{}
+func NewBrowserAuth(browsers []string) CredentialsProvider {
+	return &browserAuth{browsers: browsers}
 }
 
 func (b *browserAuth) SetClient(c Client) {
@@ -135,14 +136,14 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
-		log.Info("reading cookies from browser", "domain", domain)
+		log.Info("reading cookies from browsers", "domain", domain)
 
 		defer func(start time.Time) {
-			log.Debug("finished read cookies from browser", "elapsed", time.Since(start))
+			log.Debug("finished reading cookies", "elapsed", time.Since(start))
 		}(time.Now())
 
-		cookies := kooky.ReadCookies(
-			kooky.Valid,
+		cookieStores := kooky.FindCookieStores(b.browsers...)
+		filters := []kooky.Filter{
 			kooky.DomainHasSuffix(domain),
 			kooky.FilterFunc(
 				func(cookie *kooky.Cookie) bool {
@@ -150,21 +151,39 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 						kooky.Name("csrftoken").Filter(cookie)
 				},
 			),
-		)
-		if len(cookies) < 2 {
-			return errors.New("no cookie found in browser")
 		}
-		for _, cookie := range cookies {
-			if cookie.Name == "LEETCODE_SESSION" {
-				b.LeetcodeSession = cookie.Value
+		for _, store := range cookieStores {
+			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
+			cookies, err := store.ReadCookies(filters...)
+			if err != nil {
+				log.Debug("failed to read cookies", "error", err)
+				continue
 			}
-			if cookie.Name == "csrftoken" {
-				b.CsrfToken = cookie.Value
+			if len(cookies) < 2 {
+				log.Debug("no cookie found", "browser", store.Browser())
+				continue
 			}
+			var session, csrfToken string
+			for _, cookie := range cookies {
+				if cookie.Name == "LEETCODE_SESSION" {
+					session = cookie.Value
+				}
+				if cookie.Name == "csrftoken" {
+					csrfToken = cookie.Value
+				}
+			}
+			if session == "" || csrfToken == "" {
+				log.Debug("no cookie found", "browser", store.Browser())
+				continue
+			}
+			b.LeetCodeSession = session
+			b.CsrfToken = csrfToken
+			log.Debug("found cookie", "browser", store.Browser())
+			break
 		}
-		if b.LeetcodeSession == "" || b.CsrfToken == "" {
-			return errors.New("no cookie found in browser")
-		}
+	}
+	if !b.hasAuth() {
+		return errors.New("no cookies found in browsers")
 	}
 
 	return b.cookiesAuth.AddCredentials(req)
@@ -173,7 +192,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 func (b *browserAuth) Reset() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.LeetcodeSession = ""
+	b.LeetCodeSession = ""
 	b.CsrfToken = ""
 }
 
@@ -181,7 +200,7 @@ func ReadCredentials() (CredentialsProvider, error) {
 	cfg := config.Get()
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
-		return NewBrowserAuth(), nil
+		return NewBrowserAuth(cfg.LeetCode.Credentials.Browsers), nil
 	case "password":
 		username, err := env("LEETCODE_USERNAME")
 		if err != nil {
