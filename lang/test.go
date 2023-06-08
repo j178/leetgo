@@ -14,9 +14,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jedib0t/go-pretty/v6/list"
 
+	goutils "github.com/j178/leetgo/testutils/go"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
-	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -479,7 +480,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 
 			if r := judger.Judge(c.Input, c.Output, actualOutput); r.IsAccepted() {
 				passed++
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Accepted")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Passed")))
 			} else {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, failedStyle.Render("Wrong answer")))
 				l.Indent()
