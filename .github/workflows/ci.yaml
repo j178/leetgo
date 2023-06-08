@@ -19,7 +19,7 @@ jobs:
         with:
           version: latest
           args: --timeout 3m0s
-          skip-cache: true
+          skip-pkg-cache: true
   test:
     runs-on: ubuntu-latest
     steps:
