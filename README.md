@@ -373,4 +373,8 @@ Here are some awesome projects that inspired me to create this project:
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
 
+Also thanks to [JetBrains](https://www.jetbrains.com/) for providing free licenses to support this project.
+
+[![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)](https://jb.gg/OpenSourceSupport)
+
 [^1]: For Safari on macOS, you may need to grant `Full Disk Access` privilege to your terminal app which you would like to run `leetgo`.

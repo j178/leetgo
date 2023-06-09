@@ -362,4 +362,8 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 - https://github.com/budougumi0617/leetgode
 - https://github.com/skygragon/leetcode-cli
 
+也感谢 [JetBrains](https://www.jetbrains.com/) 为本项目提供的免费开源许可证。
+
+[![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)](https://jb.gg/OpenSourceSupport)
+
 [^1]: 使用 Safari 的用户注意，你需要赋予使用 `leetgo` 的终端 App `全盘访问`的权限。
