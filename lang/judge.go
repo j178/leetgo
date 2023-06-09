@@ -3,6 +3,7 @@ package lang
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -88,14 +89,13 @@ func (j *sliceJudger) Judge(input []string, output, actualOutput string) JudgeRe
 	return accepted()
 }
 
+var anyOrderRe = regexp.MustCompile(`(?i)return.* in any order`)
+
 // TODO improve the detection of "any order"
 func shouldIgnoreOrder(q *leetcode.QuestionData) bool {
 	content := q.GetEnglishContent()
 	content = strip.StripTags(content)
-	if strings.Contains(content, "return the answer in any order") {
-		return true
-	}
-	if strings.Contains(content, "return the result in any order") {
+	if anyOrderRe.MatchString(content) {
 		return true
 	}
 
