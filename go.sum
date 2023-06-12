@@ -221,8 +221,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLfbgNxrN4=
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
-github.com/j178/kooky v0.0.0-20230608070159-044cb72f9436 h1:hnwdkVHsZsL9wlhAv5EsBHZSfRR7sPK1AGnc90EiW8A=
-github.com/j178/kooky v0.0.0-20230608070159-044cb72f9436/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
+github.com/j178/kooky v0.0.0-20230609034248-af88dcd40695 h1:v9a4z7YcjcnP7e4r6r1UvUgGWOyGf+1ec98PVv4PSVE=
+github.com/j178/kooky v0.0.0-20230609034248-af88dcd40695/go.mod h1:7Rm3VdbhA/02fT1ObHhffCHXDhdmn3/x+EIHCbMuf44=
 github.com/j178/leetgo/testutils/go v0.2.0 h1:5ofMFF29RMM0ANCjlwpOR9rkOFtYf/5UTGbCwkRds5A=
 github.com/j178/leetgo/testutils/go v0.2.0/go.mod h1:m4VquSOufm2jcOyXW7P52fWa8adQim5XoQSEAJX2hw8=
 github.com/jedib0t/go-pretty/v6 v6.4.6 h1:v6aG9h6Uby3IusSSEjHaZNXpHFhzqMmjXcPq1Rjl9Jw=
