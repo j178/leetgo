@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/list"
 
 	goutils "github.com/j178/leetgo/testutils/go"
@@ -395,6 +396,30 @@ var (
 	failedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff6600"))
 	stdoutStyle  = lipgloss.NewStyle().Faint(true)
 )
+
+func buildTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	buf := new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+	cmd.Dir = genResult.OutDir
+	cmd.Stdout = buf
+	cmd.Stderr = buf
+
+	testFile := genResult.GetFile(TestFile).GetPath()
+	if log.GetLevel() <= log.DebugLevel {
+		log.Info("building", "cmd", cmd.String())
+	} else {
+		log.Info("building", "file", utils.RelToCwd(testFile))
+	}
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(stdoutStyle.Render(buf.String()))
+		return err
+	}
+	return nil
+}
 
 func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, targetCaseStr string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)

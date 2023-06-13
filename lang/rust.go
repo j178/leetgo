@@ -58,12 +58,8 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 	}
 	genResult.SetOutDir(outDir)
 
-	build := exec.Command("cargo", "build", "--quiet", "--bin", q.TitleSlug)
-	build.Dir = outDir
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	log.Info("building", "cmd", build.String())
-	err = build.Run()
+	args := []string{"cargo", "build", "--quiet", "--bin", q.TitleSlug}
+	err = buildTest(q, genResult, args)
 	if err != nil {
 		return false, fmt.Errorf("build failed: %w", err)
 	}

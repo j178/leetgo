@@ -151,12 +151,7 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase
 		return false, fmt.Errorf("get temp bin file failed: %w", err)
 	}
 
-	build := exec.Command("go", "build", "-o", execFile, testFile)
-	build.Dir = outDir
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	log.Info("building", "cmd", build.String())
-	err = build.Run()
+	err = buildTest(q, genResult, []string{"go", "build", "-o", execFile, testFile})
 	if err != nil {
 		return false, fmt.Errorf("build failed: %w", err)
 	}
