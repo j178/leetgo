@@ -261,7 +261,7 @@ var credentialFrom = map[string]bool{
 
 func verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
-		return fmt.Errorf("invalid `language` value: %s", c.Language)
+		return fmt.Errorf("invalid `language` value: %s, only `en` or `zh` is supported", c.Language)
 	}
 	if c.Code.Lang == "" {
 		return fmt.Errorf("`code.lang` not set, please set it in config file or provide it with `--lang/-l` flag")
