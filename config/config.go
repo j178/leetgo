@@ -311,6 +311,7 @@ func Load(init bool) error {
 		if init && notExist {
 			// During `init`, if global config file does not exist, we will create one
 			err = nil
+			_ = err
 		} else {
 			if notExist {
 				return fmt.Errorf(
