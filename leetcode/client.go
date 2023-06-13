@@ -575,7 +575,7 @@ func (c *cnClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
 				"year":  date.Year(),
 				"month": int(date.Month()),
 			},
-			authType: withoutAuth,
+			authType: withAuth,
 		},
 		&resp, nil,
 	)

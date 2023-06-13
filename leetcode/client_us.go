@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
@@ -140,6 +141,45 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	}
 	slug := resp.Get("data.activeDailyCodingChallengeQuestion.question.titleSlug").Str
 	return c.GetQuestionData(slug)
+}
+
+func (c *usClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
+	query := `
+	query dailyCodingQuestionRecords($year: Int!, $month: Int!) {
+	    dailyCodingChallengeV2(year: $year, month: $month) {
+			challenges {
+				date
+				userStatus
+				question {
+	                titleSlug
+	            }
+			}
+	    }
+	}`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{
+			query: query,
+			variables: map[string]any{
+				"year":  date.Year(),
+				"month": int(date.Month()),
+			},
+			authType: withAuth,
+		},
+		&resp, nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	dateStr := date.Format("2006-01-02")
+	qs := resp.Get("data.dailyCodingChallengeV2.challenges").Array()
+	for _, q := range qs {
+		if q.Get("date").Str == dateStr {
+			slug := q.Get("question.titleSlug").Str
+			return c.GetQuestionData(slug)
+		}
+	}
+	return nil, ErrQuestionNotFound
 }
 
 func (c *usClient) GetContest(contestSlug string) (*Contest, error) {
