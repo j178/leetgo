@@ -325,6 +325,9 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase st
 	genResult.SetOutDir(outDir)
 
 	testFile := genResult.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
 	execFile, err := getTempBinFile(q, c)
 	if err != nil {
 		return false, fmt.Errorf("generate temporary binary file path failed: %w", err)

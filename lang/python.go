@@ -81,6 +81,9 @@ func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase
 	genResult.SetOutDir(outDir)
 
 	testFile := genResult.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
 	cmd := []string{path.Join(outDir, ".venv", constants.VenvPython), testFile}
 	return runTest(q, genResult, cmd, targetCase)
 }

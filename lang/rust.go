@@ -58,6 +58,11 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 	}
 	genResult.SetOutDir(outDir)
 
+	testFile := genResult.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
+
 	args := []string{"cargo", "build", "--quiet", "--bin", q.TitleSlug}
 	err = buildTest(q, genResult, args)
 	if err != nil {

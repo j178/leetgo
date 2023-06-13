@@ -13,6 +13,7 @@ import (
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 )
 
 type golang struct {
@@ -146,6 +147,9 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase
 	genResult.SetOutDir(outDir)
 
 	testFile := genResult.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
 	execFile, err := getTempBinFile(q, g)
 	if err != nil {
 		return false, fmt.Errorf("get temp bin file failed: %w", err)

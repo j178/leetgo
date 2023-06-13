@@ -46,7 +46,7 @@ leetgo submit w330/
 			log.Info("submitting solution", "question", q.TitleSlug, "user", user.Whoami(c))
 			result, err := submitSolution(cmd, q, c, gen, limiter)
 			if err != nil {
-				log.Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+				log.Error("failed to submit solution", "err", err)
 				continue
 			}
 			cmd.Print(result.Display(qs[0]))
@@ -54,7 +54,7 @@ leetgo submit w330/
 			if !result.Accepted() {
 				added, _ := appendToTestCases(q, result)
 				if added {
-					log.Info("added failed case to testcases.txt", "question", q.TitleSlug)
+					log.Info("added failed case to testcases.txt")
 				}
 			}
 		}

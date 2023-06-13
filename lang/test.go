@@ -415,7 +415,7 @@ func buildTest(q *leetcode.QuestionData, genResult *GenerateResult, args []strin
 	}
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(stdoutStyle.Render(buf.String()))
+		fmt.Println(stdoutStyle.Render(strings.TrimSuffix(buf.String(), "\n")))
 		return err
 	}
 	return nil
