@@ -69,6 +69,9 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 		}
 	case strings.Contains(qid, "/"):
 		_, qs, err = ParseContestQID(qid, c, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if err == ErrQuestionNotFound {
 		err = nil
@@ -150,7 +153,7 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 			if questionNum > 0 {
 				questionName = strconv.Itoa(questionNum)
 			}
-			return contest, nil, fmt.Errorf("get contest question failed %s: %w", questionName, err)
+			return contest, nil, fmt.Errorf("get contest question %s failed: %w", questionName, err)
 		}
 		if q != nil {
 			qs = []*QuestionData{q}
