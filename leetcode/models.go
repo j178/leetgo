@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/fatih/color"
+	"github.com/j178/leetgo/config"
 )
 
 type UserStatus struct {
@@ -77,14 +77,6 @@ type SubmitCheckResult struct {
 	FullRuntimeError  string  `json:"full_runtime_error"`
 }
 
-var (
-	// TODO replace with lipgloss
-	colorGreen  = color.New(color.FgHiGreen, color.Bold)
-	colorYellow = color.New(color.FgHiYellow, color.Bold)
-	colorFaint  = color.New(color.Faint)
-	colorRed    = color.New(color.FgHiRed, color.Bold)
-)
-
 func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	stdout := ""
 	if len(r.CodeOutput) > 1 {
@@ -93,16 +85,16 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	switch StatusCode(r.StatusCode) {
 	case Accepted:
 		return fmt.Sprintf(
-			"\n%s\n%s%s%s\n",
-			colorGreen.Sprintf("√ %s", r.StatusMsg),
+			"\n%s%s%s%s\n",
+			config.PassedStyle.Render(fmt.Sprintf(" √ %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nRuntime:       %s, better than %.0f%%", r.StatusRuntime, r.RuntimePercentile),
 			fmt.Sprintf("\nMemory:        %s, better than %.0f%%", r.StatusMemory, r.MemoryPercentile),
 		)
 	case WrongAnswer:
 		return fmt.Sprintf(
-			"\n%s\n%s%s%s%s%s\n",
-			colorRed.Sprint(" × Wrong Answer"),
+			"\n%s%s%s%s%s%s\n",
+			config.FailedStyle.Render(" × Wrong Answer\n"),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nLast case:     %s", strings.ReplaceAll(r.LastTestcase, "\n", "↩ ")),
 			fmt.Sprintf("\nOutput:        %s", strings.ReplaceAll(r.CodeOutput, "\n", "↩ ")),
@@ -111,26 +103,26 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 		)
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
 		return fmt.Sprintf(
-			"\n%s\n%s%s\n",
-			colorYellow.Sprintf("\n × %s\n", r.StatusMsg),
+			"\n%s%s%s\n",
+			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nLast case:     %s", r.LastTestcase),
 		)
 	case RuntimeError:
 		return fmt.Sprintf(
-			"\n%s\n%s\n\n%s\n",
-			colorRed.Sprintf(" × %s", r.StatusMsg),
-			fmt.Sprintf("Passed cases:   %s", formatCompare(r.CompareResult)),
-			colorFaint.Sprint(r.FullRuntimeError),
+			"\n%s%s%s\n",
+			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			fmt.Sprintf("\nPassed cases:   %s", formatCompare(r.CompareResult)),
+			"\n"+config.StdoutStyle.Render(r.FullRuntimeError),
 		)
 	case CompileError:
 		return fmt.Sprintf(
-			"\n%s\n\n%s\n",
-			colorRed.Sprintf(" × %s", r.StatusMsg),
-			colorFaint.Sprint(r.FullCompileError),
+			"\n%s%s\n",
+			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			"\n"+config.StdoutStyle.Render(r.FullCompileError),
 		)
 	default:
-		return fmt.Sprintf("\n%s\n", colorRed.Sprintf(" × %s", r.StatusMsg))
+		return config.FailedStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
 	}
 }
 
@@ -188,9 +180,9 @@ func formatCompare(s string) string {
 	var sb strings.Builder
 	for _, c := range s {
 		if c == '1' {
-			sb.WriteString(colorGreen.Sprint("√"))
+			sb.WriteString(config.PassedStyle.Render("√"))
 		} else {
-			sb.WriteString(colorRed.Sprint("×"))
+			sb.WriteString(config.ErrorStyle.Render("×"))
 		}
 	}
 	return sb.String()
@@ -205,8 +197,8 @@ func (r *RunCheckResult) Display(q *QuestionData) string {
 	case Accepted:
 		if r.CorrectAnswer {
 			return fmt.Sprintf(
-				"\n%s\n%s%s%s%s%s\n",
-				colorGreen.Sprintf("√ %s", r.StatusMsg),
+				"\n%s%s%s%s%s%s\n",
+				config.PassedStyle.Render(fmt.Sprintf(" √ %s\n", r.StatusMsg)),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
 				fmt.Sprintf("\nInput:         %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
 				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
@@ -215,8 +207,8 @@ func (r *RunCheckResult) Display(q *QuestionData) string {
 			)
 		} else {
 			return fmt.Sprintf(
-				"\n%s\n%s%s%s%s%s\n",
-				colorRed.Sprint(" × Wrong Answer"),
+				"\n%s%s%s%s%s%s\n",
+				config.ErrorStyle.Render("\n × Wrong Answer\n"),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
 				fmt.Sprintf("\nInput:         %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
 				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
@@ -225,22 +217,22 @@ func (r *RunCheckResult) Display(q *QuestionData) string {
 			)
 		}
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
-		return colorYellow.Sprintf("\n × %s\n", r.StatusMsg)
+		return config.ErrorStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
 	case RuntimeError:
 		return fmt.Sprintf(
-			"\n%s\n%s\n\n%s\n",
-			colorRed.Sprintf(" × %s", r.StatusMsg),
+			"\n%s%s%s\n",
+			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
 			fmt.Sprintf("Passed cases:   %s", formatCompare(r.CompareResult)),
-			colorFaint.Sprint(r.FullRuntimeError),
+			"\n"+config.StdoutStyle.Render(r.FullRuntimeError),
 		)
 	case CompileError:
 		return fmt.Sprintf(
-			"\n%s\n\n%s\n",
-			colorRed.Sprintf(" × %s", r.StatusMsg),
-			colorFaint.Sprint(r.FullCompileError),
+			"\n%s%s\n",
+			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			"\n"+config.StdoutStyle.Render(r.FullCompileError),
 		)
 	default:
-		return fmt.Sprintf("\n%s\n", colorRed.Sprintf(" × %s", r.StatusMsg))
+		return config.FailedStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
 	}
 }
 

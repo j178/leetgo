@@ -92,6 +92,10 @@ func submitSolution(
 		return nil, fmt.Errorf("failed to submit solution: %w", err)
 	}
 
+	spin.Lock()
+	spin.Suffix = " Waiting for result..."
+	spin.Unlock()
+
 	testResult, err := waitResult(c, submissionId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to wait submit result: %w", err)

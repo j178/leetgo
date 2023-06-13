@@ -96,7 +96,7 @@ leetgo test w330/`,
 				}
 			}
 			if runRemotely {
-				log.Info("running test remotely", "question", q.TitleSlug, "user", user.Whoami(c))
+				log.Info("running test remotely", "question", q.TitleSlug)
 				result, err := runTestRemotely(cmd, q, c, gen, testLimiter)
 				if err != nil {
 					log.Error("failed to run test remotely", "err", err)
@@ -108,6 +108,7 @@ leetgo test w330/`,
 			}
 
 			if localPassed && remotePassed && autoSubmit {
+				log.Info("submitting solution", "user", user.Whoami(c))
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
 					log.Error("failed to submit solution", "err", err)
@@ -153,7 +154,7 @@ func runTestRemotely(
 	casesStr := strings.Join(cases, "\n")
 
 	spin := newSpinner(cmd.ErrOrStderr())
-	spin.Suffix = " Running test..."
+	spin.Suffix = " Running tests..."
 	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
@@ -165,6 +166,10 @@ func runTestRemotely(
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
 	}
+
+	spin.Lock()
+	spin.Suffix = " Waiting for result..."
+	spin.Unlock()
 
 	testResult, err := waitResult(c, interResult.InterpretId)
 	if err != nil {

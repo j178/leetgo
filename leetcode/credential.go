@@ -184,7 +184,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			}
 			b.LeetCodeSession = session
 			b.CsrfToken = csrfToken
-			log.Info("found cookies", "browser", store.Browser(), "domain", domain)
+			log.Info("read LeetCode cookies", "browser", store.Browser(), "domain", domain)
 			break
 		}
 	}
