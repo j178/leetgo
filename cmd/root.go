@@ -68,11 +68,17 @@ func initWorkDir() error {
 }
 
 func initLogger() {
-	log.SetReportTimestamp(false)
-	log.SetLevel(log.InfoLevel)
 	if config.Debug {
 		log.SetReportTimestamp(true)
 		log.SetLevel(log.DebugLevel)
+	} else {
+		log.DebugLevelStyle = log.DebugLevelStyle.SetString("●")
+		log.InfoLevelStyle = log.InfoLevelStyle.SetString("●")
+		log.WarnLevelStyle = log.WarnLevelStyle.SetString("●")
+		log.ErrorLevelStyle = log.ErrorLevelStyle.SetString("×")
+		log.FatalLevelStyle = log.FatalLevelStyle.SetString("×")
+		log.SetReportTimestamp(false)
+		log.SetLevel(log.InfoLevel)
 	}
 }
 

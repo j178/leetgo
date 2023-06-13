@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/list"
 
 	goutils "github.com/j178/leetgo/testutils/go"
@@ -388,13 +388,29 @@ func checkOutput(q *leetcode.QuestionData, input []string, outputLine string) er
 	return nil
 }
 
-var (
-	skippedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#b8b8b8"))
-	passedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#00b300"))
-	errorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
-	failedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#ff6600"))
-	stdoutStyle  = lipgloss.NewStyle().Faint(true)
-)
+func buildTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	buf := new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+	cmd.Dir = genResult.OutDir
+	cmd.Stdout = buf
+	cmd.Stderr = buf
+
+	testFile := genResult.GetFile(TestFile).GetPath()
+	if log.GetLevel() <= log.DebugLevel {
+		log.Info("building", "cmd", cmd.String())
+	} else {
+		log.Info("building", "file", utils.RelToCwd(testFile))
+	}
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(config.StdoutStyle.Render(strings.TrimSuffix(buf.String(), "\n")))
+		return err
+	}
+	return nil
+}
 
 func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string, targetCaseStr string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)
@@ -424,7 +440,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				fmt.Println(l.Render())
 			}()
 			if !caseRange.Contains(c.No) {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, skippedStyle.Render("Skipped")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.SkippedStyle.Render("Skipped")))
 				return
 			}
 			ran++
@@ -439,7 +455,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			cmd.Stderr = outputBuf
 			err = cmd.Start()
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Failed to start")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Failed to start")))
 				return
 			}
 			err = cmd.Wait()
@@ -447,12 +463,12 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			actualOutput, stdout := extractOutput(outputBuf.String())
 			mayAppendStdout := func() {
 				if stdout != "" {
-					out := stdoutStyle.Render(strings.ReplaceAll(stdout, "\n", "↩ "))
+					out := config.StdoutStyle.Render(strings.ReplaceAll(stdout, "\n", "↩ "))
 					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
 				}
 			}
 			if ctx.Err() != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Time limit exceeded")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Time limit exceeded")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				mayAppendStdout()
@@ -460,7 +476,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Runtime error")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Runtime error")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				mayAppendStdout()
@@ -469,7 +485,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			}
 			err = checkOutput(q, c.Input, actualOutput)
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, errorStyle.Render("Invalid output")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Invalid output")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
 				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
@@ -480,9 +496,9 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 
 			if r := judger.Judge(c.Input, c.Output, actualOutput); r.IsAccepted() {
 				passed++
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, passedStyle.Render("Passed")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.PassedStyle.Render("Passed")))
 			} else {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, failedStyle.Render("Wrong answer")))
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.FailedStyle.Render("Wrong answer")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Reason:     %s", r.GetInfo()))
 				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))

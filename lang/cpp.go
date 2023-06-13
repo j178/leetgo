@@ -2,12 +2,9 @@ package lang
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/shlex"
 
 	"github.com/j178/leetgo/config"
@@ -328,22 +325,21 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase st
 	genResult.SetOutDir(outDir)
 
 	testFile := genResult.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
 	execFile, err := getTempBinFile(q, c)
 	if err != nil {
 		return false, fmt.Errorf("generate temporary binary file path failed: %w", err)
 	}
 
 	cfg := config.Get()
-	compiler := cfg.Code.Cpp.CXX
 	compilerFlags, _ := shlex.Split(cfg.Code.Cpp.CXXFLAGS)
-	compilerFlags = append(compilerFlags, "-I", outDir, "-o", execFile, testFile)
+	args := []string{cfg.Code.Cpp.CXX}
+	args = append(args, compilerFlags...)
+	args = append(args, "-I", outDir, "-o", execFile, testFile)
 
-	cmd := exec.Command(compiler, compilerFlags...)
-	cmd.Dir = outDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	log.Info("compiling", "cmd", cmd.String())
-	err = cmd.Run()
+	err = buildTest(q, genResult, args)
 	if err != nil {
 		return false, fmt.Errorf("compilation failed: %w", err)
 	}

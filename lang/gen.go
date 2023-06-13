@@ -94,7 +94,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	for i, file := range result.Files {
 		written, err := tryWrite(file.GetPath(), file.Content)
 		if err != nil {
-			log.Error("failed to write file", "path", file.GetPath(), "err", err)
+			log.Error("failed to write file", "path", utils.RelToCwd(file.GetPath()), "err", err)
 			continue
 		}
 		result.Files[i].Written = written

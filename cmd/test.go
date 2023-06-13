@@ -92,14 +92,14 @@ leetgo test w330/`,
 				log.Info("running test locally", "question", q.TitleSlug)
 				localPassed, err = lang.RunLocalTest(q, targetCase)
 				if err != nil {
-					log.Error("failed to run test locally", "question", q.TitleSlug, "err", err)
+					log.Error("failed to run test locally", "err", err)
 				}
 			}
 			if runRemotely {
-				log.Info("running test remotely", "question", q.TitleSlug, "user", user.Whoami(c))
+				log.Info("running test remotely", "question", q.TitleSlug)
 				result, err := runTestRemotely(cmd, q, c, gen, testLimiter)
 				if err != nil {
-					log.Error("failed to run test remotely", "question", q.TitleSlug, "err", err)
+					log.Error("failed to run test remotely", "err", err)
 					remotePassed = false
 				} else {
 					cmd.Print(result.Display(q))
@@ -108,16 +108,17 @@ leetgo test w330/`,
 			}
 
 			if localPassed && remotePassed && autoSubmit {
+				log.Info("submitting solution", "user", user.Whoami(c))
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
-					log.Error("failed to submit solution", "question", q.TitleSlug, "err", err)
+					log.Error("failed to submit solution", "err", err)
 				} else {
 					cmd.Print(result.Display(q))
 
 					if !result.Accepted() {
 						added, _ := appendToTestCases(q, result)
 						if added {
-							log.Info("added failed case to testcases.txt", "question", q.TitleSlug)
+							log.Info("added failed case to testcases.txt")
 						}
 					}
 				}
@@ -153,7 +154,7 @@ func runTestRemotely(
 	casesStr := strings.Join(cases, "\n")
 
 	spin := newSpinner(cmd.ErrOrStderr())
-	spin.Suffix = " Running test..."
+	spin.Suffix = " Running tests..."
 	spin.Reverse()
 	spin.Start()
 	defer spin.Stop()
@@ -165,6 +166,10 @@ func runTestRemotely(
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
 	}
+
+	spin.Lock()
+	spin.Suffix = " Waiting for result..."
+	spin.Unlock()
 
 	testResult, err := waitResult(c, interResult.InterpretId)
 	if err != nil {

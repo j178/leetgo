@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 
 	"github.com/j178/leetgo/cmd"
@@ -39,7 +38,7 @@ func replace(mark string, origin []byte, new []byte) []byte {
 }
 
 func updateUsage(readme []byte) []byte {
-	color.NoColor = true
+	_ = os.Setenv("NO_COLOR", "true")
 	usage := cmd.UsageString()
 	usage = "\n```\n" + usage + "```\n"
 
