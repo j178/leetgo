@@ -261,10 +261,10 @@ var credentialFrom = map[string]bool{
 
 func verify(c *Config) error {
 	if c.Language != ZH && c.Language != EN {
-		return fmt.Errorf("invalid `language` value: %s", c.Language)
+		return fmt.Errorf("invalid `language` value: %s, only `en` or `zh` is supported", c.Language)
 	}
 	if c.Code.Lang == "" {
-		return fmt.Errorf("`code.lang` is empty")
+		return fmt.Errorf("`code.lang` not set, please set it in config file or provide it with `--lang/-l` flag")
 	}
 	switch strings.ToLower(string(c.LeetCode.Site)) {
 	case "cn":
@@ -307,17 +307,20 @@ func Load(init bool) error {
 	viper.SetConfigFile(cfg.GlobalConfigFile())
 	err := viper.ReadInConfig()
 	if err != nil {
-		if os.IsNotExist(err) {
-			if !init {
-				log.Warn(
-					"global config file not found, have you ran `leetgo init`?",
-					"file",
+		notExist := os.IsNotExist(err)
+		if init && notExist {
+			// During `init`, if global config file does not exist, we will create one
+			err = nil
+			_ = err
+		} else {
+			if notExist {
+				return fmt.Errorf(
+					"global config file %s not found, run `leetgo init` to create one",
 					cfg.GlobalConfigFile(),
 				)
 			}
-			return nil
+			return fmt.Errorf("load global config file %s failed: %w", cfg.GlobalConfigFile(), err)
 		}
-		return fmt.Errorf("load config file %s failed: %w", cfg.GlobalConfigFile(), err)
 	}
 
 	// Don't read project config if we are running `init` command

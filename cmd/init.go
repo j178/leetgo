@@ -135,7 +135,7 @@ leetcode:
 			site,
 		),
 	)
-	log.Info("project config file created", "file", projectFile)
+	log.Info("project config file created", "file", utils.RelToCwd(projectFile))
 
 	return nil
 }
