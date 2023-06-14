@@ -37,15 +37,6 @@ var rootCmd = &cobra.Command{
 	Version:       buildVersion() + "\n\n" + constants.ProjectURL,
 	SilenceErrors: true,
 	SilenceUsage:  true,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		initLogger()
-		err := initWorkDir()
-		if err != nil {
-			return err
-		}
-		err = config.Load(cmd == initCmd)
-		return err
-	},
 }
 
 func Execute() {
@@ -82,6 +73,16 @@ func initLogger() {
 	}
 }
 
+func preRun(cmd *cobra.Command, args []string) error {
+	initLogger()
+	err := initWorkDir()
+	if err != nil {
+		return err
+	}
+	err = config.Load(cmd == initCmd)
+	return err
+}
+
 func initCommands() {
 	cobra.EnableCommandSorting = false
 
@@ -115,6 +116,7 @@ func initCommands() {
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false
+		cmd.PersistentPreRunE = preRun
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.InitDefaultHelpCmd()
