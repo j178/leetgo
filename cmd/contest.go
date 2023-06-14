@@ -117,6 +117,19 @@ func waitContestStart(cmd *cobra.Command, ct *leetcode.Contest) error {
 	}
 }
 
+func getUpcomingContests() ([]string, error) {
+	c := leetcode.NewClient(leetcode.NonAuth())
+	contestList, err := c.GetUpcomingContests()
+	if err != nil {
+		return nil, err
+	}
+	var list []string
+	for _, ct := range contestList {
+		list = append(list, ct.TitleSlug)
+	}
+	return list, nil
+}
+
 var contestCmd = &cobra.Command{
 	Use:   "contest [qid]",
 	Short: "Generate contest questions",
@@ -126,6 +139,13 @@ leetgo contest left w330
 `,
 	Aliases: []string{"c"},
 	Args:    cobra.MaximumNArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		list, err := getUpcomingContests()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return list, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		cfg := config.Get()
@@ -204,10 +224,17 @@ leetgo contest left w330
 }
 
 var unregisterCmd = &cobra.Command{
-	Use:     "left [qid]",
+	Use:     "unregister [qid]",
 	Short:   "Unregister from contest",
-	Aliases: []string{"un", "unregister"},
+	Aliases: []string{"un", "left"},
 	Args:    cobra.MaximumNArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		list, err := getUpcomingContests()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return list, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 
