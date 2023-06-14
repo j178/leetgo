@@ -303,13 +303,15 @@ func Load(init bool) error {
 
 	// load global configuration
 	cfg := defaultConfig()
+	viper.SetDefault("code.lang", cfg.Code.Lang)
+	viper.SetDefault("leetcode.site", cfg.LeetCode.Site)
 
 	viper.SetConfigFile(cfg.GlobalConfigFile())
 	err := viper.ReadInConfig()
 	if err != nil {
 		notExist := os.IsNotExist(err)
 		if init && notExist {
-			// During `init`, if global config file does not exist, we will create one
+			// During `init`, if global config file does not exist, we will create one.
 			err = nil
 			_ = err
 		} else {

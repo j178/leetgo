@@ -60,7 +60,7 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "us", "template to use, cn or us")
+	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "", "template to use, cn or us")
 	initCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite global config file if exists")
 
 	_ = initCmd.RegisterFlagCompletionFunc(

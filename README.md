@@ -18,7 +18,7 @@ And `leetgo` also supports real-time generation of **contest questions**, submit
 ## Quick Start
 
 1. [Install leetgo](#installation)
-2. Initialize leetgo: `leetgo init -t <us or cn>`
+2. Initialize leetgo: `leetgo init -t <us or cn> -l <lang>`
 3. Edit leetgo config file: `leetgo.yaml` and `~/.config/leetgo/config.yaml`
 4. Pick a question: `leetgo pick <id or name or today>`
 5. Test your code: `leetgo test last -L`

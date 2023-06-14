@@ -27,7 +27,7 @@ Type "mkdir my-leetcode-solutions" Enter
 Sleep 2
 Type "cd my-leetcode-solutions" Enter
 Sleep 2
-Type "leetgo init -t cn # Init with Chinese template" Enter
+Type "leetgo init -t cn -l go" Enter
 Sleep 2
 Type "# A new leetgo.yaml file is created" Enter
 Sleep 2
