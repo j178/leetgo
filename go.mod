@@ -15,6 +15,7 @@ require (
 	github.com/charmbracelet/log v0.2.2
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20230216180835-5937a312edda
+	github.com/fatih/color v1.15.0
 	github.com/goccy/go-json v0.10.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/grokify/html-strip-tags-go v0.0.1
@@ -47,7 +48,6 @@ require (
 	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/dlclark/regexp2 v1.8.0 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

@@ -198,7 +198,7 @@ code:
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
-  # Available functions: lower, upper, trim, padWithZero, toUnderscore
+  # Available functions: lower, upper, trim, padWithZero, toUnderscore, group
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
   # Default setting for separate_description_file
   separate_description_file: true

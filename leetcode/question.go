@@ -585,6 +585,13 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 			"toUnderscore": func(s string) string {
 				return strings.ReplaceAll(s, "-", "_")
 			},
+			"group": func(size int, s string) string {
+				id, err := strconv.Atoi(s)
+				if err != nil {
+					return "Others"
+				}
+				return fmt.Sprintf("%d-%d", (id-1)/size*size+1, (id-1)/size*size+size)
+			},
 		},
 	)
 	tmpl, err := tmpl.Parse(filenameTemplate)
