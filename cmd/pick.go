@@ -86,6 +86,14 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 	return filter, nil
 }
 
+var (
+	skipEditor bool
+)
+
+func init() {
+	pickCmd.Flags().BoolVarP(&skipEditor, "skip-editor", "", false, "Skip opening the editor")
+}
+
 var pickCmd = &cobra.Command{
 	Use:   "pick [qid]",
 	Short: "Generate a new question",
@@ -129,7 +137,10 @@ leetgo pick two-sum`,
 		if err != nil {
 			return err
 		}
-		err = editor.Open(result)
-		return err
+		if !skipEditor {
+			err = editor.Open(result)
+			return err
+		}
+		return nil
 	},
 }
