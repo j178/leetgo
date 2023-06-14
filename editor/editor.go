@@ -47,7 +47,7 @@ type editor struct {
 	args    []string
 }
 
-func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
+func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) {
 	getPath := func(fileType lang.FileType) string {
 		f := result.GetFile(fileType)
 		if f == nil {
@@ -72,6 +72,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
 		TestCasesFile:   getPath(lang.TestCasesFile),
 	}
 
+	args := make([]string, len(ed.args))
 	for i, arg := range ed.args {
 		if !strings.Contains(arg, "{{") {
 			continue
@@ -80,37 +81,37 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) error {
 		tmpl := template.New("")
 		_, err := tmpl.Parse(arg)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		var s bytes.Buffer
 		err = tmpl.Execute(&s, data)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		ed.args[i] = s.String()
+		args[i] = s.String()
 	}
 
 	// replace the special marker with all files
-	for i, arg := range ed.args {
+	for i, arg := range args {
 		if arg == specialAllFiles {
-			allFiles := make([]string, 0, len(result.Files))
-			for _, f := range result.Files {
-				allFiles = append(allFiles, f.GetPath())
+			allFiles := make([]string, len(result.Files))
+			for j, f := range result.Files {
+				allFiles[j] = f.GetPath()
 			}
-			ed.args = append(ed.args[:i], append(allFiles, ed.args[i+1:]...)...)
+			args = append(args[:i], append(allFiles, args[i+1:]...)...)
 			break
 		}
 	}
 
-	return nil
+	return args, nil
 }
 
 func (ed *editor) Open(result *lang.GenerateResult) error {
-	err := ed.substituteArgs(result)
+	args, err := ed.substituteArgs(result)
 	if err != nil {
 		return fmt.Errorf("invalid editor command: %w", err)
 	}
-	return runCmd(ed.command, ed.args, result.OutDir)
+	return runCmd(ed.command, args, result.OutDir)
 }
 
 func Get(s string) Opener {
