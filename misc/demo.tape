@@ -1,4 +1,4 @@
-# Usage: brew install vhs && vhs misc/demo.vhs
+# Usage: brew install vhs && vhs misc/demo.tape
 
 Set Theme "Monokai Vivid"
 Set FontSize 20
@@ -59,7 +59,7 @@ Type "vim go/0001.two-sum/solution.go"
 Sleep 2
 Enter
 
-Type "17Gi"
+Type "18Gi"
 Sleep 1
 Tab Type@0.1 "m := make(map[int]int)" Enter
 Tab Type@0.1 "for i, num := range nums {" Enter

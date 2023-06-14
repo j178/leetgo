@@ -30,7 +30,7 @@
 
 ## Demo
 
-![demo](https://github.com/j178/leetgo/assets/10510431/cabc4f6b-221b-4e93-b871-e757d357b674)
+![demo](https://github.com/j178/leetgo/assets/10510431/8eaee981-a1f7-4b40-b9df-5af3c72daf26)
 
 ## 主要特性
 
