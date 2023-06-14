@@ -46,10 +46,11 @@ func init() {
 }
 
 var testCmd = &cobra.Command{
-	Use:     "test qid",
-	Aliases: []string{"t"},
-	Args:    cobra.ExactArgs(1),
-	Short:   "Run question test cases",
+	Use:       "test qid",
+	Aliases:   []string{"t"},
+	Args:      cobra.ExactArgs(1),
+	ValidArgs: []string{"today", "last", "last/"},
+	Short:     "Run question test cases",
 	Example: `leetgo test 244
 leetgo test last
 leetgo test w330/1

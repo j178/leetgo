@@ -21,11 +21,12 @@ func init() {
 }
 
 var infoCmd = &cobra.Command{
-	Use:     "info qid...",
-	Short:   "Show question info",
-	Example: "leetgo info 145\nleetgo info two-sum",
-	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"i"},
+	Use:       "info qid...",
+	Short:     "Show question info",
+	Example:   "leetgo info 145\nleetgo info two-sum",
+	Args:      cobra.MinimumNArgs(1),
+	Aliases:   []string{"i"},
+	ValidArgs: []string{"today", "last"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		var questions []*leetcode.QuestionData

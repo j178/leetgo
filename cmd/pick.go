@@ -99,8 +99,9 @@ var pickCmd = &cobra.Command{
 leetgo pick today
 leetgo pick 549
 leetgo pick two-sum`,
-	Args:    cobra.MaximumNArgs(1),
-	Aliases: []string{"p"},
+	Args:      cobra.MaximumNArgs(1),
+	Aliases:   []string{"p"},
+	ValidArgs: []string{"today", "yesterday"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		var q *leetcode.QuestionData

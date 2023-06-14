@@ -13,7 +13,8 @@ var openCmd = &cobra.Command{
 	Example: `leetgo open today
 leetgo open 549
 leetgo open w330/`,
-	Args: cobra.ExactArgs(1),
+	Args:      cobra.ExactArgs(1),
+	ValidArgs: []string{"today", "last"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qid := args[0]

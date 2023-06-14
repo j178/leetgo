@@ -11,10 +11,11 @@ import (
 )
 
 var editCmd = &cobra.Command{
-	Use:     "edit qid",
-	Short:   "Open solution in editor",
-	Aliases: []string{"e"},
-	Args:    cobra.ExactArgs(1),
+	Use:       "edit qid",
+	Short:     "Open solution in editor",
+	Aliases:   []string{"e"},
+	Args:      cobra.ExactArgs(1),
+	ValidArgs: []string{"today", "last"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)

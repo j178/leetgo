@@ -27,8 +27,9 @@ var fixCmd = &cobra.Command{
 	Short: "Use ChatGPT API to fix your solution code (just for fun)",
 	Long: `Use ChatGPT API to fix your solution code.
 Set OPENAI_API_KEY environment variable to your OpenAI API key before using this command.`,
-	Example: `leetgo fix 429`,
-	Args:    cobra.ExactArgs(1),
+	Example:   `leetgo fix 429`,
+	Args:      cobra.ExactArgs(1),
+	ValidArgs: []string{"today", "last"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		qs, err := leetcode.ParseQID(args[0], c)

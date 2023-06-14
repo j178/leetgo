@@ -13,6 +13,7 @@ import (
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/constants"
+	"github.com/j178/leetgo/lang"
 )
 
 func buildVersion() string {
@@ -96,6 +97,22 @@ func initCommands() {
 	_ = viper.BindPFlag("code.lang", rootCmd.PersistentFlags().Lookup("lang"))
 	_ = viper.BindPFlag("leetcode.site", rootCmd.PersistentFlags().Lookup("site"))
 	_ = viper.BindPFlag("yes", rootCmd.PersistentFlags().Lookup("yes"))
+
+	_ = rootCmd.RegisterFlagCompletionFunc(
+		"lang", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			langs := make([]string, 0, len(lang.SupportedLangs))
+			for _, l := range lang.SupportedLangs {
+				langs = append(langs, l.Slug())
+			}
+			return langs, cobra.ShellCompDirectiveNoFileComp
+		},
+	)
+	_ = rootCmd.RegisterFlagCompletionFunc(
+		"site",
+		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			return []string{"cn", "us"}, cobra.ShellCompDirectiveNoFileComp
+		},
+	)
 
 	commands := []*cobra.Command{
 		initCmd,

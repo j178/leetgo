@@ -62,6 +62,12 @@ var initCmd = &cobra.Command{
 func init() {
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "us", "template to use, cn or us")
 	initCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite global config file if exists")
+
+	_ = initCmd.RegisterFlagCompletionFunc(
+		"template", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			return []string{"us", "cn"}, cobra.ShellCompDirectiveNoFileComp
+		},
+	)
 }
 
 func createConfigDir() error {

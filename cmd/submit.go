@@ -22,8 +22,9 @@ leetgo submit last
 leetgo submit w330/1
 leetgo submit w330/
 `,
-	Aliases: []string{"s"},
-	Args:    cobra.ExactArgs(1),
+	Aliases:   []string{"s"},
+	Args:      cobra.ExactArgs(1),
+	ValidArgs: []string{"today", "last", "last/"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg := config.Get()
 		c := leetcode.NewClient(leetcode.ReadCredentials())
