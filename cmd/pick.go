@@ -86,9 +86,7 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 	return filter, nil
 }
 
-var (
-	skipEditor bool
-)
+var skipEditor bool
 
 func init() {
 	pickCmd.Flags().BoolVarP(&skipEditor, "skip-editor", "", false, "Skip opening the editor")

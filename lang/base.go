@@ -170,6 +170,7 @@ func separateDescriptionFile(lang Lang) bool {
 const codeContentTemplate = `
 {{- block "header" . -}}
 {{ .LineComment }} Created by {{ .Author }} at {{ .Time }}
+{{ .LineComment }} {{ .Version }}
 {{ .LineComment }} {{ .Question.Url }}
 {{ if .Question.IsContest }}{{ .LineComment }} {{ .Question.ContestUrl }}
 {{ end }}
@@ -205,6 +206,7 @@ type codeContentData struct {
 	Code                    string
 	SeparateDescriptionFile bool
 	NeedsDefinition         bool
+	Version                 string
 }
 
 const (
@@ -401,6 +403,7 @@ func (l baseLang) generateCodeContent(
 		Code:                    code,
 		SeparateDescriptionFile: separateDescriptionFile,
 		NeedsDefinition:         needsDefinition(code),
+		Version:                 fmt.Sprintf("%s: %s", constants.CmdName, constants.Version),
 	}
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, data)
