@@ -73,7 +73,8 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 	}
 
 	args := make([]string, len(ed.args))
-	for i, arg := range ed.args {
+	copy(args, ed.args)
+	for i, arg := range args {
 		if !strings.Contains(arg, "{{") {
 			continue
 		}

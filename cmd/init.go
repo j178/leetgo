@@ -120,8 +120,8 @@ func createConfigFiles(dir string) error {
 		return err
 	}
 
-	tmpl := `# leetgo project level config, global config is at %s
-# for more details, please refer to https://github.com/j178/leetgo
+	tmpl := `# This is the leetgo project level config, global config is at %s
+# For more details, please refer to https://github.com/j178/leetgo
 language: %s
 code:
   lang: %s
