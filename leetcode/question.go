@@ -464,8 +464,8 @@ func (q *QuestionData) GetExampleTestCases() []string {
 // m     multi-line mode: ^ and $ match begin/end line in addition to begin/end text (default false)
 // s     let . match \n (default false)
 var (
-	htmlPattern     = regexp.MustCompile(`(?si)<strong>(?:Output|输出)[:：]?\s?</strong>\s*([^<]+)`)
-	markdownPattern = regexp.MustCompile(fmt.Sprintf(`(?si)(?:Output|输出)[:：]?\s*%[1]s?([^%[1]s]+)%[1]s?`, "`"))
+	htmlPattern     = regexp.MustCompile(`(?si)<strong>(?:Output|输出)[:：]?\s*</strong>\s*([^<]+)`)
+	markdownPattern = regexp.MustCompile("(?si)(?:Output|输出)[:：]?\\s*`?([^`]+)")
 )
 
 // ParseExampleOutputs parses example output from content and translatedContent.
