@@ -443,7 +443,7 @@ func (l baseLang) generateCodeFile(
 }
 
 func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
-	cases := q.GetTestCases()
+	cases := q.GetExampleTestCases()
 	outputs := q.ParseExampleOutputs()
 	argsNum := q.MetaData.NArg()
 

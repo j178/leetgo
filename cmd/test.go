@@ -147,7 +147,7 @@ func runTestRemotely(
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch question: %s", err)
 	}
-	cases := q.GetTestCases()
+	cases := q.GetExampleTestCases()
 	cases = append(cases, getCustomCases()...)
 	if len(cases) == 0 {
 		return nil, fmt.Errorf("no test cases found")

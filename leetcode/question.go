@@ -315,12 +315,20 @@ func (q *QuestionData) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	q.normalize()
+	return nil
+}
 
+func (q *QuestionData) normalize() {
 	if md, ok := metadataFix[q.TitleSlug]; ok {
 		q.MetaData = md
 	}
-
-	return nil
+	if strings.Contains(
+		q.Content,
+		"English description is not available for the problem",
+	) {
+		q.Content = ""
+	}
 }
 
 func (q *QuestionData) Url() string {
@@ -367,30 +375,18 @@ func (q *QuestionData) GetTitle() string {
 	return q.Title
 }
 
-func (q *QuestionData) GetEnglishContent() string {
-	if q.Content != "" && !strings.Contains(
-		q.Content,
-		"English description is not available for the problem.",
-	) {
-		return q.Content
-	}
-	return ""
-}
-
 func (q *QuestionData) GetPreferContent() (string, config.Language) {
-	if config.Get().Language == config.ZH && q.TranslatedContent != "" {
+	cfg := config.Get()
+	if cfg.Language == config.ZH && q.TranslatedContent != "" {
 		return q.TranslatedContent, config.ZH
 	}
-	if config.Get().Language == config.EN && (q.Content == "" || strings.Contains(
-		q.Content,
-		"English description is not available for the problem.",
-	)) {
+	if cfg.Language == config.EN && q.Content == "" {
 		return q.TranslatedContent, config.ZH
 	}
 	return q.Content, config.EN
 }
 
-func convertHTML(html string) string {
+func htmlToMarkdown(html string) string {
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
 	converter.Use(plugin.GitHubFlavored())
@@ -431,7 +427,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	content, lang := q.GetPreferContent()
 
 	if q.EditorType == EditorTypeCKEditor {
-		content = convertHTML(content)
+		content = htmlToMarkdown(content)
 	}
 
 	// Wrap and remove blank lines
@@ -445,12 +441,7 @@ func (q *QuestionData) GetFormattedContent() string {
 	return content
 }
 
-var (
-	enPat = regexp.MustCompile(`<strong>Output[:：]?\s?</strong>\s?\n?\s*(.+)`)
-	zhPat = regexp.MustCompile(`<strong>输出[:：]?\s?</strong>\s?\n?\s*(.+)`)
-)
-
-func (q *QuestionData) GetTestCases() []string {
+func (q *QuestionData) GetExampleTestCases() []string {
 	var cases []string
 	if len(q.JsonExampleTestcases) > 0 {
 		for _, c := range q.JsonExampleTestcases {
@@ -468,18 +459,23 @@ func (q *QuestionData) GetTestCases() []string {
 	return cases
 }
 
+var (
+	htmlPattern     = regexp.MustCompile(`<strong>(?:Output|输出)[:：]?\s?</strong>\s*(.+)`)
+	markdownPattern = regexp.MustCompile(fmt.Sprintf(`(?:Output|输出)[:：]?\s*%[1]s?([^%[1]s]+)%[1]s?`, "`"))
+)
+
 // ParseExampleOutputs parses example output from content and translatedContent.
 // We can also get correct example outputs by submitting example inputs to judge server.
 func (q *QuestionData) ParseExampleOutputs() []string {
-	var pat *regexp.Regexp
-	var content string
-	if q.Content != "" && !strings.Contains(q.Content, "English description is not available for the problem.") {
-		content = q.Content
-		pat = enPat
-	} else {
+	content := q.Content
+	if content == "" {
 		content = q.TranslatedContent
-		pat = zhPat
 	}
+	pat := htmlPattern
+	if q.EditorType == EditorTypeMarkdown {
+		pat = markdownPattern
+	}
+
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
 	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/

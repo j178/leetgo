@@ -93,15 +93,13 @@ var anyOrderRe = regexp.MustCompile(`(?i)return.* in any order`)
 
 // TODO improve the detection of "any order"
 func shouldIgnoreOrder(q *leetcode.QuestionData) bool {
-	content := q.GetEnglishContent()
-	content = strip.StripTags(content)
+	content := strip.StripTags(q.Content)
 	if anyOrderRe.MatchString(content) {
 		return true
 	}
 
 	// try translated content
-	content = q.TranslatedContent
-	content = strip.StripTags(content)
+	content = strip.StripTags(q.TranslatedContent)
 	// nolint: gosimple
 	if strings.Contains(content, "任意顺序返回答案") {
 		return true
