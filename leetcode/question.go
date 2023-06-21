@@ -459,9 +459,13 @@ func (q *QuestionData) GetExampleTestCases() []string {
 	return cases
 }
 
+// regex flags:
+// i     case-insensitive (default false)
+// m     multi-line mode: ^ and $ match begin/end line in addition to begin/end text (default false)
+// s     let . match \n (default false)
 var (
-	htmlPattern     = regexp.MustCompile(`<strong>(?:Output|输出)[:：]?\s?</strong>\s*(.+)`)
-	markdownPattern = regexp.MustCompile(fmt.Sprintf(`(?:Output|输出)[:：]?\s*%[1]s?([^%[1]s]+)%[1]s?`, "`"))
+	htmlPattern     = regexp.MustCompile(`(?si)<strong>(?:Output|输出)[:：]?\s?</strong>\s*([^<]+)`)
+	markdownPattern = regexp.MustCompile(fmt.Sprintf(`(?si)(?:Output|输出)[:：]?\s*%[1]s?([^%[1]s]+)%[1]s?`, "`"))
 )
 
 // ParseExampleOutputs parses example output from content and translatedContent.
@@ -478,13 +482,17 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 
 	found := pat.FindAllStringSubmatch(content, -1)
 	result := make([]string, 0, len(found))
-	// TODO multi-line output, like https://leetcode.cn/problems/find-valid-matrix-given-row-and-column-sums/
 	for _, f := range found {
 		output := strings.TrimSpace(f[1])
 		output = strings.TrimPrefix(output, "<code>")
 		output = strings.TrimSuffix(output, "</pre>")
 		output = strings.TrimSuffix(output, "</code>")
 		output = html2text.HTMLEntitiesToText(output)
+		lines := strings.Split(output, "\n")
+		for i, line := range lines {
+			lines[i] = strings.TrimSpace(line)
+		}
+		output = strings.Join(lines, "")
 		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)
 	}
