@@ -14,6 +14,7 @@ import (
 	_ "github.com/j178/kooky/browser/edge"
 	_ "github.com/j178/kooky/browser/firefox"
 	_ "github.com/j178/kooky/browser/safari"
+	"github.com/joho/godotenv"
 
 	"github.com/j178/leetgo/config"
 )
@@ -204,6 +205,10 @@ func (b *browserAuth) Reset() {
 
 func ReadCredentials() CredentialsProvider {
 	cfg := config.Get()
+	err := godotenv.Load()
+	if err == nil {
+		log.Info("loaded env variables from .env")
+	}
 	switch cfg.LeetCode.Credentials.From {
 	case "browser":
 		return NewBrowserAuth(cfg.LeetCode.Credentials.Browsers)
