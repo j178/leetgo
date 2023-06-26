@@ -110,7 +110,7 @@ func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
 func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 	if q.MetaData.SystemDesign {
 		return fmt.Sprintf(
-			"\t%s %s\n",
+			"\t%s\n\t%s\n",
 			c.getDeclCodeForType(1, "string", systemDesignMethodListName),
 			c.getScanCodeForType(systemDesignMethodListName, inputStreamName),
 		)
@@ -120,7 +120,7 @@ func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 	for _, param := range q.MetaData.Params {
 		dimCnt, cppType := c.getCppTypeName(param.Type)
 		scanCode += fmt.Sprintf(
-			"\t%s %s\n",
+			"\t%s\n\t%s\n",
 			c.getDeclCodeForType(dimCnt, cppType, param.Name),
 			c.getScanCodeForType(param.Name, inputStreamName),
 		)
@@ -238,7 +238,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 	if !q.MetaData.SystemDesign {
 		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
-	printCode += fmt.Sprintf("\tcout << \"\n%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
+	printCode += fmt.Sprintf("\tcout << \"\\n%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
 	return
 }
 
@@ -248,13 +248,7 @@ func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	stringstream ` + outputStreamName + `;
 
 %s
-
-%s
-
-%s
-
-%s
-
+%s%s%s
 	delete ` + objectName + `;
 	return 0;
 }`
