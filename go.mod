@@ -3,7 +3,7 @@ module github.com/j178/leetgo
 go 1.20
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/JohannesKaufmann/html-to-markdown v1.4.0
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/avast/retry-go v3.0.0+incompatible
