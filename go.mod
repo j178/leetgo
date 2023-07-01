@@ -9,7 +9,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.1
+	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/charmbracelet/log v0.2.2
