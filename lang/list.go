@@ -162,7 +162,52 @@ var (
 		blockCommentStart: ">>COMMENT",
 		blockCommentEnd:   "\nCOMMENT",
 	}
-	// TODO scala, erlang, dart, racket, Elixir
+	erlangGen = baseLang{
+		name:              "Erlang",
+		slug:              "erlang",
+		shortName:         "erl",
+		extension:         ".erl",
+		lineComment:       "%",
+		blockCommentStart: "%",
+		blockCommentEnd:   "%",
+	}
+	racketGen = baseLang{
+		name:              "Racket",
+		slug:              "racket",
+		shortName:         "rkt",
+		extension:         ".rkt",
+		lineComment:       ";",
+		blockCommentStart: "#|",
+		blockCommentEnd:   "|#",
+	}
+	scalaGen = baseLang{
+		name:              "Scala",
+		slug:              "scala",
+		shortName:         "scala",
+		extension:         ".scala",
+		lineComment:       "//",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
+	elixirGen = baseLang{
+		name:              "Elixir",
+		slug:              "elixir",
+		shortName:         "exs",
+		extension:         ".exs",
+		lineComment:       "#",
+		blockCommentStart: `"""`,
+		blockCommentEnd:   `"""`,
+	}
+	dartGen = baseLang{
+		name:              "Dart",
+		slug:              "dart",
+		shortName:         "dart",
+		extension:         ".dart",
+		lineComment:       "//",
+		blockCommentStart: "/*",
+		blockCommentEnd:   "*/",
+	}
+
 	SupportedLangs = []Lang{
 		golangGen,
 		python3Gen,
@@ -181,5 +226,10 @@ var (
 		mysqlGen,
 		mssqlGen,
 		oraclesqlGen,
+		erlangGen,
+		racketGen,
+		scalaGen,
+		elixirGen,
+		dartGen,
 	}
 )
