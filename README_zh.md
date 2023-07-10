@@ -349,7 +349,7 @@ Debug 模式下 `leetgo` 会输出详细的日志，请复制这些日志，并�
 欢迎大家参与这个项目的开发，如果你不知道如何开始，这些 [Good first issues](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 是很好的起步点，
 你也可以看看这些 [help wanted](https://github.com/j178/leetgo/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) issues。
 
-如果你想为一个新的语言添加本地测试的支持，请参考 [#112](https://github.com/j178/leetgo/issues/112)。
+如果你想为一个新的语言添加本地测试的支持，请参考 [#112](https://github.com/j178/leetgox/issues/112)。
 
 提交前请使用 `golangci-lint run --fix` 来修复代码格式问题。
 
