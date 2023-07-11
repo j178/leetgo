@@ -94,6 +94,11 @@ func main() {
 | MySQL | :white_check_mark: | Not yet |
 | MSSQL | :white_check_mark: | Not yet |
 | Oracle | :white_check_mark: | Not yet |
+| Erlang | :white_check_mark: | Not yet |
+| Racket | :white_check_mark: | Not yet |
+| Scala | :white_check_mark: | Not yet |
+| Elixir | :white_check_mark: | Not yet |
+| Dart | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
 其他热门语言的支持都在计划中，如果你有兴趣的话，欢迎加入我们👏🏻
 
