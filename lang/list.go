@@ -168,8 +168,9 @@ var (
 		shortName:         "erl",
 		extension:         ".erl",
 		lineComment:       "%",
-		blockCommentStart: "%",
-		blockCommentEnd:   "%",
+		// TODO erlang does not support multiline comments really
+		blockCommentStart: "%%%",
+		blockCommentEnd:   "%%%",
 	}
 	racketGen = baseLang{
 		name:              "Racket",
