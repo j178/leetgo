@@ -163,11 +163,11 @@ var (
 		blockCommentEnd:   "\nCOMMENT",
 	}
 	erlangGen = baseLang{
-		name:              "Erlang",
-		slug:              "erlang",
-		shortName:         "erl",
-		extension:         ".erl",
-		lineComment:       "%",
+		name:        "Erlang",
+		slug:        "erlang",
+		shortName:   "erl",
+		extension:   ".erl",
+		lineComment: "%",
 		// TODO erlang does not support multiline comments really
 		blockCommentStart: "%%%",
 		blockCommentEnd:   "%%%",
