@@ -95,6 +95,11 @@ Local testing requires more work to implement for each language, so not all lang
 | MySQL | :white_check_mark: | Not yet |
 | MSSQL | :white_check_mark: | Not yet |
 | Oracle | :white_check_mark: | Not yet |
+| Erlang | :white_check_mark: | Not yet |
+| Racket | :white_check_mark: | Not yet |
+| Scala | :white_check_mark: | Not yet |
+| Elixir | :white_check_mark: | Not yet |
+| Dart | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
 and many other languages are planned. (Help wanted, contributions welcome!)
 
