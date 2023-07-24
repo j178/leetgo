@@ -329,6 +329,9 @@ func (q *QuestionData) normalize() {
 	) {
 		q.Content = ""
 	}
+	if q.EditorType == "" {
+		q.EditorType = EditorTypeCKEditor
+	}
 }
 
 func (q *QuestionData) Url() string {
@@ -516,20 +519,21 @@ func (q *QuestionData) GetCodeSnippet(slug string) string {
 	return ""
 }
 
-type FilenameTemplateData struct {
+type filenameTemplateData struct {
 	Id               string
 	Slug             string
 	Title            string
 	Difficulty       string
 	Lang             string
 	SlugIsMeaningful bool
+	Category         string
 	IsContest        bool
 	ContestTitle     string
 	ContestShortSlug string
 	ContestSlug      string
 }
 
-func (q *QuestionData) formatQuestionId() (string, bool) {
+func (q *QuestionData) normalizeQuestionId() (string, bool) {
 	slugValid := true
 	id := q.QuestionFrontendId
 	switch {
@@ -556,14 +560,15 @@ func contestShortSlug(contestSlug string) string {
 }
 
 func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string) (string, error) {
-	id, slugValid := q.formatQuestionId()
-	data := &FilenameTemplateData{
+	id, slugValid := q.normalizeQuestionId()
+	data := &filenameTemplateData{
 		Id:               id,
 		Slug:             q.TitleSlug,
 		Title:            q.GetTitle(),
 		Difficulty:       q.Difficulty,
 		Lang:             lang,
 		SlugIsMeaningful: slugValid,
+		Category:         string(q.CategoryTitle),
 		IsContest:        q.IsContest(),
 	}
 	if q.IsContest() {
