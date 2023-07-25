@@ -212,6 +212,7 @@ func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	if err != nil {
 		return nil, err
 	}
+	q.normalize()
 	q.client = c
 	return q, nil
 }
