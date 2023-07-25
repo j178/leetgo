@@ -73,7 +73,7 @@ This is a complete and runnable program. You can run it directly, input the test
 
 Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
 
-Local testing requires more work to implement for each language, so not all languages are supported.
+Local testing requires more work to implement for each language, so not all languages are supported. Below is the current support matrix:
 
 <!-- BEGIN MATRIX -->
 |  | Generation | Local testing |
@@ -101,7 +101,8 @@ Local testing requires more work to implement for each language, so not all lang
 | Elixir | :white_check_mark: | Not yet |
 | Dart | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
-and many other languages are planned. (Help wanted, contributions welcome!)
+
+Welcome to help us implement local testing for more languages!
 
 ## Installation
 

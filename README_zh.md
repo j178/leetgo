@@ -100,7 +100,8 @@ func main() {
 | Elixir | :white_check_mark: | Not yet |
 | Dart | :white_check_mark: | Not yet |
 <!-- END MATRIX -->
-其他热门语言的支持都在计划中，如果你有兴趣的话，欢迎加入我们👏🏻
+
+如果你有兴趣，欢迎加入我们支持更多语言👏🏻
 
 ## 安装
 
