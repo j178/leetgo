@@ -24,7 +24,6 @@ builds:
 
 archives:
   - format: tar.gz
-    rlcp: true
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
@@ -64,7 +63,7 @@ changelog:
       - '^test:'
       - '(?i)^Minor'
 brews:
-  - tap:
+  - repository:
       owner: j178
       name: homebrew-tap
     commit_author:
@@ -84,7 +83,7 @@ brews:
       system "#{bin}/leetgo", "-v"
 
 scoops:
-  - bucket:
+  - repository:
       owner: j178
       name: scoop-bucket
     commit_author:
