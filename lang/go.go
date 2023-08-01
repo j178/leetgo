@@ -226,8 +226,12 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
-		ansName := paramNames[q.MetaData.Output.ParamIndex]
-		code += fmt.Sprintf("\tans := %s\n", ansName)
+		if q.MetaData.Output != nil {
+			ansName := paramNames[q.MetaData.Output.ParamIndex]
+			code += fmt.Sprintf("\tans := %s\n", ansName)
+		} else {
+			code += "\tans := \"\"\n"
+		}
 	}
 
 	testContent := fmt.Sprintf(template, code, testCaseOutputMark)

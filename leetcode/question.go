@@ -59,7 +59,7 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 type MetaDataParam struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
-	HelperParam bool   // Whether this param is a helper param.
+	HelperParam bool   `json:"-"` // Whether this param is a helper param.
 }
 
 type MetaDataReturn struct {
@@ -270,6 +270,7 @@ const (
 	CategoryDatabase    CategoryTitle = "Database"
 	CategoryShell       CategoryTitle = "Shell"
 	CategoryConcurrency CategoryTitle = "Concurrency"
+	CategoryJavaScript  CategoryTitle = "JavaScript"
 	CategoryAll         CategoryTitle = ""
 )
 
@@ -323,15 +324,21 @@ func (q *QuestionData) normalize() {
 	if md, ok := metadataFix[q.TitleSlug]; ok {
 		q.MetaData = md
 	}
+
 	if strings.Contains(
 		q.Content,
 		"English description is not available for the problem",
 	) {
 		q.Content = ""
 	}
+
 	if q.EditorType == "" {
 		q.EditorType = EditorTypeCKEditor
 	}
+}
+
+func (q *QuestionData) SetClient(c Client) {
+	q.client = c
 }
 
 func (q *QuestionData) Url() string {
