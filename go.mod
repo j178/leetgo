@@ -34,7 +34,7 @@ require (
 	github.com/sashabaranov/go-openai v1.12.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
-	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/gjson v1.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
