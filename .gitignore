@@ -9,3 +9,4 @@ out/
 go.work
 go.work.sum
 misc/*.gif
+misc/questions.json
