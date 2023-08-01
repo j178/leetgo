@@ -46,14 +46,10 @@ func main() {
 			f, _ := os.Create(filepath.Join(out.TargetDir(), "question.json"))
 			enc := json.NewEncoder(f)
 			enc.SetIndent("", "  ")
-			enc.Encode(q)
+			_ = enc.Encode(q)
 			f.Close()
 		}
 	}
 
-	fmt.Printf(
-		"total: %d, %v, manual: %d\n",
-		len(questions),
-		categories,
-	)
+	fmt.Printf("total: %d, %v\n", len(questions), categories)
 }
