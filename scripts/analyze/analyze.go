@@ -42,6 +42,7 @@ func main() {
 			out, err := lang.Generate(q)
 			if err != nil {
 				fmt.Println(err)
+				continue
 			}
 			f, _ := os.Create(filepath.Join(out.TargetDir(), "question.json"))
 			enc := json.NewEncoder(f)

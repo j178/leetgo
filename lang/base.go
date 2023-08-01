@@ -24,6 +24,8 @@ const (
 	testCaseOutputMark = "output:"
 )
 
+const manualWarning = "Warning: this is a manual question, the generated test code may be incorrect."
+
 type GenerateResult struct {
 	mask        int
 	Question    *leetcode.QuestionData

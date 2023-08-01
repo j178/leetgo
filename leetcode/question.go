@@ -57,9 +57,8 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 }
 
 type MetaDataParam struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	HelperParam bool   `json:"-"` // Whether this param is a helper param.
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 type MetaDataReturn struct {
@@ -161,8 +160,7 @@ type MetaData struct {
 	ClassName    string              `json:"classname"`
 	Constructor  MetaDataConstructor `json:"constructor"`
 	Methods      []MetaDataMethod    `json:"methods"`
-	// Unknown fields
-	Manual bool `json:"manual"`
+	Manual       bool                `json:"manual"`
 }
 
 type metaDataNoMethods MetaData
@@ -321,10 +319,6 @@ func (q *QuestionData) UnmarshalJSON(data []byte) error {
 }
 
 func (q *QuestionData) normalize() {
-	if md, ok := metadataFix[q.TitleSlug]; ok {
-		q.MetaData = md
-	}
-
 	if strings.Contains(
 		q.Content,
 		"English description is not available for the problem",

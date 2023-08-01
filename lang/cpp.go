@@ -100,9 +100,7 @@ func (c cpp) getPrintCodeForType(n string, ofs string) string {
 func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
 	var paramList []string
 	for _, param := range params {
-		if !param.HelperParam {
-			paramList = append(paramList, param.Name)
-		}
+		paramList = append(paramList, param.Name)
 	}
 	return strings.Join(paramList, ", ")
 }
@@ -252,13 +250,17 @@ func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	delete ` + objectName + `;
 	return 0;
 }`
-	return fmt.Sprintf(
+	testContent := fmt.Sprintf(
 		template,
 		c.generateScanCode(q),
 		c.generateInitCode(q),
 		c.generateCallCode(q),
 		c.generatePrintCode(q),
-	), nil
+	)
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
+	}
+	return testContent, nil
 }
 
 func (c cpp) generateCodeFile(
