@@ -160,8 +160,7 @@ type MetaData struct {
 	ClassName    string              `json:"classname"`
 	Constructor  MetaDataConstructor `json:"constructor"`
 	Methods      []MetaDataMethod    `json:"methods"`
-	// Unknown fields
-	Manual bool `json:"manual"`
+	Manual       bool                `json:"manual"`
 }
 
 type metaDataNoMethods MetaData
