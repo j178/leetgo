@@ -136,10 +136,8 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			varName,
 			varType,
 		)
-		if !param.HelperParam {
-			paramNames = append(paramNames, varName)
-			paramTypes = append(paramTypes, varType)
-		}
+		paramNames = append(paramNames, varName)
+		paramTypes = append(paramTypes, varType)
 	}
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
@@ -156,16 +154,23 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			toRustVarName(q.MetaData.Name),
 			formatCallArgs(paramTypes, paramNames),
 		)
-		ansName := paramNames[q.MetaData.Output.ParamIndex]
-		ansType := paramTypes[q.MetaData.Output.ParamIndex]
-		code += fmt.Sprintf(
-			"\tlet ans: %s = %s.into();\n",
-			toRustType(ansType),
-			toRustVarName(ansName),
-		)
+		if q.MetaData.Output != nil {
+			ansName := paramNames[q.MetaData.Output.ParamIndex]
+			ansType := paramTypes[q.MetaData.Output.ParamIndex]
+			code += fmt.Sprintf(
+				"\tlet ans: %s = %s.into();\n",
+				toRustType(ansType),
+				toRustVarName(ansName),
+			)
+		} else {
+			code += "\tlet ans = ();\n"
+		}
 	}
 
 	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 
@@ -260,6 +265,9 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		callCode,
 		testCaseOutputMark,
 	)
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 

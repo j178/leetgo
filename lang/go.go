@@ -210,9 +210,7 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			param.Name,
 			toGoType(param.Type),
 		)
-		if !param.HelperParam {
-			paramNames = append(paramNames, param.Name)
-		}
+		paramNames = append(paramNames, param.Name)
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
@@ -235,6 +233,10 @@ func (g golang) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 	}
 
 	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
+
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 
@@ -311,6 +313,10 @@ func (g golang) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		callCode,
 		testCaseOutputMark,
 	)
+
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 

@@ -132,9 +132,7 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			varType,
 			varType,
 		)
-		if !param.HelperParam {
-			paramNames = append(paramNames, param.Name)
-		}
+		paramNames = append(paramNames, param.Name)
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
@@ -148,11 +146,18 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
-		ansName := paramNames[q.MetaData.Output.ParamIndex]
-		code += fmt.Sprintf("\tans = %s\n", ansName)
+		if q.MetaData.Output != nil {
+			ansName := paramNames[q.MetaData.Output.ParamIndex]
+			code += fmt.Sprintf("\tans = %s\n", ansName)
+		} else {
+			code += "\tans = None\n"
+		}
 	}
 
 	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("# %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 
@@ -235,6 +240,9 @@ func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, 
 		callCode,
 		testCaseOutputMark,
 	)
+	if q.MetaData.Manual {
+		testContent = fmt.Sprintf("# %s\n%s", manualWarning, testContent)
+	}
 	return testContent, nil
 }
 
