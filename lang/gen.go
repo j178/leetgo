@@ -49,7 +49,19 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 
 	codeSnippet := q.GetCodeSnippet(gen.Slug())
 	if codeSnippet == "" {
-		return nil, nil, fmt.Errorf(`question "%s" doesn't support language "%s"`, q.TitleSlug, cfg.Code.Lang)
+		if len(q.CodeSnippets) <= 3 {
+			langs := make([]string, 0, len(q.CodeSnippets))
+			for _, snippet := range q.CodeSnippets {
+				langs = append(langs, snippet.Lang)
+			}
+			return nil, nil, fmt.Errorf(
+				`question %q doesn't support language %s, it only supports %s`,
+				q.TitleSlug,
+				gen.Slug(),
+				strings.Join(langs, ","),
+			)
+		}
+		return nil, nil, fmt.Errorf(`question %q doesn't support language %q`, q.TitleSlug, cfg.Code.Lang)
 	}
 
 	outDir := getOutDir(q, gen)
