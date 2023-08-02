@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/charmbracelet/glamour"
@@ -92,7 +93,9 @@ const fixPrompt = `Given a LeetCode problem %s, the problem description below is
 </question>
 
 I have written the following solution:
+<code>
 %s
+</code>
 
 Please identify any issues or inefficiencies in my code and to help me fix or improve it. DO NOT rewrite it.
 I want you to only reply with pure code without <code> or markdown tags, and nothing else. DO NOT write explanations.
@@ -143,6 +146,15 @@ func askOpenAI(cmd *cobra.Command, q *leetcode.QuestionData, code string) (strin
 	}
 	log.Debug("got response from openai", "response", resp.Choices)
 	text := resp.Choices[0].Message.Content
+
+	if strings.HasPrefix(text, "```") {
+		firstLine := strings.IndexByte(text, '\n')
+		if firstLine == -1 {
+			return "", errNoFix
+		}
+		text = text[firstLine+1:]
+		text = strings.TrimSuffix(text, "```")
+	}
 	text = utils.EnsureTrailingNewline(text)
 	return text, nil
 }
