@@ -497,7 +497,6 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 			lines[i] = strings.TrimSpace(line)
 		}
 		output = strings.Join(lines, "")
-		output = strings.ReplaceAll(output, ", ", ",")
 		result = append(result, output)
 	}
 	return result
