@@ -87,8 +87,13 @@ leetgo test w330/`,
 		testLimiter := newLimiter(user)
 		submitLimiter := newLimiter(user)
 
+		var hasFailedCase bool
 		for _, q := range qs {
-			localPassed, remotePassed := true, true
+			var (
+				localPassed    = true
+				remotePassed   = true
+				submitAccepted = true
+			)
 			if runLocally {
 				log.Info("running test locally", "question", q.TitleSlug)
 				localPassed, err = lang.RunLocalTest(q, targetCase)
@@ -112,11 +117,12 @@ leetgo test w330/`,
 				log.Info("submitting solution", "user", user.Whoami(c))
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
+					submitAccepted = false
 					log.Error("failed to submit solution", "err", err)
 				} else {
 					cmd.Print(result.Display(q))
-
 					if !result.Accepted() {
+						submitAccepted = false
 						added, _ := appendToTestCases(q, result)
 						if added {
 							log.Info("added failed case to testcases.txt")
@@ -124,6 +130,14 @@ leetgo test w330/`,
 					}
 				}
 			}
+
+			if !localPassed || !remotePassed || !submitAccepted {
+				hasFailedCase = true
+			}
+		}
+
+		if hasFailedCase {
+			return exitCode(1)
 		}
 		return nil
 	},

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -40,9 +41,19 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 }
 
+type exitCode int
+
+func (e exitCode) Error() string {
+	return fmt.Sprintf("exit code %d", e)
+}
+
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
+		var e exitCode
+		if errors.As(err, &e) {
+			os.Exit(int(e))
+		}
 		log.Fatal(err)
 	}
 }
