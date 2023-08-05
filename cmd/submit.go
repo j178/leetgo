@@ -43,21 +43,28 @@ leetgo submit w330/
 		}
 		limiter := newLimiter(user)
 
+		var hasFailedCase bool
 		for _, q := range qs {
 			log.Info("submitting solution", "question", q.TitleSlug, "user", user.Whoami(c))
 			result, err := submitSolution(cmd, q, c, gen, limiter)
 			if err != nil {
+				hasFailedCase = true
 				log.Error("failed to submit solution", "err", err)
 				continue
 			}
 			cmd.Print(result.Display(qs[0]))
 
 			if !result.Accepted() {
+				hasFailedCase = true
 				added, _ := appendToTestCases(q, result)
 				if added {
 					log.Info("added failed case to testcases.txt")
 				}
 			}
+		}
+
+		if hasFailedCase {
+			return exitCode(1)
 		}
 
 		return nil
