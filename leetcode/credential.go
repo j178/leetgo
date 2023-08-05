@@ -2,6 +2,7 @@ package leetcode
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -140,6 +141,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	var errs []error
 	if !b.hasAuth() {
 		u, _ := url.Parse(b.c.BaseURI())
 		domain := u.Host
@@ -158,10 +160,14 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 				},
 			),
 		}
+
 		for _, store := range cookieStores {
 			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
 			cookies, err := store.ReadCookies(filters...)
 			if err != nil {
+				if !os.IsNotExist(err) {
+					errs = append(errs, err)
+				}
 				log.Debug("failed to read cookies", "error", err)
 				continue
 			}
@@ -189,6 +195,9 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		}
 	}
 	if !b.hasAuth() {
+		if len(errs) > 0 {
+			return fmt.Errorf("failed to read cookies: %w", errors.Join(errs...))
+		}
 		return errors.New("no cookies found in browsers")
 	}
 
