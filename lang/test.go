@@ -389,7 +389,7 @@ func checkOutput(q *leetcode.QuestionData, input []string, outputLine string) er
 }
 
 func buildTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	buf := new(bytes.Buffer)

@@ -260,7 +260,7 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	skip := false
 	for _, line := range lines {
 		if strings.Contains(line, constants.CodeBeginMarker) {
-			newLines = append(newLines, line)
+			newLines = append(newLines, line, "\n")
 			newLines = append(newLines, newCode)
 			skip = true
 		} else if strings.Contains(line, constants.CodeEndMarker) {
