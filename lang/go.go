@@ -112,7 +112,7 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 		) {
 			return false, nil
 		}
-		return false, fmt.Errorf("go list failed: %w", err)
+		return false, fmt.Errorf("go list failed: %w: %s", err, output)
 	}
 	return true, nil
 }
