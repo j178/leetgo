@@ -352,7 +352,6 @@ import (
 	if err != nil {
 		return FileOutput{}, err
 	}
-	// TODO warn user that should delete global config and init again
 	blocks = append(
 		[]config.Block{
 			{

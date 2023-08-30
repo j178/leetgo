@@ -144,7 +144,7 @@ type systemDesignJudger struct {
 func newSystemDesignJudger(q *leetcode.QuestionData) *systemDesignJudger {
 	judgers := map[string]Judger{}
 	for _, m := range q.MetaData.Methods {
-		// TODO: if two functions both return a slice, we can't distinguish them
+		// NOTE: if two functions both return a slice, we can't distinguish them
 		//  We just compare both function results ignoring order.
 		judgers[m.Name] = getJudger(q, m.Return.Type, true)
 	}
