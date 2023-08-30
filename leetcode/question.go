@@ -424,6 +424,9 @@ func htmlToMarkdown(html string) string {
 	replacer := strings.NewReplacer("\u00A0", " ", "\u200B", "")
 	content = replacer.Replace(content)
 
+	// Remove extra newline at the end of code blocks
+	content = strings.ReplaceAll(content, "\n\n```\n\n", "\n```\n\n")
+
 	return content
 }
 
