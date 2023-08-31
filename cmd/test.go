@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -21,7 +20,6 @@ var (
 	runRemotely bool = true
 	runBoth     bool
 	autoSubmit  bool
-	customCases []string
 	targetCase  string
 )
 
@@ -40,7 +38,6 @@ func init() {
 		false,
 		"run test both locally and remotely",
 	)
-	testCmd.Flags().StringSliceVarP(&customCases, "cases", "c", nil, "additional test cases for remote test")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
 }
@@ -161,12 +158,13 @@ func runTestRemotely(
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch question: %s", err)
 	}
-	cases := q.GetExampleTestCases()
-	cases = append(cases, getCustomCases()...)
-	if len(cases) == 0 {
+	cases, err := lang.GetTestCases(q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get test cases: %w", err)
+	}
+	if len(cases.Cases) == 0 {
 		return nil, fmt.Errorf("no test cases found")
 	}
-	casesStr := strings.Join(cases, "\n")
 
 	spin := newSpinner(cmd.ErrOrStderr())
 	spin.Suffix = " Running tests..."
@@ -177,7 +175,7 @@ func runTestRemotely(
 	limiter.Take()
 	spin.Reverse()
 
-	interResult, err := c.RunCode(q, gen.Slug(), solution, casesStr)
+	interResult, err := c.RunCode(q, gen.Slug(), solution, cases.InputString())
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
 	}
@@ -193,14 +191,6 @@ func runTestRemotely(
 	r := testResult.(*leetcode.RunCheckResult)
 	r.InputData = interResult.TestCase
 	return r, nil
-}
-
-func getCustomCases() []string {
-	cases := make([]string, len(customCases))
-	for i, c := range customCases {
-		cases[i] = strings.ReplaceAll(c, `\n`, "\n")
-	}
-	return cases
 }
 
 func waitResult(c leetcode.Client, submissionId string) (
