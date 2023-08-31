@@ -153,6 +153,8 @@ type TestCases struct {
 }
 
 func (tc *TestCases) AddCase(c TestCase) {
+	c.No = len(tc.Cases) + 1
+	c.Question = tc.Question
 	tc.Cases = append(tc.Cases, c)
 }
 
@@ -175,6 +177,14 @@ func (tc *TestCases) String() string {
 		if i != len(tc.Cases)-1 {
 			_, _ = fmt.Fprintln(buf)
 		}
+	}
+	return buf.String()
+}
+
+func (tc *TestCases) InputString() string {
+	buf := new(bytes.Buffer)
+	for _, c := range tc.Cases {
+		buf.WriteString(c.InputString())
 	}
 	return buf.String()
 }

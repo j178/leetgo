@@ -279,3 +279,15 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	log.Info("updated", "file", utils.RelToCwd(codeFile.GetPath()))
 	return nil
 }
+
+func GetTestCases(q *leetcode.QuestionData) (TestCases, error) {
+	result, err := GeneratePathsOnly(q)
+	if err != nil {
+		return TestCases{}, err
+	}
+	testCasesFile := result.GetFile(TestCasesFile)
+	if testCasesFile == nil {
+		return TestCases{}, fmt.Errorf("no test cases file generated")
+	}
+	return ParseTestCases(q, testCasesFile)
+}
