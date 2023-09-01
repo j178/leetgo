@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -201,13 +202,9 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 }
 
 func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
-	result, err := GeneratePathsOnly(q)
+	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
-		return "", err
-	}
-	codeFile := result.GetFile(CodeFile)
-	if codeFile == nil {
-		return "", fmt.Errorf("no code file generated")
+		return "", errors.New("code file not found")
 	}
 	code, err := codeFile.GetContent()
 	if err != nil {
@@ -243,13 +240,9 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 }
 
 func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
-	result, err := GeneratePathsOnly(q)
+	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
-		return err
-	}
-	codeFile := result.GetFile(CodeFile)
-	if codeFile == nil {
-		return fmt.Errorf("no code file generated")
+		return errors.New("code file not found")
 	}
 	code, err := codeFile.GetContent()
 	if err != nil {
@@ -280,14 +273,14 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	return nil
 }
 
-func GetTestCases(q *leetcode.QuestionData) (TestCases, error) {
+func GetFileOutput(q *leetcode.QuestionData, fileType FileType) (*FileOutput, error) {
 	result, err := GeneratePathsOnly(q)
 	if err != nil {
-		return TestCases{}, err
+		return nil, err
 	}
-	testCasesFile := result.GetFile(TestCasesFile)
-	if testCasesFile == nil {
-		return TestCases{}, fmt.Errorf("no test cases file generated")
+	f := result.GetFile(fileType)
+	if f == nil {
+		return nil, errors.New("file not found")
 	}
-	return ParseTestCases(q, testCasesFile)
+	return f, nil
 }

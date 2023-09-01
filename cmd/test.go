@@ -160,9 +160,14 @@ func runTestRemotely(
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch question: %s", err)
 	}
-	cases, err := lang.GetTestCases(q)
+
+	testCasesFile, err := lang.GetFileOutput(q, lang.TestCasesFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get test cases: %w", err)
+	}
+	cases, err := lang.ParseTestCases(q, testCasesFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse test cases: %w", err)
 	}
 	if len(cases.Cases) == 0 {
 		return nil, fmt.Errorf("no test cases found")
@@ -192,6 +197,22 @@ func runTestRemotely(
 	}
 	r := testResult.(*leetcode.RunCheckResult)
 	r.InputData = interResult.TestCase
+
+	if r.Accepted() {
+		updated, err := cases.UpdateOutputs(r.ExpectedCodeAnswer)
+		if err != nil {
+			log.Debug("failed to update test cases", "err", err)
+		} else if updated {
+			content := []byte(cases.String())
+			err = utils.WriteFile(testCasesFile.GetPath(), content)
+			if err != nil {
+				log.Debug("failed to update test cases", "err", err)
+			} else {
+				log.Info("testcases.txt updated")
+			}
+		}
+	}
+
 	return r, nil
 }
 
