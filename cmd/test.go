@@ -21,6 +21,7 @@ var (
 	runBoth     bool
 	autoSubmit  bool
 	targetCase  string
+	forceSubmit bool
 )
 
 func init() {
@@ -39,6 +40,7 @@ func init() {
 		"run test both locally and remotely",
 	)
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
+	testCmd.Flags().BoolVarP(&forceSubmit, "force", "f", false, "force submit even if local test failed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
 }
 
@@ -110,7 +112,7 @@ leetgo test w330/`,
 				}
 			}
 
-			if localPassed && remotePassed && autoSubmit {
+			if autoSubmit && remotePassed && (localPassed || forceSubmit) {
 				log.Info("submitting solution", "user", user.Whoami(c))
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
