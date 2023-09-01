@@ -296,51 +296,69 @@ editor:
 
 ## 进阶用法
 
-1. template 相关
+### `testcases.txt` 相关
 
-    `leetgo` 的配置中有许多支持 Go template，如果你熟悉 Go template 语法的话，可以配置出更加个性化的文件名和代码模板。
+`leetgo` 会自动为你生成 `testcases.txt` 文件，这个文件包含了所有测试用例，你可以在这个文件中添加自己的测试用例，`leetgo test` 会自动读取这个文件中的测试用例来作为程序的输入。
 
-2. Blocks
+当你尚不清楚用例的输出时，你可以将 `output:` 部分留空。当执行 `leetgo test` 时，`leetgo` 自动将远程输出的正确结果填充到 `output:` 部分。示例：
 
-    可以用 blocks 来自定义代码中的一些部分，目前支持的 block 有：
-    - header
-    - description
-    - title
-    - beforeMarker
-    - beforeCode
-    - code
-    - afterCode
-    - afterMarker
-    
-    示例：
-    ```yaml
-    code:
-    lang: cpp
-    cpp:
-      blocks:
-      - name: beforeCode
-        template: |
-          #include <iostream>
-          using namespace std;
-      - name: afterMarker
-        template: |
-          int main() {}
-     ```
+```
+input:
+[3,3]
+6
+output:
 
-3. Script
+input:
+[1,2,3,4]
+7
+output:
+```
 
-    `leetgo` 支持自定义一个 JavaScript 脚本来处理函数代码，示例：
-    ```yaml
-    code:
-      lang: cpp
-      cpp:
-        modifiers:
-        - name: removeUselessComments
-        - script: |
-            function modify(code) {
-              return "// hello world\n" + code;
-            }
-    ```
+### template 相关
+
+`leetgo` 的配置中有许多支持 Go template，如果你熟悉 Go template 语法的话，可以配置出更加个性化的文件名和代码模板。
+
+### Blocks
+
+可以用 blocks 来自定义代码中的一些部分，目前支持的 block 有：
+- header
+- description
+- title
+- beforeMarker
+- beforeCode
+- code
+- afterCode
+- afterMarker
+
+示例：
+```yaml
+code:
+lang: cpp
+cpp:
+  blocks:
+  - name: beforeCode
+    template: |
+      #include <iostream>
+      using namespace std;
+  - name: afterMarker
+    template: |
+      int main() {}
+ ```
+
+### Script
+
+`leetgo` 支持自定义一个 JavaScript 脚本来处理函数代码，示例：
+```yaml
+code:
+  lang: cpp
+  cpp:
+    modifiers:
+    - name: removeUselessComments
+    - script: |
+        function modify(code) {
+          return "// hello world\n" + code;
+        }
+```
 
 ## FAQ
 
