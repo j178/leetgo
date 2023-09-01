@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -201,13 +202,9 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 }
 
 func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
-	result, err := GeneratePathsOnly(q)
+	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
-		return "", err
-	}
-	codeFile := result.GetFile(CodeFile)
-	if codeFile == nil {
-		return "", fmt.Errorf("no code file generated")
+		return "", errors.New("code file not found")
 	}
 	code, err := codeFile.GetContent()
 	if err != nil {
@@ -243,13 +240,9 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 }
 
 func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
-	result, err := GeneratePathsOnly(q)
+	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
-		return err
-	}
-	codeFile := result.GetFile(CodeFile)
-	if codeFile == nil {
-		return fmt.Errorf("no code file generated")
+		return errors.New("code file not found")
 	}
 	code, err := codeFile.GetContent()
 	if err != nil {
@@ -287,7 +280,7 @@ func GetFileOutput(q *leetcode.QuestionData, fileType FileType) (*FileOutput, er
 	}
 	f := result.GetFile(fileType)
 	if f == nil {
-		return nil, fmt.Errorf("file not found")
+		return nil, errors.New("file not found")
 	}
 	return f, nil
 }
