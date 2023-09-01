@@ -280,14 +280,14 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	return nil
 }
 
-func GetTestCases(q *leetcode.QuestionData) (TestCases, error) {
+func GetFileOutput(q *leetcode.QuestionData, fileType FileType) (*FileOutput, error) {
 	result, err := GeneratePathsOnly(q)
 	if err != nil {
-		return TestCases{}, err
+		return nil, err
 	}
-	testCasesFile := result.GetFile(TestCasesFile)
-	if testCasesFile == nil {
-		return TestCases{}, fmt.Errorf("no test cases file generated")
+	f := result.GetFile(fileType)
+	if f == nil {
+		return nil, fmt.Errorf("file not found")
 	}
-	return ParseTestCases(q, testCasesFile)
+	return f, nil
 }

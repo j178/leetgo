@@ -240,6 +240,10 @@ func (r *RunCheckResult) GetState() string {
 	return r.State
 }
 
+func (r *RunCheckResult) Accepted() bool {
+	return r.StatusCode == int(Accepted)
+}
+
 type QuestionList struct {
 	Questions []*QuestionData `json:"questions"`
 	HasMore   bool            `json:"hasMore"`

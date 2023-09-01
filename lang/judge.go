@@ -10,8 +10,9 @@ import (
 	"github.com/goccy/go-json"
 	strip "github.com/grokify/html-strip-tags-go"
 
-	"github.com/j178/leetgo/leetcode"
 	goutils "github.com/j178/leetgo/testutils/go"
+
+	"github.com/j178/leetgo/leetcode"
 )
 
 type JudgeResult interface {
@@ -67,8 +68,11 @@ func (j *sliceJudger) Judge(input []string, output, actualOutput string) JudgeRe
 		return accepted()
 	}
 
-	a, _ := goutils.SplitArray(output)
-	b, _ := goutils.SplitArray(actualOutput)
+	a, err1 := goutils.SplitArray(output)
+	b, err2 := goutils.SplitArray(actualOutput)
+	if err1 != nil || err2 != nil {
+		return failed(fmt.Sprintf("expected %q, got %q", output, actualOutput))
+	}
 	if len(a) != len(b) {
 		return failed(fmt.Sprintf("expected %d elements, got %d", len(a), len(b)))
 	}
