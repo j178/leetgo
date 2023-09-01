@@ -9,9 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	goutils "github.com/j178/leetgo/testutils/go"
-
 	"github.com/j178/leetgo/leetcode"
+	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
 )
 

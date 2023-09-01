@@ -10,9 +10,8 @@ import (
 	"github.com/goccy/go-json"
 	strip "github.com/grokify/html-strip-tags-go"
 
-	goutils "github.com/j178/leetgo/testutils/go"
-
 	"github.com/j178/leetgo/leetcode"
+	goutils "github.com/j178/leetgo/testutils/go"
 )
 
 type JudgeResult interface {
