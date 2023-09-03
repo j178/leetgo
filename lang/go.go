@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -102,6 +103,9 @@ func addMod(code string, q *leetcode.QuestionData) string {
 }
 
 func (g golang) HasInitialized(outDir string) (bool, error) {
+	if !utils.IsExist(filepath.Join(outDir, "go.mod")) {
+		return false, nil
+	}
 	cmd := exec.Command("go", "list", "-m", "-json", constants.GoTestUtilsModPath)
 	cmd.Dir = outDir
 	output, err := cmd.CombinedOutput()
