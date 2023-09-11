@@ -96,21 +96,31 @@ func (r *GenerateResult) TargetDir() string {
 	return filepath.Join(r.OutDir, r.SubDir)
 }
 
+// Lang is a basic generator for a language.
 type Lang interface {
+	// Name returns the full name of the language. e.g. "C++", "JavaScript", "Python"
 	Name() string
+	// ShortName returns the short name of the language. e.g. "cpp", "js", "py"
 	ShortName() string
+	// Slug returns the slug of the language. e.g. "cpp", "javascript", "python3"
 	Slug() string
 	// Generate generates code files for the question.
 	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
+	// GeneratePaths generates the paths of the code files for the question, without generating the real files.
 	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
 }
 
+// NeedInitialization is an interface for languages that need to be initialized before generating code.
 type NeedInitialization interface {
+	// HasInitialized returns whether the language workspace has been initialized.
 	HasInitialized(dir string) (bool, error)
+	// Initialize initializes the language workspace.
 	Initialize(dir string) error
 }
 
+// LocalTestable is an interface for languages that can run local test.
 type LocalTestable interface {
+	// RunLocalTest runs local test for the question.
 	RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error)
 }
 
