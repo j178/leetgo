@@ -3,9 +3,7 @@ before:
     - go mod tidy
     - ./scripts/completions.sh
 builds:
-  - env:
-      - CGO_ENABLED=0
-    goos:
+  - goos:
       - linux
       - windows
       - darwin
@@ -21,6 +19,10 @@ builds:
       - -X github.com/j178/leetgo/constants.Version={{.Version}}
       - -X github.com/j178/leetgo/constants.Commit={{.Commit}}
       - -X github.com/j178/leetgo/constants.BuildDate={{.Date}}
+    env:
+      - CGO_ENABLED=1
+      - 'CC=zig cc -target {{ if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "arm64" }}aarch64{{ else }}{{ .Arch }}{{ end }}-{{ if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}'
+      - 'CXX=zig c++ -target {{ if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "arm64" }}aarch64{{ else }}{{ .Arch }}{{ end }}-{{ if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}'
 
 archives:
   - format: tar.gz

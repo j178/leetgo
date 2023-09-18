@@ -77,7 +77,7 @@ func (c *sqliteCache) load() {
 			var err error
 			c.db, err = sql.Open("sqlite3", c.path)
 			if err != nil {
-				log.Error("failed to load cache, try updating with `leetgo cache update`")
+				log.Error("failed to load cache, try updating with `leetgo cache update`", "err", err)
 				return
 			}
 			if c.Outdated() {
