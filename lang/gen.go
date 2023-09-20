@@ -16,6 +16,8 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
+// GetGenerator returns the generator for the given language. If the language is not supported, an error will be returned.
+// The language can be specified by slug, short name or prefix of full name.
 func GetGenerator(lang string) (Lang, error) {
 	lang = strings.ToLower(lang)
 	for _, l := range SupportedLangs {
@@ -115,6 +117,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	return gen, result, nil
 }
 
+// Generate generates the code for the given question.
 func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	gen, result, err := generate(q)
 	if err != nil {
@@ -132,6 +135,7 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	return result, nil
 }
 
+// GenerateContest generates the code for all questions in the given contest.
 func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	qs, err := ct.GetAllQuestions()
 	if err != nil {
@@ -183,7 +187,7 @@ func tryWrite(file string, content string) (bool, error) {
 	return true, nil
 }
 
-// GeneratePathsOnly runs generate process but does not generate real content.
+// GeneratePathsOnly runs generate process but only returns the paths of generated files, without writing them.
 func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	cfg := config.Get()
 	gen, err := GetGenerator(cfg.Code.Lang)
@@ -201,6 +205,7 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	return result, nil
 }
 
+// GetSolutionCode retrieves the solution code from the generated code file.
 func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
@@ -239,6 +244,7 @@ func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	return strings.Join(codeLinesToKeep, "\n"), nil
 }
 
+// UpdateSolutionCode updates the solution code in the generated code file.
 func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	codeFile, err := GetFileOutput(q, CodeFile)
 	if err != nil {
@@ -273,6 +279,7 @@ func UpdateSolutionCode(q *leetcode.QuestionData, newCode string) error {
 	return nil
 }
 
+// GetFileOutput returns the file output for the given question and file type.
 func GetFileOutput(q *leetcode.QuestionData, fileType FileType) (*FileOutput, error) {
 	result, err := GeneratePathsOnly(q)
 	if err != nil {

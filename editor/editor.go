@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -47,6 +48,7 @@ type editor struct {
 	args    []string
 }
 
+// substituteArgs substitutes the special arguments with the actual values.
 func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) {
 	getPath := func(fileType lang.FileType) string {
 		f := result.GetFile(fileType)
@@ -99,7 +101,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 			for j, f := range result.Files {
 				allFiles[j] = f.GetPath()
 			}
-			args = append(args[:i], append(allFiles, args[i+1:]...)...)
+			args = slices.Insert(args, i, allFiles...)
 			break
 		}
 	}
@@ -115,21 +117,22 @@ func (ed *editor) Open(result *lang.GenerateResult) error {
 	return runCmd(ed.command, args, result.OutDir)
 }
 
-func Get(s string) Opener {
-	if s == "custom" {
-		cfg := config.Get()
-		args, _ := shlex.Split(cfg.Editor.Args)
+// Get returns the editor with the given name.
+func Get(ed config.Editor) Opener {
+	if ed.Use == "custom" {
+		args, _ := shlex.Split(ed.Args)
 		return &editor{
-			command: cfg.Editor.Command,
+			command: ed.Command,
 			args:    args,
 		}
 	}
-	return knownEditors[s]
+	return knownEditors[ed.Use]
 }
 
+// Open opens the files in the given result with the configured editor.
 func Open(result *lang.GenerateResult) error {
 	cfg := config.Get()
-	ed := Get(cfg.Editor.Use)
+	ed := Get(cfg.Editor)
 	if ed == nil {
 		return fmt.Errorf(
 			"editor not supported: %s, you can use `editor.command` to customize the command",
