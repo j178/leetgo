@@ -322,10 +322,3 @@ func (c *sqliteCache) Update() error {
 	log.Info("cache updated", "path", c.path)
 	return nil
 }
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
