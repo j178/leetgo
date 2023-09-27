@@ -405,7 +405,7 @@ func addBinSection(result *GenerateResult) error {
 		if bin["name"].(string) == q.TitleSlug {
 			cargo.Bin[i] = map[string]any{
 				"name": q.TitleSlug,
-				"path": filepath.Join(result.SubDir, "solution.rs"),
+				"path": filepath.ToSlash(filepath.Join(result.SubDir, "solution.rs")),
 			}
 			exists = true
 			break
@@ -415,7 +415,7 @@ func addBinSection(result *GenerateResult) error {
 		cargo.Bin = append(
 			cargo.Bin, map[string]any{
 				"name": q.TitleSlug,
-				"path": filepath.Join(result.SubDir, "solution.rs"),
+				"path": filepath.ToSlash(filepath.Join(result.SubDir, "solution.rs")),
 			},
 		)
 	}
