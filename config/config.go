@@ -72,7 +72,7 @@ type Modifier struct {
 type CodeConfig struct {
 	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
 	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
-	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Default setting for separate_description_file"`
+	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
 	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
 	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages"`
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
@@ -86,7 +86,7 @@ type CodeConfig struct {
 type BaseLangConfig struct {
 	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir"`
 	FilenameTemplate        string     `yaml:"filename_template,omitempty" mapstructure:"filename_template" comment:"Overrides the default code.filename_template, empty will be ignored"`
-	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate file"`
+	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
 	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
 	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
 }

@@ -206,7 +206,7 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # Available functions: lower, upper, trim, padWithZero, toUnderscore, group
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
-  # Default setting for separate_description_file
+  # Generate question description into a separate question.md file
   separate_description_file: true
   # Default modifiers for all languages
   modifiers:
