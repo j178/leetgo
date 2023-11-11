@@ -117,7 +117,7 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 		return false, err
 	}
 	testCasesFile := genResult.GetFile(lang.TestCasesFile)
-	if !utils.IsExist(testCasesFile.GetPath()) {
+	if testCasesFile == nil || !utils.IsExist(testCasesFile.GetPath()) {
 		return false, nil
 	}
 
