@@ -75,11 +75,13 @@ func initLogger() {
 		log.SetReportTimestamp(true)
 		log.SetLevel(log.DebugLevel)
 	} else {
-		log.DebugLevelStyle = log.DebugLevelStyle.SetString("●")
-		log.InfoLevelStyle = log.InfoLevelStyle.SetString("●")
-		log.WarnLevelStyle = log.WarnLevelStyle.SetString("●")
-		log.ErrorLevelStyle = log.ErrorLevelStyle.SetString("×")
-		log.FatalLevelStyle = log.FatalLevelStyle.SetString("×")
+		style := log.DefaultStyles()
+		style.Levels[log.DebugLevel] = style.Levels[log.DebugLevel].SetString("●")
+		style.Levels[log.InfoLevel] = style.Levels[log.InfoLevel].SetString("●")
+		style.Levels[log.WarnLevel] = style.Levels[log.WarnLevel].SetString("●")
+		style.Levels[log.ErrorLevel] = style.Levels[log.ErrorLevel].SetString("×")
+		style.Levels[log.FatalLevel] = style.Levels[log.FatalLevel].SetString("×")
+		log.SetStyles(style)
 		log.SetReportTimestamp(false)
 		log.SetLevel(log.InfoLevel)
 	}
