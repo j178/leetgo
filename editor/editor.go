@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"slices"
 	"strings"
 	"text/template"
 
@@ -101,7 +100,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 			for j, f := range result.Files {
 				allFiles[j] = f.GetPath()
 			}
-			args = slices.Insert(args, i, allFiles...)
+			args = append(args[:i], append(allFiles, args[i+1:]...)...)
 			break
 		}
 	}
