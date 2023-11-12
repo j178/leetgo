@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -161,16 +162,20 @@ func runTestRemotely(
 		return nil, fmt.Errorf("failed to fetch question: %s", err)
 	}
 
+	exampleCases := q.GetExampleTestCases()
+	casesStr := strings.Join(exampleCases, "\n")
+
+	var (
+		cases             lang.TestCases
+		fromTestCasesFile bool
+	)
 	testCasesFile, err := lang.GetFileOutput(q, lang.TestCasesFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get test cases: %w", err)
-	}
-	cases, err := lang.ParseTestCases(q, testCasesFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse test cases: %w", err)
-	}
-	if len(cases.Cases) == 0 {
-		return nil, fmt.Errorf("no test cases found")
+	if err == nil {
+		cases, err = lang.ParseTestCases(q, testCasesFile)
+		if err == nil && len(cases.Cases) > 0 {
+			fromTestCasesFile = true
+			casesStr = cases.InputString()
+		}
 	}
 
 	spin := newSpinner(cmd.ErrOrStderr())
@@ -182,7 +187,7 @@ func runTestRemotely(
 	limiter.Take()
 	spin.Reverse()
 
-	interResult, err := c.RunCode(q, gen.Slug(), solution, cases.InputString())
+	interResult, err := c.RunCode(q, gen.Slug(), solution, casesStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test: %w", err)
 	}
@@ -198,7 +203,7 @@ func runTestRemotely(
 	r := testResult.(*leetcode.RunCheckResult)
 	r.InputData = interResult.TestCase
 
-	if r.Accepted() {
+	if r.Accepted() && fromTestCasesFile {
 		updated, err := cases.UpdateOutputs(r.ExpectedCodeAnswer)
 		if err != nil {
 			log.Debug("failed to update test cases", "err", err)
