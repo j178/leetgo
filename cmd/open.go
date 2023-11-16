@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/pkg/browser"
+	"github.com/cli/browser"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/leetcode"
