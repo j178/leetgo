@@ -13,6 +13,7 @@ require (
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.0
+	github.com/cli/browser v1.3.0
 	github.com/dghubble/sling v1.4.1
 	github.com/dop251/goja v0.0.0-20231027120936-b396bb4c349d
 	github.com/fatih/color v1.16.0
@@ -30,7 +31,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/pelletier/go-toml/v2 v2.1.0
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/sashabaranov/go-openai v1.17.5
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
@@ -82,7 +82,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -90,7 +89,6 @@ require (
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	github.com/zalando/go-keyring v0.2.3 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
