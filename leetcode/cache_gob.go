@@ -1,21 +1,21 @@
-//go:build !cgo && !gob
+//go:build !cgo && gob
 
 package leetcode
 
 import (
+	"encoding/gob"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/goccy/go-json"
 
 	"github.com/j178/leetgo/utils"
 )
 
-var cacheExt = ".json"
+var cacheExt = ".gob"
 
-type jsonCache struct {
+type gobCache struct {
 	path     string
 	client   Client
 	once     sync.Once
@@ -24,14 +24,14 @@ type jsonCache struct {
 }
 
 func newCache(path string, c Client) QuestionsCache {
-	return &jsonCache{path: path, client: c}
+	return &gobCache{path: path, client: c}
 }
 
-func (c *jsonCache) CacheFile() string {
+func (c *gobCache) CacheFile() string {
 	return c.path
 }
 
-func (c *jsonCache) doLoad() error {
+func (c *gobCache) doLoad() error {
 	c.slugs = make(map[string]*QuestionData)
 	c.frontIds = make(map[string]*QuestionData)
 
@@ -39,13 +39,13 @@ func (c *jsonCache) doLoad() error {
 	if err != nil {
 		return err
 	}
-	s, err := os.ReadFile(c.path)
+	s, err := os.Open(c.path)
 	if err != nil {
 		return err
 	}
 
 	var records []*QuestionData
-	err = json.Unmarshal(s, &records)
+	err = gob.NewDecoder(s).Decode(&records)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (c *jsonCache) doLoad() error {
 	return nil
 }
 
-func (c *jsonCache) load() {
+func (c *gobCache) load() {
 	c.once.Do(
 		func() {
 			defer func(now time.Time) {
@@ -76,7 +76,7 @@ func (c *jsonCache) load() {
 	)
 }
 
-func (c *jsonCache) Outdated() bool {
+func (c *gobCache) Outdated() bool {
 	stat, err := os.Stat(c.path)
 	if os.IsNotExist(err) {
 		return true
@@ -84,7 +84,7 @@ func (c *jsonCache) Outdated() bool {
 	return time.Since(stat.ModTime()) >= 14*24*time.Hour
 }
 
-func (c *jsonCache) Update() error {
+func (c *gobCache) Update() error {
 	err := utils.CreateIfNotExists(c.path, false)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (c *jsonCache) Update() error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	enc := json.NewEncoder(f)
+	enc := gob.NewEncoder(f)
 	err = enc.Encode(all)
 	if err != nil {
 		return err
@@ -108,17 +108,17 @@ func (c *jsonCache) Update() error {
 	return nil
 }
 
-func (c *jsonCache) GetBySlug(slug string) *QuestionData {
+func (c *gobCache) GetBySlug(slug string) *QuestionData {
 	c.load()
 	return c.slugs[slug]
 }
 
-func (c *jsonCache) GetById(id string) *QuestionData {
+func (c *gobCache) GetById(id string) *QuestionData {
 	c.load()
 	return c.frontIds[id]
 }
 
-func (c *jsonCache) GetAllQuestions() []*QuestionData {
+func (c *gobCache) GetAllQuestions() []*QuestionData {
 	c.load()
 	all := make([]*QuestionData, 0, len(c.slugs))
 	for _, q := range c.slugs {
