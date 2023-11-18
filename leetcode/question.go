@@ -21,26 +21,6 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-type TopicTag struct {
-	Slug           string `json:"slug"`
-	Name           string `json:"name"`
-	TranslatedName string `json:"translatedName"`
-}
-
-type CodeSnippet struct {
-	LangSlug string `json:"langSlug"`
-	Lang     string `json:"lang"`
-	Code     string `json:"code"`
-}
-
-type Stats struct {
-	TotalAccepted      string `json:"totalAccepted"`
-	TotalSubmission    string `json:"totalSubmission"`
-	TotalAcceptedRaw   int    `json:"totalAcceptedRaw"`
-	TotalSubmissionRaw int    `json:"totalSubmissionRaw"`
-	ACRate             string `json:"acRate"`
-}
-
 type statsNoMethods Stats
 
 func (s *Stats) UnmarshalJSON(data []byte) error {
@@ -54,32 +34,6 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	return nil
-}
-
-type MetaDataParam struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-type MetaDataReturn struct {
-	Type string `json:"type"`
-	// Size    *int   `json:"size"`
-	// ColSize *int `json:"colsize"`
-	Dealloc bool `json:"dealloc"`
-}
-
-type MetaDataOutput struct {
-	ParamIndex int `json:"paramindex"`
-}
-
-type MetaDataMethod struct {
-	Name   string          `json:"name"`
-	Params []MetaDataParam `json:"params"`
-	Return MetaDataReturn  `json:"return"`
-}
-
-type MetaDataConstructor struct {
-	Params []MetaDataParam `json:"params"`
 }
 
 // Normal problems metadata:
@@ -149,19 +103,6 @@ type MetaDataConstructor struct {
 //    "dealloc": true
 //  }
 // }
-
-type MetaData struct {
-	Name   string          `json:"name"`
-	Params []MetaDataParam `json:"params"`
-	Return *MetaDataReturn `json:"return"`
-	Output *MetaDataOutput `json:"output"`
-	// System design problems related
-	SystemDesign bool                `json:"systemdesign"`
-	ClassName    string              `json:"classname"`
-	Constructor  MetaDataConstructor `json:"constructor"`
-	Methods      []MetaDataMethod    `json:"methods"`
-	Manual       bool                `json:"manual"`
-}
 
 type metaDataNoMethods MetaData
 
@@ -238,13 +179,6 @@ func (j *JsonExampleTestCases) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type SimilarQuestion struct {
-	Title           string `json:"title"`
-	TitleSlug       string `json:"titleSlug"`
-	Difficulty      string `json:"difficulty"`
-	TranslatedTitle string `json:"translatedTitle"`
-}
-
 type SimilarQuestions []SimilarQuestion
 
 type similarQuestionsNoMethods SimilarQuestions
@@ -259,52 +193,6 @@ func (s *SimilarQuestions) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	return nil
-}
-
-type CategoryTitle string
-
-const (
-	CategoryAlgorithms  CategoryTitle = "Algorithms"
-	CategoryDatabase    CategoryTitle = "Database"
-	CategoryShell       CategoryTitle = "Shell"
-	CategoryConcurrency CategoryTitle = "Concurrency"
-	CategoryJavaScript  CategoryTitle = "JavaScript"
-	CategoryAll         CategoryTitle = ""
-)
-
-type EditorType string
-
-const (
-	EditorTypeCKEditor EditorType = "CKEDITOR"
-	EditorTypeMarkdown EditorType = "MARKDOWN"
-)
-
-type QuestionData struct {
-	client               Client
-	contest              *Contest
-	partial              int32
-	TitleSlug            string               `json:"titleSlug"`
-	QuestionId           string               `json:"questionId"`
-	QuestionFrontendId   string               `json:"questionFrontendId"`
-	CategoryTitle        CategoryTitle        `json:"categoryTitle"`
-	Title                string               `json:"title"`
-	TranslatedTitle      string               `json:"translatedTitle"`
-	Difficulty           string               `json:"difficulty"`
-	TopicTags            []TopicTag           `json:"topicTags"`
-	IsPaidOnly           bool                 `json:"isPaidOnly"`
-	Content              string               `json:"content"`
-	TranslatedContent    string               `json:"translatedContent"`
-	Status               string               `json:"status"` // "ac", "notac", or null
-	Stats                Stats                `json:"stats"`
-	Hints                []string             `json:"hints"`
-	SimilarQuestions     SimilarQuestions     `json:"similarQuestions"`
-	SampleTestCase       string               `json:"sampleTestCase"`
-	ExampleTestcases     string               `json:"exampleTestcases"`
-	JsonExampleTestcases JsonExampleTestCases `json:"jsonExampleTestcases"`
-	ExampleTestcaseList  []string             `json:"exampleTestcaseList"`
-	MetaData             MetaData             `json:"metaData"`
-	CodeSnippets         []CodeSnippet        `json:"codeSnippets"`
-	EditorType           EditorType           `json:"editorType"`
 }
 
 type questionDataNoMethods QuestionData
@@ -326,8 +214,8 @@ func (q *QuestionData) normalize() {
 		q.Content = ""
 	}
 
-	if q.EditorType == "" {
-		q.EditorType = EditorTypeCKEditor
+	if q.EditorType == EditorType_EDITOR_TYPE_UNSPECIFIED {
+		q.EditorType = EditorType_CKEDITOR
 	}
 }
 
@@ -433,7 +321,7 @@ func htmlToMarkdown(html string) string {
 func (q *QuestionData) GetFormattedContent() string {
 	content, lang := q.GetPreferContent()
 
-	if q.EditorType == EditorTypeCKEditor {
+	if q.EditorType == EditorType_CKEDITOR {
 		content = htmlToMarkdown(content)
 	}
 
@@ -483,7 +371,7 @@ func (q *QuestionData) ParseExampleOutputs() []string {
 		content = q.TranslatedContent
 	}
 	pat := htmlPattern
-	if q.EditorType == EditorTypeMarkdown {
+	if q.EditorType == EditorType_MARKDOWN {
 		pat = markdownPattern
 	}
 

@@ -1,4 +1,4 @@
-//go:build cgo
+//go:build cgo && cache_sqlite
 
 package leetcode
 

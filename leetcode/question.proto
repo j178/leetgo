@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+option go_package = "github.com/178/leetgo/leetcode;leetcode";
+
+message Questions {
+  repeated QuestionData questions = 1;
+}
+
+enum CategoryTitle {
+  CATEGORY_TITLE_UNSPECIFIED = 0;
+  ALGORITHMS = 1;
+  DATABASE = 2;
+  SHELL = 3;
+  CONCURRENCY = 4;
+  JAVASCRIPT = 5;
+}
+
+message TopicTag {
+  string slug = 1;
+  string name = 2;
+  string translated_name = 3;
+}
+
+message Stats {
+  string total_accepted = 1;
+  string total_submission = 2;
+  int32 total_accepted_raw = 3;
+  int32 total_submission_raw = 4;
+  string ac_rate = 5;
+}
+
+message SimilarQuestion {
+  string title = 1;
+  string title_slug = 2;
+  string difficulty = 3;
+  string translated_title = 4;
+}
+
+message MetaData {
+  message Param {
+    string name = 1;
+    string type = 2;
+  }
+  message Return {
+    string type = 1;
+    bool dealloc = 2;
+  }
+  message Output {
+    int32 param_index = 1;
+  }
+  message Constructor {
+    repeated Param params = 1;
+  }
+  message Method {
+    string name = 1;
+    repeated Param params = 2;
+    Return return = 3;
+  }
+
+  string name = 1;
+  repeated Param params = 2;
+  Return return = 3;
+  Output output = 4;
+
+  // System design problems related
+  bool system_design = 5;
+  string class_name = 6;
+  Constructor constructor = 7;
+  repeated Method methods = 8;
+  bool manual = 9;
+}
+
+message CodeSnippet {
+  string lang_slug = 1;
+  string lang = 2;
+  string code = 3;
+}
+
+enum EditorType {
+  EDITOR_TYPE_UNSPECIFIED = 0;
+  CKEDITOR = 1;
+  MARKDOWN = 2;
+}
+
+message QuestionData {
+  string title_slug = 1;
+  string question_id = 2;
+  string question_frontend_id = 3;
+  CategoryTitle category_title = 4;
+  string title = 5;
+  string translated_title = 6;
+  string difficulty = 7;
+  repeated TopicTag topic_tags = 8;
+  bool is_paid_only = 9;
+  string content = 10;
+  string translated_content = 11;
+  string status = 12;
+  Stats stats = 13;
+  repeated string hints = 14;
+  repeated SimilarQuestion similar_questions = 15;
+  string sample_test_case = 16;
+  string example_test_cases = 17;
+  repeated string json_example_testcases = 18;
+  repeated string example_testcase_list = 19;
+  MetaData metadata = 20;
+  repeated CodeSnippet code_snippets = 21;
+  EditorType editor_type = 22;
+}

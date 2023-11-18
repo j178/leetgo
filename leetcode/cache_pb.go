@@ -1,5 +1,3 @@
-//go:build cache_json
-
 package leetcode
 
 import (
@@ -9,14 +7,13 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/goccy/go-json"
 
 	"github.com/j178/leetgo/utils"
 )
 
-var cacheExt = ".json"
+var cacheExt = ".binpb"
 
-type jsonCache struct {
+type pbCache struct {
 	path     string
 	client   Client
 	once     sync.Once
@@ -25,14 +22,14 @@ type jsonCache struct {
 }
 
 func newCache(path string, c Client) QuestionsCache {
-	return &jsonCache{path: path, client: c}
+	return &pbCache{path: path, client: c}
 }
 
-func (c *jsonCache) CacheFile() string {
+func (c *pbCache) CacheFile() string {
 	return c.path
 }
 
-func (c *jsonCache) doLoad() error {
+func (c *pbCache) doLoad() error {
 	c.slugs = make(map[string]*QuestionData)
 	c.frontIds = make(map[string]*QuestionData)
 
