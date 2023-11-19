@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"unicode"
 	"unicode/utf16"
@@ -50,14 +51,15 @@ func EnsureTrailingNewline(s string) string {
 
 // TruncateString shortens a string longer than n by replacing the middle part with "...<truncated>..."
 func TruncateString(s string, n int) string {
-	if len(s) <= n {
+	if len(s) <= n || n < 30 {
 		return s
 	}
-	const l = len("...<truncated>...")
-	prefixLength := (n - l) / 2
-	suffixLength := n - prefixLength - l
+	suffix := fmt.Sprintf("......<%d bytes truncated>", len(s)-30)
+	if n < len(suffix) {
+		return suffix
+	}
 
-	truncated := s[:prefixLength] + "...<truncated>..." + s[len(s)-suffixLength:]
+	truncated := s[:n-len(suffix)] + suffix
 
 	return truncated
 }
