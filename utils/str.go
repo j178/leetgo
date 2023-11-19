@@ -48,6 +48,20 @@ func EnsureTrailingNewline(s string) string {
 	return s
 }
 
+// TruncateString shortens a string longer than n by replacing the middle part with "...<truncated>..."
+func TruncateString(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	const l = len("...<truncated>...")
+	prefixLength := (n - l) / 2
+	suffixLength := n - prefixLength - l
+
+	truncated := s[:prefixLength] + "...<truncated>..." + s[len(s)-suffixLength:]
+
+	return truncated
+}
+
 func CamelToSnake(name string) string {
 	var snakeStrBuilder strings.Builder
 
