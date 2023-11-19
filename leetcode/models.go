@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/utils"
 )
 
 type UserStatus struct {
@@ -96,17 +97,17 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 			"\n%s%s%s%s%s%s\n",
 			config.FailedStyle.Render(" × Wrong Answer\n"),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
-			fmt.Sprintf("\nLast case:     %s", strings.ReplaceAll(r.LastTestcase, "\n", "↩ ")),
-			fmt.Sprintf("\nOutput:        %s", strings.ReplaceAll(r.CodeOutput, "\n", "↩ ")),
+			fmt.Sprintf("\nLast case:     %s", utils.TruncateString(strings.ReplaceAll(r.LastTestcase, "\n", "↩ "), 100)),
+			fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.ReplaceAll(r.CodeOutput, "\n", "↩ "), 100)),
 			stdout,
-			fmt.Sprintf("\nExpected:      %s", strings.ReplaceAll(r.ExpectedOutput, "\n", "↩ ")),
+			fmt.Sprintf("\nExpected:      %s", utils.TruncateString(strings.ReplaceAll(r.ExpectedOutput, "\n", "↩ "), 100)),
 		)
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
 		return fmt.Sprintf(
 			"\n%s%s%s\n",
 			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
-			fmt.Sprintf("\nLast case:     %s", r.LastTestcase),
+			fmt.Sprintf("\nLast case:     %s", utils.TruncateString(r.LastTestcase, 100)),
 		)
 	case RuntimeError:
 		return fmt.Sprintf(
@@ -200,20 +201,20 @@ func (r *RunCheckResult) Display(q *QuestionData) string {
 				"\n%s%s%s%s%s%s\n",
 				config.PassedStyle.Render(fmt.Sprintf(" √ %s\n", r.StatusMsg)),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
-				fmt.Sprintf("\nInput:         %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
-				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
+				fmt.Sprintf("\nInput:         %s", utils.TruncateString(strings.ReplaceAll(r.InputData, "\n", "↩ "), 100)),
+				fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.Join(r.CodeAnswer, "↩ "), 100)),
 				stdout,
-				fmt.Sprintf("\nExpected:      %s", strings.Join(r.ExpectedCodeAnswer, "↩ ")),
+				fmt.Sprintf("\nExpected:      %s", utils.TruncateString(strings.Join(r.ExpectedCodeAnswer, "↩ "), 100)),
 			)
 		} else {
 			return fmt.Sprintf(
 				"\n%s%s%s%s%s%s\n",
 				config.ErrorStyle.Render("\n × Wrong Answer\n"),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
-				fmt.Sprintf("\nInput:         %s", strings.ReplaceAll(r.InputData, "\n", "↩ ")),
-				fmt.Sprintf("\nOutput:        %s", strings.Join(r.CodeAnswer, "↩ ")),
+				fmt.Sprintf("\nInput:         %s", utils.TruncateString(strings.ReplaceAll(r.InputData, "\n", "↩ "), 100)),
+				fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.Join(r.CodeAnswer, "↩ "), 100)),
 				stdout,
-				fmt.Sprintf("\nExpected:      %s", strings.Join(r.ExpectedCodeAnswer, "↩ ")),
+				fmt.Sprintf("\nExpected:      %s", utils.TruncateString(strings.Join(r.ExpectedCodeAnswer, "↩ "), 100)),
 			)
 		}
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
