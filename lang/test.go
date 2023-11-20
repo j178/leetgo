@@ -203,14 +203,19 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			actualOutput, stdout := extractOutput(outputBuf.String())
 			mayAppendStdout := func() {
 				if stdout != "" {
-					out := config.StdoutStyle.Render(strings.ReplaceAll(stdout, "\n", "↩ "))
+					out := config.StdoutStyle.Render(utils.TruncateString(strings.ReplaceAll(stdout, "\n", "↩ "), 100))
 					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
 				}
 			}
 			if ctx.Err() != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Time limit exceeded")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
 				mayAppendStdout()
 				l.UnIndent()
 				return
@@ -218,7 +223,12 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Runtime error")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
 				mayAppendStdout()
 				l.UnIndent()
 				return
@@ -227,8 +237,13 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			if err != nil {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Invalid output")))
 				l.Indent()
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
-				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
+				l.AppendItem(fmt.Sprintf("Output:     %s", utils.TruncateString(actualOutput, 100)))
 				mayAppendStdout()
 				l.UnIndent()
 				return
@@ -241,9 +256,14 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.FailedStyle.Render("Wrong answer")))
 				l.Indent()
 				l.AppendItem(fmt.Sprintf("Reason:     %s", r.GetInfo()))
-				l.AppendItem(fmt.Sprintf("Input:      %s", strings.ReplaceAll(c.InputString(), "\n", "↩ ")))
-				l.AppendItem(fmt.Sprintf("Output:     %s", actualOutput))
-				l.AppendItem(fmt.Sprintf("Expected:   %s", c.Output))
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
+				l.AppendItem(fmt.Sprintf("Output:     %s", utils.TruncateString(actualOutput, 100)))
+				l.AppendItem(fmt.Sprintf("Expected:   %s", utils.TruncateString(c.Output, 100)))
 				mayAppendStdout()
 				l.UnIndent()
 			}
