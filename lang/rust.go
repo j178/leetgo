@@ -366,26 +366,6 @@ func (r rust) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	return genResult, nil
 }
 
-type CargoToml struct {
-	CargoFeatures     []string         `toml:"cargo-features,omitempty"`
-	Package           map[string]any   `toml:"package,omitempty"`
-	Lib               map[string]any   `toml:"lib,omitempty"`
-	Bin               []map[string]any `toml:"bin,omitempty"`
-	Example           []map[string]any `toml:"example,omitempty"`
-	Test              []map[string]any `toml:"test,omitempty"`
-	Bench             []map[string]any `toml:"bench,omitempty"`
-	Dependencies      map[string]any   `toml:"dependencies"`
-	DevDependencies   map[string]any   `toml:"dev-dependencies,omitempty"`
-	BuildDependencies map[string]any   `toml:"build-dependencies,omitempty"`
-	Target            map[string]any   `toml:"target,omitempty"`
-	Badge             map[string]any   `toml:"badge,omitempty"`
-	Features          map[string]any   `toml:"features,omitempty"`
-	Patch             map[string]any   `toml:"patch,omitempty"`
-	Replace           map[string]any   `toml:"replace,omitempty"`
-	Profile           map[string]any   `toml:"profile,omitempty"`
-	Workspace         map[string]any   `toml:"workspace,omitempty"`
-}
-
 func addBinSection(result *GenerateResult) error {
 	q := result.Question
 	cargoTomlPath := filepath.Join(result.OutDir, "Cargo.toml")
@@ -394,16 +374,21 @@ func addBinSection(result *GenerateResult) error {
 		return err
 	}
 
-	var cargo CargoToml
+	var cargo map[string]any
 	err = toml.Unmarshal(data, &cargo)
 	if err != nil {
 		return err
 	}
 
 	exists := false
-	for i, bin := range cargo.Bin {
-		if bin["name"].(string) == q.TitleSlug {
-			cargo.Bin[i] = map[string]any{
+	bins := make([]map[string]any, len(cargo["bin"].([]any)))
+	for i, bin := range cargo["bin"].([]any) {
+		bins[i] = bin.(map[string]any)
+	}
+	for i, bin := range bins {
+		binName := bin["name"].(string)
+		if binName == q.TitleSlug {
+			bins[i] = map[string]any{
 				"name": q.TitleSlug,
 				"path": filepath.ToSlash(filepath.Join(result.SubDir, "solution.rs")),
 			}
@@ -412,19 +397,20 @@ func addBinSection(result *GenerateResult) error {
 		}
 	}
 	if !exists {
-		cargo.Bin = append(
-			cargo.Bin, map[string]any{
+		bins = append(
+			bins, map[string]any{
 				"name": q.TitleSlug,
 				"path": filepath.ToSlash(filepath.Join(result.SubDir, "solution.rs")),
 			},
 		)
 	}
 	sort.Slice(
-		cargo.Bin, func(i, j int) bool {
-			return cargo.Bin[i]["path"].(string) < cargo.Bin[j]["path"].(string)
+		bins, func(i, j int) bool {
+			return bins[i]["path"].(string) < bins[j]["path"].(string)
 		},
 	)
 
+	cargo["bin"] = bins
 	data, err = toml.Marshal(cargo)
 	if err != nil {
 		return err
