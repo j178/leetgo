@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/viper"
 
@@ -108,6 +109,9 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 	// Write files
 	for i, file := range result.Files {
 		written, err := tryWrite(file.GetPath(), file.Content)
+		if errors.Is(err, terminal.InterruptErr) {
+			return nil, nil, err
+		}
 		if err != nil {
 			log.Error("failed to write file", "path", utils.RelToCwd(file.GetPath()), "err", err)
 			continue
