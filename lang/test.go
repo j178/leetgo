@@ -124,7 +124,7 @@ func checkOutput(q *leetcode.QuestionData, input []string, outputLine string) er
 	return nil
 }
 
-func buildTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string) error {
+func buildTest(_ *leetcode.QuestionData, genResult *GenerateResult, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -203,7 +203,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			actualOutput, stdout := extractOutput(outputBuf.String())
 			mayAppendStdout := func() {
 				if stdout != "" {
-					out := config.StdoutStyle.Render(utils.TruncateString(strings.ReplaceAll(stdout, "\n", "↩ "), 100))
+					out := config.StdoutStyle.Render(utils.TruncateString(stdout, 1000))
 					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
 				}
 			}

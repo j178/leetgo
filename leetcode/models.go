@@ -80,8 +80,8 @@ type SubmitCheckResult struct {
 
 func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	stdout := ""
-	if len(r.CodeOutput) > 1 {
-		stdout = "\nStdout:        " + strings.ReplaceAll(r.StdOutput, "\n", "↩ ")
+	if len(r.StdOutput) > 0 {
+		stdout = "\nStdout:        " + utils.TruncateString(strings.ReplaceAll(r.StdOutput, "\n", "↩ "), 1000)
 	}
 	switch StatusCode(r.StatusCode) {
 	case Accepted:
@@ -189,10 +189,10 @@ func formatCompare(s string) string {
 	return sb.String()
 }
 
-func (r *RunCheckResult) Display(q *QuestionData) string {
+func (r *RunCheckResult) Display(_ *QuestionData) string {
 	stdout := ""
-	if len(r.CodeOutput) > 1 {
-		stdout = "\nStdout:        " + strings.Join(r.CodeOutput, "↩ ")
+	if len(r.CodeOutput) > 0 {
+		stdout = "\nStdout:        " + utils.TruncateString(strings.Join(r.CodeOutput, "↩ "), 1000)
 	}
 	switch StatusCode(r.StatusCode) {
 	case Accepted:
