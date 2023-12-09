@@ -13,3 +13,7 @@ release-pypi:
 release-cargo:
 	git tag -a $(shell svu patch --prefix 'testutils/rust/')
 	git push --tags
+
+release-maven:
+	git tag -a $(shell svu patch --prefix 'testutils/java/')
+	git push --tags

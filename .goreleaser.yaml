@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod tidy
+    - go generate ./...
     - ./scripts/completions.sh
 builds:
   - env:
@@ -12,6 +13,9 @@ builds:
     goarch:
       - amd64
       - arm64
+    ignore:
+      - goos: linux
+        goarch: arm64
     flags:
       - -v
       - -trimpath
