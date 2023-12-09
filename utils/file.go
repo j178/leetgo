@@ -82,5 +82,5 @@ func RelToCwd(path string) string {
 	if err != nil {
 		relPath = path
 	}
-	return relPath
+	return filepath.ToSlash(relPath)
 }
