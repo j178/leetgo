@@ -83,7 +83,7 @@ Local testing requires more work to implement for each language, so not all lang
 | Python | :white_check_mark: | :white_check_mark: |
 | C++ | :white_check_mark: | :white_check_mark: |
 | Rust | :white_check_mark: | :white_check_mark: |
-| Java | :white_check_mark: | Not yet |
+| Java | :white_check_mark: | :white_check_mark: |
 | JavaScript | :white_check_mark: | Not yet |
 | TypeScript | :white_check_mark: | Not yet |
 | PHP | :white_check_mark: | Not yet |
