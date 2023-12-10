@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
 	javaEmbed "github.com/j178/leetgo/testutils/java"
@@ -37,17 +39,6 @@ const (
 	    <version>1.0</version>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.1.1</version>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>
 `
 )
@@ -87,6 +78,7 @@ func (j java) sourceDir() string {
 }
 
 func (j java) Initialize(outDir string) error {
+	log.Info("initializing java project", "outDir", utils.RelToCwd(outDir))
 	// Copy mvn wrapper from embed
 	err := utils.CopyFS(outDir, javaEmbed.MvnWrapper)
 	if err != nil {
@@ -130,13 +122,25 @@ func (j java) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 		return false, fmt.Errorf("build failed: %w", err)
 	}
 
-	// TODO 生成 package name, 后续执行需要用这个名字拼成的完整 main class
-	execCmd := mvnwCmd(outDir, "exec:exec", fmt.Sprintf("-Dexec.mainClass=%s.Main"))
+	filenameTmpl := getFilenameTemplate(q, j)
+	packageName, err := q.GetFormattedFilename(j.slug, filenameTmpl)
+	if err != nil {
+		return false, err
+	}
+	className := fmt.Sprintf("%s.%s.Main", j.groupID(), packageName)
+	execCmd := []string{"java", "-classpath", filepath.Join(outDir, "target", "classes"), className}
 	return runTest(q, genResult, execCmd, targetCase)
 }
 
 func (j java) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
-	return "", nil
+	code := `
+class Main {
+    public static void main(String[] args) {
+		Solution solution = new Solution();
+	}
+}
+`
+	return code, nil
 }
 
 func (j java) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
