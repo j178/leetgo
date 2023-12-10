@@ -8,8 +8,7 @@ var (
 
 const (
 	CmdName               = "leetgo"
-	GlobalConfigFilename  = "config.yaml"
-	ProjectConfigFilename = "leetgo.yaml"
+	ConfigFilename        = "leetgo.yaml"
 	QuestionCacheBaseName = "leetcode-questions"
 	StateFilename         = "state.json"
 	CodeBeginMarker       = "@lc code=begin"

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -8,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/shlex"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -70,7 +70,7 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be override by project config and flag --lang)"`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be overridden by command line flag -l/--lang)"`
 	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
 	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
 	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
@@ -120,7 +120,7 @@ type LeetCodeConfig struct {
 	Credentials Credentials  `yaml:"credentials" mapstructure:"credentials" comment:"Credentials to access LeetCode"`
 }
 
-func (c *Config) ConfigDir() string {
+func (c *Config) HomeDir() string {
 	if c.dir != "" {
 		return c.dir
 	}
@@ -135,15 +135,11 @@ func (c *Config) ConfigDir() string {
 }
 
 func (c *Config) CacheDir() string {
-	return filepath.Join(c.ConfigDir(), "cache")
+	return filepath.Join(c.HomeDir(), "cache")
 }
 
 func (c *Config) TempDir() string {
 	return filepath.Join(os.TempDir(), constants.CmdName)
-}
-
-func (c *Config) GlobalConfigFile() string {
-	return filepath.Join(c.ConfigDir(), constants.GlobalConfigFilename)
 }
 
 func (c *Config) ProjectRoot() string {
@@ -151,7 +147,7 @@ func (c *Config) ProjectRoot() string {
 		dir, _ := os.Getwd()
 		c.projectRoot = dir
 		for {
-			if utils.IsExist(filepath.Join(dir, constants.ProjectConfigFilename)) {
+			if utils.IsExist(filepath.Join(dir, constants.ConfigFilename)) {
 				c.projectRoot = dir
 				break
 			}
@@ -166,8 +162,8 @@ func (c *Config) ProjectRoot() string {
 	return c.projectRoot
 }
 
-func (c *Config) ProjectConfigFile() string {
-	return filepath.Join(c.ProjectRoot(), constants.ProjectConfigFilename)
+func (c *Config) ConfigFile() string {
+	return filepath.Join(c.ProjectRoot(), constants.ConfigFilename)
 }
 
 func (c *Config) StateFile() string {
@@ -301,45 +297,28 @@ func Load(init bool) error {
 		return nil
 	}
 
-	// load global configuration
+	// load default configuration
 	cfg := defaultConfig()
-	viper.SetDefault("code.lang", cfg.Code.Lang)
-	viper.SetDefault("leetcode.site", cfg.LeetCode.Site)
 
-	viper.SetConfigFile(cfg.GlobalConfigFile())
-	err := viper.ReadInConfig()
+	viper.SetConfigType("yaml")
+	cfgBytes, err := yaml.Marshal(cfg)
 	if err != nil {
-		notExist := os.IsNotExist(err)
-		if init && notExist {
-			// During `init`, if global config file does not exist, we will create one.
-			err = nil
-			_ = err
-		} else {
-			if notExist {
-				return fmt.Errorf(
-					"global config file %s not found, run `leetgo init` to create one",
-					cfg.GlobalConfigFile(),
-				)
-			}
-			return fmt.Errorf("load global config file %s failed: %w", cfg.GlobalConfigFile(), err)
-		}
+		return fmt.Errorf("marshal default config failed: %w", err)
+	}
+	err = viper.ReadConfig(bytes.NewBuffer(cfgBytes))
+	if err != nil {
+		return fmt.Errorf("read default config failed: %w", err)
 	}
 
-	// Don't read project config if we are running `init` command
+	// load project configuration
 	if !init {
-		// load project configuration
-		viper.SetConfigFile(cfg.ProjectConfigFile())
+		viper.SetConfigFile(cfg.ConfigFile())
 		err = viper.MergeInConfig()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Warn(
-					fmt.Sprintf("%s not found, use global config only", constants.ProjectConfigFilename),
-					"file",
-					cfg.GlobalConfigFile(),
-				)
-			} else {
-				return fmt.Errorf("load config file %s failed: %w", cfg.ProjectConfigFile(), err)
+				return fmt.Errorf("%s not found, run `leetgo init` first", constants.ConfigFilename)
 			}
+			return fmt.Errorf("load config file %s failed: %w", cfg.ConfigFile(), err)
 		}
 	}
 

@@ -44,7 +44,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		err = createConfigFiles(dir)
+		err = createConfigFile(dir)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "", "template to use, cn or us")
-	initCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite global config file if exists")
+	initCmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite config file if exists")
 
 	_ = initCmd.RegisterFlagCompletionFunc(
 		"template", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -71,7 +71,7 @@ func init() {
 }
 
 func createConfigDir() error {
-	dir := config.Get().ConfigDir()
+	dir := config.Get().HomeDir()
 	if utils.IsExist(dir) {
 		return nil
 	}
@@ -83,7 +83,7 @@ func createConfigDir() error {
 	return nil
 }
 
-func createConfigFiles(dir string) error {
+func createConfigFile(dir string) error {
 	cfg := config.Get()
 	site := cfg.LeetCode.Site
 	language := cfg.Language
@@ -95,53 +95,25 @@ func createConfigFiles(dir string) error {
 		language = config.ZH
 	}
 
-	globalFile := cfg.GlobalConfigFile()
-	if force || !utils.IsExist(globalFile) {
-		f, err := os.Create(globalFile)
-		if err != nil {
-			return err
-		}
+	author := defaultUser()
+	cfg.LeetCode.Site = site
+	cfg.Language = language
+	cfg.Author = author
 
-		author := defaultUser()
-		cfg.LeetCode.Site = site
-		cfg.Language = language
-		cfg.Author = author
-
-		err = cfg.Write(f, true)
-		if err != nil {
-			return err
-		}
-		log.Info("global config file created", "file", globalFile)
+	projectFile := filepath.Join(dir, constants.ConfigFilename)
+	if utils.IsExist(projectFile) && !force {
+		return fmt.Errorf("config file %s already exists, use -f to overwrite", utils.RelToCwd(projectFile))
 	}
 
-	projectFile := filepath.Join(dir, constants.ProjectConfigFilename)
 	f, err := os.Create(projectFile)
 	if err != nil {
 		return err
 	}
+	defer func() { _ = f.Close() }()
 
-	tmpl := `# This is the leetgo project level config, global config is at %s
-# For more details, please refer to https://github.com/j178/leetgo
-language: %s
-code:
-  lang: %s
-leetcode:
-  site: %s
-#  credentials:
-#    from: browser
-#editor:
-#  use: none
-`
-	_, _ = f.WriteString(
-		fmt.Sprintf(
-			tmpl,
-			globalFile,
-			language,
-			cfg.Code.Lang,
-			site,
-		),
-	)
-	log.Info("project config file created", "file", utils.RelToCwd(projectFile))
+	_, _ = f.WriteString("# Leetgo configuration file, see more at https://github.com/j178/leetgo\n\n")
+	_ = cfg.Write(f, true)
+	log.Info("config file created", "file", utils.RelToCwd(projectFile))
 
 	return nil
 }
