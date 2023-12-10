@@ -128,7 +128,7 @@ func (j java) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 		return false, err
 	}
 	className := fmt.Sprintf("%s.%s.Main", j.groupID(), packageName)
-	execCmd := []string{"java", "-classpath", filepath.Join(outDir, "target", "classes"), className}
+	execCmd := []string{"java", "--class-path", filepath.Join(outDir, "target", "classes"), className}
 	return runTest(q, genResult, execCmd, targetCase)
 }
 

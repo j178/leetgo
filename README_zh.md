@@ -148,7 +148,7 @@ Available Commands:
 
 Flags:
   -v, --version       version for leetgo
-  -l, --lang string   language of code to generate: cpp, go, python ...
+  -l, --lang string   language of code to generate: cpp, go, python, java...
       --site string   leetcode site: cn, us
   -y, --yes           answer yes to all prompts
   -h, --help          help for leetgo
@@ -193,7 +193,7 @@ author: Bob
 # Language of the question description: zh or en
 language: zh
 code:
-  # Language of code generated for questions: go, cpp, python, java... 
+  # Language of code generated for questions: cpp, python, go, java... 
   # (will be overridden by command line flag -l/--lang)
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
@@ -227,6 +227,10 @@ code:
     out_dir: rust
   java:
     out_dir: java
+    # Overrides the default code.filename_template, empty will be ignored
+    filename_template: p{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}_{{ .Slug | lower | toUnderscore }}{{ end }}
+    # Maven group ID
+    group_id: ""
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
