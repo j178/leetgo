@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/config"
+	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	javaEmbed "github.com/j178/leetgo/testutils/java"
 	"github.com/j178/leetgo/utils"
@@ -39,6 +40,16 @@ const (
 	    <version>1.0</version>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.1</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>
 `
 )
@@ -128,13 +139,13 @@ func (j java) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 		return false, err
 	}
 	className := fmt.Sprintf("%s.%s.Main", j.groupID(), packageName)
-	execCmd := []string{"java", "--class-path", filepath.Join(outDir, "target", "classes"), className}
+	execCmd := mvnwCmd(outDir, "exec:java", "-Dexec.mainClass="+className)
 	return runTest(q, genResult, execCmd, targetCase)
 }
 
 func (j java) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	code := `
-class Main {
+public class Main {
     public static void main(String[] args) {
 		Solution solution = new Solution();
 	}
@@ -167,22 +178,15 @@ func (j java) generateCodeFile(
 ) {
 	codeHeader := fmt.Sprintf(
 		`package %s;
-`,
-		packageName,
+
+import %s.*;
+`, packageName, constants.JavaTestUtilsGroupId,
 	)
-	testContent, err := j.generateTestContent(q)
-	if err != nil {
-		return FileOutput{}, err
-	}
 	blocks = append(
 		[]config.Block{
 			{
 				Name:     beforeBeforeMarker,
 				Template: codeHeader,
-			},
-			{
-				Name:     afterAfterMarker,
-				Template: testContent,
 			},
 		},
 		blocks...,
@@ -199,7 +203,29 @@ func (j java) generateCodeFile(
 	return FileOutput{
 		Filename: filename,
 		Content:  content,
-		Type:     CodeFile | TestFile,
+		Type:     CodeFile,
+	}, nil
+}
+
+func (j java) generateTestFile(
+	q *leetcode.QuestionData,
+	packageName string,
+	filename string,
+) (
+	FileOutput,
+	error,
+) {
+	content, err := j.generateTestContent(q)
+	if err != nil {
+		return FileOutput{}, err
+	}
+	content = fmt.Sprintf(
+		`package %s;
+%s`, packageName, content)
+	return FileOutput{
+		Filename: filename,
+		Content:  content,
+		Type:     TestFile,
 	}, nil
 }
 
@@ -216,10 +242,15 @@ func (j java) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 	genResult.AddFile(
 		FileOutput{
-			Filename: "solution.java",
-			Type:     CodeFile | TestFile,
+			Filename: "Solution.java",
+			Type:     CodeFile,
 		},
 	)
+	genResult.AddFile(
+		FileOutput{
+			Filename: "Main.java",
+			Type:     TestFile,
+		})
 	genResult.AddFile(
 		FileOutput{
 			Filename: "testcases.txt",
@@ -255,16 +286,25 @@ func (j java) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	fqPackageName := fmt.Sprintf("%s.%s", j.groupID(), packageName)
-	codeFile, err := j.generateCodeFile(q, fqPackageName, "solution.java", blocks, modifiers, separateDescriptionFile)
+	codeFile, err := j.generateCodeFile(q, fqPackageName, "Solution.java", blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
+
+	testFile, err := j.generateTestFile(q, fqPackageName, "Main.java")
+	if err != nil {
+		return nil, err
+	}
+
 	testcaseFile, err := j.generateTestCasesFile(q, "testcases.txt")
 	if err != nil {
 		return nil, err
 	}
+
 	genResult.AddFile(codeFile)
+	genResult.AddFile(testFile)
 	genResult.AddFile(testcaseFile)
 
 	if separateDescriptionFile {

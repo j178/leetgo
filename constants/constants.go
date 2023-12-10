@@ -17,4 +17,5 @@ const (
 	GoTestUtilsModPath    = "github.com/j178/leetgo/testutils/go"
 	RustTestUtilsCrate    = "leetgo_rs"
 	PythonTestUtilsMode   = "leetgo_py"
+	JavaTestUtilsGroupId  = "io.github.j178"
 )
