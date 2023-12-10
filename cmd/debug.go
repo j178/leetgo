@@ -55,7 +55,7 @@ var debugCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Get()
 		cwd, _ := os.Getwd()
-		projectConfig, err := os.ReadFile(cfg.ProjectConfigFile())
+		projectConfig, err := os.ReadFile(cfg.ConfigFile())
 		if err != nil {
 			projectConfig = []byte("No project config file found")
 		}
@@ -63,11 +63,10 @@ var debugCmd = &cobra.Command{
 		cmd.Println("```")
 		cmd.Println(buildVersion())
 		cmd.Println("```")
-		cmd.Println("Global config dir    :", cfg.ConfigDir())
-		cmd.Println("Global config file   :", cfg.GlobalConfigFile())
+		cmd.Println("Home dir             :", cfg.HomeDir())
 		cmd.Println("Project root         :", cfg.ProjectRoot())
 		cmd.Println("Working dir          :", cwd)
-		cmd.Println("Project config file  :", cfg.ProjectConfigFile())
+		cmd.Println("Project config file  :", cfg.ConfigFile())
 		cmd.Println("Project configuration:")
 		cmd.Println("```yaml")
 		cmd.Println(string(projectConfig))

@@ -200,8 +200,8 @@ author: Bob
 # Language of the question description: zh or en
 language: zh
 code:
-  # Language of code generated for questions: go, python, ... 
-  # (will be override by project config and flag --lang)
+  # Language of code generated for questions: go, cpp, python, java... 
+  # (will be overridden by command line flag -l/--lang)
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
