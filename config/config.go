@@ -70,7 +70,7 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, python, ... \n(will be overridden by command line flag -l/--lang)"`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java... \n(will be overridden by command line flag -l/--lang)"`
 	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
 	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
 	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
