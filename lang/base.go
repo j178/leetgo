@@ -167,16 +167,6 @@ func getTempBinFile(q *leetcode.QuestionData, lang Lang) (string, error) {
 	return filepath.Join(tmpDir, filename), nil
 }
 
-func getTempBinDir(q *leetcode.QuestionData, lang Lang) (string, error) {
-	tmpDir := config.Get().TempDir()
-	dirname := fmt.Sprintf("%s-%s", q.TitleSlug, lang.Slug())
-	dir := filepath.Join(tmpDir, dirname)
-	if err := utils.CreateIfNotExists(dir, true); err != nil {
-		return "", err
-	}
-	return dir, nil
-}
-
 func separateDescriptionFile(lang Lang) bool {
 	ans := viper.Get("code." + lang.Slug() + ".separate_description_file")
 	if ans != nil {

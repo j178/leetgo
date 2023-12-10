@@ -10,7 +10,7 @@ import (
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
-	cppUtils "github.com/j178/leetgo/testutils/cpp"
+	cppEmbed "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
 )
 
@@ -19,13 +19,13 @@ type cpp struct {
 }
 
 func (c cpp) Initialize(outDir string) error {
-	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	err := utils.WriteFile(headerPath, cppUtils.HeaderContent)
+	headerPath := filepath.Join(outDir, cppEmbed.HeaderName)
+	err := utils.WriteFile(headerPath, cppEmbed.HeaderContent)
 	if err != nil {
 		return err
 	}
 	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
-	err = utils.WriteFile(stdCxxPath, cppUtils.StdCxxContent)
+	err = utils.WriteFile(stdCxxPath, cppEmbed.StdCxxContent)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (c cpp) Initialize(outDir string) error {
 }
 
 func (c cpp) HasInitialized(outDir string) (bool, error) {
-	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
+	headerPath := filepath.Join(outDir, cppEmbed.HeaderName)
 	if !utils.IsExist(headerPath) {
 		return false, nil
 	}
@@ -278,7 +278,7 @@ func (c cpp) generateCodeFile(
 #include "%s"
 using namespace std;
 
-`, cppUtils.HeaderName,
+`, cppEmbed.HeaderName,
 	)
 	testContent, err := c.generateTestContent(q)
 	if err != nil {

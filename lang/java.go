@@ -2,21 +2,113 @@ package lang
 
 import (
 	"fmt"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"strings"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
+	javaEmbed "github.com/j178/leetgo/testutils/java"
 	"github.com/j178/leetgo/utils"
+)
+
+const (
+	pomTemplate = `
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>%s</groupId>
+  <artifactId>%s</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+
+  <name>leetcode-solutions</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.j178</groupId>
+	    <artifactId>leetgo-java</artifactId>
+	    <version>1.0</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.1</version>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
+`
 )
 
 type java struct {
 	baseLang
 }
 
+func mvnwCmd(dir string, args ...string) []string {
+	cmdName := "mvnw"
+	if runtime.GOOS == "windows" {
+		cmdName = "mvnw.cmd"
+	}
+	return append([]string{filepath.Join(dir, cmdName), "-q"}, args...)
+}
+
 func (j java) HasInitialized(outDir string) (bool, error) {
-	return false, nil
+	return utils.IsExist(filepath.Join(outDir, "pom.xml")), nil
+}
+
+var nameReplacer = regexp.MustCompile(`[^a-zA-Z0-9_]`)
+
+func (j java) groupID() string {
+	cfg := config.Get()
+	if cfg.Code.Java.GroupID != "" {
+		return cfg.Code.Java.GroupID
+	}
+	name := nameReplacer.ReplaceAllString(strings.ToLower(cfg.Author), "_")
+	return "io.github." + name
+}
+
+func (j java) sourceDir() string {
+	groupID := j.groupID()
+	path := []string{"src", "main", "java"}
+	path = append(path, strings.Split(groupID, ".")...)
+	return filepath.Join(path...)
 }
 
 func (j java) Initialize(outDir string) error {
+	// Copy mvn wrapper from embed
+	err := utils.CopyFS(outDir, javaEmbed.MvnWrapper)
+	if err != nil {
+		return err
+	}
+
+	groupID := j.groupID()
+	artifactID := "leetcode-solutions"
+
+	// Write pom.xml
+	pomXML := fmt.Sprintf(pomTemplate, groupID, artifactID)
+	err = utils.WriteFile(filepath.Join(outDir, "pom.xml"), []byte(pomXML))
+	if err != nil {
+		return err
+	}
+
+	// Create layout
+	sourceDir := filepath.Join(outDir, j.sourceDir())
+	err = utils.MakeDir(sourceDir)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -32,19 +124,15 @@ func (j java) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
 	}
 
-	execDir, err := getTempBinDir(q, j)
-	if err != nil {
-		return false, fmt.Errorf("get temp bin dir failed: %w", err)
-	}
-
-	args := []string{"javac", "-d", execDir, testFile}
-	err = buildTest(q, genResult, args)
+	buildCmd := mvnwCmd(outDir, "compile")
+	err = buildTest(q, genResult, buildCmd)
 	if err != nil {
 		return false, fmt.Errorf("build failed: %w", err)
 	}
 
-	args = []string{"java", "--class-path", execDir, "Main"}
-	return runTest(q, genResult, args, targetCase)
+	// TODO 生成 package name, 后续执行需要用这个名字拼成的完整 main class
+	execCmd := mvnwCmd(outDir, "exec:exec", fmt.Sprintf("-Dexec.mainClass=%s.Main"))
+	return runTest(q, genResult, execCmd, targetCase)
 }
 
 func (j java) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
@@ -64,6 +152,7 @@ func (j java) generateTestContent(q *leetcode.QuestionData) (string, error) {
 
 func (j java) generateCodeFile(
 	q *leetcode.QuestionData,
+	packageName string,
 	filename string,
 	blocks []config.Block,
 	modifiers []ModifierFunc,
@@ -72,7 +161,11 @@ func (j java) generateCodeFile(
 	FileOutput,
 	error,
 ) {
-	codeHeader := ""
+	codeHeader := fmt.Sprintf(
+		`package %s;
+`,
+		packageName,
+	)
 	testContent, err := j.generateTestContent(q)
 	if err != nil {
 		return FileOutput{}, err
@@ -108,14 +201,14 @@ func (j java) generateCodeFile(
 
 func (j java) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 	filenameTmpl := getFilenameTemplate(q, j)
-	baseFilename, err := q.GetFormattedFilename(j.slug, filenameTmpl)
+	packageName, err := q.GetFormattedFilename(j.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
 	}
 	genResult := &GenerateResult{
-		SubDir:   baseFilename,
 		Question: q,
 		Lang:     j,
+		SubDir:   filepath.Join(j.sourceDir(), packageName),
 	}
 	genResult.AddFile(
 		FileOutput{
@@ -142,14 +235,14 @@ func (j java) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 
 func (j java) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	filenameTmpl := getFilenameTemplate(q, j)
-	baseFilename, err := q.GetFormattedFilename(j.slug, filenameTmpl)
+	packageName, err := q.GetFormattedFilename(j.slug, filenameTmpl)
 	if err != nil {
 		return nil, err
 	}
 	genResult := &GenerateResult{
 		Question: q,
 		Lang:     j,
-		SubDir:   baseFilename,
+		SubDir:   filepath.Join(j.sourceDir(), packageName),
 	}
 
 	separateDescriptionFile := separateDescriptionFile(j)
@@ -158,7 +251,8 @@ func (j java) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	codeFile, err := j.generateCodeFile(q, "solution.java", blocks, modifiers, separateDescriptionFile)
+	fqPackageName := fmt.Sprintf("%s.%s", j.groupID(), packageName)
+	codeFile, err := j.generateCodeFile(q, fqPackageName, "solution.java", blocks, modifiers, separateDescriptionFile)
 	if err != nil {
 		return nil, err
 	}
