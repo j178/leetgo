@@ -2,6 +2,7 @@ package lang
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -92,6 +93,11 @@ func (j java) Initialize(outDir string) error {
 	log.Info("initializing java project", "outDir", utils.RelToCwd(outDir))
 	// Copy mvn wrapper from embed
 	err := utils.CopyFS(outDir, javaEmbed.MvnWrapper)
+	if err != nil {
+		return err
+	}
+	// Make ./mvnw executable
+	err = os.Chmod(filepath.Join(outDir, "mvnw"), 0755)
 	if err != nil {
 		return err
 	}
@@ -221,7 +227,8 @@ func (j java) generateTestFile(
 	}
 	content = fmt.Sprintf(
 		`package %s;
-%s`, packageName, content)
+%s`, packageName, content,
+	)
 	return FileOutput{
 		Filename: filename,
 		Content:  content,
@@ -250,7 +257,8 @@ func (j java) GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error) {
 		FileOutput{
 			Filename: "Main.java",
 			Type:     TestFile,
-		})
+		},
+	)
 	genResult.AddFile(
 		FileOutput{
 			Filename: "testcases.txt",
