@@ -1,3 +1,5 @@
+//go:build !json
+
 package leetcode
 
 import (
@@ -70,8 +72,8 @@ func (c *sqliteCache) CacheFile() string {
 func (c *sqliteCache) load() {
 	c.once.Do(
 		func() {
-			defer func(now time.Time) {
-				log.Debug("cache loaded", "path", c.path, "time", time.Since(now))
+			defer func(start time.Time) {
+				log.Debug("cache loaded", "path", c.path, "elapsed", time.Since(start))
 			}(time.Now())
 			var err error
 			c.db, err = sqlite.OpenConn(c.path)
@@ -248,6 +250,10 @@ func (c *sqliteCache) GetBySlug(slug string) *QuestionData {
 }
 
 func (c *sqliteCache) GetById(id string) *QuestionData {
+	defer func(start time.Time) {
+		log.Debug("get by id", "elapsed", time.Since(start))
+	}(time.Now())
+
 	c.load()
 	if c.db == nil {
 		return nil

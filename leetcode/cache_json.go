@@ -61,8 +61,8 @@ func (c *jsonCache) doLoad() error {
 func (c *jsonCache) load() {
 	c.once.Do(
 		func() {
-			defer func(now time.Time) {
-				log.Debug("cache loaded", "path", c.path, "elapsed", time.Since(now))
+			defer func(start time.Time) {
+				log.Debug("cache loaded", "path", c.path, "elapsed", time.Since(start))
 			}(time.Now())
 			err := c.doLoad()
 			if err != nil {
@@ -114,6 +114,10 @@ func (c *jsonCache) GetBySlug(slug string) *QuestionData {
 }
 
 func (c *jsonCache) GetById(id string) *QuestionData {
+	defer func(start time.Time) {
+		log.Debug("get by id", "elapsed", time.Since(start))
+	}(time.Now())
+	
 	c.load()
 	return c.frontIds[id]
 }
