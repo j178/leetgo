@@ -29,7 +29,7 @@ require (
 	github.com/k3a/html2text v1.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
-	github.com/pelletier/go-toml/v2 v2.1.0
+	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/sashabaranov/go-openai v1.17.9
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
