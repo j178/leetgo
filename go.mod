@@ -32,7 +32,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.0
 	github.com/sashabaranov/go-openai v1.17.9
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.17.0
+	github.com/spf13/viper v1.18.2
 	github.com/tidwall/gjson v1.17.0
 	gopkg.in/yaml.v3 v3.0.1
 	zombiezen.com/go/sqlite v1.0.0
