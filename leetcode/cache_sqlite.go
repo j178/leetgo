@@ -1,4 +1,4 @@
-//go:build !json
+//go:build sqlite
 
 package leetcode
 

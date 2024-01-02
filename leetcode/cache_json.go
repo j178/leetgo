@@ -1,4 +1,4 @@
-//go:build json
+//go:build !sqlite
 
 package leetcode
 
@@ -117,7 +117,7 @@ func (c *jsonCache) GetById(id string) *QuestionData {
 	defer func(start time.Time) {
 		log.Debug("get by id", "elapsed", time.Since(start))
 	}(time.Now())
-	
+
 	c.load()
 	return c.frontIds[id]
 }
