@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -47,7 +48,7 @@ func updateUsage(readme []byte) []byte {
 }
 
 func updateConfig(readme []byte) []byte {
-	buf := new(bytes.Buffer)
+	buf := new(strings.Builder)
 	_ = config.Get().Write(buf, true)
 	configStr := buf.String()
 	configStr = "\n```yaml\n" + configStr + "```\n"

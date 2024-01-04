@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -417,7 +416,7 @@ func (l baseLang) generateCodeContent(
 		NeedsDefinition:         needsDefinition(code),
 		Version:                 fmt.Sprintf("%s: %s", constants.CmdName, constants.Version),
 	}
-	var buf bytes.Buffer
+	var buf strings.Builder
 	err = tmpl.Execute(&buf, data)
 	if err != nil {
 		return "", err

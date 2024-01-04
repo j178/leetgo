@@ -123,14 +123,14 @@ func (g golang) HasInitialized(outDir string) (bool, error) {
 
 func (g golang) Initialize(outDir string) error {
 	const modPath = "leetcode-solutions"
-	var stderr bytes.Buffer
+	var stderr strings.Builder
 	cmd := exec.Command("go", "mod", "init", modPath)
 	log.Info("go mod init", "cmd", cmd.String())
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
 	err := cmd.Run()
-	if err != nil && !bytes.Contains(stderr.Bytes(), []byte("go.mod already exists")) {
+	if err != nil && !strings.Contains(stderr.String(), "go.mod already exists") {
 		return err
 	}
 

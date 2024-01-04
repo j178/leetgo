@@ -1,7 +1,6 @@
 package leetcode
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -611,7 +610,7 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 		return "", err
 	}
 
-	var buf bytes.Buffer
+	var buf strings.Builder
 	err = tmpl.Execute(&buf, data)
 	if err != nil {
 		return "", err

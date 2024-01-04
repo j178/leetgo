@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -110,7 +109,7 @@ func (tc *TestCases) Contains(c TestCase) bool {
 }
 
 func (tc *TestCases) String() string {
-	buf := new(bytes.Buffer)
+	buf := new(strings.Builder)
 	for i, c := range tc.Cases {
 		buf.WriteString(testCaseInputMark + "\n")
 		buf.WriteString(c.InputString())
@@ -124,7 +123,7 @@ func (tc *TestCases) String() string {
 }
 
 func (tc *TestCases) InputString() string {
-	buf := new(bytes.Buffer)
+	buf := new(strings.Builder)
 	for _, c := range tc.Cases {
 		buf.WriteString(c.InputString())
 	}

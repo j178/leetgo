@@ -1,7 +1,6 @@
 package editor
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -85,7 +84,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 		if err != nil {
 			return nil, err
 		}
-		var s bytes.Buffer
+		var s strings.Builder
 		err = tmpl.Execute(&s, data)
 		if err != nil {
 			return nil, err

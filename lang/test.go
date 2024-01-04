@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -128,7 +127,7 @@ func buildTest(_ *leetcode.QuestionData, genResult *GenerateResult, args []strin
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	buf := new(bytes.Buffer)
+	buf := new(strings.Builder)
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Dir = genResult.OutDir
 	cmd.Stdout = buf
@@ -187,7 +186,7 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 
-			outputBuf := new(bytes.Buffer)
+			outputBuf := new(strings.Builder)
 			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 			cmd.Dir = genResult.OutDir
 			cmd.Stdin = strings.NewReader(c.InputString())

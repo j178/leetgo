@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"bytes"
 	"os"
+	"strings"
 
 	"github.com/goccy/go-json"
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ var inspectCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		var buf bytes.Buffer
+		var buf strings.Builder
 		enc := json.NewEncoder(&buf)
 		enc.SetIndent("", "  ")
 		_ = enc.Encode(resp)
