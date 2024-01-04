@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/fatih/color"
@@ -33,10 +34,7 @@ func replace(mark string, origin []byte, new []byte) []byte {
 	endMark := fmt.Appendf(nil, "<!-- END %s -->", mark)
 	begin := bytes.Index(origin, beginMark) + len(beginMark)
 	end := bytes.Index(origin, endMark)
-	result := append([]byte(nil), origin[:begin]...)
-	result = append(result, new...)
-	result = append(result, origin[end:]...)
-	return result
+	return slices.Replace(origin, begin, end, new...)
 }
 
 func updateUsage(readme []byte) []byte {

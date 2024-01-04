@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -72,8 +73,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 		TestCasesFile:   getPath(lang.TestCasesFile),
 	}
 
-	args := make([]string, len(ed.args))
-	copy(args, ed.args)
+	args := slices.Clone(ed.args)
 	for i, arg := range args {
 		if !strings.Contains(arg, "{{") {
 			continue
@@ -99,7 +99,7 @@ func (ed *editor) substituteArgs(result *lang.GenerateResult) ([]string, error) 
 			for j, f := range result.Files {
 				allFiles[j] = f.GetPath()
 			}
-			args = append(args[:i], append(allFiles, args[i+1:]...)...)
+			args = slices.Replace(args, i, i+1, allFiles...)
 			break
 		}
 	}
