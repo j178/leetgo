@@ -181,14 +181,14 @@ leetgo test last/            # `last/` means all questions of the last generated
 
 ## Configuration
 
-Leetgo uses two levels of configuration files, the global configuration file located at `~/.config/leetgo/config.yaml` and the local configuration file located at `leetgo.yaml` in the project root.
+> [!WARNING]
+> Since `v1.4`, `leetgo` no longer reads the global `~/.config/leetgo/config.yaml` file, please put all configurations in the project's `leetgo.yaml` file.
 
-These configuration files are created during the `leetgo init` process.
-The local configuration file in the project overrides the global configuration.
+`leetgo init` generates a `leetgo.yaml` file in the current directory, which contains all the configurations of `leetgo`. You can modify this file according to your needs.
 
-It is generally recommended to use the global configuration as the default configuration and customize it in the project by modifying the `leetgo.yaml` file.
+The directory where `leetgo.yaml` is located is considered as the root directory of a `leetgo` project, and `leetgo` will generate all code files undeer this directory. `leetgo` will look for the `leetgo.yaml` file in the current directory. If it is not found, it will recursively search upwards until a `leetgo.yaml` file is found or the root directory of the file system is reached.
 
-Here is the demonstration of complete configurations:
+Below is the demonstration of a complete configuration:
 
 <details>
 <summary>Click to expand</summary>
@@ -266,7 +266,7 @@ editor:
 <!-- END CONFIG -->
 </details>
 
-## LeetCode Support
+## LeetCode Credentials
 
 `leetgo` uses LeetCode's GraphQL API to retrieve questions and submit solutions. `leetgo` needs your LeetCode cookies to access the authenticated API.
 

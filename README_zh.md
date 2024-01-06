@@ -178,13 +178,17 @@ leetgo test last/            # last/ 表示最近生成的比赛的所有题目 
 
 ## 配置说明
 
-`leetgo` 使用两级配置结构：全局配置和项目配置。
+> [!WARNING]
+> 从 `v1.4` 开始，`leetgo` 不再读取全局的 `~/.config/leetgo/config.yaml` 文件，请将所有配置都放到项目的 `leetgo.yaml` 文件中。
 
-全局配置位于 `~/.config/leetgo/config.yaml`，项目配置是项目根目录中的 `leetgo.yaml` 文件。 他们都是在 `leetgo init` 初始化过程中生成的。
+`leetgo init` 会在当前目录生成一个 `leetgo.yaml` 文件，这个文件包含了 `leetgo` 的所有配置，你可以根据自己的需要修改这个文件。
 
-项目配置会覆盖全局配置中的相同配置。通常使用全局配置作为默认的配置，然后在各个项目中调整 `leetgo.yaml` 来自定义项目中的配置。
+`leetgo.yaml` 所在的目录会被认为是一个 `leetgo` 项目的根目录，`leetgo` 会在这个目录下生成所有的代码文件。`leetgo` 会在当前目录中查找 `leetgo.yaml` 文件，如果没有找到，会向上递归查找，直到找到一个 `leetgo.yaml` 文件或者到达文件系统的根目录。
 
 下面是一个完整配置的展示：
+
+<details>
+<summary>Click to expand</summary>
 
 <!-- BEGIN CONFIG -->
 ```yaml
@@ -257,8 +261,9 @@ editor:
   args: ""
 ```
 <!-- END CONFIG -->
+</details>
 
-## LeetCode 支持情况
+## LeetCode 认证
 
 `leetgo` 使用 LeetCode 的 GraphQL API 来获取题目和提交代码，`leetgo` 需要 LeetCode 的 Cookie 来代替你做这些事情。
 
