@@ -300,7 +300,7 @@ There are three ways to make cookies available to `leetgo`:
       from: password
   ```
 
-> **Note**
+> [!NOTE]
 > Password authentication is not recommended, and it is not supported by `leetcode.com`.
 
 ## Advanced Usage
