@@ -14,8 +14,14 @@ def split_array(s: str) -> List[str]:
     return res
 
 
-def serialize(val: Any) -> str:
-    if isinstance(val, bool):
+def serialize(val: Any, ty: str = None) -> str:
+    if val is None:
+        if ty is None:
+            raise Exception("None value without type")
+        if ty == "ListNode" or ty == "TreeNode":
+            return "[]"
+        return "null"
+    elif isinstance(val, bool):
         return "true" if val else "false"
     elif isinstance(val, int):
         return str(val)
