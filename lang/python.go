@@ -117,12 +117,10 @@ func toPythonType(typeName string) string {
 }
 
 func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
-	const template = `if __name__ == "__main__":
-%s
-	print("\n%s", serialize(ans))
-`
-	code := ""
+	code := "if __name__ == \"__main__\":\n"
+
 	paramNames := make([]string, 0, len(q.MetaData.Params))
+	paramTypes := make([]string, 0, len(q.MetaData.Params))
 	for _, param := range q.MetaData.Params {
 		varName := param.Name
 		varType := toPythonType(param.Type)
@@ -133,6 +131,7 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			varType,
 		)
 		paramNames = append(paramNames, param.Name)
+		paramTypes = append(paramTypes, varType)
 	}
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		code += fmt.Sprintf(
@@ -140,6 +139,7 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 			q.MetaData.Name,
 			strings.Join(paramNames, ", "),
 		)
+		code += fmt.Sprintf("\tprint(\"\\n%s\", serialize(ans, \"%s\"))\n", testCaseOutputMark, q.MetaData.Return.Type)
 	} else {
 		code += fmt.Sprintf(
 			"\t%s(%s)\n",
@@ -149,16 +149,21 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		if q.MetaData.Output != nil {
 			ansName := paramNames[q.MetaData.Output.ParamIndex]
 			code += fmt.Sprintf("\tans = %s\n", ansName)
+			code += fmt.Sprintf(
+				"\tprint(\"\\n%s\", serialize(ans, \"%s\"))\n",
+				testCaseOutputMark,
+				paramTypes[q.MetaData.Output.ParamIndex],
+			)
 		} else {
 			code += "\tans = None\n"
+			code += fmt.Sprintf("\tprint(\"\\n%s\", \"null\")\n", testCaseOutputMark)
 		}
 	}
 
-	testContent := fmt.Sprintf(template, code, testCaseOutputMark)
 	if q.MetaData.Manual {
-		testContent = fmt.Sprintf("# %s\n%s", manualWarning, testContent)
+		code = fmt.Sprintf("# %s\n%s", manualWarning, code)
 	}
-	return testContent, nil
+	return code, nil
 }
 
 func (p python) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, error) {
