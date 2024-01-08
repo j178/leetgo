@@ -87,6 +87,9 @@ func extractOutput(s string) (string, string) {
 	var output string
 	var others []string
 	for _, line := range utils.SplitLines(s) {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		if strings.HasPrefix(line, testCaseOutputMark) {
 			// If there are multiple output lines, only the last one is used.
 			output = strings.TrimSpace(line[len(testCaseOutputMark):])
@@ -194,7 +197,13 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 			cmd.Stderr = outputBuf
 			err = cmd.Start()
 			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Failed to start")))
+				l.AppendItem(
+					fmt.Sprintf(
+						"Case %d:    %s",
+						c.No,
+						config.ErrorStyle.Render("Failed to start:", err.Error()),
+					),
+				)
 				return
 			}
 			err = cmd.Wait()
