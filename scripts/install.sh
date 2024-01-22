@@ -37,6 +37,9 @@ else
 fi
 
 echo "This script will automatically download and install leetgo (${VERSION}) for you."
+echo "leetgo will be installed to \${PREFIX}/bin/leetgo, which is ${PREFIX}/bin/leetgo"
+echo "You may install leetgo in a different location by setting the PREFIX environment variable."
+
 if [ "x$(id -u)" == "x0" ]; then
   echo "warning: this script is running as root.  This is dangerous and unnecessary!"
 fi
@@ -74,16 +77,9 @@ tar -xzf "$TEMP_FILE_GZ" -C "$TEMP_INSTALL_DIR"
 
 DEST="$PREFIX/bin/leetgo"
 
-# Continue?
-echo "leetgo will be installed into '$DEST'."
-echo -n "Continue? (y/n) "
-read -r yn
-case $yn in
-  [Yy]* ) ;;
-  * ) exit;;
-esac
-
 chmod +x "$TEMP_INSTALL_DIR/leetgo"
 mv "$TEMP_INSTALL_DIR/leetgo" "$DEST"
+
+echo "leetgo was installed successfully to $DEST"
 
 }; __wrap__
