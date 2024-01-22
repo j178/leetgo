@@ -73,7 +73,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 			return nil, err
 		}
 	}
-	if err == ErrQuestionNotFound {
+	if errors.Is(err, ErrQuestionNotFound) {
 		err = nil
 	}
 	if err != nil {
@@ -81,7 +81,7 @@ func ParseQID(qid string, c Client) ([]*QuestionData, error) {
 	}
 	if q == nil && len(qs) == 0 {
 		q, err = QuestionBySlug(qid, c)
-		if err == ErrQuestionNotFound {
+		if errors.Is(err, ErrQuestionNotFound) {
 			q, err = QuestionFromCacheByID(qid, c)
 		}
 		if err != nil {

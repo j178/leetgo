@@ -120,7 +120,13 @@ scoop bucket add j178 https://github.com/j178/scoop-bucket.git
 scoop install j178/leetgo
 ```
 
-### 使用 `go install`
+### macOS/Linux 使用脚本安装
+
+```shell
+curl -fsSL https://raw.githubusercontent.com/j178/leetgo/master/scripts/install.sh | bash
+```
+
+### 使用 `go install` 从源码安装
 
 ```shell
 go install github.com/j178/leetgo@latest
