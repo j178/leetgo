@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -exuo pipefail
+set -euo pipefail
 
 # Most of this script is taken from https://github.com/mitsuhiko/rye/blob/main/scripts/install.sh
 
