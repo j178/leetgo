@@ -186,7 +186,13 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				return
 			}
 			ran++
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			timeout := 3 * time.Second
+			if ran == 1 {
+				// Give more time for the first run.
+				// On macOS, first time execution of a binary may be slow due to the system's security check.
+				timeout += 3 * time.Second
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 
 			outputBuf := new(strings.Builder)
