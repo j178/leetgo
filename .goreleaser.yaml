@@ -111,7 +111,7 @@ aurs:
       install -Dm755 "./leetgo" "${pkgdir}/usr/bin/leetgo"
 
       # license
-      install -Dm644 "./LICENSE.md" "${pkgdir}/usr/share/licenses/leetgo/LICENSE"
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/leetgo/LICENSE"
 
       # completions
       mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
