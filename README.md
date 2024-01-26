@@ -128,6 +128,12 @@ scoop install j178/leetgo
 curl -fsSL https://raw.githubusercontent.com/j178/leetgo/master/scripts/install.sh | bash
 ```
 
+### Install from AUR on ArchLinux
+
+```shell
+yay -S leetgo
+```
+
 ### Install from source via `go install`
 
 ```shell
