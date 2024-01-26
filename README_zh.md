@@ -120,6 +120,12 @@ scoop bucket add j178 https://github.com/j178/scoop-bucket.git
 scoop install j178/leetgo
 ```
 
+### ArchLinux 使用 [AUR](https://aur.archlinux.org/packages/leetgo-bin/)
+
+```shell
+yay -S leetgo-bin
+```
+
 ### macOS/Linux 使用脚本安装
 
 ```shell

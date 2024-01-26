@@ -96,6 +96,31 @@ scoops:
       submit, test, and view your submissions.
     license: MIT
 
+aurs:
+  - homepage: https://github.com/j178/leetgo
+    description: >-
+      leetgo is a command line tool for leetcode.com. It can help you to login,
+      submit, test, and view your submissions.
+    license: MIT
+    maintainers:
+      - "j178 <10510431+j178@users.noreply.github.com>"
+    private_key: "{{ .Env.AUR_PRIVATE_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/leetgo-bin.git"
+    package: |-
+      # bin
+      install -Dm755 "./leetgo" "${pkgdir}/usr/bin/leetgo"
+
+      # license
+      install -Dm644 "./LICENSE.md" "${pkgdir}/usr/share/licenses/leetgo/LICENSE"
+
+      # completions
+      mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+      mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+      mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+      install -Dm644 "./completions/leetgo.bash" "${pkgdir}/usr/share/bash-completion/completions/leetgo"
+      install -Dm644 "./completions/leetgo.zsh" "${pkgdir}/usr/share/zsh/site-functions/_leetgo"
+      install -Dm644 "./completions/leetgo.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/leetgo.fish"
+
 announce:
   # DISCORD_WEBHOOK_ID and DISCORD_WEBHOOK_TOKEN
   discord:
