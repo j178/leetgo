@@ -10,3 +10,6 @@ go.work
 go.work.sum
 misc/*.gif
 misc/questions.json
+
+testutils/java/target/
+testutils/java/.idea/

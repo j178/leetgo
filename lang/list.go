@@ -45,14 +45,16 @@ var (
 			blockCommentEnd:   "*/",
 		},
 	}
-	javaGen = baseLang{
-		name:              "Java",
-		slug:              "java",
-		shortName:         "java",
-		extension:         ".java",
-		lineComment:       "//",
-		blockCommentStart: "/*",
-		blockCommentEnd:   "*/",
+	javaGen = java{
+		baseLang{
+			name:              "Java",
+			slug:              "java",
+			shortName:         "java",
+			extension:         ".java",
+			lineComment:       "//",
+			blockCommentStart: "/*",
+			blockCommentEnd:   "*/",
+		},
 	}
 	cGen = baseLang{
 		name:              "C",

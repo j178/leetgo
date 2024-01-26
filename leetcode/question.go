@@ -561,6 +561,8 @@ func contestShortSlug(contestSlug string) string {
 	return strings.Replace(contestSlug, "-contest-", "-", 1)
 }
 
+var nonIdentifierRe = regexp.MustCompile(`[^a-zA-Z0-9_]`)
+
 func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string) (string, error) {
 	id, slugValid := q.normalizeQuestionId()
 	data := &filenameTemplateData{
@@ -594,7 +596,7 @@ func (q *QuestionData) GetFormattedFilename(lang string, filenameTemplate string
 				return fmt.Sprintf("%0*s", n, s)
 			},
 			"toUnderscore": func(s string) string {
-				return strings.ReplaceAll(s, "-", "_")
+				return nonIdentifierRe.ReplaceAllString(s, "_")
 			},
 			"group": func(size int, s string) string {
 				id, err := strconv.Atoi(s)

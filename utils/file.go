@@ -2,6 +2,9 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -83,4 +86,41 @@ func RelToCwd(path string) string {
 		relPath = path
 	}
 	return filepath.ToSlash(relPath)
+}
+
+// CopyFS copies a file system to a directory.
+func CopyFS(dir string, fsys fs.FS) error {
+	return fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		targ := filepath.Join(dir, filepath.FromSlash(path))
+		if d.IsDir() {
+			if err := os.MkdirAll(targ, 0o777); err != nil {
+				return err
+			}
+			return nil
+		}
+		r, err := fsys.Open(path)
+		if err != nil {
+			return err
+		}
+		defer r.Close()
+		info, err := r.Stat()
+		if err != nil {
+			return err
+		}
+		w, err := os.OpenFile(targ, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o666|info.Mode()&0o777)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(w, r); err != nil {
+			w.Close()
+			return fmt.Errorf("copying %s: %v", path, err)
+		}
+		if err := w.Close(); err != nil {
+			return err
+		}
+		return nil
+	})
 }

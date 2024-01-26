@@ -70,16 +70,16 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java... \n(will be overridden by command line flag -l/--lang)"`
-	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
-	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
-	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
-	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages"`
-	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
-	Python                  PythonConfig   `yaml:"python3" mapstructure:"python3"`
-	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
-	Rust                    RustConfig     `yaml:"rust" mapstructure:"rust"`
-	Java                    BaseLangConfig `yaml:"java" mapstructure:"java"`
+	Lang                    string       `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: cpp, python, go, java... \n(will be overridden by command line flag -l/--lang)"`
+	FilenameTemplate        string       `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
+	SeparateDescriptionFile bool         `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
+	Blocks                  []Block      `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
+	Modifiers               []Modifier   `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages"`
+	Go                      GoConfig     `yaml:"go" mapstructure:"go"`
+	Python                  PythonConfig `yaml:"python3" mapstructure:"python3"`
+	Cpp                     CppConfig    `yaml:"cpp" mapstructure:"cpp"`
+	Rust                    RustConfig   `yaml:"rust" mapstructure:"rust"`
+	Java                    JavaConfig   `yaml:"java" mapstructure:"java"`
 	// Add more languages here
 }
 
@@ -108,6 +108,11 @@ type CppConfig struct {
 
 type RustConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+}
+
+type JavaConfig struct {
+	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
+	GroupID        string `yaml:"group_id" mapstructure:"group_id" comment:"Maven group ID"`
 }
 
 type Credentials struct {
@@ -219,7 +224,12 @@ func defaultConfig() *Config {
 				BaseLangConfig: BaseLangConfig{OutDir: "python"},
 				Executable:     constants.DefaultPython,
 			},
-			Java: BaseLangConfig{OutDir: "java"},
+			Java: JavaConfig{
+				BaseLangConfig: BaseLangConfig{
+					OutDir:           "java",
+					FilenameTemplate: `p{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}_{{ .Slug | lower | toUnderscore }}{{ end }}`,
+				},
+			},
 			Rust: RustConfig{BaseLangConfig: BaseLangConfig{OutDir: "rust"}},
 			// Add more languages here
 		},
