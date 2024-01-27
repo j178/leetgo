@@ -381,6 +381,9 @@ func addBinSection(result *GenerateResult) error {
 	}
 
 	exists := false
+	if cargo["bin"] == nil {
+		cargo["bin"] = []any{}
+	}
 	bins := make([]map[string]any, len(cargo["bin"].([]any)))
 	for i, bin := range cargo["bin"].([]any) {
 		bins[i] = bin.(map[string]any)
