@@ -19,7 +19,7 @@
 
 1. [安装 leetgo](#安装)
 2. 创建一个项目: `leetgo init -t <us or cn> -l <lang>`
-3. 编辑配置文件: `leetgo.yaml` and `~/.config/leetgo/config.yaml`
+3. 编辑配置文件: `leetgo.yaml`
 4. 选择一个问题: `leetgo pick <id or name or today>`
 5. 测试你的代码: `leetgo test last -L`
 6. 提交你的代码: `leetgo submit last`
