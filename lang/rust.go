@@ -21,21 +21,34 @@ type rust struct {
 	baseLang
 }
 
-func (r rust) HasInitialized(outDir string) (bool, error) {
+func (r rust) shouldInit(outDir string) (bool, error) {
 	if !utils.IsExist(filepath.Join(outDir, "Cargo.toml")) {
+		return true, nil
+	}
+	update, err := IsDepUpdateToDate(r)
+	if err != nil {
 		return false, nil
 	}
-	return true, nil
+	return !update, nil
 }
 
-func (r rust) Initialize(outDir string) error {
+func (r rust) InitWorkspace(outDir string) error {
+	if should, err := r.shouldInit(outDir); err != nil || !should {
+		return err
+	}
+
+	err := utils.RemoveIfExist(filepath.Join(outDir, "Cargo.toml"))
+	if err != nil {
+		return err
+	}
+
 	const packageName = "leetcode-solutions"
 	cmd := exec.Command("cargo", "init", "--bin", "--name", packageName, outDir)
 	log.Info("cargo init", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = outDir
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}
@@ -48,7 +61,9 @@ func (r rust) Initialize(outDir string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	err = UpdateDep(r)
+	return err
 }
 
 func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {

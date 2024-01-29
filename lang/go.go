@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -102,26 +101,32 @@ func addMod(code string, q *leetcode.QuestionData) string {
 	return strings.Join(newLines, "\n")
 }
 
-func (g golang) HasInitialized(outDir string) (bool, error) {
+func (g golang) shouldInit(outDir string) (bool, error) {
 	if !utils.IsExist(filepath.Join(outDir, "go.mod")) {
-		return false, nil
+		return true, nil
 	}
-	cmd := exec.Command("go", "list", "-m", "-json", constants.GoTestUtilsModPath)
-	cmd.Dir = outDir
-	output, err := cmd.CombinedOutput()
+
+	update, err := IsDepUpdateToDate(g)
 	if err != nil {
-		if bytes.Contains(output, []byte("not a known dependency")) || bytes.Contains(
-			output,
-			[]byte("go.mod file not found"),
-		) {
-			return false, nil
-		}
-		return false, fmt.Errorf("go list failed: %w: %s", err, output)
+		return false, err
 	}
-	return true, nil
+	if !update {
+		return true, nil
+	}
+	return false, nil
 }
 
-func (g golang) Initialize(outDir string) error {
+func (g golang) InitWorkspace(outDir string) error {
+	if should, err := g.shouldInit(outDir); err != nil || !should {
+		return err
+	}
+
+	err := utils.RemoveIfExist(filepath.Join(outDir, "go.mod"))
+	if err != nil {
+		return err
+	}
+	_ = utils.RemoveIfExist(filepath.Join(outDir, "go.sum"))
+
 	const modPath = "leetcode-solutions"
 	var stderr strings.Builder
 	cmd := exec.Command("go", "mod", "init", modPath)
@@ -129,17 +134,22 @@ func (g golang) Initialize(outDir string) error {
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil && !strings.Contains(stderr.String(), "go.mod already exists") {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", constants.GoTestUtilsModPath)
+	cmd = exec.Command("go", "get", "-u", constants.GoTestUtilsModPath)
 	log.Info("go get", "cmd", cmd.String())
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = UpdateDep(g)
 	return err
 }
 

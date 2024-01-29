@@ -22,9 +22,12 @@ type python struct {
 	baseLang
 }
 
-func (p python) Initialize(outDir string) error {
-	pythonExe := config.Get().Code.Python.Executable
+func (p python) InitWorkspace(outDir string) error {
+	if should, err := p.shouldInit(outDir); err != nil || !should {
+		return err
+	}
 
+	pythonExe := config.Get().Code.Python.Executable
 	cmd := exec.Command(pythonExe, "--version")
 	log.Info("checking python version", "cmd", cmd.String())
 	versionOutput, err := cmd.CombinedOutput()
@@ -34,6 +37,11 @@ func (p python) Initialize(outDir string) error {
 	pythonVersion := strings.TrimPrefix(string(versionOutput), "Python ")
 	if !strings.HasPrefix(pythonVersion, "3.") {
 		return errors.New("python version must be 3.x")
+	}
+
+	err = utils.RemoveDirIfExist(path.Join(outDir, ".venv"))
+	if err != nil {
+		return err
 	}
 
 	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(requirements))
@@ -66,11 +74,23 @@ func (p python) Initialize(outDir string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = UpdateDep(p)
 	return err
 }
 
-func (p python) HasInitialized(outDir string) (bool, error) {
-	return utils.IsExist(path.Join(outDir, ".venv")), nil
+func (p python) shouldInit(outDir string) (bool, error) {
+	if !utils.IsExist(path.Join(outDir, ".venv")) {
+		return true, nil
+	}
+	update, err := IsDepUpdateToDate(p)
+	if err != nil {
+		return false, err
+	}
+	return !update, nil
 }
 
 func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {

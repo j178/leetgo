@@ -8,7 +8,6 @@ import (
 	"github.com/google/shlex"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	cppUtils "github.com/j178/leetgo/testutils/cpp"
 	"github.com/j178/leetgo/utils"
@@ -18,7 +17,11 @@ type cpp struct {
 	baseLang
 }
 
-func (c cpp) Initialize(outDir string) error {
+func (c cpp) InitWorkspace(outDir string) error {
+	if should, err := c.shouldInit(outDir); err != nil || !should {
+		return err
+	}
+
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
 	err := utils.WriteFile(headerPath, cppUtils.HeaderContent)
 	if err != nil {
@@ -29,28 +32,29 @@ func (c cpp) Initialize(outDir string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	err = UpdateDep(c)
+	return err
 }
 
-func (c cpp) HasInitialized(outDir string) (bool, error) {
+func (c cpp) shouldInit(outDir string) (bool, error) {
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
 	if !utils.IsExist(headerPath) {
-		return false, nil
+		return true, nil
 	}
 	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
 	if !utils.IsExist(stdCxxPath) {
-		return false, nil
+		return true, nil
 	}
 
-	version, err := ReadVersion(headerPath)
+	update, err := IsDepUpdateToDate(c)
 	if err != nil {
 		return false, err
 	}
-	currVersion := constants.Version
-	if version != currVersion {
-		return false, nil
+	if !update {
+		return true, nil
 	}
-	return true, nil
+	return false, nil
 }
 
 var cppTypes = map[string]string{

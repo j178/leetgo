@@ -103,18 +103,12 @@ type Lang interface {
 	ShortName() string
 	// Slug returns the slug of the language. e.g. "cpp", "javascript", "python3"
 	Slug() string
+	// InitWorkspace initializes the language workspace for code running.
+	InitWorkspace(dir string) error
 	// Generate generates code files for the question.
 	Generate(q *leetcode.QuestionData) (*GenerateResult, error)
 	// GeneratePaths generates the paths of the code files for the question, without generating the real files.
 	GeneratePaths(q *leetcode.QuestionData) (*GenerateResult, error)
-}
-
-// NeedInitialization is an interface for languages that need to be initialized before generating code.
-type NeedInitialization interface {
-	// HasInitialized returns whether the language workspace has been initialized.
-	HasInitialized(dir string) (bool, error)
-	// Initialize initializes the language workspace.
-	Initialize(dir string) error
 }
 
 // LocalTestable is an interface for languages that can run local test.
@@ -367,6 +361,10 @@ func (l baseLang) Slug() string {
 
 func (l baseLang) ShortName() string {
 	return l.shortName
+}
+
+func (l baseLang) InitWorkspace(_ string) error {
+	return nil
 }
 
 func (l baseLang) generateCodeContent(
