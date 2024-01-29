@@ -18,7 +18,7 @@ var depVersions = map[string]string{
 }
 
 func readDepVersions() (map[string]string, error) {
-	depVersionFile := config.Get().CacheDir() // TODO change to config.Get().DepVersionFile()
+	depVersionFile := config.Get().DepVersionFile()
 	records := make(map[string]string)
 	f, err := os.Open(depVersionFile)
 	if err != nil {
@@ -68,7 +68,7 @@ func UpdateDep(lang Lang) error {
 
 	records[lang.Slug()] = ver
 
-	depVersionFile := config.Get().CacheDir()
+	depVersionFile := config.Get().DepVersionFile()
 	f, err := os.Create(depVersionFile)
 	if err != nil {
 		return err

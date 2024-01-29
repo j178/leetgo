@@ -170,6 +170,10 @@ func (c *Config) StateFile() string {
 	return filepath.Join(c.CacheDir(), constants.StateFilename)
 }
 
+func (c *Config) DepVersionFile() string {
+	return filepath.Join(c.CacheDir(), constants.DepVersionFilename)
+}
+
 func (c *Config) QuestionCacheFile(ext string) string {
 	return filepath.Join(c.CacheDir(), constants.QuestionCacheBaseName+ext)
 }
