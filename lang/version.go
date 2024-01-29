@@ -47,10 +47,10 @@ func IsDepUpdateToDate(lang Lang) (bool, error) {
 	}
 	old := records[lang.Slug()]
 	if old == "" || old != ver {
-		return true, nil
+		return false, nil
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func UpdateDep(lang Lang) error {
