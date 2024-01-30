@@ -15,7 +15,4 @@ const (
 	CodeBeginMarker       = "@lc code=begin"
 	CodeEndMarker         = "@lc code=end"
 	ProjectURL            = "https://github.com/j178/leetgo"
-	GoTestUtilsModPath    = "github.com/j178/leetgo/testutils/go"
-	RustTestUtilsCrate    = "leetgo_rs"
-	PythonTestUtilsMode   = "leetgo_py"
 )

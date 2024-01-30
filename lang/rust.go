@@ -12,10 +12,18 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
+
+const leetgoRs = "leetgo_rs"
+
+var rustDeps = []string{
+	"serde@v1.0.196",
+	"serde_json@v1.0.113",
+	"anyhow@v1.0.79",
+	leetgoRs + "@v0.2.1",
+}
 
 type rust struct {
 	baseLang
@@ -52,7 +60,8 @@ func (r rust) InitWorkspace(outDir string) error {
 	if err != nil {
 		return err
 	}
-	cmd = exec.Command("cargo", "add", "serde", "serde_json", "anyhow", constants.RustTestUtilsCrate)
+	cmd = exec.Command("cargo", "add")
+	cmd.Args = append(cmd.Args, rustDeps...)
 	log.Info("cargo add", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -311,8 +320,7 @@ func (r rust) generateCodeFile(
 		`use anyhow::Result;
 use %s::*;
 %s
-`, constants.RustTestUtilsCrate,
-		emptySolution,
+`, leetgoRs, emptySolution,
 	)
 	testContent, err := r.generateTestContent(q)
 	if err != nil {

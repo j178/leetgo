@@ -16,7 +16,12 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-var requirements = fmt.Sprintf("sortedcontainers\n%s\n", constants.PythonTestUtilsMode)
+const leetgoPy = "leetgo_py"
+
+var pyDeps = []string{
+	"sortedcontainers==2.4.0",
+	leetgoPy + "==0.2.4",
+}
 
 type python struct {
 	baseLang
@@ -44,7 +49,7 @@ func (p python) InitWorkspace(outDir string) error {
 		return err
 	}
 
-	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(requirements))
+	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(strings.Join(pyDeps, "\n")+"\n"))
 	if err != nil {
 		return err
 	}
@@ -290,7 +295,7 @@ func (p python) generateCodeFile(
 ) {
 	codeHeader := fmt.Sprintf(
 		`from typing import *
-from %s import *`, constants.PythonTestUtilsMode,
+from %s import *`, leetgoPy,
 	)
 	testContent, err := p.generateTestContent(q)
 	if err != nil {

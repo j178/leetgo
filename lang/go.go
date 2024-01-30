@@ -11,10 +11,15 @@ import (
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
+
+const leetgoGo = "github.com/j178/leetgo/testutils/go"
+
+var goDeps = []string{
+	leetgoGo + "@v0.2.0",
+}
 
 type golang struct {
 	baseLang
@@ -139,7 +144,8 @@ func (g golang) InitWorkspace(outDir string) error {
 		return err
 	}
 
-	cmd = exec.Command("go", "get", "-u", constants.GoTestUtilsModPath)
+	cmd = exec.Command("go", "get")
+	cmd.Args = append(cmd.Args, goDeps...)
 	log.Info("go get", "cmd", cmd.String())
 	cmd.Dir = outDir
 	cmd.Stdout = os.Stdout
@@ -360,7 +366,7 @@ import (
 	"os"
 
 	. "%s"
-)`, constants.GoTestUtilsModPath,
+)`, leetgoGo,
 	)
 	testContent, err := g.generateTestContent(q)
 	if err != nil {
