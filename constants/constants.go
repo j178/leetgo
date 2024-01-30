@@ -11,7 +11,7 @@ const (
 	ConfigFilename        = "leetgo.yaml"
 	QuestionCacheBaseName = "leetcode-questions"
 	StateFilename         = "state.json"
-	DepVersionFilename    = "dep.json"
+	DepVersionFilename    = "deps.json"
 	CodeBeginMarker       = "@lc code=begin"
 	CodeEndMarker         = "@lc code=end"
 	ProjectURL            = "https://github.com/j178/leetgo"
