@@ -49,6 +49,7 @@ func (r rust) InitWorkspace(outDir string) error {
 	if err != nil {
 		return err
 	}
+	_ = utils.RemoveDirIfExist(filepath.Join(outDir, "Cargo.lock"))
 
 	const packageName = "leetcode-solutions"
 	cmd := exec.Command("cargo", "init", "--bin", "--name", packageName, outDir)
