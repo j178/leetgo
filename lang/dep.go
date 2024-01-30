@@ -21,6 +21,9 @@ func readDepVersions() (map[string]int, error) {
 	depVersionFile := config.Get().DepVersionFile()
 	records := make(map[string]int)
 	f, err := os.Open(depVersionFile)
+	if errors.Is(err, os.ErrNotExist) {
+		return records, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +42,6 @@ func IsDepUpdateToDate(lang Lang) (bool, error) {
 	}
 
 	records, err := readDepVersions()
-	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
 	if err != nil {
 		return false, err
 	}
@@ -60,9 +60,7 @@ func UpdateDep(lang Lang) error {
 	}
 
 	records, err := readDepVersions()
-	if errors.Is(err, os.ErrNotExist) {
-		records = make(map[string]int)
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
