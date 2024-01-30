@@ -74,22 +74,9 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 		return nil, nil, err
 	}
 
-	// Check and generate necessary library files.
-	if t, ok := gen.(NeedInitialization); ok {
-		ok, err := t.HasInitialized(outDir)
-		if err == nil && !ok {
-			err = t.Initialize(outDir)
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-		if err != nil {
-			log.Error(
-				"check initialization failed, skip initialization",
-				"lang", gen.Slug(),
-				"err", err,
-			)
-		}
+	err = gen.InitWorkspace(outDir)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Generate files

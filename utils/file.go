@@ -62,6 +62,14 @@ func RemoveIfExist(path string) error {
 	return err
 }
 
+func RemoveDirIfExist(path string) error {
+	err := os.RemoveAll(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	return err
+}
+
 func Truncate(filename string) error {
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, 0o755)
 	if err != nil {

@@ -12,34 +12,57 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/constants"
 	"github.com/j178/leetgo/leetcode"
 	"github.com/j178/leetgo/utils"
 )
+
+const leetgoRs = "leetgo-rs"
+
+var rustDeps = []string{
+	"serde@1.0.196",
+	"serde_json@1.0.113",
+	"anyhow@1.0.79",
+	leetgoRs + "@0.2.1",
+}
 
 type rust struct {
 	baseLang
 }
 
-func (r rust) HasInitialized(outDir string) (bool, error) {
+func (r rust) shouldInit(outDir string) (bool, error) {
 	if !utils.IsExist(filepath.Join(outDir, "Cargo.toml")) {
+		return true, nil
+	}
+	update, err := IsDepUpdateToDate(r)
+	if err != nil {
 		return false, nil
 	}
-	return true, nil
+	return !update, nil
 }
 
-func (r rust) Initialize(outDir string) error {
+func (r rust) InitWorkspace(outDir string) error {
+	if should, err := r.shouldInit(outDir); err != nil || !should {
+		return err
+	}
+
+	err := utils.RemoveIfExist(filepath.Join(outDir, "Cargo.toml"))
+	if err != nil {
+		return err
+	}
+	_ = utils.RemoveIfExist(filepath.Join(outDir, "Cargo.lock"))
+
 	const packageName = "leetcode-solutions"
 	cmd := exec.Command("cargo", "init", "--bin", "--name", packageName, outDir)
 	log.Info("cargo init", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Dir = outDir
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}
-	cmd = exec.Command("cargo", "add", "serde", "serde_json", "anyhow", constants.RustTestUtilsCrate)
+	cmd = exec.Command("cargo", "add")
+	cmd.Args = append(cmd.Args, rustDeps...)
 	log.Info("cargo add", "cmd", cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -48,7 +71,9 @@ func (r rust) Initialize(outDir string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+
+	err = UpdateDep(r)
+	return err
 }
 
 func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
@@ -296,8 +321,7 @@ func (r rust) generateCodeFile(
 		`use anyhow::Result;
 use %s::*;
 %s
-`, constants.RustTestUtilsCrate,
-		emptySolution,
+`, leetgoRs, emptySolution,
 	)
 	testContent, err := r.generateTestContent(q)
 	if err != nil {

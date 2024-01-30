@@ -16,15 +16,23 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-var requirements = fmt.Sprintf("sortedcontainers\n%s\n", constants.PythonTestUtilsMode)
+const leetgoPy = "leetgo_py"
+
+var pyDeps = []string{
+	"sortedcontainers==2.4.0",
+	leetgoPy + "==0.2.4",
+}
 
 type python struct {
 	baseLang
 }
 
-func (p python) Initialize(outDir string) error {
-	pythonExe := config.Get().Code.Python.Executable
+func (p python) InitWorkspace(outDir string) error {
+	if should, err := p.shouldInit(outDir); err != nil || !should {
+		return err
+	}
 
+	pythonExe := config.Get().Code.Python.Executable
 	cmd := exec.Command(pythonExe, "--version")
 	log.Info("checking python version", "cmd", cmd.String())
 	versionOutput, err := cmd.CombinedOutput()
@@ -36,7 +44,12 @@ func (p python) Initialize(outDir string) error {
 		return errors.New("python version must be 3.x")
 	}
 
-	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(requirements))
+	err = utils.RemoveDirIfExist(path.Join(outDir, ".venv"))
+	if err != nil {
+		return err
+	}
+
+	err = utils.WriteFile(path.Join(outDir, "requirements.txt"), []byte(strings.Join(pyDeps, "\n")+"\n"))
 	if err != nil {
 		return err
 	}
@@ -66,11 +79,23 @@ func (p python) Initialize(outDir string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = UpdateDep(p)
 	return err
 }
 
-func (p python) HasInitialized(outDir string) (bool, error) {
-	return utils.IsExist(path.Join(outDir, ".venv")), nil
+func (p python) shouldInit(outDir string) (bool, error) {
+	if !utils.IsExist(path.Join(outDir, ".venv")) {
+		return true, nil
+	}
+	update, err := IsDepUpdateToDate(p)
+	if err != nil {
+		return false, err
+	}
+	return !update, nil
 }
 
 func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error) {
@@ -270,7 +295,7 @@ func (p python) generateCodeFile(
 ) {
 	codeHeader := fmt.Sprintf(
 		`from typing import *
-from %s import *`, constants.PythonTestUtilsMode,
+from %s import *`, leetgoPy,
 	)
 	testContent, err := p.generateTestContent(q)
 	if err != nil {
