@@ -321,7 +321,7 @@ func (r rust) generateCodeFile(
 		`use anyhow::Result;
 use %s::*;
 %s
-`, leetgoRs, emptySolution,
+`, strings.ReplaceAll(leetgoRs, "-", "_"), emptySolution,
 	)
 	testContent, err := r.generateTestContent(q)
 	if err != nil {
