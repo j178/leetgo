@@ -16,13 +16,13 @@ import (
 	"github.com/j178/leetgo/utils"
 )
 
-const leetgoRs = "leetgo_rs"
+const leetgoRs = "leetgo-rs"
 
 var rustDeps = []string{
-	"serde@v1.0.196",
-	"serde_json@v1.0.113",
-	"anyhow@v1.0.79",
-	leetgoRs + "@v0.2.1",
+	"serde@1.0.196",
+	"serde_json@1.0.113",
+	"anyhow@1.0.79",
+	leetgoRs + "@0.2.1",
 }
 
 type rust struct {

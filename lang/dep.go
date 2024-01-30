@@ -10,16 +10,16 @@ import (
 )
 
 // If client dependency needs to be updated, update this version number.
-var depVersions = map[string]string{
-	cppGen.slug:     "1",
-	golangGen.slug:  "1",
-	python3Gen.slug: "1",
-	rustGen.slug:    "1",
+var depVersions = map[string]int{
+	cppGen.slug:     1,
+	golangGen.slug:  1,
+	python3Gen.slug: 1,
+	rustGen.slug:    1,
 }
 
-func readDepVersions() (map[string]string, error) {
+func readDepVersions() (map[string]int, error) {
 	depVersionFile := config.Get().DepVersionFile()
-	records := make(map[string]string)
+	records := make(map[string]int)
 	f, err := os.Open(depVersionFile)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func readDepVersions() (map[string]string, error) {
 
 func IsDepUpdateToDate(lang Lang) (bool, error) {
 	ver := depVersions[lang.Slug()]
-	if ver == "" {
+	if ver == 0 {
 		return true, nil
 	}
 
@@ -46,7 +46,7 @@ func IsDepUpdateToDate(lang Lang) (bool, error) {
 		return false, err
 	}
 	old := records[lang.Slug()]
-	if old == "" || old != ver {
+	if old == 0 || old != ver {
 		return false, nil
 	}
 
@@ -55,13 +55,13 @@ func IsDepUpdateToDate(lang Lang) (bool, error) {
 
 func UpdateDep(lang Lang) error {
 	ver := depVersions[lang.Slug()]
-	if ver == "" {
+	if ver == 0 {
 		return nil
 	}
 
 	records, err := readDepVersions()
 	if errors.Is(err, os.ErrNotExist) {
-		records = make(map[string]string)
+		records = make(map[string]int)
 	} else if err != nil {
 		return err
 	}
