@@ -1,4 +1,4 @@
-**中文 | [English](./README.md)**
+**简体中文 | [English](./README.md)**
 
 # Leetgo
 
@@ -7,7 +7,6 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/j178/leetgo/total)](https://github.com/j178/leetgo/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
-
 
 `leetgo` 是一个命令行工具，帮助你管理 LeetCode 代码、简化常用的 LeetCode 操作，让解题更轻松~
 
