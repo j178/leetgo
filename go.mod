@@ -25,17 +25,17 @@ require (
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/j178/kooky v0.0.0-20240103045155-c09911743d37
 	github.com/j178/leetgo/testutils/go v0.2.0
-	github.com/jedib0t/go-pretty/v6 v6.5.2
+	github.com/jedib0t/go-pretty/v6 v6.5.4
 	github.com/k3a/html2text v1.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/pelletier/go-toml/v2 v2.1.1
-	github.com/sashabaranov/go-openai v1.17.11
+	github.com/sashabaranov/go-openai v1.19.2
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/tidwall/gjson v1.17.0
 	gopkg.in/yaml.v3 v3.0.1
-	zombiezen.com/go/sqlite v1.0.0
+	zombiezen.com/go/sqlite v1.1.0
 )
 
 require (
