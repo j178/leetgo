@@ -40,23 +40,23 @@ type Config struct {
 	dir         string
 	projectRoot string
 	Author      string         `yaml:"author" mapstructure:"author" comment:"Your name"`
-	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the question description: zh or en"`
+	Language    Language       `yaml:"language" mapstructure:"language" comment:"Language of the question description: 'zh' (Simplified Chinese) or 'en' (English)."`
 	Code        CodeConfig     `yaml:"code" mapstructure:"code"`
 	LeetCode    LeetCodeConfig `yaml:"leetcode" mapstructure:"leetcode"`
 	Contest     ContestConfig  `yaml:"contest" mapstructure:"contest"`
-	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"Editor settings to open generated files"`
+	Editor      Editor         `yaml:"editor" mapstructure:"editor" comment:"Editor settings to open generated files."`
 }
 
 type ContestConfig struct {
-	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base dir to put generated contest questions"`
-	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Template to generate filename of the question"`
-	OpenInBrowser    bool   `yaml:"open_in_browser" mapstructure:"open_in_browser" comment:"Open the contest page in browser after generating"`
+	OutDir           string `yaml:"out_dir" mapstructure:"out_dir" comment:"Base directory to put generated contest questions."`
+	FilenameTemplate string `yaml:"filename_template" mapstructure:"filename_template" comment:"Template to generate filename of the question."`
+	OpenInBrowser    bool   `yaml:"open_in_browser" mapstructure:"open_in_browser" comment:"Open the contest page in browser after generating."`
 }
 
 type Editor struct {
-	Use     string `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command"`
-	Command string `yaml:"command" mapstructure:"command" comment:"Custom command to open files"`
-	Args    string `yaml:"args" mapstructure:"args" comment:"Arguments to the command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.\n{{.Folder}} will be substituted with the output directory.\n{{.Files}} will be substituted with the list of all file paths."`
+	Use     string `yaml:"use" mapstructure:"use" comment:"Use a predefined editor: vim, vscode, goland\nSet to 'none' to disable, set to 'custom' to provide your own command and args."`
+	Command string `yaml:"command" mapstructure:"command" comment:"Custom command to open files."`
+	Args    string `yaml:"args" mapstructure:"args" comment:"Arguments to your custom command.\nString contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.\n{{.Folder}} will be substituted with the output directory.\n{{.Files}} will be substituted with the list of all file paths."`
 }
 
 type Block struct {
@@ -70,11 +70,11 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java... \n(will be overridden by command line flag -l/--lang)"`
-	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group"`
-	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
-	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages"`
-	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages"`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java... \n(will be overridden by command line flag -l/--lang)."`
+	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\n(Most questions have descriptive slugs, but some consist of random characters. The SlugIsMeaningful boolean indicates whether a slug is meaningful.)\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group."`
+	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file, otherwise it will be embed in the code file."`
+	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages."`
+	Modifiers               []Modifier     `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Default modifiers for all languages."`
 	Go                      GoConfig       `yaml:"go" mapstructure:"go"`
 	Python                  PythonConfig   `yaml:"python3" mapstructure:"python3"`
 	Cpp                     CppConfig      `yaml:"cpp" mapstructure:"cpp"`
@@ -84,11 +84,11 @@ type CodeConfig struct {
 }
 
 type BaseLangConfig struct {
-	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir"`
-	FilenameTemplate        string     `yaml:"filename_template,omitempty" mapstructure:"filename_template" comment:"Overrides the default code.filename_template, empty will be ignored"`
-	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file"`
-	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code"`
-	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code"`
+	OutDir                  string     `yaml:"out_dir" mapstructure:"out_dir" comment:"Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp."`
+	FilenameTemplate        string     `yaml:"filename_template,omitempty" mapstructure:"filename_template" comment:"Overrides the default code.filename_template, empty will be ignored."`
+	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file, otherwise it will be embed in the code file."`
+	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code."`
+	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code."`
 }
 
 type GoConfig struct {
@@ -97,13 +97,13 @@ type GoConfig struct {
 
 type PythonConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
-	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Python executable that creates the venv"`
+	Executable     string `yaml:"executable" mapstructure:"executable" comment:"Path to the python executable that creates the venv."`
 }
 
 type CppConfig struct {
 	BaseLangConfig `yaml:",inline" mapstructure:",squash"`
 	CXX            string `yaml:"cxx" mapstructure:"cxx" comment:"C++ compiler"`
-	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)"`
+	CXXFLAGS       string `yaml:"cxxflags" mapstructure:"cxxflags" comment:"C++ compiler flags (our Leetcode I/O library implementation requires C++17)."`
 }
 
 type RustConfig struct {
@@ -111,13 +111,13 @@ type RustConfig struct {
 }
 
 type Credentials struct {
-	From     string   `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none"`
-	Browsers []string `yaml:"browsers" mapstructure:"browsers" comment:"Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried"`
+	From     string   `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none."`
+	Browsers []string `yaml:"browsers" mapstructure:"browsers" comment:"Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried. Only used when 'from' is 'browser'."`
 }
 
 type LeetCodeConfig struct {
 	Site        LeetcodeSite `yaml:"site" mapstructure:"site" comment:"LeetCode site, https://leetcode.com or https://leetcode.cn"`
-	Credentials Credentials  `yaml:"credentials" mapstructure:"credentials" comment:"Credentials to access LeetCode"`
+	Credentials Credentials  `yaml:"credentials" mapstructure:"credentials" comment:"Credentials to access LeetCode."`
 }
 
 func (c *Config) HomeDir() string {

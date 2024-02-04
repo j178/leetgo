@@ -209,67 +209,73 @@ Below is the demonstration of a complete configuration:
 ```yaml
 # Your name
 author: Bob
-# Language of the question description: zh or en
+# Language of the question description: 'zh' (Simplified Chinese) or 'en' (English).
 language: zh
 code:
   # Language of code generated for questions: go, cpp, python, java... 
-  # (will be overridden by command line flag -l/--lang)
+  # (will be overridden by command line flag -l/--lang).
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
-  # Available functions: lower, upper, trim, padWithZero, toUnderscore, group
+  # (Most questions have descriptive slugs, but some consist of random characters. The SlugIsMeaningful boolean indicates whether a slug is meaningful.)
+  # Available functions: lower, upper, trim, padWithZero, toUnderscore, group.
   filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
-  # Generate question description into a separate question.md file
+  # Generate question description into a separate question.md file, otherwise it will be embed in the code file.
   separate_description_file: true
-  # Default modifiers for all languages
+  # Default modifiers for all languages.
   modifiers:
     - name: removeUselessComments
   go:
+    # Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp.
     out_dir: go
-    # Functions that modify the generated code
+    # Functions that modify the generated code.
     modifiers:
       - name: removeUselessComments
       - name: changeReceiverName
       - name: addNamedReturn
       - name: addMod
   python3:
+    # Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp.
     out_dir: python
-    # Python executable that creates the venv
+    # Path to the python executable that creates the venv.
     executable: python3
   cpp:
+    # Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp.
     out_dir: cpp
     # C++ compiler
     cxx: g++
-    # C++ compiler flags (our Leetcode I/O library implementation requires C++17)
+    # C++ compiler flags (our Leetcode I/O library implementation requires C++17).
     cxxflags: -O2 -std=c++17
   rust:
+    # Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp.
     out_dir: rust
   java:
+    # Base directory to put generated questions, defaults to the language slug, e.g. go, python, cpp.
     out_dir: java
 leetcode:
   # LeetCode site, https://leetcode.com or https://leetcode.cn
   site: https://leetcode.cn
-  # Credentials to access LeetCode
+  # Credentials to access LeetCode.
   credentials:
-    # How to provide credentials: browser, cookies, password or none
+    # How to provide credentials: browser, cookies, password or none.
     from: browser
-    # Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried
+    # Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried. Only used when 'from' is 'browser'.
     browsers: []
 contest:
-  # Base dir to put generated contest questions
+  # Base directory to put generated contest questions.
   out_dir: contest
-  # Template to generate filename of the question
+  # Template to generate filename of the question.
   filename_template: '{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
-  # Open the contest page in browser after generating
+  # Open the contest page in browser after generating.
   open_in_browser: true
-# Editor settings to open generated files
+# Editor settings to open generated files.
 editor:
   # Use a predefined editor: vim, vscode, goland
-  # Set to 'none' to disable, set to 'custom' to provide your own command
+  # Set to 'none' to disable, set to 'custom' to provide your own command and args.
   use: none
-  # Custom command to open files
+  # Custom command to open files.
   command: ""
-  # Arguments to the command.
+  # Arguments to your custom command.
   # String contains {{.CodeFile}}, {{.TestFile}}, {{.DescriptionFile}}, {{.TestCasesFile}} will be replaced with corresponding file path.
   # {{.Folder}} will be substituted with the output directory.
   # {{.Files}} will be substituted with the list of all file paths.
