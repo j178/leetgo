@@ -170,7 +170,7 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 	)
 	lines := utils.SplitLines(content)
 	for _, line := range lines {
-		line := strings.TrimSpace(line)
+		line = strings.TrimSpace(line)
 		switch {
 		case line == "":
 			continue

@@ -459,9 +459,8 @@ func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 	// Assume all questions output are single.
 	var tc TestCases
 	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
-		tc.Cases = append(
-			tc.Cases, TestCase{
-				No:     i/argsNum + 1,
+		tc.AddCase(
+			TestCase{
 				Input:  cases[i : i+argsNum],
 				Output: outputs[i/argsNum],
 			},
