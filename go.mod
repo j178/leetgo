@@ -5,16 +5,16 @@ go 1.21
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/JohannesKaufmann/html-to-markdown v1.5.0
-	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/PuerkitoBio/goquery v1.9.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.23.0
-	github.com/charmbracelet/bubbles v0.17.1
+	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
 	github.com/cli/browser v1.3.0
-	github.com/dghubble/sling v1.4.1
+	github.com/dghubble/sling v1.4.2
 	github.com/dop251/goja v0.0.0-20231027120936-b396bb4c349d
 	github.com/fatih/color v1.16.0
 	github.com/goccy/go-json v0.10.2
@@ -30,12 +30,12 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/pelletier/go-toml/v2 v2.1.1
-	github.com/sashabaranov/go-openai v1.19.2
+	github.com/sashabaranov/go-openai v1.20.2
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/tidwall/gjson v1.17.0
+	github.com/tidwall/gjson v1.17.1
 	gopkg.in/yaml.v3 v3.0.1
-	zombiezen.com/go/sqlite v1.1.0
+	zombiezen.com/go/sqlite v1.1.2
 )
 
 require (
@@ -75,9 +75,10 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
+	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sahilm/fuzzy v0.1.1-0.20230530133925-c48e322e2a8f // indirect
@@ -92,17 +93,17 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	github.com/zalando/go-keyring v0.2.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	modernc.org/libc v1.38.0 // indirect
+	modernc.org/libc v1.41.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
-	modernc.org/sqlite v1.28.0 // indirect
+	modernc.org/sqlite v1.29.1 // indirect
 )
