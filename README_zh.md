@@ -298,7 +298,7 @@ editor:
 
 - 手动提供 Cookie
   
-  你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值，设置为 `LEETCODE_SESSION` 和 `LEETCODE_CSRFTOKEN` 环境变量。
+  你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值，设置为 `LEETCODE_SESSION` 和 `LEETCODE_CSRFTOKEN` 环境变量。如果你在使用 `leetcode.com`, 你还需要设置 `LEETCODE_CFCLEARANCE` 为 `cf_clearance` cookie 的值。
 
   ```yaml
   leetcode:

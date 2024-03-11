@@ -46,19 +46,20 @@ func (n *nonAuth) Reset() {}
 type cookiesAuth struct {
 	LeetCodeSession string
 	CsrfToken       string
+	CfClearance     string // Cloudflare cookie, US only
 }
 
-func NewCookiesAuth(session, csrftoken string) CredentialsProvider {
-	return &cookiesAuth{LeetCodeSession: session, CsrfToken: csrftoken}
+func NewCookiesAuth(session, csrftoken, cfClearance string) CredentialsProvider {
+	return &cookiesAuth{LeetCodeSession: session, CsrfToken: csrftoken, CfClearance: cfClearance}
 }
 
 func (c *cookiesAuth) AddCredentials(req *http.Request) error {
 	if c.LeetCodeSession == "" || c.CsrfToken == "" {
 		return errors.New("cookies not found")
 	}
-
 	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetCodeSession})
 	req.AddCookie(&http.Cookie{Name: "csrftoken", Value: c.CsrfToken})
+	req.AddCookie(&http.Cookie{Name: "cf_clearance", Value: c.CfClearance})
 	req.Header.Add("x-csrftoken", c.CsrfToken)
 	return nil
 }
@@ -156,7 +157,8 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			kooky.FilterFunc(
 				func(cookie *kooky.Cookie) bool {
 					return kooky.Name("LEETCODE_SESSION").Filter(cookie) ||
-						kooky.Name("csrftoken").Filter(cookie)
+						kooky.Name("csrftoken").Filter(cookie) ||
+						kooky.Name("cf_clearance").Filter(cookie)
 				},
 			),
 		}
@@ -175,21 +177,21 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 				log.Debug("no cookie found", "browser", store.Browser())
 				continue
 			}
-			var session, csrfToken string
 			for _, cookie := range cookies {
 				if cookie.Name == "LEETCODE_SESSION" {
-					session = cookie.Value
+					b.LeetCodeSession = cookie.Value
 				}
 				if cookie.Name == "csrftoken" {
-					csrfToken = cookie.Value
+					b.CsrfToken = cookie.Value
+				}
+				if cookie.Name == "cf_clearance" {
+					b.CfClearance = cookie.Value
 				}
 			}
-			if session == "" || csrfToken == "" {
+			if b.LeetCodeSession == "" || b.CsrfToken == "" {
 				log.Debug("no cookie found", "browser", store.Browser(), "domain", domain)
 				continue
 			}
-			b.LeetCodeSession = session
-			b.CsrfToken = csrfToken
 			log.Info("read LeetCode cookies", "browser", store.Browser(), "domain", domain)
 			break
 		}
@@ -223,7 +225,8 @@ func ReadCredentials() CredentialsProvider {
 	case "cookies":
 		session := os.Getenv("LEETCODE_SESSION")
 		csrfToken := os.Getenv("LEETCODE_CSRFTOKEN")
-		return NewCookiesAuth(session, csrfToken)
+		cfClearance := os.Getenv("LEETCODE_CFCLEARANCE")
+		return NewCookiesAuth(session, csrfToken, cfClearance)
 	default:
 		return NonAuth()
 	}

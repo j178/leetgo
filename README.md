@@ -310,7 +310,7 @@ There are three ways to make cookies available to `leetgo`:
       from: cookies
   ```
 
-- Provide username and password through `LEETCODE_USERNAME` and `LEETCODE_PASSWORD` environment variables.
+- Provide username and password through `LEETCODE_USERNAME` and `LEETCODE_PASSWORD` environment variables. If you are using `leetcode.com`, `LEETCODE_CFCLEARANCE` should also be set to the value of the `cf_clearance` cookie.
 
   ```yaml
   leetcode:

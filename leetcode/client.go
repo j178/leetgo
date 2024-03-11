@@ -27,7 +27,7 @@ var (
 	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrUserNotSignedIn   = errors.New("user not signed in, your cookies may have expired")
+	ErrUserNotSignedIn   = errors.New("[403 Forbidden] user not signed in, your cookies may have expired")
 )
 
 type unexpectedStatusCode struct {
@@ -87,7 +87,7 @@ func NewClient(cred CredentialsProvider) Client {
 	httpClient := sling.New()
 	httpClient.Add(
 		"User-Agent",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
 	)
 	httpClient.Add("Accept-Encoding", "gzip, deflate")
 	httpClient.Add("x-requested-with", "XMLHttpRequest")
