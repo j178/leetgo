@@ -60,6 +60,7 @@ func (c *cookiesAuth) AddCredentials(req *http.Request) error {
 	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetCodeSession})
 	req.AddCookie(&http.Cookie{Name: "csrftoken", Value: c.CsrfToken})
 	req.AddCookie(&http.Cookie{Name: "cf_clearance", Value: c.CfClearance})
+
 	req.Header.Add("x-csrftoken", c.CsrfToken)
 	return nil
 }

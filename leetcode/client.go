@@ -2,6 +2,7 @@ package leetcode
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -101,6 +102,10 @@ func NewClient(cred CredentialsProvider) Client {
 	httpClient.Client(
 		&http.Client{
 			CheckRedirect: nonFollowRedirect,
+			Transport: &http.Transport{
+				// Disable http2
+				TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+			},
 		},
 	)
 
