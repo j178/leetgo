@@ -25,10 +25,10 @@ import (
 
 var (
 	ErrPaidOnlyQuestion  = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
-	ErrTooManyRequests   = errors.New("you have submitted too frequently, please submit again later")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrUserNotSignedIn   = errors.New("[403 Forbidden] user not signed in, your cookies may have expired")
+	ErrForbidden         = errors.New("[403 Forbidden] access is forbidden, your cookies may have expired or LeetCode has restricted its API access")
+	ErrTooManyRequests   = errors.New("[429 TooManyRequests] LeetCode limited you access rate, you may be submitting too frequently")
 )
 
 type unexpectedStatusCode struct {
@@ -211,7 +211,7 @@ func (c *cnClient) send(req *http.Request, authType authType, result any, failur
 			case http.StatusTooManyRequests:
 				return ErrTooManyRequests
 			case http.StatusForbidden:
-				return ErrUserNotSignedIn
+				return ErrForbidden
 			}
 			if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
 				body, _ := io.ReadAll(resp.Body)

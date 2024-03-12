@@ -42,7 +42,7 @@ var whoamiCmd = &cobra.Command{
 			return err
 		}
 		if !user.IsSignedIn {
-			return leetcode.ErrUserNotSignedIn
+			return leetcode.ErrForbidden
 		}
 		cmd.Println(user.Whoami(c))
 		return nil
