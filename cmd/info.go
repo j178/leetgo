@@ -15,12 +15,36 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
+type outputFormatEnum string
+
+const (
+    jsonOutput outputFormatEnum = "json"
+)
+
+func (e *outputFormatEnum) String() string {
+    return string(*e)
+}
+
+func (e *outputFormatEnum) Set(v string) error {
+    switch v {
+    case "json":
+        *e = outputFormatEnum(v)
+        return nil
+    default:
+        return errors.New(`must be one of the support formats: "json"`)
+    }
+}
+
+func (e *outputFormatEnum) Type() string {
+    return "outputFormatEnum"
+}
+
 var flagFull bool
-var flagFormat string
+var flagFormat outputFormatEnum
 
 func init() {
 	infoCmd.Flags().BoolVarP(&flagFull, "full", "f", false, "show full question info")
-	infoCmd.Flags().StringVarP(&flagFormat, "format", "F", "", "preseent question info in raw json string")
+	infoCmd.Flags().Var(&flagFormat, "format", "preseent question info in raw json string")
 }
 
 var infoCmd = &cobra.Command{
@@ -47,9 +71,6 @@ var infoCmd = &cobra.Command{
 		}
 
 		if len(flagFormat) > 0 {
-			if flagFormat != "json" {
-				return errors.New("only json output supported")
-			}
 			res, err := json.Marshal(questions)
 			if err != nil {
 				return fmt.Errorf("failed to convert questions to raw string", "err", err)
