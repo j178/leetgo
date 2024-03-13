@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
-	"encoding/json"
 
 	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -18,29 +18,31 @@ import (
 type outputFormatEnum string
 
 const (
-    jsonOutput outputFormatEnum = "json"
+	jsonOutput outputFormatEnum = "json"
 )
 
 func (e *outputFormatEnum) String() string {
-    return string(*e)
+	return string(*e)
 }
 
 func (e *outputFormatEnum) Set(v string) error {
-    switch v {
-    case "json":
-        *e = outputFormatEnum(v)
-        return nil
-    default:
-        return errors.New(`must be one of the support formats: "json"`)
-    }
+	switch v {
+	case "json":
+		*e = outputFormatEnum(v)
+		return nil
+	default:
+		return errors.New(`must be one of the support formats: "json"`)
+	}
 }
 
 func (e *outputFormatEnum) Type() string {
-    return "outputFormatEnum"
+	return "outputFormatEnum"
 }
 
-var flagFull bool
-var flagFormat outputFormatEnum
+var (
+	flagFull   bool
+	flagFormat outputFormatEnum = jsonOutput
+)
 
 func init() {
 	infoCmd.Flags().BoolVarP(&flagFull, "full", "f", false, "show full question info")
@@ -73,7 +75,7 @@ var infoCmd = &cobra.Command{
 		if len(flagFormat) > 0 {
 			res, err := json.Marshal(questions)
 			if err != nil {
-				return fmt.Errorf("failed to convert questions to raw string", "err", err)
+				return fmt.Errorf("failed to convert questions to raw string: %w", err)
 			}
 			fmt.Println(string(res))
 			return nil
