@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -15,38 +15,52 @@ import (
 	"github.com/j178/leetgo/leetcode"
 )
 
-type outputFormatEnum string
+type outputFormat string
 
-const (
-	jsonOutput outputFormatEnum = "json"
-)
-
-func (e *outputFormatEnum) String() string {
+func (e *outputFormat) String() string {
 	return string(*e)
 }
 
-func (e *outputFormatEnum) Set(v string) error {
+func (e *outputFormat) Set(v string) error {
 	switch v {
 	case "json":
-		*e = outputFormatEnum(v)
+		*e = outputFormat(v)
 		return nil
 	default:
-		return errors.New(`must be one of the support formats: "json"`)
+		return errors.New(`must be one of the supported formats: "json"`)
 	}
 }
 
-func (e *outputFormatEnum) Type() string {
-	return "outputFormatEnum"
+func (e *outputFormat) Type() string {
+	return "outputFormat"
 }
 
 var (
 	flagFull   bool
-	flagFormat outputFormatEnum = jsonOutput
+	flagFormat outputFormat = "default"
 )
 
 func init() {
-	infoCmd.Flags().BoolVarP(&flagFull, "full", "f", false, "show full question info")
-	infoCmd.Flags().Var(&flagFormat, "format", "preseent question info in raw json string")
+	infoCmd.Flags().BoolVar(&flagFull, "full", false, "show full question info")
+	infoCmd.Flags().Var(&flagFormat, "format", "show question info in specific format (json)")
+}
+
+// A simplified version of the leetcode.QuestionData struct
+type question struct {
+	FrontendId         string   `json:"frontend_id"`
+	Title              string   `json:"title"`
+	Slug               string   `json:"slug"`
+	Difficulty         string   `json:"difficulty"`
+	Url                string   `json:"url"`
+	Tags               []string `json:"tags"`
+	IsPaidOnly         bool     `json:"is_paid_only"`
+	TotalAccepted      string   `json:"total_accepted"`
+	TotalAcceptedRaw   int      `json:"total_accepted_raw"`
+	TotalSubmission    string   `json:"total_submission"`
+	TotalSubmissionRaw int      `json:"total_submission_raw"`
+	ACRate             string   `json:"ac_rate"`
+	Content            string   `json:"content"`
+	Hints              []string `json:"hints"`
 }
 
 var infoCmd = &cobra.Command{
@@ -58,66 +72,96 @@ var infoCmd = &cobra.Command{
 	ValidArgs: []string{"today", "last"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
-		var questions []*leetcode.QuestionData
 
+		var questions []question
 		for _, qid := range args {
 			qs, err := leetcode.ParseQID(qid, c)
 			if err != nil {
 				log.Error("failed to get question", "qid", qid, "err", err)
 				continue
 			}
-			questions = append(questions, qs...)
+			for _, q := range qs {
+				_ = q.Fulfill()
+				content := ""
+				if flagFull {
+					content = q.GetFormattedContent()
+				}
+				questions = append(
+					questions, question{
+						FrontendId:         q.QuestionFrontendId,
+						Title:              q.GetTitle(),
+						Slug:               q.TitleSlug,
+						Difficulty:         q.Difficulty,
+						Url:                q.Url(),
+						Tags:               q.TagSlugs(),
+						IsPaidOnly:         q.IsPaidOnly,
+						TotalAccepted:      q.Stats.TotalAccepted,
+						TotalAcceptedRaw:   q.Stats.TotalAcceptedRaw,
+						TotalSubmission:    q.Stats.TotalSubmission,
+						TotalSubmissionRaw: q.Stats.TotalSubmissionRaw,
+						ACRate:             q.Stats.ACRate,
+						Content:            content,
+						Hints:              q.Hints,
+					},
+				)
+			}
 		}
 		if len(questions) == 0 {
 			return errors.New("no questions found")
 		}
 
-		if len(flagFormat) > 0 {
-			res, err := json.Marshal(questions)
-			if err != nil {
-				return fmt.Errorf("failed to convert questions to raw string: %w", err)
-			}
-			fmt.Println(string(res))
-			return nil
+		switch flagFormat {
+		default:
+			outputHuman(questions, cmd.OutOrStdout())
+		case "json":
+			outputJson(questions, cmd.OutOrStdout())
 		}
 
-		w := table.NewWriter()
-		w.SetOutputMirror(os.Stdout)
-		w.SetStyle(table.StyleColoredDark)
-		w.SetColumnConfigs(
-			[]table.ColumnConfig{
-				{
-					Number:   2,
-					WidthMax: 50,
-				},
-			},
-		)
-		for _, q := range questions {
-			_ = q.Fulfill()
-			w.AppendRow(
-				table.Row{fmt.Sprintf("%s. %s", q.QuestionFrontendId, q.GetTitle())},
-				table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft},
-			)
-			w.AppendRow(table.Row{"Slug", q.TitleSlug})
-			w.AppendRow(table.Row{"Difficulty", q.Difficulty})
-			w.AppendRow(table.Row{"URL", q.Url()})
-			w.AppendRow(table.Row{"Tags", strings.Join(q.TagSlugs(), ", ")})
-			w.AppendRow(table.Row{"Paid Only", q.IsPaidOnly})
-			w.AppendRow(
-				table.Row{
-					"AC Rate",
-					fmt.Sprintf("%s/%s %s", q.Stats.TotalAccepted, q.Stats.TotalSubmission, q.Stats.ACRate),
-				},
-			)
-			if flagFull {
-				w.AppendRow(table.Row{"Content", q.GetFormattedContent()})
-			}
-			for _, h := range q.Hints {
-				w.AppendRow(table.Row{"Hint", h})
-			}
-			w.AppendSeparator()
-		}
-		w.Render()
 		return nil
 	},
+}
+
+func outputHuman(qs []question, out io.Writer) {
+	w := table.NewWriter()
+	w.SetOutputMirror(out)
+	w.SetStyle(table.StyleColoredDark)
+	w.SetColumnConfigs(
+		[]table.ColumnConfig{
+			{
+				Number:   2,
+				WidthMax: 50,
+			},
+		},
+	)
+	for _, q := range qs {
+		w.AppendRow(
+			table.Row{fmt.Sprintf("%s. %s", q.FrontendId, q.Title)},
+			table.RowConfig{AutoMerge: true, AutoMergeAlign: text.AlignLeft},
+		)
+		w.AppendRow(table.Row{"Slug", q.Slug})
+		w.AppendRow(table.Row{"Difficulty", q.Difficulty})
+		w.AppendRow(table.Row{"URL", q.Url})
+		w.AppendRow(table.Row{"Tags", strings.Join(q.Tags, ", ")})
+		w.AppendRow(table.Row{"Paid Only", q.IsPaidOnly})
+		w.AppendRow(
+			table.Row{
+				"AC Rate",
+				fmt.Sprintf("%s/%s %s", q.TotalAccepted, q.TotalSubmission, q.ACRate),
+			},
+		)
+		if q.Content != "" {
+			w.AppendRow(table.Row{"Content", q.Content})
+		}
+		for _, h := range q.Hints {
+			w.AppendRow(table.Row{"Hint", h})
+		}
+		w.AppendSeparator()
+	}
+	w.Render()
+}
+
+func outputJson(qs []question, out io.Writer) {
+	enc := json.NewEncoder(out)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(qs)
 }
