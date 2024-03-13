@@ -150,7 +150,7 @@ func initCommands() {
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.InitDefaultHelpCmd()
-
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	cc.Init(
 		&cc.Config{
 			RootCmd:         rootCmd,
