@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"encoding/json"
 
 	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -15,9 +16,11 @@ import (
 )
 
 var flagFull bool
+var flagFormat string
 
 func init() {
 	infoCmd.Flags().BoolVarP(&flagFull, "full", "f", false, "show full question info")
+	infoCmd.Flags().StringVarP(&flagFormat, "format", "F", "", "preseent question info in raw json string")
 }
 
 var infoCmd = &cobra.Command{
@@ -41,6 +44,18 @@ var infoCmd = &cobra.Command{
 		}
 		if len(questions) == 0 {
 			return errors.New("no questions found")
+		}
+
+		if len(flagFormat) > 0 {
+			if flagFormat != "json" {
+				return errors.New("only json output supported")
+			}
+			res, err := json.Marshal(questions)
+			if err != nil {
+				return fmt.Errorf("failed to convert questions to raw string", "err", err)
+			}
+			fmt.Println(string(res))
+			return nil
 		}
 
 		w := table.NewWriter()
