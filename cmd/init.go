@@ -159,7 +159,7 @@ func initGitRepo(dir string) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(filepath.Join(dir, ".gitignore"), []byte(".env\n"), 0644)
+	err = os.WriteFile(filepath.Join(dir, ".gitignore"), []byte(".env\n"), 0o644)
 	return err
 }
 
