@@ -321,6 +321,8 @@ There are three ways to make cookies available to `leetgo`:
 > [!NOTE]
 > Password authentication is not recommended, and it is not supported by `leetcode.com`.
 
+You can put environment variables in a `.env` file in the project's root directory, and `leetgo` will automatically read them.
+
 ## Advanced Usage
 
 ### `testcases.txt`

@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	cc "github.com/ivanpirog/coloredcobra"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -58,6 +59,23 @@ func Execute() {
 	}
 }
 
+func preRun(cmd *cobra.Command, _ []string) error {
+	initLogger()
+	err := initWorkDir()
+	if err != nil {
+		return err
+	}
+	err = config.Load(cmd == initCmd)
+	if err != nil {
+		return err
+	}
+	err = godotenv.Load()
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
 func UsageString() string {
 	return rootCmd.UsageString()
 }
@@ -85,16 +103,6 @@ func initLogger() {
 		log.SetReportTimestamp(false)
 		log.SetLevel(log.InfoLevel)
 	}
-}
-
-func preRun(cmd *cobra.Command, args []string) error {
-	initLogger()
-	err := initWorkDir()
-	if err != nil {
-		return err
-	}
-	err = config.Load(cmd == initCmd)
-	return err
 }
 
 func initCommands() {
