@@ -37,6 +37,8 @@ func CreateIfNotExists(path string, isDir bool) error {
 				return err
 			}
 			f.Close()
+		} else {
+			return err
 		}
 	}
 	return nil
@@ -52,6 +54,23 @@ func WriteFile(file string, content []byte) error {
 		return err
 	}
 	return nil
+}
+
+func WriteOrAppendFile(file string, content []byte) error {
+	_, err := os.Stat(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return WriteFile(file, content)
+		}
+		return err
+	}
+	f, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write(content)
+	return err
 }
 
 func RemoveIfExist(path string) error {

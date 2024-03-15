@@ -49,7 +49,7 @@ func (e exitCode) Error() string {
 }
 
 func Execute() {
-	err := execute(rootCmd)
+	err := rootCmd.Execute()
 	if err != nil {
 		var e exitCode
 		if errors.As(err, &e) {
@@ -59,7 +59,7 @@ func Execute() {
 	}
 }
 
-func execute(cmd *cobra.Command) error {
+func preRun(cmd *cobra.Command, _ []string) error {
 	initLogger()
 	err := initWorkDir()
 	if err != nil {
@@ -73,7 +73,7 @@ func execute(cmd *cobra.Command) error {
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	return cmd.Execute()
+	return nil
 }
 
 func UsageString() string {
@@ -154,6 +154,7 @@ func initCommands() {
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false
+		cmd.PersistentPreRunE = preRun
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.InitDefaultHelpCmd()
