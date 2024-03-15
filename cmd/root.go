@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	cc "github.com/ivanpirog/coloredcobra"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -48,7 +49,7 @@ func (e exitCode) Error() string {
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	err := execute(rootCmd)
 	if err != nil {
 		var e exitCode
 		if errors.As(err, &e) {
@@ -56,6 +57,23 @@ func Execute() {
 		}
 		log.Fatal(err)
 	}
+}
+
+func execute(cmd *cobra.Command) error {
+	initLogger()
+	err := initWorkDir()
+	if err != nil {
+		return err
+	}
+	err = config.Load(cmd == initCmd)
+	if err != nil {
+		return err
+	}
+	err = godotenv.Load()
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return cmd.Execute()
 }
 
 func UsageString() string {
@@ -85,16 +103,6 @@ func initLogger() {
 		log.SetReportTimestamp(false)
 		log.SetLevel(log.InfoLevel)
 	}
-}
-
-func preRun(cmd *cobra.Command, args []string) error {
-	initLogger()
-	err := initWorkDir()
-	if err != nil {
-		return err
-	}
-	err = config.Load(cmd == initCmd)
-	return err
 }
 
 func initCommands() {
@@ -146,7 +154,6 @@ func initCommands() {
 	}
 	for _, cmd := range commands {
 		cmd.Flags().SortFlags = false
-		cmd.PersistentPreRunE = preRun
 		rootCmd.AddCommand(cmd)
 	}
 	rootCmd.InitDefaultHelpCmd()

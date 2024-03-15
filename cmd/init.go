@@ -155,7 +155,12 @@ func gitAvailable() bool {
 
 func initGitRepo(dir string) error {
 	cmd := exec.Command("git", "init", dir)
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(dir, ".gitignore"), []byte(".env\n"), 0644)
+	return err
 }
 
 func isInsideGitRepo(dir string) bool {

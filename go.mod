@@ -26,6 +26,7 @@ require (
 	github.com/j178/kooky v0.0.0-20240103045155-c09911743d37
 	github.com/j178/leetgo/testutils/go v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.5.4
+	github.com/joho/godotenv v1.5.1
 	github.com/k3a/html2text v1.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
