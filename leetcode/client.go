@@ -29,11 +29,11 @@ var (
 	ErrContestNotStarted = errors.New("contest has not started")
 	ErrForbidden         = UnexpectedStatusCode{
 		Code: 403,
-		Body: "[403 Forbidden] access is forbidden, your cookies may have expired or LeetCode has restricted its API access",
+		Body: "access is forbidden, your cookies may have expired or LeetCode has restricted its API access",
 	}
 	ErrTooManyRequests = UnexpectedStatusCode{
 		Code: 429,
-		Body: "[429 TooManyRequests] LeetCode limited you access rate, you may be submitting too frequently",
+		Body: "LeetCode limited you access rate, you may be submitting too frequently",
 	}
 )
 
@@ -47,7 +47,7 @@ func (e UnexpectedStatusCode) Error() string {
 	if len(e.Body) > 0 {
 		body = e.Body[:1024]
 	}
-	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, body)
+	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
 }
 
 type Client interface {
