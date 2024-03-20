@@ -200,7 +200,8 @@ func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	req, _ := c.http.New().Get(path).Request()
 	_, err := c.send(req, requireAuth, &html, nil)
 	if err != nil {
-		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
+		var e UnexpectedStatusCode
+		if errors.As(err, &e) && e.Code == 302 {
 			return nil, ErrPaidOnlyQuestion
 		}
 		return nil, err

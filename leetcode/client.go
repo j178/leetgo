@@ -27,20 +27,25 @@ var (
 	ErrPaidOnlyQuestion  = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrForbidden         = errors.New("[403 Forbidden] access is forbidden, your cookies may have expired or LeetCode has restricted its API access")
-	ErrTooManyRequests   = errors.New("[429 TooManyRequests] LeetCode limited you access rate, you may be submitting too frequently")
+	ErrForbidden         = UnexpectedStatusCode{
+		Code: 403,
+		Body: "[403 Forbidden] access is forbidden, your cookies may have expired or LeetCode has restricted its API access",
+	}
+	ErrTooManyRequests = UnexpectedStatusCode{
+		Code: 429,
+		Body: "[429 TooManyRequests] LeetCode limited you access rate, you may be submitting too frequently",
+	}
 )
 
-type unexpectedStatusCode struct {
+type UnexpectedStatusCode struct {
 	Code int
-	Resp *http.Response
-	Body []byte
+	Body string
 }
 
-func (e unexpectedStatusCode) Error() string {
+func (e UnexpectedStatusCode) Error() string {
 	body := "<empty>"
 	if len(e.Body) > 0 {
-		body = string(e.Body)[:1024]
+		body = e.Body[:1024]
 	}
 	return fmt.Sprintf("unexpected status code: %d, body: %s", e.Code, body)
 }
@@ -207,31 +212,26 @@ func (c *cnClient) send(req *http.Request, authType authType, result any, failur
 			if err != nil {
 				return err
 			}
-			switch resp.StatusCode {
-			case http.StatusTooManyRequests:
-				return ErrTooManyRequests
-			case http.StatusForbidden:
-				return ErrForbidden
-			}
 			if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
-				body, _ := io.ReadAll(resp.Body)
-				return unexpectedStatusCode{Code: resp.StatusCode, Resp: resp, Body: body}
+				switch resp.StatusCode {
+				case http.StatusTooManyRequests:
+					return ErrTooManyRequests
+				case http.StatusForbidden:
+					return ErrForbidden
+				default:
+					body, _ := io.ReadAll(resp.Body)
+					return UnexpectedStatusCode{Code: resp.StatusCode, Body: string(body)}
+				}
 			}
 			return nil
 		},
 		retry.RetryIf(
 			func(err error) bool {
-				switch err := err.(type) {
-				case unexpectedStatusCode:
-					if err.Code == http.StatusServiceUnavailable {
-						return true
-					}
-				}
-				return false
+				// Do not retry on 429
+				return !errors.Is(err, ErrTooManyRequests)
 			},
 		),
-		retry.Delay(1*time.Second),
-		retry.MaxDelay(5*time.Second),
+		retry.Attempts(3),
 		retry.LastErrorOnly(true),
 		retry.OnRetry(
 			func(n uint, err error) {
@@ -655,7 +655,8 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	req, _ := c.http.New().Get(path).Request()
 	_, err := c.send(req, requireAuth, &html, nil)
 	if err != nil {
-		if e, ok := err.(unexpectedStatusCode); ok && e.Code == 302 {
+		var e UnexpectedStatusCode
+		if errors.As(err, &e) && e.Code == 302 {
 			return nil, ErrPaidOnlyQuestion
 		}
 		return nil, err
@@ -903,7 +904,8 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 func (c *cnClient) RegisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	_, err := c.jsonPost(path, nil, requireAuth, nil, nil)
-	if e, ok := err.(unexpectedStatusCode); ok && e.Code == http.StatusFound {
+	var e UnexpectedStatusCode
+	if errors.As(err, &e) && e.Code == http.StatusFound {
 		err = nil
 	}
 	return err
