@@ -14,6 +14,9 @@ func TestInfiniteLoopDetect(t *testing.T) {
 	tree := &TreeNode{Val: 1}
 	tree.Left = &TreeNode{Val: 2, Right: tree}
 
+	naryTree := &NaryTreeNode{Val: 1}
+	naryTree.Children = []*NaryTreeNode{{Val: 2, Children: []*NaryTreeNode{naryTree}}}
+
 	type toStringer interface {
 		ToString() string
 	}
@@ -21,6 +24,7 @@ func TestInfiniteLoopDetect(t *testing.T) {
 	tests := []toStringer{
 		linkedList,
 		tree,
+		naryTree,
 	}
 
 	for _, tc := range tests {

@@ -183,6 +183,7 @@ func DeserializeNaryTreeNode(s string) (*NaryTreeNode, error) {
 func (t *NaryTreeNode) ToString() string {
 	nodes := []*NaryTreeNode{}
 	q := []*NaryTreeNode{{Children: []*NaryTreeNode{t}}}
+	seen := make(map[*NaryTreeNode]bool, 10)
 
 	for len(q) > 0 {
 		node := q[0]
@@ -190,6 +191,11 @@ func (t *NaryTreeNode) ToString() string {
 		nodes = append(nodes, node)
 
 		if node != nil {
+			if seen[node] {
+				panic(ErrInfiniteLoop)
+			}
+			seen[node] = true
+
 			if len(node.Children) > 0 {
 				q = append(q, node.Children...)
 			}
