@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const cycleIndicator = "..inf"
+
 /*
 Much appreciated to EndlessCheng
 Adapted from https://github.com/EndlessCheng/codeforces-go/blob/ae5b312f3f/leetcode/testutil/leetcode.go
@@ -37,6 +39,8 @@ func DeserializeListNode(s string) (*ListNode, error) {
 }
 
 func (l *ListNode) ToString() string {
+	visited := make(map[*ListNode]bool, 10)
+
 	sb := &strings.Builder{}
 	sb.WriteByte('[')
 	for ; l != nil; l = l.Next {
@@ -44,6 +48,12 @@ func (l *ListNode) ToString() string {
 			sb.WriteByte(',')
 		}
 		sb.WriteString(strconv.Itoa(l.Val))
+
+		if visited[l] {
+			sb.WriteString(cycleIndicator)
+			break
+		}
+		visited[l] = true
 	}
 	sb.WriteByte(']')
 	return sb.String()
