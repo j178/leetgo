@@ -2,11 +2,12 @@ package goutils
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 )
 
-const cycleIndicator = "..inf"
+var ErrInfiniteLoop = errors.New("infinite loop detected")
 
 /*
 Much appreciated to EndlessCheng
@@ -39,7 +40,7 @@ func DeserializeListNode(s string) (*ListNode, error) {
 }
 
 func (l *ListNode) ToString() string {
-	visited := make(map[*ListNode]bool, 10)
+	seen := make(map[*ListNode]bool, 10)
 
 	sb := &strings.Builder{}
 	sb.WriteByte('[')
@@ -49,11 +50,10 @@ func (l *ListNode) ToString() string {
 		}
 		sb.WriteString(strconv.Itoa(l.Val))
 
-		if visited[l] {
-			sb.WriteString(cycleIndicator)
-			break
+		if seen[l] {
+			panic(ErrInfiniteLoop)
 		}
-		visited[l] = true
+		seen[l] = true
 	}
 	sb.WriteByte(']')
 	return sb.String()
@@ -117,10 +117,16 @@ func DeserializeTreeNode(s string) (*TreeNode, error) {
 func (t *TreeNode) ToString() string {
 	nodes := []*TreeNode{}
 	queue := []*TreeNode{t}
+	seen := make(map[*TreeNode]bool, 10)
 	for len(queue) > 0 {
 		t, queue = queue[0], queue[1:]
 		nodes = append(nodes, t)
 		if t != nil {
+			if seen[t] {
+				panic(ErrInfiniteLoop)
+			}
+			seen[t] = true
+
 			queue = append(queue, t.Left, t.Right)
 		}
 	}

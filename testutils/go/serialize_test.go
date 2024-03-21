@@ -6,20 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSerialize(t *testing.T) {
+func TestInfiniteLoopDetect(t *testing.T) {
 
-	cycleCaseHead := &ListNode{Val: 1}
-	cycleCaseHead.Next = &ListNode{Val: 2, Next: cycleCaseHead}
+	linkedList := &ListNode{Val: 1}
+	linkedList.Next = &ListNode{Val: 2, Next: linkedList}
 
-	tests := []struct {
-		input *ListNode
-		want  string
-	}{
-		{&ListNode{Val: 1, Next: &ListNode{Val: 2, Next: &ListNode{Val: 3}}}, "[1,2,3]"},
-		{cycleCaseHead, "[1,2,1..inf]"},
+	tree := &TreeNode{Val: 1}
+	tree.Left = &TreeNode{Val: 2, Right: tree}
+
+	type toStringer interface {
+		ToString() string
+	}
+
+	tests := []toStringer{
+		linkedList,
+		tree,
 	}
 
 	for _, tc := range tests {
-		assert.Equal(t, tc.want, tc.input.ToString())
+		assert.PanicsWithValue(t, ErrInfiniteLoop, func() { tc.ToString() })
 	}
 }
