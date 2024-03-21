@@ -2,9 +2,12 @@ package goutils
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 )
+
+var ErrInfiniteLoop = errors.New("infinite loop detected")
 
 /*
 Much appreciated to EndlessCheng
@@ -36,7 +39,11 @@ func DeserializeListNode(s string) (*ListNode, error) {
 	return root, nil
 }
 
+// ToString returns a string representation of the linked list.
+// It panics with ErrInfiniteLoop if a cycle is detected.
 func (l *ListNode) ToString() string {
+	seen := make(map[*ListNode]bool, 10)
+
 	sb := &strings.Builder{}
 	sb.WriteByte('[')
 	for ; l != nil; l = l.Next {
@@ -44,6 +51,11 @@ func (l *ListNode) ToString() string {
 			sb.WriteByte(',')
 		}
 		sb.WriteString(strconv.Itoa(l.Val))
+
+		if seen[l] {
+			panic(ErrInfiniteLoop)
+		}
+		seen[l] = true
 	}
 	sb.WriteByte(']')
 	return sb.String()
@@ -104,13 +116,21 @@ func DeserializeTreeNode(s string) (*TreeNode, error) {
 	return root, nil
 }
 
+// ToString returns a string representation of the binary tree.
+// It panics with ErrInfiniteLoop if a cycle is detected.
 func (t *TreeNode) ToString() string {
 	nodes := []*TreeNode{}
 	queue := []*TreeNode{t}
+	seen := make(map[*TreeNode]bool, 10)
 	for len(queue) > 0 {
 		t, queue = queue[0], queue[1:]
 		nodes = append(nodes, t)
 		if t != nil {
+			if seen[t] {
+				panic(ErrInfiniteLoop)
+			}
+			seen[t] = true
+
 			queue = append(queue, t.Left, t.Right)
 		}
 	}
@@ -164,9 +184,12 @@ func DeserializeNaryTreeNode(s string) (*NaryTreeNode, error) {
 	return root.Children[0], nil
 }
 
+// ToString returns a string representation of the nary tree.
+// It panics with ErrInfiniteLoop if a cycle is detected.
 func (t *NaryTreeNode) ToString() string {
 	nodes := []*NaryTreeNode{}
 	q := []*NaryTreeNode{{Children: []*NaryTreeNode{t}}}
+	seen := make(map[*NaryTreeNode]bool, 10)
 
 	for len(q) > 0 {
 		node := q[0]
@@ -174,6 +197,11 @@ func (t *NaryTreeNode) ToString() string {
 		nodes = append(nodes, node)
 
 		if node != nil {
+			if seen[node] {
+				panic(ErrInfiniteLoop)
+			}
+			seen[node] = true
+
 			if len(node.Children) > 0 {
 				q = append(q, node.Children...)
 			}
