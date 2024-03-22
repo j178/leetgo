@@ -39,9 +39,14 @@ func DeserializeListNode(s string) (*ListNode, error) {
 	return root, nil
 }
 
-// ToString returns a string representation of the linked list.
-// It panics with ErrInfiniteLoop if a cycle is detected.
+// ToString is deprecated, use String()
 func (l *ListNode) ToString() string {
+	return l.String()
+}
+
+// String returns a string representation of the linked list.
+// It panics with ErrInfiniteLoop if a cycle is detected.
+func (l *ListNode) String() string {
 	seen := make(map[*ListNode]bool, 10)
 
 	sb := &strings.Builder{}
@@ -116,9 +121,14 @@ func DeserializeTreeNode(s string) (*TreeNode, error) {
 	return root, nil
 }
 
-// ToString returns a string representation of the binary tree.
-// It panics with ErrInfiniteLoop if a cycle is detected.
+// ToString is deprecated, use String()
 func (t *TreeNode) ToString() string {
+	return t.String()
+}
+
+// String returns a string representation of the binary tree.
+// It panics with ErrInfiniteLoop if a cycle is detected.
+func (t *TreeNode) String() string {
 	nodes := []*TreeNode{}
 	queue := []*TreeNode{t}
 	seen := make(map[*TreeNode]bool, 10)
@@ -184,9 +194,14 @@ func DeserializeNaryTreeNode(s string) (*NaryTreeNode, error) {
 	return root.Children[0], nil
 }
 
-// ToString returns a string representation of the nary tree.
-// It panics with ErrInfiniteLoop if a cycle is detected.
+// ToString is deprecated, use String
 func (t *NaryTreeNode) ToString() string {
+	return t.String()
+}
+
+// String returns a string representation of the nary tree.
+// It panics with ErrInfiniteLoop if a cycle is detected.
+func (t *NaryTreeNode) String() string {
 	nodes := []*NaryTreeNode{}
 	q := []*NaryTreeNode{{Children: []*NaryTreeNode{t}}}
 	seen := make(map[*NaryTreeNode]bool, 10)

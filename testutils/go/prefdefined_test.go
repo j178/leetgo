@@ -77,7 +77,7 @@ func Test_NaryTreeNodeToString(t *testing.T) {
 	for _, test := range tests {
 		t.Run(
 			"", func(t *testing.T) {
-				assert.Equal(t, test.expected, test.tree.ToString())
+				assert.Equal(t, test.expected, test.tree.String())
 			},
 		)
 	}
@@ -94,7 +94,7 @@ func Test_DeserializeNaryTree(t *testing.T) {
 			"", func(t *testing.T) {
 				tree, err := DeserializeNaryTreeNode(test)
 				if assert.NoError(t, err) {
-					assert.Equal(t, test, tree.ToString())
+					assert.Equal(t, test, tree.String())
 				}
 			},
 		)
