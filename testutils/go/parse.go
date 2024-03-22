@@ -157,9 +157,9 @@ func serialize(v reflect.Value) (string, error) {
 	case reflect.Ptr: // *TreeNode, *ListNode
 		switch tpName := v.Type().Elem().Name(); tpName {
 		case "TreeNode":
-			return v.Interface().(*TreeNode).ToString(), nil
+			return v.Interface().(*TreeNode).String(), nil
 		case "ListNode":
-			return v.Interface().(*ListNode).ToString(), nil
+			return v.Interface().(*ListNode).String(), nil
 		default:
 			return "", fmt.Errorf("unknown type %s", tpName)
 		}

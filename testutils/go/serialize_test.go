@@ -1,6 +1,7 @@
 package goutils
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,17 +18,13 @@ func TestInfiniteLoopDetect(t *testing.T) {
 	naryTree := &NaryTreeNode{Val: 1}
 	naryTree.Children = []*NaryTreeNode{{Val: 2, Children: []*NaryTreeNode{naryTree}}}
 
-	type toStringer interface {
-		ToString() string
-	}
-
-	tests := []toStringer{
+	tests := []fmt.Stringer{
 		linkedList,
 		tree,
 		naryTree,
 	}
 
 	for _, tc := range tests {
-		assert.PanicsWithValue(t, ErrInfiniteLoop, func() { tc.ToString() })
+		assert.PanicsWithValue(t, ErrInfiniteLoop, func() { _ = tc.String() })
 	}
 }
