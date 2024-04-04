@@ -18,7 +18,7 @@ import (
 const leetgoGo = "github.com/j178/leetgo/testutils/go"
 
 var goDeps = []string{
-	leetgoGo + "@v0.2.0",
+	leetgoGo + "@v0.2.1",
 }
 
 type golang struct {

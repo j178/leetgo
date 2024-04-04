@@ -12,7 +12,7 @@ import (
 // If client dependency needs to be updated, update this version number.
 var depVersions = map[string]int{
 	cppGen.slug:     1,
-	golangGen.slug:  2,
+	golangGen.slug:  3,
 	python3Gen.slug: 1,
 	rustGen.slug:    1,
 }
