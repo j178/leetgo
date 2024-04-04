@@ -44,7 +44,7 @@ type UnexpectedStatusCode struct {
 
 func (e UnexpectedStatusCode) Error() string {
 	body := "<empty>"
-	if len(e.Body) > 0 {
+	if len(e.Body) > 1024 {
 		body = e.Body[:1024]
 	}
 	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
