@@ -184,11 +184,11 @@ func (m *MetaData) normalize() {
 	if m.Return != nil {
 		m.Return.Type = normalizeType(m.Return.Type)
 	}
-	for _, method := range m.Methods {
-		for i, param := range method.Params {
-			method.Params[i].Type = normalizeType(param.Type)
+	for i, method := range m.Methods {
+		for j, param := range method.Params {
+			m.Methods[i].Params[j].Type = normalizeType(param.Type)
 		}
-		method.Return.Type = normalizeType(method.Return.Type)
+		m.Methods[i].Return.Type = normalizeType(method.Return.Type)
 	}
 }
 
