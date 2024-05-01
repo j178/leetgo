@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/JohannesKaufmann/html-to-markdown v1.5.0
-	github.com/PuerkitoBio/goquery v1.9.1
+	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.23.0
 	github.com/charmbracelet/bubbles v0.18.0
@@ -24,14 +24,14 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/j178/kooky v0.0.0-20240103045155-c09911743d37
-	github.com/j178/leetgo/testutils/go v0.2.0
-	github.com/jedib0t/go-pretty/v6 v6.5.6
+	github.com/j178/leetgo/testutils/go v0.2.1
+	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/joho/godotenv v1.5.1
 	github.com/k3a/html2text v1.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
-	github.com/pelletier/go-toml/v2 v2.2.0
-	github.com/sashabaranov/go-openai v1.20.4
+	github.com/pelletier/go-toml/v2 v2.2.1
+	github.com/sashabaranov/go-openai v1.23.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/tidwall/gjson v1.17.1
@@ -94,12 +94,12 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	github.com/zalando/go-keyring v0.2.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
