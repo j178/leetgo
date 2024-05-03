@@ -69,6 +69,10 @@ func (c *jsonCache) load() {
 				log.Error("failed to load cache, try updating with `leetgo cache update`", "err", err)
 				return
 			}
+			if len(c.slugs) == 0 {
+				log.Warn("cache is empty, try updating with `leetgo cache update`")
+				return
+			}
 			if c.Outdated() {
 				log.Warn("cache is too old, try updating with `leetgo cache update`")
 			}
