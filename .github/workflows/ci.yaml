@@ -19,8 +19,6 @@ jobs:
         with:
           version: latest
           args: --timeout 3m0s
-          # https://github.com/golangci/golangci-lint-action/issues/135
-          skip-pkg-cache: true
   test:
     runs-on: ubuntu-latest
     steps:
