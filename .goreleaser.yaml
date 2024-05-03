@@ -89,7 +89,7 @@ scoops:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    folder: bucket
+    directory: bucket
     homepage: https://github.com/j178/leetgo
     description: >-
       leetgo is a command line tool for leetcode.com. It can help you to login,
