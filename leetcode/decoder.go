@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	gjsonType  = reflect.TypeOf(gjson.Result{})
-	bytesType  = reflect.TypeOf([]byte{})
-	stringType = reflect.TypeOf("")
+	gjsonType  = reflect.TypeFor[gjson.Result]()
+	bytesType  = reflect.TypeFor[[]byte]()
+	stringType = reflect.TypeFor[string]()
+	errorType  = reflect.TypeFor[UnexpectedStatusCode]()
 )
 
 type smartDecoder struct {
@@ -64,10 +65,9 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 		if d.LogResponse {
 			dataStr = utils.BytesToString(data)
 			limit := d.LogLimit
-			if len(data) < limit {
-				limit = len(data)
+			if len(data) > limit {
+				dataStr = dataStr[:limit] + "..."
 			}
-			dataStr = dataStr[:limit]
 		}
 		log.Debug(
 			"response",
@@ -91,6 +91,8 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 		ele.SetBytes(data)
 	case stringType:
 		ele.SetString(utils.BytesToString(data))
+	case errorType:
+		ele.Set(reflect.ValueOf(NewUnexpectedStatusCode(resp)))
 	default:
 		return json.Unmarshal(data, v)
 	}

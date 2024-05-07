@@ -108,7 +108,7 @@ func (c *jsonCache) Update() error {
 	if err != nil {
 		return err
 	}
-	log.Info("cache updated", "path", c.path)
+	log.Info("questions cache updated", "count", len(all), "path", c.path)
 	return nil
 }
 

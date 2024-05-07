@@ -71,7 +71,7 @@ func (c *usClient) GetQuestionData(slug string) (*QuestionData, error) {
 }
 
 func (c *usClient) GetAllQuestions() ([]*QuestionData, error) {
-	var resp struct {
+	var respData struct {
 		UserName        string `json:"user_name"`
 		NumSolved       int    `json:"num_solved"`
 		NumTotal        int    `json:"num_total"`
@@ -92,12 +92,13 @@ func (c *usClient) GetAllQuestions() ([]*QuestionData, error) {
 			PaidOnly bool `json:"paid_only"`
 		} `json:"stat_status_pairs"`
 	}
-	_, err := c.http.New().Get(problemsAllPath).ReceiveSuccess(&resp)
+
+	_, err := c.jsonGet(problemsAllPath, nil, withoutAuth, &respData)
 	if err != nil {
 		return nil, err
 	}
-	qs := make([]*QuestionData, 0, len(resp.StatStatusPairs))
-	for _, pair := range resp.StatStatusPairs {
+	qs := make([]*QuestionData, 0, len(respData.StatStatusPairs))
+	for _, pair := range respData.StatStatusPairs {
 		difficulty := ""
 		switch pair.Difficulty.Level {
 		case 1:
@@ -134,7 +135,7 @@ func (c *usClient) GetTodayQuestion() (*QuestionData, error) {
 	}`
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query, authType: withoutAuth}, &resp, nil,
+		graphqlRequest{query: query, authType: withoutAuth}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -166,7 +167,7 @@ func (c *usClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
 			},
 			authType: withAuth,
 		},
-		&resp, nil,
+		&resp,
 	)
 	if err != nil {
 		return nil, err
@@ -198,7 +199,7 @@ func (c *usClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
 	req, _ := c.http.New().Get(path).Request()
-	_, err := c.send(req, requireAuth, &html, nil)
+	_, err := c.send(req, requireAuth, &html)
 	if err != nil {
 		var e UnexpectedStatusCode
 		if errors.As(err, &e) && e.Code == 302 {
@@ -240,7 +241,7 @@ func (c *usClient) GetUpcomingContests() ([]*Contest, error) {
 
 	path := "_next/data/" + buildId + "/contest.json"
 	var resp gjson.Result
-	_, err = c.jsonGet(path, nil, withAuth, &resp, nil)
+	_, err = c.jsonGet(path, nil, withAuth, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +325,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		Post(graphQLPath).
 		Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").
 		BodyJSON(body).Request()
-	_, err := c.send(req, withoutAuth, &resp, nil)
+	_, err := c.send(req, withoutAuth, &resp)
 	if err != nil {
 		return QuestionList{}, err
 	}
@@ -345,7 +346,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
 	var resp gjson.Result
-	_, err := c.jsonGet(problemsApiTagsPath, nil, withoutAuth, &resp, nil)
+	_, err := c.jsonGet(problemsApiTagsPath, nil, withoutAuth, &resp)
 	if err != nil {
 		return nil, err
 	}
