@@ -168,14 +168,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
 			cookies, err := store.ReadCookies(filters...)
 			if err != nil {
-				if !os.IsNotExist(err) {
-					errs = append(errs, err)
-				}
-				log.Debug("failed to read cookies", "error", err)
-				continue
-			}
-			if len(cookies) < 2 {
-				log.Debug("no cookie found", "browser", store.Browser())
+				errs = append(errs, err)
 				continue
 			}
 			for _, cookie := range cookies {
@@ -190,7 +183,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 				}
 			}
 			if b.LeetCodeSession == "" || b.CsrfToken == "" {
-				log.Debug("no cookie found", "browser", store.Browser(), "domain", domain)
+				errs = append(errs, fmt.Errorf("LeetCode cookies not found in %s", store.FilePath()))
 				continue
 			}
 			log.Info("read LeetCode cookies", "browser", store.Browser(), "domain", domain)
