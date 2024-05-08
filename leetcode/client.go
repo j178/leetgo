@@ -46,16 +46,15 @@ func (e UnexpectedStatusCode) Error() string {
 	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
 }
 
-func NewUnexpectedStatusCode(resp *http.Response) UnexpectedStatusCode {
-	err := UnexpectedStatusCode{Code: resp.StatusCode}
-	switch resp.StatusCode {
+func NewUnexpectedStatusCode(code int, body []byte) UnexpectedStatusCode {
+	err := UnexpectedStatusCode{Code: code}
+	switch code {
 	case http.StatusTooManyRequests:
 		err.Body = "LeetCode limited you access rate, you may be submitting too frequently"
 	case http.StatusForbidden:
 		err.Body = "Access is forbidden, your cookies may have expired or LeetCode has restricted its API access"
 	default:
-		body, _ := io.ReadAll(resp.Body)
-		err.Body = string(body)
+		err.Body = utils.BytesToString(body)
 	}
 	return err
 }

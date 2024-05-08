@@ -92,7 +92,7 @@ func (d smartDecoder) Decode(resp *http.Response, v interface{}) error {
 	case stringType:
 		ele.SetString(utils.BytesToString(data))
 	case errorType:
-		ele.Set(reflect.ValueOf(NewUnexpectedStatusCode(resp)))
+		ele.Set(reflect.ValueOf(NewUnexpectedStatusCode(resp.StatusCode, data)))
 	default:
 		return json.Unmarshal(data, v)
 	}
