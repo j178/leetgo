@@ -34,6 +34,10 @@ type UnexpectedStatusCode struct {
 	Body string
 }
 
+func (e UnexpectedStatusCode) IsError() bool {
+	return e.Code != 0
+}
+
 func (e UnexpectedStatusCode) Error() string {
 	body := "<empty body>"
 	if len(e.Body) > 100 {
@@ -220,7 +224,7 @@ func (c *cnClient) send(req *http.Request, authType authType, result any) (*http
 			if err != nil {
 				return err
 			}
-			if respErr.Code != 0 {
+			if respErr.IsError() {
 				return respErr
 			}
 			return nil
@@ -526,10 +530,14 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	go pw.Render()
 
 	var qs []*QuestionData
+	var respErr UnexpectedStatusCode
 	dec := progressDecoder{smartDecoder{LogResponse: false}, tracker}
-	_, err = c.http.New().Get(url).ResponseDecoder(dec).ReceiveSuccess(&qs)
+	_, err = c.http.New().Get(url).ResponseDecoder(dec).Receive(&qs, &respErr)
 	if err != nil {
 		return nil, err
+	}
+	if respErr.IsError() {
+		return nil, respErr
 	}
 	for i := range qs {
 		qs[i].client = c
