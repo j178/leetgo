@@ -337,6 +337,7 @@ func (c *sqliteCache) Update() error {
 	if err != nil {
 		return err
 	}
+	count := len(all)
 	placeholder := "(" + strings.Repeat("?,", 19) + "?)"
 	batch := 100
 	for len(all) > 0 {
@@ -367,6 +368,6 @@ func (c *sqliteCache) Update() error {
 	if err != nil {
 		return err
 	}
-	log.Info("cache updated", "path", c.path)
+	log.Info("questions cache updated", "count", count, "path", c.path)
 	return nil
 }

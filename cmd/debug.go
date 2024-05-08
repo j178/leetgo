@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"strings"
 
@@ -42,7 +43,7 @@ var whoamiCmd = &cobra.Command{
 			return err
 		}
 		if !user.IsSignedIn {
-			return leetcode.ErrForbidden
+			return errors.New("user not signed in")
 		}
 		cmd.Println(user.Whoami(c))
 		return nil

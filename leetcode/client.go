@@ -27,14 +27,6 @@ var (
 	ErrPaidOnlyQuestion  = errors.New("this is paid only question, you need to subscribe to LeetCode Premium")
 	ErrQuestionNotFound  = errors.New("no such question")
 	ErrContestNotStarted = errors.New("contest has not started")
-	ErrForbidden         = UnexpectedStatusCode{
-		Code: 403,
-		Body: "access is forbidden, your cookies may have expired or LeetCode has restricted its API access",
-	}
-	ErrTooManyRequests = UnexpectedStatusCode{
-		Code: 429,
-		Body: "LeetCode limited you access rate, you may be submitting too frequently",
-	}
 )
 
 type UnexpectedStatusCode struct {
@@ -42,12 +34,29 @@ type UnexpectedStatusCode struct {
 	Body string
 }
 
+func (e UnexpectedStatusCode) IsError() bool {
+	return e.Code != 0
+}
+
 func (e UnexpectedStatusCode) Error() string {
-	body := "<empty>"
-	if len(e.Body) > 1024 {
-		body = e.Body[:1024]
+	body := "<empty body>"
+	if len(e.Body) > 100 {
+		body = e.Body[:100] + "..."
 	}
 	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
+}
+
+func NewUnexpectedStatusCode(code int, body []byte) UnexpectedStatusCode {
+	err := UnexpectedStatusCode{Code: code}
+	switch code {
+	case http.StatusTooManyRequests:
+		err.Body = "LeetCode limited you access rate, you may be submitting too frequently"
+	case http.StatusForbidden:
+		err.Body = "Access is forbidden, your cookies may have expired or LeetCode has restricted its API access"
+	default:
+		err.Body = utils.BytesToString(body)
+	}
+	return err
 }
 
 type Client interface {
@@ -182,7 +191,7 @@ const (
 	problemsApiTagsPath   = "/problems/api/tags/"
 )
 
-func (c *cnClient) send(req *http.Request, authType authType, result any, failure any) (*http.Response, error) {
+func (c *cnClient) send(req *http.Request, authType authType, result any) (*http.Response, error) {
 	switch authType {
 	case withoutAuth:
 	case withAuth:
@@ -204,31 +213,29 @@ func (c *cnClient) send(req *http.Request, authType authType, result any, failur
 		log.Debug("request", "method", req.Method, "url", req.URL.String(), "body", utils.BytesToString(bodyStr))
 	}
 
-	var resp *http.Response
 	err := retry.Do(
 		func() error {
-			var err error
-			resp, err = c.http.Do(req, result, failure)
+			var (
+				err     error
+				respErr UnexpectedStatusCode
+			)
+			_, err = c.http.Do(req, result, &respErr)
 			if err != nil {
 				return err
 			}
-			if !(200 <= resp.StatusCode && resp.StatusCode <= 299) {
-				switch resp.StatusCode {
-				case http.StatusTooManyRequests:
-					return ErrTooManyRequests
-				case http.StatusForbidden:
-					return ErrForbidden
-				default:
-					body, _ := io.ReadAll(resp.Body)
-					return UnexpectedStatusCode{Code: resp.StatusCode, Body: string(body)}
-				}
+			if respErr.IsError() {
+				return respErr
 			}
 			return nil
 		},
 		retry.RetryIf(
 			func(err error) bool {
 				// Do not retry on 429
-				return !errors.Is(err, ErrTooManyRequests)
+				var e UnexpectedStatusCode
+				if errors.As(err, &e) && e.Code == http.StatusTooManyRequests {
+					return false
+				}
+				return true
 			},
 		),
 		retry.Attempts(3),
@@ -244,7 +251,7 @@ func (c *cnClient) send(req *http.Request, authType authType, result any, failur
 }
 
 //nolint:unused
-func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*http.Response, error) {
+func (c *cnClient) graphqlGet(req graphqlRequest, result any) (*http.Response, error) {
 	type params struct {
 		Query         string `url:"query"`
 		OperationName string `url:"operationName"`
@@ -262,10 +269,10 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any, failure any) (*htt
 	if err != nil {
 		return nil, err
 	}
-	return c.send(r, req.authType, result, failure)
+	return c.send(r, req.authType, result)
 }
 
-func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) (*http.Response, error) {
+func (c *cnClient) graphqlPost(req graphqlRequest, result any) (*http.Response, error) {
 	v := req.variables
 	if v == nil {
 		v = make(map[string]any)
@@ -279,23 +286,23 @@ func (c *cnClient) graphqlPost(req graphqlRequest, result any, failure any) (*ht
 	if err != nil {
 		return nil, err
 	}
-	return c.send(r, req.authType, result, failure)
+	return c.send(r, req.authType, result)
 }
 
-func (c *cnClient) jsonGet(url string, query any, authType authType, result any, failure any) (*http.Response, error) {
+func (c *cnClient) jsonGet(url string, query any, authType authType, result any) (*http.Response, error) {
 	r, err := c.http.New().Get(url).QueryStruct(query).Request()
 	if err != nil {
 		return nil, err
 	}
-	return c.send(r, authType, result, failure)
+	return c.send(r, authType, result)
 }
 
-func (c *cnClient) jsonPost(url string, json any, authType authType, result any, failure any) (*http.Response, error) {
+func (c *cnClient) jsonPost(url string, json any, authType authType, result any) (*http.Response, error) {
 	r, err := c.http.New().Post(url).BodyJSON(json).Request()
 	if err != nil {
 		return nil, err
 	}
-	return c.send(r, authType, result, failure)
+	return c.send(r, authType, result)
 }
 
 func (c *cnClient) BaseURI() string {
@@ -339,7 +346,6 @@ query a {
 	_, err := c.graphqlGet(
 		graphqlRequest{query: query},
 		&resp,
-		nil,
 	)
 	return resp, err
 }
@@ -407,7 +413,7 @@ query globalData {
 		} `json:"data"`
 	}
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query, authType: requireAuth}, &resp, nil,
+		graphqlRequest{query: query, authType: requireAuth}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -428,7 +434,7 @@ func (c *cnClient) getQuestionData(slug string, query string, authType authType)
 			operationName: "questionData",
 			variables:     map[string]any{"titleSlug": slug},
 			authType:      authType,
-		}, &resp, nil,
+		}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -500,7 +506,7 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 		graphqlRequest{
 			query:         query,
 			operationName: "AllQuestionUrls",
-		}, &resp, nil,
+		}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -523,10 +529,14 @@ func (c *cnClient) GetAllQuestions() ([]*QuestionData, error) {
 	go pw.Render()
 
 	var qs []*QuestionData
+	var respErr UnexpectedStatusCode
 	dec := progressDecoder{smartDecoder{LogResponse: false}, tracker}
-	_, err = c.http.New().Get(url).ResponseDecoder(dec).ReceiveSuccess(&qs)
+	_, err = c.http.New().Get(url).ResponseDecoder(dec).Receive(&qs, &respErr)
 	if err != nil {
 		return nil, err
+	}
+	if respErr.IsError() {
+		return nil, respErr
 	}
 	for i := range qs {
 		qs[i].client = c
@@ -552,7 +562,7 @@ func (c *cnClient) GetTodayQuestion() (*QuestionData, error) {
 			query:         query,
 			operationName: "questionOfToday",
 			authType:      withoutAuth,
-		}, &resp, nil,
+		}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -582,7 +592,7 @@ func (c *cnClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
 			},
 			authType: withAuth,
 		},
-		&resp, nil,
+		&resp,
 	)
 	if err != nil {
 		return nil, err
@@ -601,7 +611,7 @@ func (c *cnClient) GetQuestionOfDate(date time.Time) (*QuestionData, error) {
 func (c *cnClient) getContest(contestSlug string) (*Contest, error) {
 	path := fmt.Sprintf(contestInfoPath, contestSlug)
 	var resp gjson.Result
-	_, err := c.jsonGet(path, nil, withAuth, &resp, nil)
+	_, err := c.jsonGet(path, nil, withAuth, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +663,7 @@ func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug strin
 	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
 	var html []byte
 	req, _ := c.http.New().Get(path).Request()
-	_, err := c.send(req, requireAuth, &html, nil)
+	_, err := c.send(req, requireAuth, &html)
 	if err != nil {
 		var e UnexpectedStatusCode
 		if errors.As(err, &e) && e.Code == 302 {
@@ -800,7 +810,7 @@ func (c *cnClient) RunCode(q *QuestionData, lang string, code string, dataInput 
 			"question_id": q.QuestionId,
 			"typed_code":  code,
 			"data_input":  dataInput,
-		}, requireAuth, &resp, nil,
+		}, requireAuth, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -828,7 +838,7 @@ func (c *cnClient) SubmitCode(q *QuestionData, lang string, code string) (string
 			"questionSlug": q.TitleSlug,
 			"question_id":  q.QuestionId,
 			"typed_code":   code,
-		}, requireAuth, &resp, nil,
+		}, requireAuth, &resp,
 	)
 	return resp.Get("submission_id").String(), err
 }
@@ -839,7 +849,7 @@ func (c *cnClient) CheckResult(submissionId string) (
 ) {
 	path := fmt.Sprintf(checkResultPath, submissionId)
 	var result gjson.Result
-	_, err := c.jsonGet(path, nil, requireAuth, &result, nil)
+	_, err := c.jsonGet(path, nil, requireAuth, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -871,7 +881,7 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 `
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query, authType: withAuth}, &resp, nil,
+		graphqlRequest{query: query, authType: withAuth}, &resp,
 	)
 	if err != nil {
 		return nil, err
@@ -903,7 +913,7 @@ func (c *cnClient) GetUpcomingContests() ([]*Contest, error) {
 
 func (c *cnClient) RegisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
-	_, err := c.jsonPost(path, nil, requireAuth, nil, nil)
+	_, err := c.jsonPost(path, nil, requireAuth, nil)
 	var e UnexpectedStatusCode
 	if errors.As(err, &e) && e.Code == http.StatusFound {
 		err = nil
@@ -914,7 +924,7 @@ func (c *cnClient) RegisterContest(slug string) error {
 func (c *cnClient) UnregisterContest(slug string) error {
 	path := fmt.Sprintf(contestRegisterPath, slug)
 	req, _ := c.http.New().Delete(path).Request()
-	_, err := c.send(req, requireAuth, nil, nil)
+	_, err := c.send(req, requireAuth, nil)
 	return err
 }
 
@@ -964,7 +974,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		graphqlRequest{
 			query:     query,
 			variables: vars,
-		}, &resp, nil,
+		}, &resp,
 	)
 	if err != nil {
 		return QuestionList{}, err
@@ -986,7 +996,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 	var resp gjson.Result
-	_, err := c.jsonGet(problemsApiTagsPath, nil, withAuth, &resp, nil)
+	_, err := c.jsonGet(problemsApiTagsPath, nil, withAuth, &resp)
 	if err != nil {
 		return nil, err
 	}
