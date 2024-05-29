@@ -58,6 +58,9 @@ func updateSupportMatrix(readme []byte) []byte {
 	w := table.NewWriter()
 	w.AppendHeader(table.Row{"", "Generation", "Local testing"})
 	for _, l := range lang.SupportedLangs {
+		if l.Name() == "Pandas" {
+			continue
+		}
 		localTest := ":white_check_mark:"
 		if _, ok := l.(lang.LocalTestable); !ok {
 			localTest = "Not yet"

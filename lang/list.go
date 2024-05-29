@@ -23,6 +23,15 @@ var (
 			blockCommentEnd:   `"""`,
 		},
 	}
+	pandasGen = baseLang{
+		name:              "Pandas",
+		slug:              "pythondata",
+		shortName:         "py",
+		extension:         ".py",
+		lineComment:       "#",
+		blockCommentStart: `"""`,
+		blockCommentEnd:   `"""`,
+	}
 	cppGen = cpp{
 		baseLang{
 			name:              "C++",
@@ -212,6 +221,7 @@ var (
 	SupportedLangs = []Lang{
 		golangGen,
 		python3Gen,
+		pandasGen,
 		cppGen,
 		rustGen,
 		javaGen,
