@@ -61,6 +61,8 @@ leetgo submit w330/
 					log.Info("added failed case to testcases.txt")
 				}
 			}
+
+			_ = showTodayStreak(c)
 		}
 
 		if hasFailedCase {
@@ -144,4 +146,15 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 	content := []byte(tc.String())
 	err = utils.WriteFile(testCasesFile.GetPath(), content)
 	return true, err
+}
+
+func showTodayStreak(c leetcode.Client) error {
+	streak, err := c.GetStreakCounter()
+	if err != nil {
+		return err
+	}
+	if streak.TodayCompleted {
+		fmt.Println("You have completed today's problem!\nTotal streak:", streak.StreakCount)
+	}
+	return nil
 }

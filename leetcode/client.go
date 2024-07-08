@@ -40,8 +40,8 @@ func (e UnexpectedStatusCode) IsError() bool {
 
 func (e UnexpectedStatusCode) Error() string {
 	body := "<empty body>"
-	if len(e.Body) > 100 {
-		body = e.Body[:100] + "..."
+	if len(e.Body) > 500 {
+		body = e.Body[:500] + "..."
 	}
 	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
 }
@@ -81,6 +81,7 @@ type Client interface {
 	GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error)
 	RegisterContest(slug string) error
 	UnregisterContest(slug string) error
+	GetStreakCounter() (StreakCounter, error)
 }
 
 type cnClient struct {
@@ -1011,4 +1012,26 @@ func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 		)
 	}
 	return tags, nil
+}
+
+func (c *cnClient) GetStreakCounter() (StreakCounter, error) {
+	query := `
+query getStreakCounter {
+  problemsetStreakCounter {
+    today
+    streakCount
+    daysSkipped
+    todayCompleted
+  }
+}`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{query: query, authType: requireAuth}, &resp,
+	)
+	if err != nil {
+		return StreakCounter{}, err
+	}
+	var counter StreakCounter
+	err = json.Unmarshal(utils.StringToBytes(resp.Get("data.problemsetStreakCounter").Raw), &counter)
+	return counter, err
 }

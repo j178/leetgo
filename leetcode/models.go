@@ -259,3 +259,10 @@ type QuestionTag struct {
 	TypeName       string `json:"typeName"`
 	TypeTransName  string `json:"typeTransName"`
 }
+
+type StreakCounter struct {
+	Today          string `json:"today"`
+	StreakCount    int    `json:"streakCount"`
+	DaysSkipped    int    `json:"daysSkipped"`
+	TodayCompleted bool   `json:"todayCompleted"`
+}
