@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -61,8 +62,11 @@ leetgo submit w330/
 					log.Info("added failed case to testcases.txt")
 				}
 			}
+		}
 
-			_ = showTodayStreak(c)
+		err = showTodayStreak(c, cmd)
+		if err != nil {
+			log.Debug("failed to show today's streak", "err", err)
 		}
 
 		if hasFailedCase {
@@ -148,13 +152,15 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 	return true, err
 }
 
-func showTodayStreak(c leetcode.Client) error {
+func showTodayStreak(c leetcode.Client, cmd *cobra.Command) error {
 	streak, err := c.GetStreakCounter()
 	if err != nil {
 		return err
 	}
+	today := ""
 	if streak.TodayCompleted {
-		fmt.Println("You have completed today's problem!\nTotal streak:", streak.StreakCount)
+		today = config.PassedStyle.Render("+1")
 	}
+	cmd.Printf("\nTotal streak:  %s%s\n", strconv.Itoa(streak.StreakCount-1), today)
 	return nil
 }

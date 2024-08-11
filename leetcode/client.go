@@ -163,6 +163,7 @@ func nonFollowRedirect(req *http.Request, via []*http.Request) error {
 }
 
 type graphqlRequest struct {
+	path          string
 	query         string
 	operationName string
 	variables     map[string]any
@@ -179,6 +180,7 @@ const (
 
 const (
 	graphQLPath           = "/graphql"
+	graphQLNoj            = "/graphql/noj-go/"
 	accountLoginPath      = "/accounts/login/"
 	contestInfoPath       = "/contest/api/info/%s/"
 	contestProblemsPath   = "/contest/%s/problems/%s/"
@@ -266,7 +268,11 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any) (*http.Response, e
 		v, _ := json.Marshal(req.variables)
 		p.Variables = string(v)
 	}
-	r, err := c.http.New().Get(graphQLPath).QueryStruct(p).Request()
+	path := graphQLPath
+	if req.path != "" {
+		path = req.path
+	}
+	r, err := c.http.New().Get(path).QueryStruct(p).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +289,11 @@ func (c *cnClient) graphqlPost(req graphqlRequest, result any) (*http.Response, 
 		"operationName": req.operationName,
 		"variables":     v,
 	}
-	r, err := c.http.New().Post(graphQLPath).BodyJSON(body).Request()
+	path := graphQLPath
+	if req.path != "" {
+		path = req.path
+	}
+	r, err := c.http.New().Post(path).BodyJSON(body).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -1026,7 +1036,7 @@ query getStreakCounter {
 }`
 	var resp gjson.Result
 	_, err := c.graphqlPost(
-		graphqlRequest{query: query, authType: requireAuth}, &resp,
+		graphqlRequest{path: graphQLNoj, query: query, authType: requireAuth}, &resp,
 	)
 	if err != nil {
 		return StreakCounter{}, err

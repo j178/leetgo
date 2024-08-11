@@ -58,7 +58,7 @@ func selectUpcomingContest(c leetcode.Client, registeredOnly bool) (string, erro
 	for i, ct := range contestList {
 		mark := " "
 		if ct.Registered {
-			mark = "√"
+			mark = "✔"
 		}
 		contestNames[i] = fmt.Sprintf(
 			"%s %s at %s",

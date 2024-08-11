@@ -88,6 +88,7 @@ leetgo test w330/`,
 		submitLimiter := newLimiter(user)
 
 		var hasFailedCase bool
+		var hasSubmitted bool
 		for _, q := range qs {
 			var (
 				localPassed    = true
@@ -115,6 +116,7 @@ leetgo test w330/`,
 
 			if autoSubmit && remotePassed && (localPassed || forceSubmit) {
 				log.Info("submitting solution", "user", user.Whoami(c))
+				hasSubmitted = true
 				result, err := submitSolution(cmd, q, c, gen, submitLimiter)
 				if err != nil {
 					submitAccepted = false
@@ -125,7 +127,7 @@ leetgo test w330/`,
 						submitAccepted = false
 						added, _ := appendToTestCases(q, result)
 						if added {
-							log.Info("added failed case to testcases.txt")
+							log.Info("added failed cases to `testcases.txt`")
 						}
 					}
 				}
@@ -133,6 +135,13 @@ leetgo test w330/`,
 
 			if !localPassed || !remotePassed || !submitAccepted {
 				hasFailedCase = true
+			}
+		}
+
+		if hasSubmitted {
+			err = showTodayStreak(c, cmd)
+			if err != nil {
+				log.Debug("failed to show today's streak", "err", err)
 			}
 		}
 
@@ -213,7 +222,7 @@ func runTestRemotely(
 			if err != nil {
 				log.Debug("failed to update test cases", "err", err)
 			} else {
-				log.Info("testcases.txt updated")
+				log.Info("`testcases.txt` updated")
 			}
 		}
 	}
