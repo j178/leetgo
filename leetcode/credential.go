@@ -186,7 +186,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 				errs = append(errs, fmt.Errorf("LeetCode cookies not found in %s", store.FilePath()))
 				continue
 			}
-			log.Info("read LeetCode cookies", "browser", store.Browser(), "domain", domain)
+			log.Info("reading leetcode cookies", "browser", store.Browser(), "domain", domain)
 			break
 		}
 	}
