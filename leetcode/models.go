@@ -87,7 +87,7 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	case Accepted:
 		return fmt.Sprintf(
 			"\n%s%s%s%s\n",
-			config.PassedStyle.Render(fmt.Sprintf(" √ %s\n", r.StatusMsg)),
+			config.PassedStyle.Render(fmt.Sprintf(" ✔ %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nRuntime:       %s, better than %.0f%%", r.StatusRuntime, r.RuntimePercentile),
 			fmt.Sprintf("\nMemory:        %s, better than %.0f%%", r.StatusMemory, r.MemoryPercentile),
@@ -95,7 +95,7 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	case WrongAnswer:
 		return fmt.Sprintf(
 			"\n%s%s%s%s%s%s\n",
-			config.FailedStyle.Render(" × Wrong Answer\n"),
+			config.FailedStyle.Render(" ✘ Wrong Answer\n"),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nLast case:     %s", utils.TruncateString(strings.ReplaceAll(r.LastTestcase, "\n", "↩ "), 100)),
 			fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.ReplaceAll(r.CodeOutput, "\n", "↩ "), 100)),
@@ -105,25 +105,25 @@ func (r *SubmitCheckResult) Display(q *QuestionData) string {
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
 		return fmt.Sprintf(
 			"\n%s%s%s\n",
-			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			config.ErrorStyle.Render(fmt.Sprintf(" ✘ %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:  %d/%d", r.TotalCorrect, r.TotalTestcases),
 			fmt.Sprintf("\nLast case:     %s", utils.TruncateString(r.LastTestcase, 100)),
 		)
 	case RuntimeError:
 		return fmt.Sprintf(
 			"\n%s%s%s\n",
-			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			config.ErrorStyle.Render(fmt.Sprintf(" ✘ %s\n", r.StatusMsg)),
 			fmt.Sprintf("\nPassed cases:   %s", formatCompare(r.CompareResult)),
 			"\n"+config.StdoutStyle.Render(r.FullRuntimeError),
 		)
 	case CompileError:
 		return fmt.Sprintf(
 			"\n%s%s\n",
-			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			config.ErrorStyle.Render(fmt.Sprintf(" ✘ %s\n", r.StatusMsg)),
 			"\n"+config.StdoutStyle.Render(r.FullCompileError),
 		)
 	default:
-		return config.FailedStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
+		return config.FailedStyle.Render(fmt.Sprintf("\n ✘ %s\n", r.StatusMsg))
 	}
 }
 
@@ -181,9 +181,9 @@ func formatCompare(s string) string {
 	var sb strings.Builder
 	for _, c := range s {
 		if c == '1' {
-			sb.WriteString(config.PassedStyle.Render("√"))
+			sb.WriteString(config.PassedStyle.Render("✔"))
 		} else {
-			sb.WriteString(config.ErrorStyle.Render("×"))
+			sb.WriteString(config.ErrorStyle.Render("✘"))
 		}
 	}
 	return sb.String()
@@ -199,7 +199,7 @@ func (r *RunCheckResult) Display(_ *QuestionData) string {
 		if r.CorrectAnswer {
 			return fmt.Sprintf(
 				"\n%s%s%s%s%s%s\n",
-				config.PassedStyle.Render(fmt.Sprintf(" √ %s\n", r.StatusMsg)),
+				config.PassedStyle.Render(fmt.Sprintf(" ✔ %s\n", r.StatusMsg)),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
 				fmt.Sprintf("\nInput:         %s", utils.TruncateString(strings.ReplaceAll(r.InputData, "\n", "↩ "), 100)),
 				fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.Join(r.CodeAnswer, "↩ "), 100)),
@@ -209,7 +209,7 @@ func (r *RunCheckResult) Display(_ *QuestionData) string {
 		} else {
 			return fmt.Sprintf(
 				"\n%s%s%s%s%s%s\n",
-				config.ErrorStyle.Render("\n × Wrong Answer\n"),
+				config.ErrorStyle.Render("\n ✘ Wrong Answer\n"),
 				fmt.Sprintf("\nPassed cases:  %s", formatCompare(r.CompareResult)),
 				fmt.Sprintf("\nInput:         %s", utils.TruncateString(strings.ReplaceAll(r.InputData, "\n", "↩ "), 100)),
 				fmt.Sprintf("\nOutput:        %s", utils.TruncateString(strings.Join(r.CodeAnswer, "↩ "), 100)),
@@ -218,22 +218,22 @@ func (r *RunCheckResult) Display(_ *QuestionData) string {
 			)
 		}
 	case MemoryLimitExceeded, TimeLimitExceeded, OutputLimitExceeded:
-		return config.ErrorStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
+		return config.ErrorStyle.Render(fmt.Sprintf("\n ✘ %s\n", r.StatusMsg))
 	case RuntimeError:
 		return fmt.Sprintf(
 			"\n%s%s%s\n",
-			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			config.ErrorStyle.Render(fmt.Sprintf(" ✘ %s\n", r.StatusMsg)),
 			fmt.Sprintf("Passed cases:   %s", formatCompare(r.CompareResult)),
 			"\n"+config.StdoutStyle.Render(r.FullRuntimeError),
 		)
 	case CompileError:
 		return fmt.Sprintf(
 			"\n%s%s\n",
-			config.ErrorStyle.Render(fmt.Sprintf(" × %s\n", r.StatusMsg)),
+			config.ErrorStyle.Render(fmt.Sprintf(" ✘ %s\n", r.StatusMsg)),
 			"\n"+config.StdoutStyle.Render(r.FullCompileError),
 		)
 	default:
-		return config.FailedStyle.Render(fmt.Sprintf("\n × %s\n", r.StatusMsg))
+		return config.FailedStyle.Render(fmt.Sprintf("\n ✘ %s\n", r.StatusMsg))
 	}
 }
 
@@ -258,4 +258,11 @@ type QuestionTag struct {
 	Slug           string `json:"slug"`
 	TypeName       string `json:"typeName"`
 	TypeTransName  string `json:"typeTransName"`
+}
+
+type StreakCounter struct {
+	Today          string `json:"today"`
+	StreakCount    int    `json:"streakCount"`
+	DaysSkipped    int    `json:"daysSkipped"`
+	TodayCompleted bool   `json:"todayCompleted"`
 }

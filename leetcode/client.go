@@ -40,8 +40,8 @@ func (e UnexpectedStatusCode) IsError() bool {
 
 func (e UnexpectedStatusCode) Error() string {
 	body := "<empty body>"
-	if len(e.Body) > 100 {
-		body = e.Body[:100] + "..."
+	if len(e.Body) > 500 {
+		body = e.Body[:500] + "..."
 	}
 	return fmt.Sprintf("[%d %s] %s", e.Code, http.StatusText(e.Code), body)
 }
@@ -81,6 +81,7 @@ type Client interface {
 	GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error)
 	RegisterContest(slug string) error
 	UnregisterContest(slug string) error
+	GetStreakCounter() (StreakCounter, error)
 }
 
 type cnClient struct {
@@ -162,6 +163,7 @@ func nonFollowRedirect(req *http.Request, via []*http.Request) error {
 }
 
 type graphqlRequest struct {
+	path          string
 	query         string
 	operationName string
 	variables     map[string]any
@@ -178,6 +180,7 @@ const (
 
 const (
 	graphQLPath           = "/graphql"
+	graphQLNoj            = "/graphql/noj-go/"
 	accountLoginPath      = "/accounts/login/"
 	contestInfoPath       = "/contest/api/info/%s/"
 	contestProblemsPath   = "/contest/%s/problems/%s/"
@@ -265,7 +268,11 @@ func (c *cnClient) graphqlGet(req graphqlRequest, result any) (*http.Response, e
 		v, _ := json.Marshal(req.variables)
 		p.Variables = string(v)
 	}
-	r, err := c.http.New().Get(graphQLPath).QueryStruct(p).Request()
+	path := graphQLPath
+	if req.path != "" {
+		path = req.path
+	}
+	r, err := c.http.New().Get(path).QueryStruct(p).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +289,11 @@ func (c *cnClient) graphqlPost(req graphqlRequest, result any) (*http.Response, 
 		"operationName": req.operationName,
 		"variables":     v,
 	}
-	r, err := c.http.New().Post(graphQLPath).BodyJSON(body).Request()
+	path := graphQLPath
+	if req.path != "" {
+		path = req.path
+	}
+	r, err := c.http.New().Post(path).BodyJSON(body).Request()
 	if err != nil {
 		return nil, err
 	}
@@ -1011,4 +1022,26 @@ func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {
 		)
 	}
 	return tags, nil
+}
+
+func (c *cnClient) GetStreakCounter() (StreakCounter, error) {
+	query := `
+query getStreakCounter {
+  problemsetStreakCounter {
+    today
+    streakCount
+    daysSkipped
+    todayCompleted
+  }
+}`
+	var resp gjson.Result
+	_, err := c.graphqlPost(
+		graphqlRequest{path: graphQLNoj, query: query, authType: requireAuth}, &resp,
+	)
+	if err != nil {
+		return StreakCounter{}, err
+	}
+	var counter StreakCounter
+	err = json.Unmarshal(utils.StringToBytes(resp.Get("data.problemsetStreakCounter").Raw), &counter)
+	return counter, err
 }
