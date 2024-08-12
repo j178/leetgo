@@ -156,12 +156,10 @@ func showTodayStreak(c leetcode.Client, cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	total := streak.StreakCount
 	today := ""
 	if streak.TodayCompleted {
-		total--
 		today = config.PassedStyle.Render("+1")
 	}
-	cmd.Printf("\nTotal streak:  %d%s\n", total, today)
+	cmd.Printf("\nTotal streak:  %d%s\n", streak.StreakCount, today)
 	return nil
 }
