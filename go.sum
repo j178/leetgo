@@ -138,6 +138,8 @@ github.com/ivanpirog/coloredcobra v1.0.1 h1:aURSdEmlR90/tSiWS0dMjdwOvCVUeYLfltLf
 github.com/ivanpirog/coloredcobra v1.0.1/go.mod h1:iho4nEKcnwZFiniGSdcgdvRgZNjxm+h20acv8vqmN6Q=
 github.com/j178/kooky v0.0.0-20240103045155-c09911743d37 h1:Ppl6xtCWADzuu50NAqm/Z4XT5GNNTcyMnJ+cmvrGvNY=
 github.com/j178/kooky v0.0.0-20240103045155-c09911743d37/go.mod h1:T3AtuzRZcxAUYdHBbmpGP8kJYDovEBpNp3sqsGjxRmU=
+github.com/j178/kooky v0.0.0-20241030033854-742377410b80 h1:rsHxk+2x+hYBzxpPn/KKPSUXsF6B3M5xTmyao011xRY=
+github.com/j178/kooky v0.0.0-20241030033854-742377410b80/go.mod h1:T3AtuzRZcxAUYdHBbmpGP8kJYDovEBpNp3sqsGjxRmU=
 github.com/j178/leetgo/testutils/go v0.2.1 h1:b6vWZmSZiXRqlAsnlq9WJC85hNN4bzGrnavy1mb6shE=
 github.com/j178/leetgo/testutils/go v0.2.1/go.mod h1:m4VquSOufm2jcOyXW7P52fWa8adQim5XoQSEAJX2hw8=
 github.com/jedib0t/go-pretty/v6 v6.5.9 h1:ACteMBRrrmm1gMsXe9PSTOClQ63IXDUt03H5U+UV8OU=
