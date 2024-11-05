@@ -54,7 +54,7 @@ func NewCookiesAuth(session, csrftoken, cfClearance string) CredentialsProvider 
 }
 
 func (c *cookiesAuth) AddCredentials(req *http.Request) error {
-	if c.LeetCodeSession == "" || c.CsrfToken == "" {
+	if !c.hasAuth() {
 		return errors.New("cookies not found")
 	}
 	req.AddCookie(&http.Cookie{Name: "LEETCODE_SESSION", Value: c.LeetCodeSession})
