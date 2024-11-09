@@ -459,10 +459,17 @@ func (l baseLang) generateTestCasesContent(q *leetcode.QuestionData) string {
 	// Assume all questions output are single.
 	var tc TestCases
 	for i := 0; i < len(cases) && i/argsNum < len(outputs); i += argsNum {
+		input := cases[i : i+argsNum]
+		output := outputs[i/argsNum]
+
+		if err := checkOutput(q, input, output); err != nil {
+			log.Debug("ignore invalid testcase output", "output", output)
+			output = ""
+		}
 		tc.AddCase(
 			TestCase{
-				Input:  cases[i : i+argsNum],
-				Output: outputs[i/argsNum],
+				Input:  input,
+				Output: output,
 			},
 		)
 	}
