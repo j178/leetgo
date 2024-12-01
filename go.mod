@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.23.1
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.2.1
+	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
@@ -27,13 +27,13 @@ require (
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/j178/kooky v0.0.0-20241030033854-742377410b80
 	github.com/j178/leetgo/testutils/go v0.2.1
-	github.com/jedib0t/go-pretty/v6 v6.6.1
+	github.com/jedib0t/go-pretty/v6 v6.6.3
 	github.com/joho/godotenv v1.5.1
 	github.com/k3a/html2text v1.2.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/pelletier/go-toml/v2 v2.2.3
-	github.com/sashabaranov/go-openai v1.35.6
+	github.com/sashabaranov/go-openai v1.36.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/tidwall/gjson v1.18.0
