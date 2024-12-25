@@ -162,9 +162,17 @@ func runTestRemotely(
 	*leetcode.RunCheckResult,
 	error,
 ) {
+	modifiers, err := getPostModifiers(gen)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get post modifiers: %w", err)
+	}
+
 	solution, err := lang.GetSolutionCode(q)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
+	}
+	for _, m := range modifiers {
+		solution = m(solution)
 	}
 	err = q.Fulfill()
 	if err != nil {
