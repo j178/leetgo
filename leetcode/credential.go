@@ -20,6 +20,7 @@ import (
 )
 
 type CredentialsProvider interface {
+	Source() string
 	AddCredentials(req *http.Request) error
 }
 
@@ -37,6 +38,10 @@ func NonAuth() CredentialsProvider {
 	return &nonAuth{}
 }
 
+func (n *nonAuth) Source() string {
+	return "none"
+}
+
 func (n *nonAuth) AddCredentials(req *http.Request) error {
 	return errors.New("no credentials provided")
 }
@@ -51,6 +56,10 @@ type cookiesAuth struct {
 
 func NewCookiesAuth(session, csrftoken, cfClearance string) CredentialsProvider {
 	return &cookiesAuth{LeetCodeSession: session, CsrfToken: csrftoken, CfClearance: cfClearance}
+}
+
+func (c *cookiesAuth) Source() string {
+	return "cookies"
 }
 
 func (c *cookiesAuth) AddCredentials(req *http.Request) error {
@@ -81,6 +90,10 @@ type passwordAuth struct {
 
 func NewPasswordAuth(username, passwd string) CredentialsProvider {
 	return &passwordAuth{username: username, password: passwd}
+}
+
+func (p *passwordAuth) Source() string {
+	return "password"
 }
 
 func (p *passwordAuth) SetClient(c Client) {
@@ -133,6 +146,10 @@ type browserAuth struct {
 
 func NewBrowserAuth(browsers []string) CredentialsProvider {
 	return &browserAuth{browsers: browsers}
+}
+
+func (b *browserAuth) Source() string {
+	return "browser"
 }
 
 func (b *browserAuth) SetClient(c Client) {
@@ -207,21 +224,68 @@ func (b *browserAuth) Reset() {
 	b.CsrfToken = ""
 }
 
+type combinedAuth struct {
+	providers []CredentialsProvider
+}
+
+func NewCombinedAuth(providers ...CredentialsProvider) CredentialsProvider {
+	return &combinedAuth{providers: providers}
+}
+
+func (c *combinedAuth) Source() string {
+	return "combined sources"
+}
+
+func (c *combinedAuth) AddCredentials(req *http.Request) error {
+	for _, p := range c.providers {
+		if err := p.AddCredentials(req); err == nil {
+			return nil
+		} else {
+			log.Debug("read credentials from %s failed: %v", p.Source(), err)
+		}
+	}
+	return errors.New("no credentials provided")
+}
+
+func (c *combinedAuth) SetClient(client Client) {
+	for _, p := range c.providers {
+		if r, ok := p.(NeedClient); ok {
+			r.SetClient(client)
+		}
+	}
+}
+
+func (c *combinedAuth) Reset() {
+	for _, p := range c.providers {
+		if r, ok := p.(ResettableProvider); ok {
+			r.Reset()
+		}
+	}
+}
+
 func ReadCredentials() CredentialsProvider {
 	cfg := config.Get()
-	switch cfg.LeetCode.Credentials.From {
-	case "browser":
-		return NewBrowserAuth(cfg.LeetCode.Credentials.Browsers)
-	case "password":
-		username := os.Getenv("LEETCODE_USERNAME")
-		password := os.Getenv("LEETCODE_PASSWORD")
-		return NewPasswordAuth(username, password)
-	case "cookies":
-		session := os.Getenv("LEETCODE_SESSION")
-		csrfToken := os.Getenv("LEETCODE_CSRFTOKEN")
-		cfClearance := os.Getenv("LEETCODE_CFCLEARANCE")
-		return NewCookiesAuth(session, csrfToken, cfClearance)
-	default:
+	var providers []CredentialsProvider
+	for _, from := range cfg.LeetCode.Credentials.From {
+		switch from {
+		case "browser":
+			providers = append(providers, NewBrowserAuth(cfg.LeetCode.Credentials.Browsers))
+		case "password":
+			username := os.Getenv("LEETCODE_USERNAME")
+			password := os.Getenv("LEETCODE_PASSWORD")
+			providers = append(providers, NewPasswordAuth(username, password))
+		case "cookies":
+			session := os.Getenv("LEETCODE_SESSION")
+			csrfToken := os.Getenv("LEETCODE_CSRFTOKEN")
+			cfClearance := os.Getenv("LEETCODE_CFCLEARANCE")
+			providers = append(providers, NewCookiesAuth(session, csrfToken, cfClearance))
+		}
+	}
+	if len(providers) == 0 {
 		return NonAuth()
 	}
+	if len(providers) == 1 {
+		return providers[0]
+	}
+	return NewCombinedAuth(providers...)
 }

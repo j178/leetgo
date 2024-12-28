@@ -111,8 +111,25 @@ type RustConfig struct {
 }
 
 type Credentials struct {
-	From     string   `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none."`
+	From     []string `yaml:"from" mapstructure:"from" comment:"How to provide credentials: browser, cookies, password or none."`
 	Browsers []string `yaml:"browsers" mapstructure:"browsers" comment:"Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried. Only used when 'from' is 'browser'."`
+}
+
+func (c *Credentials) UnmarshalYAML(node *yaml.Node) error {
+	// Compatibility with old `from` field, which is a string.
+	var from string
+	if err := node.Decode(&from); err == nil {
+		c.From = []string{from}
+		return nil
+	}
+
+	type credentials Credentials
+	var cred credentials
+	if err := node.Decode(&cred); err != nil {
+		return err
+	}
+	*c = Credentials(cred)
+	return nil
 }
 
 type LeetCodeConfig struct {
@@ -230,7 +247,7 @@ func defaultConfig() *Config {
 		LeetCode: LeetCodeConfig{
 			Site: LeetCodeCN,
 			Credentials: Credentials{
-				From: "browser",
+				From: []string{"browser"},
 			},
 		},
 		Editor: Editor{
@@ -276,11 +293,13 @@ func verify(c *Config) error {
 		return fmt.Errorf("invalid `leetcode.site` value: %s", c.LeetCode.Site)
 	}
 
-	if !credentialFrom[c.LeetCode.Credentials.From] {
-		return fmt.Errorf("invalid `leetcode.credentials.from` value: %s", c.LeetCode.Credentials.From)
-	}
-	if c.LeetCode.Credentials.From == "password" && c.LeetCode.Site == LeetCodeUS {
-		return errors.New("username/password authentication is not supported for leetcode.com")
+	for _, from := range c.LeetCode.Credentials.From {
+		if !credentialFrom[from] {
+			return fmt.Errorf("invalid `leetcode.credentials.from` value: %s", from)
+		}
+		if from == "password" && c.LeetCode.Site == LeetCodeUS {
+			return errors.New("username/password authentication is not supported for leetcode.com")
+		}
 	}
 
 	if c.Editor.Args != "" {

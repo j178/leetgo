@@ -258,7 +258,8 @@ leetcode:
   # Credentials to access LeetCode.
   credentials:
     # How to provide credentials: browser, cookies, password or none.
-    from: browser
+    from:
+      - browser
     # Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried. Only used when 'from' is 'browser'.
     browsers: []
 contest:
@@ -321,6 +322,11 @@ There are three ways to make cookies available to `leetgo`:
     credentials:
       from: password
   ```
+
+> [!TIP]
+> You can specify which browser to read cookies from, e.g. `browsers: [chrome]`.
+> You can specify multiple authentication methods, `leetgo` will try them in order, e.g. `from: [browser, cookies]`.
+> You can put all the environment variables in a `.env` file in the project's root directory, `leetgo` will automatically read them.
 
 > [!NOTE]
 > Password authentication is not recommended, and it is not supported by `leetcode.com`.
