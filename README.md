@@ -300,6 +300,10 @@ There are three ways to make cookies available to `leetgo`:
       from: browser
   ```
 
+  > [!IMPORTANT]  
+  On Windows, Chrome/Edge v127 enabled [App-Bound Encryption](https://security.googleblog.com/2024/07/improving-security-of-chrome-cookies-on.html) and `leetgo` can no longer decrypt cookies from Chrome/Edge.
+  You would need to provide cookies manually or use other browsers.
+
 - Provide cookies.
 
   You can get your cookies named `LEETCODE_SESSION` and `csrftoken` from browser's developer tools, and set the `LEETCODE_SESSION` and `LEETCODE_CSRFTOKEN` environment variables.  If you are using `leetcode.com`, `LEETCODE_CFCLEARANCE` should also be set to the value of the `cf_clearance` cookie.
