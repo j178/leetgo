@@ -320,9 +320,9 @@ editor:
   ```
 
 > [!TIP]
-> 你可以指定读取哪个浏览器的 Cookie，比如 `browsers: [chrome]`。
-> 你可以指定多种方式，`leetgo` 会按照顺序尝试，比如 `from: [browser, cookies]`。
-> 你可以将 `LEETCODE_XXX` 等环境变量放到项目根目录的 `.env` 文件中，`leetgo` 会自动读取这个文件。
+> 你可以指定读取哪个浏览器的 Cookie，比如 `browsers: [chrome]`。  
+> 你可以指定多种方式，`leetgo` 会按照顺序尝试，比如 `from: [browser, cookies]`。  
+> 你可以将 `LEETCODE_XXX` 等环境变量放到项目根目录的 `.env` 文件中，`leetgo` 会自动读取这个文件。  
 
 > [!NOTE]
 > 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.

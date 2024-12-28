@@ -324,9 +324,9 @@ There are three ways to make cookies available to `leetgo`:
   ```
 
 > [!TIP]
-> You can specify which browser to read cookies from, e.g. `browsers: [chrome]`.
-> You can specify multiple authentication methods, `leetgo` will try them in order, e.g. `from: [browser, cookies]`.
-> You can put all the environment variables in a `.env` file in the project's root directory, `leetgo` will automatically read them.
+> You can specify which browser to read cookies from, e.g. `browsers: [chrome]`.  
+> You can specify multiple authentication methods, `leetgo` will try them in order, e.g. `from: [browser, cookies]`.  
+> You can put all the environment variables in a `.env` file in the project's root directory, `leetgo` will automatically read them.  
 
 > [!NOTE]
 > Password authentication is not recommended, and it is not supported by `leetcode.com`.
