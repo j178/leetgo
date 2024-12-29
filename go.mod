@@ -25,7 +25,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
-	github.com/j178/kooky v0.0.0-20241228133120-b7d55e55a536
+	github.com/j178/kooky v0.0.0-20241229062455-9bf54ed73002
 	github.com/j178/leetgo/testutils/go v0.2.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	github.com/joho/godotenv v1.5.1
