@@ -9,7 +9,7 @@ require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/briandowns/spinner v1.23.1
+	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/glamour v0.8.0
@@ -19,7 +19,7 @@ require (
 	github.com/dghubble/sling v1.4.2
 	github.com/dop251/goja v0.0.0-20241024094426-79f3a7efcdbd
 	github.com/fatih/color v1.18.0
-	github.com/goccy/go-json v0.10.4
+	github.com/goccy/go-json v0.10.5
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
