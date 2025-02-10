@@ -2,7 +2,7 @@ module github.com/j178/leetgo
 
 go 1.23
 
-toolchain go1.23.2
+toolchain go1.23.6
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
