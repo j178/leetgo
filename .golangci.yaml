@@ -1,11 +1,11 @@
-run:
-  skip-dirs:
-    - out
-
 linters:
   enable:
     - gofumpt
     - gci
+
+issues:
+  exclude-dirs:
+    - out
 
 # https://golangci-lint.run/usage/linters#linters-configuration
 linters-settings:
