@@ -1,8 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "schedule:monthly",
   ],
   "prHourlyLimit": 10,
-  "schedule": ["before 4am on Monday"]
 }
