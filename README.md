@@ -7,7 +7,7 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/j178/leetgo/total)](https://github.com/j178/leetgo/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
-<img align="right" height=150 src="https://github.com/j178/leetgo/assets/10510431/4dbe3a58-6c64-4b54-a695-78c7d8c8de39" />
+<img align="right" height=150 src="https://github.com/user-attachments/assets/5942dc93-31b5-4d93-ba55-4c0b20550981" />
 
 `leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode,
 allowing you to do all of your LeetCode exercises without leaving the terminal.
