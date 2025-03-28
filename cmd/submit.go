@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/log"
+	"github.com/dop251/goja"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/lang"
@@ -86,9 +88,17 @@ func submitSolution(
 	*leetcode.SubmitCheckResult,
 	error,
 ) {
+	modifiers, err := getPostModifiers(gen)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get post modifiers: %w", err)
+	}
+
 	solution, err := lang.GetSolutionCode(q)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get solution code: %w", err)
+	}
+	for _, m := range modifiers {
+		solution = m(solution)
 	}
 
 	spin := newSpinner(cmd.ErrOrStderr())
@@ -114,6 +124,49 @@ func submitSolution(
 		return nil, fmt.Errorf("failed to wait submit result: %w", err)
 	}
 	return testResult.(*leetcode.SubmitCheckResult), nil
+}
+
+func getPostModifiers(lang lang.Lang) ([]func(string) string, error) {
+	modifiers := viper.Get("code." + lang.Slug() + ".post-modifiers")
+	if modifiers == nil || len(modifiers.([]any)) == 0 {
+		modifiers = viper.Get("code." + lang.ShortName() + ".post-modifiers")
+	}
+	if modifiers == nil || len(modifiers.([]any)) == 0 {
+		modifiers = viper.Get("code.post-modifiers")
+	}
+	if modifiers == nil {
+		return nil, nil
+	}
+
+	var funcs []func(string) string
+	for _, m := range modifiers.([]any) {
+		m := m.(map[string]any)
+		name, script := "", ""
+
+		if m["script"] != nil {
+			script = m["script"].(string)
+			vm := goja.New()
+			_, err := vm.RunString(script)
+			if err != nil {
+				return nil, fmt.Errorf("failed to run script: %w", err)
+			}
+			var jsFn func(string) string
+			if vm.Get("modify") == nil {
+				return nil, fmt.Errorf("failed to get modify function")
+			}
+			err = vm.ExportTo(vm.Get("modify"), &jsFn)
+			if err != nil {
+				return nil, fmt.Errorf("failed to export function: %w", err)
+			}
+			f := func(s string) string {
+				return jsFn(s)
+			}
+			funcs = append(funcs, f)
+			continue
+		}
+		log.Warn("invalid modifier, ignored", "name", name, "script", script)
+	}
+	return funcs, nil
 }
 
 func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckResult) (bool, error) {
