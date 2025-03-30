@@ -138,7 +138,7 @@ leetgo pick two-sum`,
 		}
 
 		if result.PostPickError != "" {
-			log.Error("Post-pick action error: %s\n", result.PostPickError)
+			log.Error("error", "post_pick_action", result.PostPickError)
 		}
 		if !skipEditor {
 			err = editor.Open(result)

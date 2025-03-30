@@ -136,7 +136,7 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 					if err := cmd.Run(); err != nil {
-						result.PostPickError = fmt.Sprintf("post-pick action failed: %v", err)
+						result.PostPickError = fmt.Sprintf("%v", err)
 					}
 				}
 			}
