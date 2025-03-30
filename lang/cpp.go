@@ -2,6 +2,8 @@ package lang
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -382,6 +384,20 @@ func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 			return nil, err
 		}
 		genResult.AddFile(docFile)
+	}
+	// Run post-pick action directly.
+	postAction := getCodeStringConfig(c, "post_pick_action")
+	print(postAction)
+	if postAction != "" {
+		parts := strings.Fields(postAction)
+		if len(parts) > 0 {
+			cmd := exec.Command(parts[0], parts[1:]...)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				return nil, fmt.Errorf("post-pick action failed: %w", err)
+			}
+		}
 	}
 
 	return genResult, nil

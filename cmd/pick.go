@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/editor"
@@ -105,7 +106,6 @@ leetgo pick two-sum`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := leetcode.NewClient(leetcode.ReadCredentials())
 		var q *leetcode.QuestionData
-
 		if len(args) > 0 {
 			qid := args[0]
 			qs, err := leetcode.ParseQID(qid, c)
@@ -135,6 +135,10 @@ leetgo pick two-sum`,
 		result, err := lang.Generate(q)
 		if err != nil {
 			return err
+		}
+
+		if result.PostPickError != "" {
+			log.Error("Post-pick action error: %s\n", result.PostPickError)
 		}
 		if !skipEditor {
 			err = editor.Open(result)
