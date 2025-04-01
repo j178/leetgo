@@ -87,10 +87,11 @@ func createConfigFile(dir string) error {
 	cfg := config.Get()
 	site := cfg.LeetCode.Site
 	language := cfg.Language
-	if initTemplate == "us" {
+	switch initTemplate {
+	case "us":
 		site = config.LeetCodeUS
 		language = config.EN
-	} else if initTemplate == "cn" {
+	case "cn":
 		site = config.LeetCodeCN
 		language = config.ZH
 	}

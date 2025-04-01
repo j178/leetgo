@@ -1,17 +1,32 @@
+version: "2"
 linters:
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - out
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
   enable:
-    - gofumpt
     - gci
-
-issues:
-  exclude-dirs:
-    - out
-
-# https://golangci-lint.run/usage/linters#linters-configuration
-linters-settings:
-  gci:
-    custom-order: true
-    sections:
-      - standard
-      - default
-      - prefix(github.com/j178/leetgo)
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/j178/leetgo)
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - out
+      - third_party$
+      - builtin$
+      - examples$
