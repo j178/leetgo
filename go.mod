@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.3
 	github.com/charmbracelet/glamour v0.9.1
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/charmbracelet/log v0.4.0
+	github.com/charmbracelet/log v0.4.1
 	github.com/cli/browser v1.3.0
 	github.com/dghubble/sling v1.4.2
 	github.com/dop251/goja v0.0.0-20250309171923-bcd7cc6bf64c
