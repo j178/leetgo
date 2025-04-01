@@ -11,10 +11,9 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/jedib0t/go-pretty/v6/list"
 
-	goutils "github.com/j178/leetgo/testutils/go"
-
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/leetcode"
+	goutils "github.com/j178/leetgo/testutils/go"
 	"github.com/j178/leetgo/utils"
 )
 
