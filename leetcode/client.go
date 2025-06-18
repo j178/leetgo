@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/avast/retry-go"
 	"github.com/charmbracelet/log"
 	"github.com/dghubble/sling"
@@ -78,7 +77,6 @@ type Client interface {
 	CheckResult(interpretId string) (CheckResult, error)
 	GetUpcomingContests() ([]*Contest, error)
 	GetContest(contestSlug string) (*Contest, error)
-	GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error)
 	RegisterContest(slug string) error
 	UnregisterContest(slug string) error
 	GetStreakCounter() (StreakCounter, error)
@@ -668,132 +666,6 @@ func (c *cnClient) GetContest(contestSlug string) (*Contest, error) {
 		ct.Questions[i].client = c
 	}
 	return ct, nil
-}
-
-func (c *cnClient) GetContestQuestionData(contestSlug string, questionSlug string) (*QuestionData, error) {
-	path := fmt.Sprintf(contestProblemsPath, contestSlug, questionSlug)
-	var html []byte
-	req, _ := c.http.New().Get(path).Request()
-	_, err := c.send(req, requireAuth, &html)
-	if err != nil {
-		var e UnexpectedStatusCode
-		if errors.As(err, &e) && e.Code == 302 {
-			return nil, ErrPaidOnlyQuestion
-		}
-		return nil, err
-	}
-	if len(html) == 0 {
-		return nil, errors.New("get contest question data: empty response")
-	}
-	q, err := parseContestHtml(html, questionSlug, config.LeetCodeCN)
-	if err != nil {
-		return nil, err
-	}
-	q.normalize()
-	q.client = c
-	return q, nil
-}
-
-func parseContestHtml(html []byte, questionSlug string, site config.LeetcodeSite) (*QuestionData, error) {
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(html))
-	if err != nil {
-		return nil, err
-	}
-	difficulty := strings.TrimSpace(doc.Find("span.pull-right.label.round").Text())
-	frontendId := strings.TrimSuffix(doc.Find("div.question-title h3").Get(0).FirstChild.Data, ". ")
-	defaultContent, err := doc.Find("div.question-content.default-content").Html()
-	if err != nil {
-		return nil, err
-	}
-	sourceContent, err := doc.Find("div.question-content.source-content").Html()
-	if err != nil {
-		return nil, err
-	}
-
-	var (
-		questionId         string
-		scriptText         string
-		codeDefinitionText string
-		metaDataText       string
-		title              string
-		sourceTitle        string
-		exampleTestcases   string
-		sampleTestcase     string
-		categoryTitle      string
-	)
-	for _, node := range doc.Find("script").Nodes {
-		if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
-			scriptText = node.FirstChild.Data
-			break
-		}
-	}
-	if scriptText == "" {
-		return nil, errors.New("question data not found")
-	}
-	scriptLines := strings.Split(scriptText, "\n")
-	for _, line := range scriptLines {
-		switch {
-		case strings.HasPrefix(line, `    questionId: '`):
-			questionId = line[len(`    questionId: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionTitle: '`):
-			title = line[len(`    questionTitle: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionSourceTitle: '`):
-			sourceTitle = line[len(`    questionSourceTitle: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionExampleTestcases: '`):
-			exampleTestcases = line[len(`    questionExampleTestcases: '`) : len(line)-2]
-			exampleTestcases = utils.DecodeRawUnicodeEscape(exampleTestcases)
-		case strings.HasPrefix(line, `    sampleTestCase: '`):
-			sampleTestcase = line[len(`    sampleTestCase: '`) : len(line)-2]
-			sampleTestcase = utils.DecodeRawUnicodeEscape(sampleTestcase)
-		case strings.HasPrefix(line, `    codeDefinition: `):
-			codeDefinitionText = line[len(`    codeDefinition: `):len(line)-len(",],")] + "]"
-			codeDefinitionText = strings.ReplaceAll(codeDefinitionText, "'", `"`)
-		case strings.HasPrefix(line, `    metaData: `):
-			metaDataText = line[len(`    metaData: JSON.parse('`) : len(line)-len(`' || '{}'),`)]
-			metaDataText = utils.DecodeRawUnicodeEscape(metaDataText)
-		case strings.HasPrefix(line, `    categoryTitle: '`):
-			categoryTitle = line[len(`    categoryTitle: '`) : len(line)-2]
-		}
-	}
-
-	if site == config.LeetCodeUS {
-		sourceContent = defaultContent
-		defaultContent = ""
-		sourceTitle = title
-		title = ""
-	}
-	q := &QuestionData{
-		QuestionId:         questionId,
-		QuestionFrontendId: frontendId,
-		TitleSlug:          questionSlug,
-		Difficulty:         difficulty,
-		Content:            sourceContent,
-		TranslatedContent:  defaultContent,
-		Title:              sourceTitle,
-		TranslatedTitle:    title,
-		ExampleTestcases:   exampleTestcases,
-		SampleTestCase:     sampleTestcase,
-		CategoryTitle:      CategoryTitle(categoryTitle),
-	}
-	err = json.Unmarshal([]byte(metaDataText), &q.MetaData)
-	if err != nil {
-		return nil, err
-	}
-	var codeDefs []map[string]string
-	err = json.Unmarshal([]byte(codeDefinitionText), &codeDefs)
-	if err != nil {
-		return nil, err
-	}
-	for _, codeDef := range codeDefs {
-		q.CodeSnippets = append(
-			q.CodeSnippets, CodeSnippet{
-				LangSlug: codeDef["value"],
-				Lang:     codeDef["text"],
-				Code:     codeDef["defaultCode"],
-			},
-		)
-	}
-	return q, nil
 }
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
