@@ -356,7 +356,12 @@ func (q *QuestionData) Fulfill() (err error) {
 	}
 
 	contest := q.contest
-	nq, err := q.client.GetQuestionData(q.TitleSlug)
+	var nq *QuestionData
+	if q.IsContest() {
+		nq, err = q.client.GetContestQuestionData(q.contest.TitleSlug, q.TitleSlug)
+	} else {
+		nq, err = q.client.GetQuestionData(q.TitleSlug)
+	}
 	if err != nil {
 		return
 	}
