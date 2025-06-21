@@ -699,101 +699,35 @@ func parseContestHtml(html []byte, questionSlug string, site config.LeetcodeSite
 	if err != nil {
 		return nil, err
 	}
-	difficulty := strings.TrimSpace(doc.Find("span.pull-right.label.round").Text())
-	frontendId := strings.TrimSuffix(doc.Find("div.question-title h3").Get(0).FirstChild.Data, ". ")
-	defaultContent, err := doc.Find("div.question-content.default-content").Html()
-	if err != nil {
-		return nil, err
+
+	script := doc.Find("script#__NEXT_DATA__")
+	if script.Length() == 0 {
+		return nil, errors.New("get contest question data: empty script")
 	}
-	sourceContent, err := doc.Find("div.question-content.source-content").Html()
-	if err != nil {
-		return nil, err
+	jsonText := script.Text()
+	result := gjson.Get(jsonText, "props.pageProps.dehydratedState.queries.#.state.data.contestQuestion.question")
+	if !result.Exists() {
+		return nil, errors.New("contest question data not found in __NEXT_DATA__")
 	}
 
-	var (
-		questionId         string
-		scriptText         string
-		codeDefinitionText string
-		metaDataText       string
-		title              string
-		sourceTitle        string
-		exampleTestcases   string
-		sampleTestcase     string
-		categoryTitle      string
-	)
-	for _, node := range doc.Find("script").Nodes {
-		if node.FirstChild != nil && strings.Contains(node.FirstChild.Data, "var pageData") {
-			scriptText = node.FirstChild.Data
+	var questionRaw []byte
+	for _, q := range result.Array() {
+		if q.Exists() && len(q.Map()) > 0 {
+			questionRaw = []byte(q.Raw)
 			break
 		}
 	}
-	if scriptText == "" {
-		return nil, errors.New("question data not found")
-	}
-	scriptLines := strings.Split(scriptText, "\n")
-	for _, line := range scriptLines {
-		switch {
-		case strings.HasPrefix(line, `    questionId: '`):
-			questionId = line[len(`    questionId: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionTitle: '`):
-			title = line[len(`    questionTitle: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionSourceTitle: '`):
-			sourceTitle = line[len(`    questionSourceTitle: '`) : len(line)-2]
-		case strings.HasPrefix(line, `    questionExampleTestcases: '`):
-			exampleTestcases = line[len(`    questionExampleTestcases: '`) : len(line)-2]
-			exampleTestcases = utils.DecodeRawUnicodeEscape(exampleTestcases)
-		case strings.HasPrefix(line, `    sampleTestCase: '`):
-			sampleTestcase = line[len(`    sampleTestCase: '`) : len(line)-2]
-			sampleTestcase = utils.DecodeRawUnicodeEscape(sampleTestcase)
-		case strings.HasPrefix(line, `    codeDefinition: `):
-			codeDefinitionText = line[len(`    codeDefinition: `):len(line)-len(",],")] + "]"
-			codeDefinitionText = strings.ReplaceAll(codeDefinitionText, "'", `"`)
-		case strings.HasPrefix(line, `    metaData: `):
-			metaDataText = line[len(`    metaData: JSON.parse('`) : len(line)-len(`' || '{}'),`)]
-			metaDataText = utils.DecodeRawUnicodeEscape(metaDataText)
-		case strings.HasPrefix(line, `    categoryTitle: '`):
-			categoryTitle = line[len(`    categoryTitle: '`) : len(line)-2]
-		}
+	if len(questionRaw) == 0 {
+		return nil, errors.New("contest question data not found in __NEXT_DATA__")
 	}
 
-	if site == config.LeetCodeUS {
-		sourceContent = defaultContent
-		defaultContent = ""
-		sourceTitle = title
-		title = ""
-	}
-	q := &QuestionData{
-		QuestionId:         questionId,
-		QuestionFrontendId: frontendId,
-		TitleSlug:          questionSlug,
-		Difficulty:         difficulty,
-		Content:            sourceContent,
-		TranslatedContent:  defaultContent,
-		Title:              sourceTitle,
-		TranslatedTitle:    title,
-		ExampleTestcases:   exampleTestcases,
-		SampleTestCase:     sampleTestcase,
-		CategoryTitle:      CategoryTitle(categoryTitle),
-	}
-	err = json.Unmarshal([]byte(metaDataText), &q.MetaData)
+	var qd QuestionData
+	err = json.Unmarshal(questionRaw, &qd)
 	if err != nil {
 		return nil, err
 	}
-	var codeDefs []map[string]string
-	err = json.Unmarshal([]byte(codeDefinitionText), &codeDefs)
-	if err != nil {
-		return nil, err
-	}
-	for _, codeDef := range codeDefs {
-		q.CodeSnippets = append(
-			q.CodeSnippets, CodeSnippet{
-				LangSlug: codeDef["value"],
-				Lang:     codeDef["text"],
-				Code:     codeDef["defaultCode"],
-			},
-		)
-	}
-	return q, nil
+	qd.TitleSlug = questionSlug
+	return &qd, nil
 }
 
 // 每次 "运行代码" 会产生两个 submission, 一个是运行我们的代码，一个是运行标程。
