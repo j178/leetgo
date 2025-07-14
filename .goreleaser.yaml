@@ -24,7 +24,7 @@ builds:
       - -X github.com/j178/leetgo/constants.BuildDate={{.Date}}
 
 archives:
-  - format: tar.gz
+  - formats: ['tar.gz']
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
@@ -37,7 +37,7 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
     files:
       - LICENSE
       - README*
@@ -63,26 +63,26 @@ changelog:
       - '^docs:'
       - '^test:'
       - '(?i)^Minor'
-brews:
+homebrew_casks:
   - repository:
       owner: j178
       name: homebrew-tap
+    conflicts:
+      - formula: leetgo
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    directory: Formula
     homepage: https://github.com/j178/leetgo
     description: >-
       leetgo is a command line tool for leetcode.com. It can help you to login,
       submit, test, and view your submissions.
     license: MIT
-    install: |-
-      bin.install "leetgo"
-      bash_completion.install "completions/leetgo.bash" => "leetgo"
-      zsh_completion.install "completions/leetgo.zsh" => "_leetgo"
-      fish_completion.install "completions/leetgo.fish"
-    test: |-
-      system "#{bin}/leetgo", "-v"
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/leetgo"]
+          end
 
 scoops:
   - repository:
