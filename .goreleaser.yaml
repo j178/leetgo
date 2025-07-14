@@ -77,6 +77,10 @@ homebrew_casks:
       leetgo is a command line tool for leetcode.com. It can help you to login,
       submit, test, and view your submissions.
     license: MIT
+    completions:
+      bash: completions/leetgo.bash
+      zsh: completions/leetgo.zsh
+      fish: completions/leetgo.fish
     hooks:
       post:
         install: |
