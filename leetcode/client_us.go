@@ -361,3 +361,7 @@ func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
 	}
 	return tags, nil
 }
+
+func (c *usClient) GetStreakCounter() (StreakCounter, error) {
+	return StreakCounter{}, errors.ErrUnsupported
+}
