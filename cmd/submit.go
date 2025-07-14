@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -153,6 +154,9 @@ func appendToTestCases(q *leetcode.QuestionData, result *leetcode.SubmitCheckRes
 
 func showTodayStreak(c leetcode.Client, cmd *cobra.Command) error {
 	streak, err := c.GetStreakCounter()
+	if errors.Is(err, errors.ErrUnsupported) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
