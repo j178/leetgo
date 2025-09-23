@@ -6,7 +6,7 @@
 [![CI](https://github.com/j178/leetgo/actions/workflows/ci.yaml/badge.svg)](https://github.com/j178/leetgo/actions/workflows/ci.yaml)
 [![GitHub downloads](https://img.shields.io/github/downloads/j178/leetgo/total)](https://github.com/j178/leetgo/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
-[![Twitter Follow](https://img.shields.io/twitter/follow/niceoe)](https://twitter.com/niceoe)
+[![Twitter Follow](https://img.shields.io/twitter/follow/j178x)](https://twitter.com/j178x)
 <img align="right" height=150 src="https://github.com/user-attachments/assets/5942dc93-31b5-4d93-ba55-4c0b20550981" />
 
 `leetgo` is a command-line tool for LeetCode that provides almost all the functionality of LeetCode,

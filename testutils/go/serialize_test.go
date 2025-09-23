@@ -8,7 +8,6 @@ import (
 )
 
 func TestInfiniteLoopDetect(t *testing.T) {
-
 	linkedList := &ListNode{Val: 1}
 	linkedList.Next = &ListNode{Val: 2, Next: linkedList}
 
