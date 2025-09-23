@@ -16,7 +16,7 @@ import (
 func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 	tags, err := c.GetQuestionTags()
 	if err != nil {
-		return
+		return filter, err
 	}
 	tagNames := make([]string, 0, len(tags))
 	tagNamesToSlug := make(map[string]string, len(tags))
@@ -80,7 +80,7 @@ func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
 
 	err = survey.Ask(qs, &filter, survey.WithRemoveSelectAll())
 	if err != nil {
-		return
+		return filter, err
 	}
 
 	return filter, nil

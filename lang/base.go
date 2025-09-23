@@ -248,7 +248,7 @@ func getBlocks(lang Lang) (ans []config.Block) {
 		blocks = viper.Get("code.blocks")
 	}
 	if blocks == nil {
-		return
+		return ans
 	}
 	for _, b := range blocks.([]any) {
 		ans = append(
@@ -258,7 +258,7 @@ func getBlocks(lang Lang) (ans []config.Block) {
 			},
 		)
 	}
-	return
+	return ans
 }
 
 func getModifiers(lang Lang, modifiersMap map[string]ModifierFunc) ([]ModifierFunc, error) {

@@ -233,7 +233,7 @@ func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
 			)
 		}
 	}
-	return
+	return callCode
 }
 
 func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
@@ -241,7 +241,7 @@ func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
 		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
 	}
 	printCode += fmt.Sprintf("\tcout << \"\\n%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
-	return
+	return printCode
 }
 
 func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {

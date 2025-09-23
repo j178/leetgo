@@ -352,7 +352,7 @@ func (q *QuestionData) Contest() *Contest {
 
 func (q *QuestionData) Fulfill() (err error) {
 	if atomic.LoadInt32(&q.partial) == 0 {
-		return
+		return err
 	}
 
 	contest := q.contest
@@ -363,7 +363,7 @@ func (q *QuestionData) Fulfill() (err error) {
 		nq, err = q.client.GetQuestionData(q.TitleSlug)
 	}
 	if err != nil {
-		return
+		return err
 	}
 	*q = *nq
 	q.contest = contest

@@ -108,7 +108,7 @@ type reader struct {
 func (r *reader) Read(p []byte) (n int, err error) {
 	n, err = r.Reader.Read(p)
 	r.tracker.Increment(int64(n))
-	return
+	return n, err
 }
 
 // Close the reader when it implements io.Closer
@@ -117,7 +117,7 @@ func (r *reader) Close() (err error) {
 	if closer, ok := r.Reader.(io.Closer); ok {
 		return closer.Close()
 	}
-	return
+	return err
 }
 
 type progressDecoder struct {
