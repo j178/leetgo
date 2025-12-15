@@ -15,7 +15,7 @@ require (
 	github.com/charmbracelet/log v0.4.2
 	github.com/cli/browser v1.3.0
 	github.com/dghubble/sling v1.4.2
-	github.com/dop251/goja v0.0.0-20250630131328-58d95d85e994
+	github.com/dop251/goja v0.0.0-20251201205617-2bb4c724c0f9
 	github.com/fatih/color v1.18.0
 	github.com/goccy/go-json v0.10.5
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
