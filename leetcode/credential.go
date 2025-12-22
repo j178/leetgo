@@ -1,20 +1,23 @@
 package leetcode
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/j178/kooky"
-	_ "github.com/j178/kooky/browser/chrome"
-	_ "github.com/j178/kooky/browser/edge"
-	_ "github.com/j178/kooky/browser/firefox"
-	_ "github.com/j178/kooky/browser/safari"
+	"github.com/browserutils/kooky"
+	_ "github.com/browserutils/kooky/browser/brave"
+	_ "github.com/browserutils/kooky/browser/chrome"
+	_ "github.com/browserutils/kooky/browser/edge"
+	_ "github.com/browserutils/kooky/browser/firefox"
+	_ "github.com/browserutils/kooky/browser/safari"
 
 	"github.com/j178/leetgo/config"
 )
@@ -169,7 +172,8 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			log.Debug("finished reading cookies", "elapsed", time.Since(start))
 		}(time.Now())
 
-		cookieStores := kooky.FindCookieStores(b.browsers...)
+		ctx := context.Background()
+		cookieStores := kooky.FindAllCookieStores(ctx)
 		filters := []kooky.Filter{
 			kooky.DomainHasSuffix(domain),
 			kooky.FilterFunc(
@@ -182,13 +186,19 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		}
 
 		for _, store := range cookieStores {
-			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
-			cookies, err := store.ReadCookies(filters...)
-			if err != nil {
-				errs = append(errs, err)
+			// Filter by browser if specified
+			if len(b.browsers) > 0 && !slices.Contains(b.browsers, store.Browser()) {
 				continue
 			}
-			for _, cookie := range cookies {
+			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
+			for cookie, err := range store.TraverseCookies(filters...) {
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
+				if cookie == nil {
+					continue
+				}
 				if cookie.Name == "LEETCODE_SESSION" {
 					b.LeetCodeSession = cookie.Value
 				}
