@@ -8,7 +8,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.23.2
-	github.com/browserutils/kooky v0.0.0-20250804175718-ba1e2a20167c
+	github.com/j178/kooky v0.0.0-00010101000000-000000000000
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/glamour v0.10.0
@@ -113,5 +113,3 @@ require (
 	modernc.org/sqlite v1.38.0 // indirect
 	www.velocidex.com/golang/go-ese v0.2.0 // indirect
 )
-
-replace github.com/browserutils/kooky => github.com/phantompunk/kooky v0.0.0-20250804175718-ba1e2a20167c

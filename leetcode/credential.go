@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/browserutils/kooky"
-	_ "github.com/browserutils/kooky/browser/brave"
-	_ "github.com/browserutils/kooky/browser/chrome"
-	_ "github.com/browserutils/kooky/browser/edge"
-	_ "github.com/browserutils/kooky/browser/firefox"
-	_ "github.com/browserutils/kooky/browser/safari"
+	"github.com/j178/kooky"
+	_ "github.com/j178/kooky/browser/brave"
+	_ "github.com/j178/kooky/browser/chrome"
+	_ "github.com/j178/kooky/browser/edge"
+	_ "github.com/j178/kooky/browser/firefox"
+	_ "github.com/j178/kooky/browser/safari"
 
 	"github.com/j178/leetgo/config"
 )
