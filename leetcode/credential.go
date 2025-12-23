@@ -1,13 +1,11 @@
 package leetcode
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
-	"slices"
 	"sync"
 	"time"
 
@@ -172,8 +170,7 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 			log.Debug("finished reading cookies", "elapsed", time.Since(start))
 		}(time.Now())
 
-		ctx := context.Background()
-		cookieStores := kooky.FindAllCookieStores(ctx)
+		cookieStores := kooky.FindCookieStores(b.browsers...)
 		filters := []kooky.Filter{
 			kooky.DomainHasSuffix(domain),
 			kooky.FilterFunc(
@@ -186,19 +183,13 @@ func (b *browserAuth) AddCredentials(req *http.Request) error {
 		}
 
 		for _, store := range cookieStores {
-			// Filter by browser if specified
-			if len(b.browsers) > 0 && !slices.Contains(b.browsers, store.Browser()) {
+			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
+			cookies, err := store.ReadCookies(filters...)
+			if err != nil {
+				errs = append(errs, err)
 				continue
 			}
-			log.Debug("reading cookies", "browser", store.Browser(), "file", store.FilePath())
-			for cookie, err := range store.TraverseCookies(filters...) {
-				if err != nil {
-					errs = append(errs, err)
-					continue
-				}
-				if cookie == nil {
-					continue
-				}
+			for _, cookie := range cookies {
 				if cookie.Name == "LEETCODE_SESSION" {
 					b.LeetCodeSession = cookie.Value
 				}
