@@ -23,7 +23,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/ivanpirog/coloredcobra v1.0.1
-	github.com/j178/kooky v0.0.0-20241229062455-9bf54ed73002
+	github.com/j178/kooky v0.0.0-20251223152209-7ad4f89aab97
 	github.com/j178/leetgo/testutils/go v0.2.1
 	github.com/jedib0t/go-pretty/v6 v6.7.7
 	github.com/joho/godotenv v1.5.1
@@ -40,12 +40,13 @@ require (
 )
 
 require (
+	github.com/Velocidex/ordereddict v0.0.0-20250626035939-2f7f022fc719 // indirect
 	github.com/alecthomas/chroma/v2 v2.19.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bobesa/go-domain-util v0.0.0-20250410211237-17ab3b2f4a95 // indirect
+	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/charmbracelet/colorprofile v0.3.1 // indirect
 	github.com/charmbracelet/x/ansi v0.9.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect

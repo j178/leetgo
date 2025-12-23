@@ -11,6 +11,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/j178/kooky"
+	_ "github.com/j178/kooky/browser/brave"
 	_ "github.com/j178/kooky/browser/chrome"
 	_ "github.com/j178/kooky/browser/edge"
 	_ "github.com/j178/kooky/browser/firefox"
