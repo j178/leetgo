@@ -112,7 +112,7 @@ You can download the latest binary from the [release page](https://github.com/j1
 ### Install via [HomeBrew](https://brew.sh/) on macOS/Linux
 
 ```shell
-brew install --cask j178/tap/leetgo
+brew install leetgo
 ```
 
 ### Install via [Scoop](https://scoop.sh/) on Windows

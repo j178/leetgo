@@ -109,7 +109,7 @@ func main() {
 ### macOS/Linux 使用 [HomeBrew](https://brew.sh/)
 
 ```shell
-brew install --cask j178/tap/leetgo
+brew install leetgo
 ```
 
 ### Windows 使用 [Scoop](https://scoop.sh/)
