@@ -20,6 +20,7 @@ var (
 	runLocally  bool
 	runRemotely bool = true
 	runBoth     bool
+	runOffline  bool
 	autoSubmit  bool
 	targetCase  string
 	forceSubmit bool
@@ -40,6 +41,7 @@ func init() {
 		false,
 		"run test both locally and remotely",
 	)
+	testCmd.Flags().BoolVarP(&runOffline, "offline", "O", false, "run test using only local offline artifacts")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 	testCmd.Flags().BoolVarP(&forceSubmit, "force", "f", false, "force submit even if local test failed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
@@ -56,6 +58,12 @@ leetgo test last
 leetgo test w330/1
 leetgo test w330/`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if runOffline {
+			if runLocally || runBoth || autoSubmit || forceSubmit {
+				return fmt.Errorf("offline mode cannot be combined with --local, --both, --submit, or --force")
+			}
+			return runOfflineQuestion(cmd, args[0])
+		}
 		if runLocally {
 			runRemotely = false
 		}
@@ -150,6 +158,36 @@ leetgo test w330/`,
 		}
 		return nil
 	},
+}
+
+func runOfflineQuestion(cmd *cobra.Command, qid string) error {
+	cfg := config.Get()
+	entry, err := config.ResolveOfflineQuestion(qid, cfg.Code.Lang)
+	if err != nil {
+		return err
+	}
+	if entry.SystemDesign {
+		return fmt.Errorf("offline mode does not support system design questions yet")
+	}
+
+	gen, err := lang.GetGenerator(entry.Lang)
+	if err != nil {
+		return err
+	}
+	tester, ok := gen.(lang.OfflineTestable)
+	if !ok {
+		return fmt.Errorf("language %s does not support offline test", entry.Lang)
+	}
+
+	result := lang.NewOfflineGenerateResult(entry, gen)
+	passed, err := tester.RunOfflineTest(result, targetCase)
+	if err != nil {
+		return err
+	}
+	if !passed {
+		return exitCode(1)
+	}
+	return nil
 }
 
 func runTestRemotely(

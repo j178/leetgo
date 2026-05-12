@@ -196,6 +196,32 @@ func GeneratePathsOnly(q *leetcode.QuestionData) (*GenerateResult, error) {
 	return result, nil
 }
 
+// NewOfflineGenerateResult constructs a GenerateResult from persisted offline metadata.
+func NewOfflineGenerateResult(q config.OfflineQuestion, gen Lang) *GenerateResult {
+	result := &GenerateResult{
+		Question: &leetcode.QuestionData{
+			TitleSlug:          q.Slug,
+			QuestionFrontendId: q.FrontendID,
+		},
+		Lang:   gen,
+		OutDir: q.OutDir,
+		SubDir: q.SubDir,
+	}
+	result.AddFile(
+		FileOutput{
+			Filename: q.CodeFile,
+			Type:     CodeFile | TestFile,
+		},
+	)
+	result.AddFile(
+		FileOutput{
+			Filename: q.TestCasesFile,
+			Type:     TestCasesFile,
+		},
+	)
+	return result
+}
+
 // GetSolutionCode retrieves the solution code from the generated code file.
 func GetSolutionCode(q *leetcode.QuestionData) (string, error) {
 	codeFile, err := GetFileOutput(q, CodeFile)

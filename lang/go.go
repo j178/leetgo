@@ -183,6 +183,24 @@ func (g golang) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase
 	return runTest(q, genResult, []string{execFile}, targetCase)
 }
 
+func (g golang) RunOfflineTest(result *GenerateResult, targetCase string) (bool, error) {
+	testFile := result.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
+	execFile, err := getTempBinFileSlug(result.Question.TitleSlug, g)
+	if err != nil {
+		return false, fmt.Errorf("get temp bin file failed: %w", err)
+	}
+
+	err = buildTest(nil, result, []string{"go", "build", "-o", execFile, testFile})
+	if err != nil {
+		return false, fmt.Errorf("build failed: %w", err)
+	}
+
+	return runOfflineTest(result, []string{execFile}, targetCase)
+}
+
 // toGoType converts LeetCode type name to Go type name.
 func toGoType(typeName string) string {
 	switch typeName {

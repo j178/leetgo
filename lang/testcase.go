@@ -215,6 +215,63 @@ func ParseTestCases(q *leetcode.QuestionData, f *FileOutput) (TestCases, error) 
 	return tc, nil
 }
 
+// ParseOfflineTestCases parses test cases without validating them against question metadata.
+func ParseOfflineTestCases(f *FileOutput) (TestCases, error) {
+	tc := TestCases{}
+
+	content, err := f.GetContent()
+	if err != nil {
+		return tc, err
+	}
+	var (
+		inputLines    []string
+		output        string
+		inputStarted  bool
+		outputStarted bool
+	)
+	lines := utils.SplitLines(content)
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		switch {
+		case line == "":
+			continue
+		case strings.HasPrefix(line, testCaseInputMark):
+			inputStarted = true
+			outputStarted = false
+			if len(inputLines) > 0 {
+				tc.AddCase(
+					TestCase{
+						Input:  slices.Clone(inputLines),
+						Output: output,
+					},
+				)
+				inputLines = inputLines[:0]
+				output = ""
+			}
+		case strings.HasPrefix(line, testCaseOutputMark):
+			outputStarted = true
+			inputStarted = false
+		case inputStarted:
+			inputLines = append(inputLines, line)
+		case outputStarted:
+			if len(output) > 0 {
+				return tc, errors.New("invalid test case: output should be a single line")
+			}
+			output = line
+		}
+	}
+	if len(inputLines) > 0 {
+		tc.AddCase(
+			TestCase{
+				Input:  slices.Clone(inputLines),
+				Output: output,
+			},
+		)
+	}
+
+	return tc, nil
+}
+
 type Range struct {
 	whole  bool
 	max    int

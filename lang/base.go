@@ -117,6 +117,12 @@ type LocalTestable interface {
 	RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error)
 }
 
+// OfflineTestable is an interface for languages that can run offline test using local generated files only.
+type OfflineTestable interface {
+	// RunOfflineTest runs offline test for the generated question files.
+	RunOfflineTest(result *GenerateResult, targetCase string) (bool, error)
+}
+
 func getCodeStringConfig(lang Lang, key string) string {
 	ans := viper.GetString("code." + lang.Slug() + "." + key)
 	if ans != "" {
@@ -151,13 +157,17 @@ func getOutDir(q *leetcode.QuestionData, lang Lang) string {
 	return outDir
 }
 
-func getTempBinFile(q *leetcode.QuestionData, lang Lang) (string, error) {
+func getTempBinFileSlug(titleSlug string, lang Lang) (string, error) {
 	tmpDir := config.Get().TempDir()
 	if err := utils.CreateIfNotExists(tmpDir, true); err != nil {
 		return "", err
 	}
-	filename := fmt.Sprintf("%s-%s.exec", q.TitleSlug, lang.Slug())
+	filename := fmt.Sprintf("%s-%s.exec", titleSlug, lang.Slug())
 	return filepath.Join(tmpDir, filename), nil
+}
+
+func getTempBinFile(q *leetcode.QuestionData, lang Lang) (string, error) {
+	return getTempBinFileSlug(q.TitleSlug, lang)
 }
 
 func separateDescriptionFile(lang Lang) bool {

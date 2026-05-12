@@ -363,6 +363,30 @@ func (c cpp) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase st
 	return runTest(q, genResult, []string{execFile}, targetCase)
 }
 
+func (c cpp) RunOfflineTest(result *GenerateResult, targetCase string) (bool, error) {
+	testFile := result.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
+	execFile, err := getTempBinFileSlug(result.Question.TitleSlug, c)
+	if err != nil {
+		return false, fmt.Errorf("generate temporary binary file path failed: %w", err)
+	}
+
+	cfg := config.Get()
+	compilerFlags, _ := shlex.Split(cfg.Code.Cpp.CXXFLAGS)
+	args := []string{cfg.Code.Cpp.CXX}
+	args = append(args, compilerFlags...)
+	args = append(args, "-I", result.OutDir, "-o", execFile, testFile)
+
+	err = buildTest(nil, result, args)
+	if err != nil {
+		return false, fmt.Errorf("compilation failed: %w", err)
+	}
+
+	return runOfflineTest(result, []string{execFile}, targetCase)
+}
+
 func (c cpp) Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	filenameTmpl := getFilenameTemplate(q, c)
 	baseFilename, err := q.GetFormattedFilename(c.slug, filenameTmpl)

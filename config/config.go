@@ -186,6 +186,10 @@ func (c *Config) StateFile() string {
 	return filepath.Join(c.CacheDir(), constants.StateFilename)
 }
 
+func (c *Config) OfflineStateFile() string {
+	return filepath.Join(c.CacheDir(), constants.OfflineStateFilename)
+}
+
 func (c *Config) DepVersionFile() string {
 	return filepath.Join(c.CacheDir(), constants.DepVersionFilename)
 }

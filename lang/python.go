@@ -113,6 +113,15 @@ func (p python) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase
 	return runTest(q, genResult, cmd, targetCase)
 }
 
+func (p python) RunOfflineTest(result *GenerateResult, targetCase string) (bool, error) {
+	testFile := result.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
+	cmd := []string{path.Join(result.OutDir, ".venv", constants.VenvPython), testFile}
+	return runOfflineTest(result, cmd, targetCase)
+}
+
 func toPythonType(typeName string) string {
 	switch typeName {
 	case "integer":

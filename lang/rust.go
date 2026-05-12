@@ -97,6 +97,21 @@ func (r rust) RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase s
 	return runTest(q, genResult, []string{"cargo", "run", "--quiet", "--bin", q.TitleSlug}, targetCase)
 }
 
+func (r rust) RunOfflineTest(result *GenerateResult, targetCase string) (bool, error) {
+	testFile := result.GetFile(TestFile).GetPath()
+	if !utils.IsExist(testFile) {
+		return false, fmt.Errorf("file %s not found", utils.RelToCwd(testFile))
+	}
+
+	args := []string{"cargo", "build", "--quiet", "--bin", result.Question.TitleSlug}
+	err := buildTest(nil, result, args)
+	if err != nil {
+		return false, fmt.Errorf("build failed: %w", err)
+	}
+
+	return runOfflineTest(result, []string{"cargo", "run", "--quiet", "--bin", result.Question.TitleSlug}, targetCase)
+}
+
 func toRustType(typeName string) string {
 	switch typeName {
 	case "integer":

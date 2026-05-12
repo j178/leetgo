@@ -6,11 +6,14 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 
+	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/editor"
 	"github.com/j178/leetgo/lang"
 	"github.com/j178/leetgo/leetcode"
+	"github.com/j178/leetgo/utils"
 )
 
 func askFilter(c leetcode.Client) (filter leetcode.QuestionFilter, err error) {
@@ -135,6 +138,23 @@ leetgo pick two-sum`,
 		result, err := lang.Generate(q)
 		if err != nil {
 			return err
+		}
+		offline := config.OfflineQuestion{
+			FrontendID:    q.QuestionFrontendId,
+			Slug:          q.TitleSlug,
+			Lang:          result.Lang.Slug(),
+			OutDir:        result.OutDir,
+			SubDir:        result.SubDir,
+			CodeFile:      result.GetFile(lang.CodeFile).Filename,
+			TestCasesFile: result.GetFile(lang.TestCasesFile).Filename,
+			SystemDesign:  q.MetaData.SystemDesign,
+		}
+		codePath := result.GetFile(lang.CodeFile).GetPath()
+		testCasesPath := result.GetFile(lang.TestCasesFile).GetPath()
+		if utils.IsExist(codePath) && utils.IsExist(testCasesPath) {
+			if err := config.SaveOfflineQuestion(offline); err != nil {
+				log.Warn("failed to save offline question", "err", err)
+			}
 		}
 		if !skipEditor {
 			err = editor.Open(result)

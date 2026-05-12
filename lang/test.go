@@ -285,3 +285,122 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 
 	return passed == ran, nil
 }
+
+func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr string) (bool, error) {
+	testcaseFile := genResult.GetFile(TestCasesFile)
+	if testcaseFile == nil {
+		panic("no test cases file generated")
+	}
+	tc, err := ParseOfflineTestCases(testcaseFile)
+	if err != nil {
+		return false, err
+	}
+	if len(tc.Cases) == 0 {
+		return false, fmt.Errorf("no test cases found")
+	}
+	caseRange, err := ParseRange(targetCaseStr, len(tc.Cases))
+	if err != nil {
+		return false, err
+	}
+
+	var ran, passed int
+	for _, c := range tc.Cases {
+		func() {
+			l := list.NewWriter()
+			l.SetStyle(list.StyleBulletCircle)
+			defer func() {
+				fmt.Println(l.Render())
+			}()
+			if !caseRange.Contains(c.No) {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.SkippedStyle.Render("Skipped")))
+				return
+			}
+			if !c.HasOutput() {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.SkippedStyle.Render("Skipped: no output")))
+				return
+			}
+			ran++
+			timeout := 3 * time.Second
+			if ran == 1 {
+				// Give more time for the first run.
+				// On macOS, first time execution of a binary may be slow due to the system's security check.
+				timeout += 3 * time.Second
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			outputBuf := new(strings.Builder)
+			cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+			cmd.Dir = genResult.OutDir
+			cmd.Stdin = strings.NewReader(c.InputString())
+			cmd.Stdout = outputBuf
+			cmd.Stderr = outputBuf
+			err = cmd.Start()
+			if err != nil {
+				l.AppendItem(
+					fmt.Sprintf(
+						"Case %d:    %s",
+						c.No,
+						config.ErrorStyle.Render("Failed to start:", err.Error()),
+					),
+				)
+				return
+			}
+			err = cmd.Wait()
+
+			actualOutput, stdout := extractOutput(outputBuf.String())
+			mayAppendStdout := func() {
+				if stdout != "" {
+					out := config.StdoutStyle.Render(utils.TruncateString(stdout, 1000))
+					l.AppendItem(fmt.Sprintf("Stdout:     %s", out))
+				}
+			}
+			if ctx.Err() != nil {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Time limit exceeded")))
+				l.Indent()
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
+				mayAppendStdout()
+				l.UnIndent()
+				return
+			}
+			if err != nil {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Runtime error")))
+				l.Indent()
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
+				mayAppendStdout()
+				l.UnIndent()
+				return
+			}
+			if strings.TrimSpace(actualOutput) != strings.TrimSpace(c.Output) {
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.FailedStyle.Render("Wrong answer")))
+				l.Indent()
+				l.AppendItem(
+					fmt.Sprintf(
+						"Input:      %s",
+						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+					),
+				)
+				l.AppendItem(fmt.Sprintf("Output:     %s", utils.TruncateString(actualOutput, 100)))
+				l.AppendItem(fmt.Sprintf("Expected:   %s", utils.TruncateString(c.Output, 100)))
+				mayAppendStdout()
+				l.UnIndent()
+				return
+			}
+
+			passed++
+			l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.PassedStyle.Render("Passed")))
+		}()
+	}
+
+	return passed == ran, nil
+}
