@@ -7,6 +7,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
+	"github.com/goccy/go-json"
 	"github.com/spf13/cobra"
 
 	"github.com/j178/leetgo/config"
@@ -139,15 +140,22 @@ leetgo pick two-sum`,
 		if err != nil {
 			return err
 		}
+		metaData, err := json.Marshal(q.MetaData)
+		if err != nil {
+			return err
+		}
 		offline := config.OfflineQuestion{
-			FrontendID:    q.QuestionFrontendId,
-			Slug:          q.TitleSlug,
-			Lang:          result.Lang.Slug(),
-			OutDir:        result.OutDir,
-			SubDir:        result.SubDir,
-			CodeFile:      result.GetFile(lang.CodeFile).Filename,
-			TestCasesFile: result.GetFile(lang.TestCasesFile).Filename,
-			SystemDesign:  q.MetaData.SystemDesign,
+			FrontendID:        q.QuestionFrontendId,
+			Slug:              q.TitleSlug,
+			Lang:              result.Lang.Slug(),
+			OutDir:            result.OutDir,
+			SubDir:            result.SubDir,
+			CodeFile:          result.GetFile(lang.CodeFile).Filename,
+			TestCasesFile:     result.GetFile(lang.TestCasesFile).Filename,
+			SystemDesign:      q.MetaData.SystemDesign,
+			Content:           q.Content,
+			TranslatedContent: q.TranslatedContent,
+			MetaData:          metaData,
 		}
 		codePath := result.GetFile(lang.CodeFile).GetPath()
 		testCasesPath := result.GetFile(lang.TestCasesFile).GetPath()

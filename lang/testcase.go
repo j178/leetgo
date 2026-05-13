@@ -229,6 +229,23 @@ func ParseOfflineTestCases(f *FileOutput) (TestCases, error) {
 		inputStarted  bool
 		outputStarted bool
 	)
+	addCase := func() error {
+		if len(inputLines) == 0 {
+			return nil
+		}
+		if output == "" {
+			return fmt.Errorf("invalid offline test case: missing output for case %d", len(tc.Cases)+1)
+		}
+		tc.AddCase(
+			TestCase{
+				Input:  slices.Clone(inputLines),
+				Output: output,
+			},
+		)
+		inputLines = inputLines[:0]
+		output = ""
+		return nil
+	}
 	lines := utils.SplitLines(content)
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -238,15 +255,8 @@ func ParseOfflineTestCases(f *FileOutput) (TestCases, error) {
 		case strings.HasPrefix(line, testCaseInputMark):
 			inputStarted = true
 			outputStarted = false
-			if len(inputLines) > 0 {
-				tc.AddCase(
-					TestCase{
-						Input:  slices.Clone(inputLines),
-						Output: output,
-					},
-				)
-				inputLines = inputLines[:0]
-				output = ""
+			if err := addCase(); err != nil {
+				return tc, err
 			}
 		case strings.HasPrefix(line, testCaseOutputMark):
 			outputStarted = true
@@ -261,6 +271,9 @@ func ParseOfflineTestCases(f *FileOutput) (TestCases, error) {
 		}
 	}
 	if len(inputLines) > 0 {
+		if output == "" {
+			return tc, fmt.Errorf("invalid offline test case: missing output for case %d", len(tc.Cases)+1)
+		}
 		tc.AddCase(
 			TestCase{
 				Input:  slices.Clone(inputLines),

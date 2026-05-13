@@ -12,14 +12,17 @@ import (
 )
 
 type OfflineQuestion struct {
-	FrontendID    string `json:"frontend_id"`
-	Slug          string `json:"slug"`
-	Lang          string `json:"lang"`
-	OutDir        string `json:"out_dir"`
-	SubDir        string `json:"sub_dir"`
-	CodeFile      string `json:"code_file"`
-	TestCasesFile string `json:"testcases_file"`
-	SystemDesign  bool   `json:"system_design"`
+	FrontendID        string          `json:"frontend_id"`
+	Slug              string          `json:"slug"`
+	Lang              string          `json:"lang"`
+	OutDir            string          `json:"out_dir"`
+	SubDir            string          `json:"sub_dir"`
+	CodeFile          string          `json:"code_file"`
+	TestCasesFile     string          `json:"testcases_file"`
+	SystemDesign      bool            `json:"system_design"`
+	Content           string          `json:"content,omitempty"`
+	TranslatedContent string          `json:"translated_content,omitempty"`
+	MetaData          json.RawMessage `json:"meta_data,omitempty"`
 }
 
 type OfflineProjectState struct {
@@ -132,11 +135,6 @@ func ResolveOfflineQuestion(qid string, langHint string) (OfflineQuestion, error
 
 	if langHint != "" {
 		if q, ok := state.Questions[offlineKey(langHint, qid)]; ok {
-			return q, nil
-		}
-	}
-	for _, q := range state.Questions {
-		if q.Slug == qid || q.FrontendID == qid {
 			return q, nil
 		}
 	}

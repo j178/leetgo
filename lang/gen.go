@@ -203,9 +203,10 @@ func NewOfflineGenerateResult(q config.OfflineQuestion, gen Lang) *GenerateResul
 			TitleSlug:          q.Slug,
 			QuestionFrontendId: q.FrontendID,
 		},
-		Lang:   gen,
-		OutDir: q.OutDir,
-		SubDir: q.SubDir,
+		OfflineQuestion: q,
+		Lang:            gen,
+		OutDir:          q.OutDir,
+		SubDir:          q.SubDir,
 	}
 	result.AddFile(
 		FileOutput{

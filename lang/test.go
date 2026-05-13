@@ -3,6 +3,7 @@ package lang
 import (
 	"context"
 	"fmt"
+	"github.com/goccy/go-json"
 	"os/exec"
 	"reflect"
 	"strings"
@@ -286,6 +287,28 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 	return passed == ran, nil
 }
 
+func offlineQuestionData(entry config.OfflineQuestion) (*leetcode.QuestionData, error) {
+	if len(entry.MetaData) == 0 {
+		return nil, fmt.Errorf("offline metadata missing for %s; rerun `leetgo pick`", entry.Slug)
+	}
+
+	var meta leetcode.MetaData
+	if err := json.Unmarshal(entry.MetaData, &meta); err != nil {
+		return nil, fmt.Errorf("failed to load offline metadata for %s: %w", entry.Slug, err)
+	}
+	if !meta.SystemDesign && meta.Return == nil && meta.Output == nil {
+		return nil, fmt.Errorf("offline metadata missing return information for %s", entry.Slug)
+	}
+
+	return &leetcode.QuestionData{
+		TitleSlug:          entry.Slug,
+		QuestionFrontendId: entry.FrontendID,
+		Content:            entry.Content,
+		TranslatedContent:  entry.TranslatedContent,
+		MetaData:           meta,
+	}, nil
+}
+
 func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr string) (bool, error) {
 	testcaseFile := genResult.GetFile(TestCasesFile)
 	if testcaseFile == nil {
@@ -303,6 +326,12 @@ func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr stri
 		return false, err
 	}
 
+	q, err := offlineQuestionData(genResult.OfflineQuestion)
+	if err != nil {
+		return false, err
+	}
+	judger := GetJudger(q)
+
 	var ran, passed int
 	for _, c := range tc.Cases {
 		func() {
@@ -313,10 +342,6 @@ func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr stri
 			}()
 			if !caseRange.Contains(c.No) {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.SkippedStyle.Render("Skipped")))
-				return
-			}
-			if !c.HasOutput() {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.SkippedStyle.Render("Skipped: no output")))
 				return
 			}
 			ran++
@@ -381,9 +406,13 @@ func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr stri
 				l.UnIndent()
 				return
 			}
-			if strings.TrimSpace(actualOutput) != strings.TrimSpace(c.Output) {
+			if r := judger.Judge(c.Input, c.Output, actualOutput); r.IsAccepted() {
+				passed++
+				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.PassedStyle.Render("Passed")))
+			} else {
 				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.FailedStyle.Render("Wrong answer")))
 				l.Indent()
+				l.AppendItem(fmt.Sprintf("Reason:     %s", r.GetInfo()))
 				l.AppendItem(
 					fmt.Sprintf(
 						"Input:      %s",
@@ -394,11 +423,7 @@ func runOfflineTest(genResult *GenerateResult, args []string, targetCaseStr stri
 				l.AppendItem(fmt.Sprintf("Expected:   %s", utils.TruncateString(c.Output, 100)))
 				mayAppendStdout()
 				l.UnIndent()
-				return
 			}
-
-			passed++
-			l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.PassedStyle.Render("Passed")))
 		}()
 	}
 
