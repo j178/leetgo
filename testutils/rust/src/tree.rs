@@ -107,7 +107,7 @@ impl<'de> serde::de::Visitor<'de> for BinaryTreeVisitor {
             }))));
         }
 
-        let root = nodes[0].clone();
+        let root = nodes.first().cloned().flatten();
         let (mut i, mut j) = (0, 1);
 
         while j < nodes.len() {
