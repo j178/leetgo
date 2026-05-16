@@ -3,13 +3,13 @@ package lang
 import (
 	"context"
 	"fmt"
-	"github.com/goccy/go-json"
 	"os/exec"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/goccy/go-json"
 	"github.com/jedib0t/go-pretty/v6/list"
 
 	"github.com/j178/leetgo/config"
