@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/log"
@@ -110,34 +111,59 @@ func ResolveOfflineQuestion(qid string, langHint string) (OfflineQuestion, error
 		if last.Slug == "" {
 			return OfflineQuestion{}, fmt.Errorf("offline question %q not found", qid)
 		}
-		if last.Gen != "" {
-			if q, ok := state.Questions[offlineKey(last.Gen, last.Slug)]; ok {
-				return q, nil
-			}
-			if last.FrontendID != "" {
-				if q, ok := state.Questions[offlineKey(last.Gen, last.FrontendID)]; ok {
-					return q, nil
-				}
-			}
-		}
-		if langHint != "" {
-			if q, ok := state.Questions[offlineKey(langHint, last.Slug)]; ok {
-				return q, nil
-			}
-			if last.FrontendID != "" {
-				if q, ok := state.Questions[offlineKey(langHint, last.FrontendID)]; ok {
-					return q, nil
-				}
-			}
+		q, ok := resolveOfflineQuestion(state, []string{last.Slug, last.FrontendID}, []string{last.Gen, langHint})
+		if ok {
+			return q, nil
 		}
 		return OfflineQuestion{}, fmt.Errorf("offline question %q not found", qid)
 	}
 
-	if langHint != "" {
-		if q, ok := state.Questions[offlineKey(langHint, qid)]; ok {
-			return q, nil
-		}
+	q, ok := resolveOfflineQuestion(state, []string{qid}, []string{langHint})
+	if ok {
+		return q, nil
 	}
 
 	return OfflineQuestion{}, fmt.Errorf("offline question %q not found", qid)
+}
+
+func resolveOfflineQuestion(state OfflineProjectState, ids []string, preferredLangs []string) (OfflineQuestion, bool) {
+	seenIDs := make(map[string]struct{}, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		if _, ok := seenIDs[id]; ok {
+			continue
+		}
+		seenIDs[id] = struct{}{}
+
+		for _, lang := range preferredLangs {
+			if lang == "" {
+				continue
+			}
+			if q, ok := state.Questions[offlineKey(lang, id)]; ok {
+				return q, true
+			}
+		}
+	}
+
+	keys := make([]string, 0, len(state.Questions))
+	for key := range state.Questions {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		q := state.Questions[key]
+		for _, id := range ids {
+			if id == "" {
+				continue
+			}
+			if q.Slug == id || q.FrontendID == id {
+				return q, true
+			}
+		}
+	}
+
+	return OfflineQuestion{}, false
 }
