@@ -193,7 +193,6 @@ func (m *MetaData) normalize() {
 }
 
 func (m *MetaData) UnmarshalJSON(data []byte) error {
-	// Ignore error, when we load from sqlite, no need to unquote it.
 	unquoted, err := strconv.Unquote(utils.BytesToString(data))
 	if err != nil {
 		unquoted = utils.BytesToString(data)
