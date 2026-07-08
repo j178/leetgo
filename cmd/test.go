@@ -42,7 +42,6 @@ func init() {
 		"run test both locally and remotely",
 	)
 	testCmd.Flags().BoolVarP(&runOffline, "offline", "O", false, "run test using only local offline artifacts saved by `leetgo pick`")
-	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 	testCmd.Flags().BoolVarP(&forceSubmit, "force", "f", false, "force submit even if local test failed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
 }
