@@ -41,7 +41,7 @@ func init() {
 		false,
 		"run test both locally and remotely",
 	)
-	testCmd.Flags().BoolVarP(&runOffline, "offline", "O", false, "run test using only local offline artifacts")
+	testCmd.Flags().BoolVarP(&runOffline, "offline", "O", false, "run test using only local offline artifacts saved by `leetgo pick`")
 	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 	testCmd.Flags().BoolVarP(&forceSubmit, "force", "f", false, "force submit even if local test failed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
@@ -56,7 +56,8 @@ var testCmd = &cobra.Command{
 	Example: `leetgo test 244
 leetgo test last
 leetgo test w330/1
-leetgo test w330/`,
+leetgo test w330/
+leetgo test --offline last`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if runOffline {
 			if runLocally || runBoth || autoSubmit || forceSubmit {
