@@ -187,11 +187,6 @@ leetgo test last/1           # last/1 表示最近生成的比赛的第一个题
 leetgo test last/            # last/ 表示最近生成的比赛的所有题目 (必须要保留末尾的斜杠)
 ```
 
-### 离线测试
-
-`leetgo test --offline <qid>` 只会使用 `leetgo pick` 保存下来的本地离线数据。
-它可以识别最近一次保存的题目，并优先使用该离线题目记录的语言。
-
 ## 配置说明
 
 > [!WARNING]

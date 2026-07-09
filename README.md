@@ -191,11 +191,6 @@ leetgo test last/1           # `last/1` means the first question of the last gen
 leetgo test last/            # `last/` means all questions of the last generated contest (must keep the trailing slash)
 ```
 
-### Offline Testing
-
-`leetgo test --offline <qid>` runs only against locally saved offline artifacts created by `leetgo pick`.
-It can resolve the last saved question and prefers the language recorded with that offline entry.
-
 ## Configuration
 
 > [!WARNING]

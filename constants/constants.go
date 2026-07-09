@@ -11,7 +11,6 @@ const (
 	ConfigFilename        = "leetgo.yaml"
 	QuestionCacheBaseName = "leetcode-questions"
 	StateFilename         = "state.json"
-	OfflineStateFilename  = "offline.json"
 	DepVersionFilename    = "deps.json"
 	CodeBeginMarker       = "@lc code=begin"
 	CodeEndMarker         = "@lc code=end"

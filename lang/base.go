@@ -28,7 +28,6 @@ const manualWarning = "Warning: this is a manual question, the generated test co
 type GenerateResult struct {
 	mask            int
 	Question        *leetcode.QuestionData
-	OfflineQuestion config.OfflineQuestion
 	Lang            Lang
 	OutDir          string
 	SubDir          string
@@ -116,12 +115,6 @@ type Lang interface {
 type LocalTestable interface {
 	// RunLocalTest runs local test for the question.
 	RunLocalTest(q *leetcode.QuestionData, outDir string, targetCase string) (bool, error)
-}
-
-// OfflineTestable is an interface for languages that can run offline test using local generated files only.
-type OfflineTestable interface {
-	// RunOfflineTest runs offline test for the generated question files.
-	RunOfflineTest(result *GenerateResult, targetCase string) (bool, error)
 }
 
 func getCodeStringConfig(lang Lang, key string) string {
