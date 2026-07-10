@@ -9,6 +9,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/charmbracelet/log"
+	"github.com/goccy/go-json"
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
@@ -116,10 +117,17 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	state := config.LoadState()
+	metaData, err := json.Marshal(q.MetaData)
+	if err != nil {
+		return nil, err
+	}
 	state.LastQuestion = config.LastQuestion{
-		Slug:       q.TitleSlug,
-		FrontendID: q.QuestionFrontendId,
-		Gen:        gen.Slug(),
+		Slug:              q.TitleSlug,
+		FrontendID:        q.QuestionFrontendId,
+		Gen:               gen.Slug(),
+		Content:           q.Content,
+		TranslatedContent: q.TranslatedContent,
+		MetaData:          metaData,
 	}
 	config.SaveState(state)
 

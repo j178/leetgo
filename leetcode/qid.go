@@ -8,10 +8,40 @@ import (
 	"strings"
 	"time"
 
+	"github.com/goccy/go-json"
+
 	"github.com/j178/leetgo/config"
 )
 
+func questionFromLastState(c Client, id string) (*QuestionData, bool) {
+	last := config.LoadState().LastQuestion
+	if last.Slug == "" || len(last.MetaData) == 0 {
+		return nil, false
+	}
+	if id != last.Slug && id != last.FrontendID {
+		return nil, false
+	}
+
+	var meta MetaData
+	if err := json.Unmarshal(last.MetaData, &meta); err != nil {
+		return nil, false
+	}
+
+	q := &QuestionData{
+		TitleSlug:          last.Slug,
+		QuestionFrontendId: last.FrontendID,
+		Content:            last.Content,
+		TranslatedContent:  last.TranslatedContent,
+		MetaData:           meta,
+	}
+	q.client = c
+	return q, true
+}
+
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
+	if q, ok := questionFromLastState(c, slug); ok {
+		return q, nil
+	}
 	q := GetCache(c).GetBySlug(slug)
 	if q != nil {
 		q.client = c
@@ -21,6 +51,9 @@ func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 }
 
 func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
+	if q, ok := questionFromLastState(c, id); ok {
+		return q, nil
+	}
 	q := GetCache(c).GetById(id)
 	if q != nil {
 		q.client = c

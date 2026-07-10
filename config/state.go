@@ -12,9 +12,12 @@ import (
 // Small project state management.
 
 type LastQuestion struct {
-	FrontendID string `json:"frontend_id"`
-	Slug       string `json:"slug"`
-	Gen        string `json:"gen"`
+	FrontendID        string          `json:"frontend_id"`
+	Slug              string          `json:"slug"`
+	Gen               string          `json:"gen"`
+	Content           string          `json:"content,omitempty"`
+	TranslatedContent string          `json:"translated_content,omitempty"`
+	MetaData          json.RawMessage `json:"meta_data,omitempty"`
 }
 
 type State struct {
