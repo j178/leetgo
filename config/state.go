@@ -21,15 +21,8 @@ type LastQuestion struct {
 	MetaData          json.RawMessage `json:"meta_data,omitempty"`
 }
 
-type SavedContest struct {
-	Questions []string `json:"questions"`
-}
-
 type State struct {
-	LastQuestion LastQuestion            `json:"last_question"`
-	LastContest  string                  `json:"last_contest"`
-	Questions    map[string]LastQuestion `json:"questions,omitempty"`
-	Contests     map[string]SavedContest `json:"contests,omitempty"`
+	LastQuestion LastQuestion `json:"last_question"`
 }
 
 type States map[string]State

@@ -134,13 +134,6 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 		saved.ContestSlug = q.Contest().TitleSlug
 	}
 	state.LastQuestion = saved
-	if state.Questions == nil {
-		state.Questions = make(map[string]config.LastQuestion)
-	}
-	state.Questions[saved.Slug] = saved
-	if saved.FrontendID != "" {
-		state.Questions[saved.FrontendID] = saved
-	}
 	config.SaveState(state)
 
 	return result, nil
@@ -165,19 +158,6 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	if len(results) == 0 {
 		return nil, fmt.Errorf("no question generated")
 	}
-
-	state := config.LoadState()
-	if state.Contests == nil {
-		state.Contests = make(map[string]config.SavedContest)
-	}
-	savedContest := config.SavedContest{Questions: make([]string, 0, len(results))}
-	for _, result := range results {
-		savedContest.Questions = append(savedContest.Questions, result.Question.TitleSlug)
-	}
-	state.Contests[ct.TitleSlug] = savedContest
-	state.LastContest = ct.TitleSlug
-	config.SaveState(state)
-
 	return results, nil
 }
 
