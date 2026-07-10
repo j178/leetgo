@@ -15,14 +15,21 @@ type LastQuestion struct {
 	FrontendID        string          `json:"frontend_id"`
 	Slug              string          `json:"slug"`
 	Gen               string          `json:"gen"`
+	ContestSlug       string          `json:"contest_slug,omitempty"`
 	Content           string          `json:"content,omitempty"`
 	TranslatedContent string          `json:"translated_content,omitempty"`
 	MetaData          json.RawMessage `json:"meta_data,omitempty"`
 }
 
+type SavedContest struct {
+	Questions []string `json:"questions"`
+}
+
 type State struct {
-	LastQuestion LastQuestion `json:"last_question"`
-	LastContest  string       `json:"last_contest"`
+	LastQuestion LastQuestion            `json:"last_question"`
+	LastContest  string                  `json:"last_contest"`
+	Questions    map[string]LastQuestion `json:"questions,omitempty"`
+	Contests     map[string]SavedContest `json:"contests,omitempty"`
 }
 
 type States map[string]State

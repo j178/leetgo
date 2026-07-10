@@ -13,33 +13,85 @@ import (
 	"github.com/j178/leetgo/config"
 )
 
-func questionFromLastState(c Client, id string) (*QuestionData, bool) {
-	last := config.LoadState().LastQuestion
+func questionFromSavedState(c Client, id string) (*QuestionData, bool) {
+	state := config.LoadState()
+	if saved, ok := state.Questions[id]; ok {
+		q := questionFromSaved(c, saved)
+		return q, q != nil
+	}
+	last := state.LastQuestion
 	if last.Slug == "" || len(last.MetaData) == 0 {
 		return nil, false
 	}
-	if id != last.Slug && id != last.FrontendID {
+	if id != "last" && id != last.Slug && id != last.FrontendID {
 		return nil, false
 	}
+	q := questionFromSaved(c, last)
+	return q, q != nil
+}
 
+func questionFromSaved(c Client, saved config.LastQuestion) *QuestionData {
 	var meta MetaData
-	if err := json.Unmarshal(last.MetaData, &meta); err != nil {
-		return nil, false
+	if err := json.Unmarshal(saved.MetaData, &meta); err != nil {
+		return nil
 	}
-
 	q := &QuestionData{
-		TitleSlug:          last.Slug,
-		QuestionFrontendId: last.FrontendID,
-		Content:            last.Content,
-		TranslatedContent:  last.TranslatedContent,
+		TitleSlug:          saved.Slug,
+		QuestionFrontendId: saved.FrontendID,
+		Content:            saved.Content,
+		TranslatedContent:  saved.TranslatedContent,
 		MetaData:           meta,
 	}
+	if saved.ContestSlug != "" {
+		q.contest = &Contest{TitleSlug: saved.ContestSlug}
+		q.contest.client = c
+	}
 	q.client = c
-	return q, true
+	return q
+}
+
+func contestFromSavedState(c Client, contestSlug string, questionNum int, withQuestions bool) (*Contest, []*QuestionData, bool) {
+	state := config.LoadState()
+	savedContest, ok := state.Contests[contestSlug]
+	if !ok || len(savedContest.Questions) == 0 {
+		return nil, nil, false
+	}
+
+	contest := &Contest{
+		client:    c,
+		TitleSlug: contestSlug,
+		Questions: make([]*QuestionData, 0, len(savedContest.Questions)),
+	}
+	if !withQuestions {
+		return contest, nil, true
+	}
+
+	if questionNum > 0 {
+		if questionNum > len(savedContest.Questions) {
+			return nil, nil, false
+		}
+		q, ok := questionFromSavedState(c, savedContest.Questions[questionNum-1])
+		if !ok {
+			return nil, nil, false
+		}
+		q.contest = contest
+		contest.Questions = []*QuestionData{q}
+		return contest, contest.Questions, true
+	}
+
+	for _, slug := range savedContest.Questions {
+		q, ok := questionFromSavedState(c, slug)
+		if !ok {
+			return nil, nil, false
+		}
+		q.contest = contest
+		contest.Questions = append(contest.Questions, q)
+	}
+	return contest, contest.Questions, true
 }
 
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
-	if q, ok := questionFromLastState(c, slug); ok {
+	if q, ok := questionFromSavedState(c, slug); ok {
 		return q, nil
 	}
 	q := GetCache(c).GetBySlug(slug)
@@ -51,7 +103,7 @@ func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
 }
 
 func QuestionFromCacheByID(id string, c Client) (*QuestionData, error) {
-	if q, ok := questionFromLastState(c, id); ok {
+	if q, ok := questionFromSavedState(c, id); ok {
 		return q, nil
 	}
 	q := GetCache(c).GetById(id)
@@ -170,6 +222,11 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 			return nil, nil, fmt.Errorf("invalid contest qid: %s is not a number", parts[1])
 		}
 	}
+
+	if contest, qs, ok := contestFromSavedState(c, contestSlug, questionNum, withQuestions); ok {
+		return contest, qs, nil
+	}
+
 	contest, err := c.GetContest(contestSlug)
 	if err != nil {
 		return nil, nil, fmt.Errorf("contest not found %s: %w", contestSlug, err)
