@@ -40,6 +40,7 @@ func init() {
 		false,
 		"run test both locally and remotely",
 	)
+	testCmd.Flags().BoolVarP(&autoSubmit, "submit", "s", false, "auto submit if all tests passed")
 	testCmd.Flags().BoolVarP(&forceSubmit, "force", "f", false, "force submit even if local test failed")
 	testCmd.Flags().StringVarP(&targetCase, "target", "t", "-", "only run the specified test case, e.g. 1, 1-3, -1, 1-")
 }
@@ -53,8 +54,7 @@ var testCmd = &cobra.Command{
 	Example: `leetgo test 244
 leetgo test last
 leetgo test w330/1
-leetgo test w330/
-leetgo test last`,
+leetgo test w330/`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if runLocally {
 			runRemotely = false

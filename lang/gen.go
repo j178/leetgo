@@ -158,6 +158,10 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	if len(results) == 0 {
 		return nil, fmt.Errorf("no question generated")
 	}
+
+	state := config.LoadState()
+	state.LastContest = ct.TitleSlug
+	config.SaveState(state)
 	return results, nil
 }
 

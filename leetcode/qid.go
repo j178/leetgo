@@ -163,6 +163,13 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 	matches := contestPat.FindStringSubmatch(parts[0])
 	if matches == nil {
 		contestSlug = parts[0]
+		if contestSlug == "last" {
+			state := config.LoadState()
+			if state.LastContest == "" {
+				return nil, nil, errors.New("invalid contest qid: last contest not found")
+			}
+			contestSlug = state.LastContest
+		}
 	} else {
 		if matches[1][0] == 'w' || matches[1][0] == 'W' {
 			contestSlug = "weekly-contest-" + matches[2]
