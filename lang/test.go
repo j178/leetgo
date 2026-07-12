@@ -162,7 +162,12 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 		return false, err
 	}
 
-	judger := GetJudger(q)
+	var judger Judger
+	if hasQuestionMetadata(q) {
+		judger = GetJudger(q)
+	} else {
+		judger = stringJudger{}
+	}
 
 	var ran, passed int
 	for _, c := range tc.Cases {

@@ -83,7 +83,8 @@ func hasQuestionMetadata(q *leetcode.QuestionData) bool {
 	if q == nil {
 		return false
 	}
-	return q.MetaData.SystemDesign || len(q.MetaData.Params) > 0 || q.MetaData.Return.Type != ""
+	return q.MetaData.SystemDesign || len(q.MetaData.Params) > 0 ||
+		(q.MetaData.Return != nil && q.MetaData.Return.Type != "")
 }
 
 func (c *TestCase) InputString() string {

@@ -22,8 +22,10 @@ type LastQuestion struct {
 }
 
 type State struct {
-	LastQuestion LastQuestion `json:"last_question"`
-	LastContest  string       `json:"last_contest"`
+	LastQuestion LastQuestion            `json:"last_question"`
+	LastContest  string                  `json:"last_contest"`
+	Questions    map[string]LastQuestion `json:"questions,omitempty"`
+	Contests     map[string][]string     `json:"contests,omitempty"`
 }
 
 type States map[string]State

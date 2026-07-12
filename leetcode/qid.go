@@ -15,21 +15,25 @@ import (
 
 func questionFromSavedState(c Client, id string) (*QuestionData, bool) {
 	state := config.LoadState()
-	last := state.LastQuestion
-	if last.Slug == "" || len(last.MetaData) == 0 {
-		return nil, false
+	if q, ok := questionFromSavedQuestions(c, state.Questions, id); ok {
+		return q, true
 	}
-	if id != "last" && id != last.Slug && id != last.FrontendID {
-		return nil, false
+	if id == "last" || id == state.LastQuestion.Slug || id == state.LastQuestion.FrontendID {
+		q := questionFromSaved(c, state.LastQuestion)
+		return q, q != nil
 	}
-	q := questionFromSaved(c, last)
-	return q, q != nil
+	return nil, false
 }
 
 func questionFromSaved(c Client, saved config.LastQuestion) *QuestionData {
-	var meta MetaData
-	if err := json.Unmarshal(saved.MetaData, &meta); err != nil {
+	if saved.Slug == "" {
 		return nil
+	}
+	var meta MetaData
+	if len(saved.MetaData) > 0 {
+		if err := json.Unmarshal(saved.MetaData, &meta); err != nil {
+			return nil
+		}
 	}
 	q := &QuestionData{
 		TitleSlug:          saved.Slug,
@@ -44,6 +48,17 @@ func questionFromSaved(c Client, saved config.LastQuestion) *QuestionData {
 	}
 	q.client = c
 	return q
+}
+
+func questionFromSavedQuestions(c Client, questions map[string]config.LastQuestion, id string) (*QuestionData, bool) {
+	for key, saved := range questions {
+		if id != key && id != saved.Slug && id != saved.FrontendID {
+			continue
+		}
+		q := questionFromSaved(c, saved)
+		return q, q != nil
+	}
+	return nil, false
 }
 
 func QuestionFromCacheBySlug(slug string, c Client) (*QuestionData, error) {
@@ -184,6 +199,10 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 		}
 	}
 
+	if contest, qs, ok := contestFromSavedState(c, config.LoadState(), contestSlug, questionNum, withQuestions); ok {
+		return contest, qs, nil
+	}
+
 	contest, err := c.GetContest(contestSlug)
 	if err != nil {
 		return nil, nil, fmt.Errorf("contest not found %s: %w", contestSlug, err)
@@ -208,6 +227,38 @@ func ParseContestQID(qid string, c Client, withQuestions bool) (*Contest, []*Que
 	}
 
 	return contest, qs, nil
+}
+
+func contestFromSavedState(c Client, state config.State, contestSlug string, questionNum int, withQuestions bool) (*Contest, []*QuestionData, bool) {
+	slugs, ok := state.Contests[contestSlug]
+	if !ok || len(slugs) == 0 {
+		return nil, nil, false
+	}
+	contest := &Contest{TitleSlug: contestSlug, client: c}
+	if !withQuestions {
+		return contest, nil, true
+	}
+	questions := make([]*QuestionData, 0, len(slugs))
+	for _, slug := range slugs {
+		saved, ok := state.Questions[slug]
+		if !ok {
+			return nil, nil, false
+		}
+		q := questionFromSaved(c, saved)
+		if q == nil {
+			return nil, nil, false
+		}
+		q.contest = contest
+		questions = append(questions, q)
+	}
+	contest.Questions = questions
+	if questionNum > 0 {
+		if questionNum > len(questions) {
+			return nil, nil, false
+		}
+		return contest, []*QuestionData{questions[questionNum-1]}, true
+	}
+	return contest, questions, true
 }
 
 func isNumber(s string) bool {
