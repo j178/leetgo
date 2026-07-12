@@ -22,9 +22,8 @@ type TestCase struct {
 
 func (c *TestCase) Check() error {
 	q := c.Question
-	err := q.Fulfill()
-	if err != nil {
-		return fmt.Errorf("failed to get question data: %w", err)
+	if !hasQuestionMetadata(q) {
+		return nil
 	}
 	narg := q.MetaData.NArg()
 	if q.MetaData.SystemDesign {
@@ -78,6 +77,13 @@ func (c *TestCase) Check() error {
 	}
 
 	return nil
+}
+
+func hasQuestionMetadata(q *leetcode.QuestionData) bool {
+	if q == nil {
+		return false
+	}
+	return q.MetaData.SystemDesign || len(q.MetaData.Params) > 0 || q.MetaData.Return.Type != ""
 }
 
 func (c *TestCase) InputString() string {

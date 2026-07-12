@@ -27,10 +27,6 @@ func RunLocalTest(q *leetcode.QuestionData, targetCase string) (bool, error) {
 	if !ok {
 		return false, fmt.Errorf("language %s does not support local test", gen.Slug())
 	}
-	err = q.Fulfill()
-	if err != nil {
-		return false, fmt.Errorf("failed to get question data: %w", err)
-	}
 	outDir := getOutDir(q, gen)
 	if !utils.IsExist(outDir) {
 		return false, fmt.Errorf("no code generated for %s in language %s", q.TitleSlug, gen.Slug())
@@ -246,20 +242,22 @@ func runTest(q *leetcode.QuestionData, genResult *GenerateResult, args []string,
 				l.UnIndent()
 				return
 			}
-			err = checkOutput(q, c.Input, actualOutput)
-			if err != nil {
-				l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Invalid output")))
-				l.Indent()
-				l.AppendItem(
-					fmt.Sprintf(
-						"Input:      %s",
-						utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
-					),
-				)
-				l.AppendItem(fmt.Sprintf("Output:     %s", utils.TruncateString(actualOutput, 100)))
-				mayAppendStdout()
-				l.UnIndent()
-				return
+			if hasQuestionMetadata(q) {
+				err = checkOutput(q, c.Input, actualOutput)
+				if err != nil {
+					l.AppendItem(fmt.Sprintf("Case %d:    %s", c.No, config.ErrorStyle.Render("Invalid output")))
+					l.Indent()
+					l.AppendItem(
+						fmt.Sprintf(
+							"Input:      %s",
+							utils.TruncateString(strings.ReplaceAll(c.InputString(), "\n", "↩ "), 100),
+						),
+					)
+					l.AppendItem(fmt.Sprintf("Output:     %s", utils.TruncateString(actualOutput, 100)))
+					mayAppendStdout()
+					l.UnIndent()
+					return
+				}
 			}
 
 			if r := judger.Judge(c.Input, c.Output, actualOutput); r.IsAccepted() {
