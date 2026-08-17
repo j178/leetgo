@@ -1,7 +1,9 @@
 #ifndef LC_IO_H
 #define LC_IO_H
 
+#include <cstdlib>
 #include <iomanip>
+#include <iostream>
 #include <queue>
 
 /**
@@ -30,6 +32,25 @@ struct TreeNode {
 namespace LeetCodeIO {
     namespace Helper {
         /**
+         * Function for rejecting input a scan loop cannot make progress on.
+         *
+         * Each loop below dispatches on is.peek() and, in its default branch,
+         * extracts with operator>>. A failed extraction consumes nothing, so
+         * peek() returns the same byte forever: truncated input such as
+         * "[1,2,3" spins without terminating, allocating on every pass. The
+         * loops end only on ']', which malformed input never supplies.
+         *
+         * Called at the top of every loop, this converts that hang into an
+         * immediate diagnostic. Valid input never reaches it in a failed state,
+         * because a well-formed array always has a ']' left to consume.
+         */
+        inline void require_progress(std::istream &is, const char *what) {
+            if (is && is.peek() != std::char_traits<char>::eof()) { return; }
+            std::cerr << "LC_IO: malformed or truncated input while reading " << what << '\n';
+            std::exit(2);
+        }
+
+        /**
          * Function for deserializing a singly-linked list.
          */
         inline void scan_list(std::istream &is, ListNode *&node) {
@@ -37,7 +58,8 @@ namespace LeetCodeIO {
             ListNode *now = nullptr;
         [[maybe_unused]]
         L0: is.ignore();
-        L1: switch (is.peek()) {
+        L1: require_progress(is, "a list");
+            switch (is.peek()) {
             case ' ':
             case ',': is.ignore(); goto L1;
             case ']': is.ignore(); goto L2;
@@ -55,7 +77,8 @@ namespace LeetCodeIO {
             std::deque<TreeNode *> dq;
         [[maybe_unused]]
         L0: is.ignore();
-        L1: switch (is.peek()) {
+        L1: require_progress(is, "a tree");
+            switch (is.peek()) {
             case ' ':
             case ',': is.ignore(); goto L1;
             case 'n': is.ignore(4); dq.emplace_back(nullptr);
@@ -157,7 +180,8 @@ namespace LeetCodeIO {
     [[maybe_unused]]
     L0: is >> std::ws;
         is.ignore();
-    L1: switch (is.peek()) {
+    L1: Helper::require_progress(is, "an array");
+        switch (is.peek()) {
         case ' ':
         case ',': is.ignore(); goto L1;
         case ']': is.ignore(); goto L2;
