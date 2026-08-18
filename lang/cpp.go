@@ -18,43 +18,35 @@ type cpp struct {
 }
 
 func (c cpp) InitWorkspace(outDir string) error {
-	if should, err := c.shouldInit(outDir); err != nil || !should {
-		return err
-	}
-
+	// Generated code may use new LC_IO APIs, so always keep the managed header in sync.
 	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	err := utils.WriteFile(headerPath, cppUtils.HeaderContent)
-	if err != nil {
-		return err
-	}
-	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
-	err = utils.WriteFile(stdCxxPath, cppUtils.StdCxxContent)
-	if err != nil {
+	if err := utils.WriteFile(headerPath, cppUtils.HeaderContent); err != nil {
 		return err
 	}
 
-	err = UpdateDep(c)
-	return err
+	if should, err := c.shouldUpdateStdCxx(outDir); err != nil || !should {
+		return err
+	}
+
+	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
+	if err := utils.WriteFile(stdCxxPath, cppUtils.StdCxxContent); err != nil {
+		return err
+	}
+
+	return UpdateDep(c)
 }
 
-func (c cpp) shouldInit(outDir string) (bool, error) {
-	headerPath := filepath.Join(outDir, cppUtils.HeaderName)
-	if !utils.IsExist(headerPath) {
-		return true, nil
-	}
+func (c cpp) shouldUpdateStdCxx(outDir string) (bool, error) {
 	stdCxxPath := filepath.Join(outDir, "bits", "stdc++.h")
 	if !utils.IsExist(stdCxxPath) {
 		return true, nil
 	}
 
-	update, err := IsDepUpdateToDate(c)
+	upToDate, err := IsDepUpdateToDate(c)
 	if err != nil {
 		return false, err
 	}
-	if !update {
-		return true, nil
-	}
-	return false, nil
+	return !upToDate, nil
 }
 
 var cppTypes = map[string]string{
@@ -75,8 +67,8 @@ const (
 	inputStreamName            = "cin"
 	outputStreamName           = "out_stream"
 	systemDesignMethodMapName  = "methods"
-	systemDesignMethodNameName = "method_name"
 	systemDesignMethodListName = "method_names"
+	systemDesignOutputName     = "output"
 )
 
 func (c cpp) getCppTypeName(t string) (int, string) {
@@ -87,17 +79,12 @@ func (c cpp) getVectorTypeName(d int, t string) string {
 	return strings.Repeat("vector<", d) + t + strings.Repeat(">", d)
 }
 
-func (c cpp) getDeclCodeForType(d int, t string, n string) string {
-	return fmt.Sprintf("%s %s;", c.getVectorTypeName(d, t), n)
-}
-
-func (c cpp) getScanCodeForType(n string, ifs string) string {
-	return fmt.Sprintf("LeetCodeIO::scan(%s, %s);", ifs, n)
+func (c cpp) getDeserializeCodeForType(d int, t string, n string, input string) string {
+	typeName := c.getVectorTypeName(d, t)
+	return fmt.Sprintf("%s %s = LeetCodeIO::deserialize<%s>(%s);", typeName, n, typeName, input)
 }
 
 func (c cpp) getPrintCodeForType(n string, ofs string) string {
-	/* assumes one invocation for each printed variable */
-	/* (parameter "n" could be a function call, which we only wish to call once) */
 	return fmt.Sprintf("LeetCodeIO::print(%s, %s);", ofs, n)
 }
 
@@ -112,170 +99,192 @@ func (c cpp) getParamString(params []leetcode.MetaDataParam) string {
 func (c cpp) generateScanCode(q *leetcode.QuestionData) string {
 	if q.MetaData.SystemDesign {
 		return fmt.Sprintf(
-			"\t%s\n\t%s\n",
-			c.getDeclCodeForType(1, "string", systemDesignMethodListName),
-			c.getScanCodeForType(systemDesignMethodListName, inputStreamName),
+			"\tauto %s = LeetCodeIO::deserialize<vector<string>>(%s);\n"+
+				"\tauto params = LeetCodeIO::split_array(%s);\n",
+			systemDesignMethodListName,
+			inputStreamName,
+			inputStreamName,
 		)
 	}
 
 	var scanCode string
 	for _, param := range q.MetaData.Params {
 		dimCnt, cppType := c.getCppTypeName(param.Type)
-		scanCode += fmt.Sprintf(
-			"\t%s\n\t%s\n",
-			c.getDeclCodeForType(dimCnt, cppType, param.Name),
-			c.getScanCodeForType(param.Name, inputStreamName),
-		)
+		scanCode += "\t" + c.getDeserializeCodeForType(
+			dimCnt,
+			cppType,
+			param.Name,
+			inputStreamName,
+		) + "\n"
 	}
 	return scanCode
 }
 
 func (c cpp) generateInitCode(q *leetcode.QuestionData) string {
 	if q.MetaData.SystemDesign {
-		return fmt.Sprintf("\t%s *%s;\n", q.MetaData.ClassName, objectName)
-	} else {
-		return fmt.Sprintf("\tSolution *%s = new Solution();\n", objectName)
+		return fmt.Sprintf("\tunique_ptr<%s> %s;\n", q.MetaData.ClassName, objectName)
 	}
+	return fmt.Sprintf("\tSolution %s;\n", objectName)
 }
 
-func (c cpp) generateCallCode(q *leetcode.QuestionData) (callCode string) {
-	generateParamScanningCode := func(params []leetcode.MetaDataParam) {
-		if len(params) > 0 {
-			for _, param := range params {
-				dimCnt, cppType := c.getCppTypeName(param.Type)
-				callCode += fmt.Sprintf(
-					"\t\t\t%s %s %s.ignore();\n",
-					c.getDeclCodeForType(dimCnt, cppType, param.Name),
-					c.getScanCodeForType(param.Name, inputStreamName),
-					inputStreamName,
-				)
-			}
-		} else {
-			callCode += fmt.Sprintf("\t\t\t%s.ignore();\n", inputStreamName)
-		}
-	}
-
+func (c cpp) generateCallCode(q *leetcode.QuestionData) string {
 	if !q.MetaData.SystemDesign {
 		if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
-			callCode = fmt.Sprintf(
-				"\tauto %s = %s->%s(%s);\n",
+			return fmt.Sprintf(
+				"\tauto %s = %s.%s(%s);\n",
 				returnName,
 				objectName,
 				q.MetaData.Name,
 				c.getParamString(q.MetaData.Params),
 			)
-		} else {
-			callCode = fmt.Sprintf(
-				"\t%s->%s(%s);\n",
-				objectName,
-				q.MetaData.Name,
-				c.getParamString(q.MetaData.Params),
-			)
 		}
-	} else {
-		/* define methods */ {
-			callCode = fmt.Sprintf(
-				"\tconst unordered_map<string, function<void()>> %s = {\n",
-				systemDesignMethodMapName,
-			)
-			/* operations in constructor function call */ {
-				callCode += fmt.Sprintf("\t\t{ \"%s\", [&]() {\n", q.MetaData.ClassName)
-				generateParamScanningCode(q.MetaData.Constructor.Params)
-				callCode += fmt.Sprintf(
-					"\t\t\t%s = new %s(%s);\n",
-					objectName,
-					q.MetaData.ClassName,
-					c.getParamString(q.MetaData.Constructor.Params),
-				)
-				callCode += fmt.Sprintf("\t\t\t%s << \"null,\";\n\t\t} },\n", outputStreamName)
-			}
-			/* operations in member function calls */
-			for _, method := range q.MetaData.Methods {
-				callCode += fmt.Sprintf("\t\t{ \"%s\", [&]() {\n", method.Name)
-				generateParamScanningCode(method.Params)
-				_, returnType := c.getCppTypeName(method.Return.Type)
-				functionCall := fmt.Sprintf(
-					"%s->%s(%s)",
-					objectName,
-					method.Name,
-					c.getParamString(method.Params),
-				)
-				if returnType != "void" {
-					callCode += fmt.Sprintf(
-						"\t\t\t%s %s << ',';\n",
-						c.getPrintCodeForType(functionCall, outputStreamName),
-						outputStreamName,
-					)
-				} else {
-					callCode += fmt.Sprintf(
-						"\t\t\t%s;\n\t\t\t%s << \"null,\";\n",
-						functionCall,
-						outputStreamName,
-					)
-				}
-				callCode += "\t\t} },\n"
-			}
-			callCode += "\t};"
+		return fmt.Sprintf(
+			"\t%s.%s(%s);\n",
+			objectName,
+			q.MetaData.Name,
+			c.getParamString(q.MetaData.Params),
+		)
+	}
+
+	generateParamScanningCode := func(params []leetcode.MetaDataParam) string {
+		var code string
+		for index, param := range params {
+			dimCnt, cppType := c.getCppTypeName(param.Type)
+			code += "\t\t\t" + c.getDeserializeCodeForType(
+				dimCnt,
+				cppType,
+				param.Name,
+				fmt.Sprintf("method_params, %d", index),
+			) + "\n"
 		}
-		/* invoke methods */ {
+		return code
+	}
+	lambdaParameter := func(params []leetcode.MetaDataParam) string {
+		if len(params) == 0 {
+			return "const vector<string> &"
+		}
+		return "const vector<string> &method_params"
+	}
+
+	callCode := fmt.Sprintf(
+		"\tvector<string> %s;\n\tconst unordered_map<string, function<void(const vector<string> &)>> %s = {\n",
+		systemDesignOutputName,
+		systemDesignMethodMapName,
+	)
+
+	callCode += fmt.Sprintf(
+		"\t\t{ \"%s\", [&](%s) {\n",
+		q.MetaData.ClassName,
+		lambdaParameter(q.MetaData.Constructor.Params),
+	)
+	callCode += generateParamScanningCode(q.MetaData.Constructor.Params)
+	callCode += fmt.Sprintf(
+		"\t\t\t%s = make_unique<%s>(%s);\n",
+		objectName,
+		q.MetaData.ClassName,
+		c.getParamString(q.MetaData.Constructor.Params),
+	)
+	callCode += fmt.Sprintf("\t\t\t%s.push_back(\"null\");\n\t\t} },\n", systemDesignOutputName)
+
+	for _, method := range q.MetaData.Methods {
+		callCode += fmt.Sprintf(
+			"\t\t{ \"%s\", [&](%s) {\n",
+			method.Name,
+			lambdaParameter(method.Params),
+		)
+		callCode += generateParamScanningCode(method.Params)
+		functionCall := fmt.Sprintf(
+			"%s->%s(%s)",
+			objectName,
+			method.Name,
+			c.getParamString(method.Params),
+		)
+		if method.Return.Type != "" && method.Return.Type != "void" {
 			callCode += fmt.Sprintf(
-				`
-	%s >> ws;
-	%s << '[';
-	for (auto &&%s : %s) {
-		%s.ignore(2);
-		%s.at(%s)();
-	}
-	%s.ignore();
-	%s.seekp(-1, ios_base::end); %s << ']';
-`,
-				inputStreamName,
-				outputStreamName,
-				systemDesignMethodNameName,
-				systemDesignMethodListName,
-				inputStreamName,
-				systemDesignMethodMapName,
-				systemDesignMethodNameName,
-				inputStreamName,
-				outputStreamName,
-				outputStreamName,
+				"\t\t\t%s.push_back(LeetCodeIO::serialize(%s));\n",
+				systemDesignOutputName,
+				functionCall,
+			)
+		} else {
+			callCode += fmt.Sprintf(
+				"\t\t\t%s;\n\t\t\t%s.push_back(\"null\");\n",
+				functionCall,
+				systemDesignOutputName,
 			)
 		}
+		callCode += "\t\t} },\n"
 	}
+	callCode += "\t};\n"
+
+	callCode += fmt.Sprintf(
+		`	if (%s.size() != params.size()) {
+		throw LeetCodeIO::Error("method and parameter counts differ");
+	}
+	for (size_t i = 0; i < %s.size(); ++i) {
+		auto method_params = LeetCodeIO::split_array(params[i]);
+		%s.at(%s[i])(method_params);
+	}
+`,
+		systemDesignMethodListName,
+		systemDesignMethodListName,
+		systemDesignMethodMapName,
+		systemDesignMethodListName,
+	)
 	return callCode
 }
 
 func (c cpp) generatePrintCode(q *leetcode.QuestionData) (printCode string) {
-	if !q.MetaData.SystemDesign {
-		if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
-			printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
-		} else if q.MetaData.Output != nil {
-			outputParamName := q.MetaData.Params[q.MetaData.Output.ParamIndex].Name
-			printCode += "\t" + c.getPrintCodeForType(outputParamName, outputStreamName) + "\n"
-		} else {
-			printCode += fmt.Sprintf("\t%s << \"null\";\n", outputStreamName)
+	if q.MetaData.SystemDesign {
+		return fmt.Sprintf(
+			"\tcout << \"\\n%s \" << LeetCodeIO::join_array(%s) << '\\n';\n",
+			testCaseOutputMark,
+			systemDesignOutputName,
+		)
+	}
+
+	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		printCode += "\t" + c.getPrintCodeForType(returnName, outputStreamName) + "\n"
+	} else if q.MetaData.Output != nil {
+		outputParamName := q.MetaData.Params[q.MetaData.Output.ParamIndex].Name
+		printCode += "\t" + c.getPrintCodeForType(outputParamName, outputStreamName) + "\n"
+	} else {
+		printCode += fmt.Sprintf("\t%s << \"null\";\n", outputStreamName)
+	}
+	printCode += fmt.Sprintf("\tcout << \"\\n%s \" << %s.rdbuf() << '\\n';\n", testCaseOutputMark, outputStreamName)
+	return printCode
+}
+
+func indentCode(code string) string {
+	lines := strings.Split(code, "\n")
+	for i, line := range lines {
+		if line != "" {
+			lines[i] = "\t" + line
 		}
 	}
-	printCode += fmt.Sprintf("\tcout << \"\\n%s \" << %s.rdbuf() << endl;\n", testCaseOutputMark, outputStreamName)
-	return printCode
+	return strings.Join(lines, "\n")
 }
 
 func (c cpp) generateTestContent(q *leetcode.QuestionData) (string, error) {
 	const template = `int main() {
 	ios_base::sync_with_stdio(false);
-	stringstream ` + outputStreamName + `;
-
+	try {
 %s
-%s%s%s
-	delete ` + objectName + `;
+	} catch (const LeetCodeIO::Error &error) {
+		cerr << "LC_IO: " << error.what() << '\n';
+		return 2;
+	}
 	return 0;
 }`
+	body := c.generateScanCode(q) + "\n" +
+		c.generateInitCode(q) +
+		c.generateCallCode(q)
+	if !q.MetaData.SystemDesign {
+		body += "\n\tstringstream " + outputStreamName + ";\n"
+	}
+	body += c.generatePrintCode(q)
 	testContent := fmt.Sprintf(
 		template,
-		c.generateScanCode(q),
-		c.generateInitCode(q),
-		c.generateCallCode(q),
-		c.generatePrintCode(q),
+		indentCode(strings.TrimSuffix(body, "\n")),
 	)
 	if q.MetaData.Manual {
 		testContent = fmt.Sprintf("// %s\n%s", manualWarning, testContent)
