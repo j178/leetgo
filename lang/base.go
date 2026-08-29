@@ -26,13 +26,14 @@ const (
 const manualWarning = "Warning: this is a manual question, the generated test code may be incorrect."
 
 type GenerateResult struct {
-	mask        int
-	Question    *leetcode.QuestionData
-	Lang        Lang
-	OutDir      string
-	SubDir      string
-	Files       []FileOutput
-	ResultHooks []func(*GenerateResult) error
+	mask          int
+	Question      *leetcode.QuestionData
+	Lang          Lang
+	OutDir        string
+	SubDir        string
+	Files         []FileOutput
+	ResultHooks   []func(*GenerateResult) error
+	PostPickError string
 }
 
 type FileOutput struct {

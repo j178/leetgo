@@ -1,10 +1,13 @@
 package lang
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
+	"text/template"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -105,6 +108,41 @@ func generate(q *leetcode.QuestionData) (Lang, *GenerateResult, error) {
 		}
 		result.Files[i].Written = written
 	}
+
+	// Execute post-pick action after file writes
+	postAction := getCodeStringConfig(gen, "post_pick_action")
+	if postAction != "" {
+		// Build the substitution context.
+		data := struct {
+			Folder string
+		}{
+			Folder: result.TargetDir(),
+		}
+		// Parse and execute the template.
+		tmpl, err := template.New("postPick").Parse(postAction)
+		if err != nil {
+			result.PostPickError = fmt.Sprintf("post-pick action template parsing failed: %v", err)
+		} else {
+			var buf bytes.Buffer
+			if err := tmpl.Execute(&buf, data); err != nil {
+				result.PostPickError = fmt.Sprintf("post-pick action template execution failed: %v", err)
+			} else {
+				substitutedCommand := buf.String()
+				// Split the substituted command into parts.
+				parts := strings.Fields(substitutedCommand)
+				if len(parts) > 0 {
+					log.Info("executing", "post_pick_action", substitutedCommand)
+					cmd := exec.Command(parts[0], parts[1:]...)
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					if err := cmd.Run(); err != nil {
+						result.PostPickError = fmt.Sprintf("%v", err)
+					}
+				}
+			}
+		}
+	}
+
 	return gen, result, nil
 }
 
