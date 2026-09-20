@@ -72,10 +72,12 @@ func TestRustInitWorkspace(t *testing.T) {
 		"serde":      "1.0.196",
 		"serde_json": "1.0.113",
 		"anyhow":     "1.0.79",
+		"leetgo-rs":  "0.2.2",
 	}
+
 	for depName, expectedDepVersion := range expectedDeps {
-		if DepVersion := manifest.Dependencies[depName]; DepVersion != expectedDepVersion {
-			t.Errorf("dependency: %s: got: %q, want: %q", depName, DepVersion, expectedDepVersion)
+		if depVersion := manifest.Dependencies[depName]; depVersion != expectedDepVersion {
+			t.Errorf("dependency: %s: got: %q, want: %q", depName, depVersion, expectedDepVersion)
 		}
 	}
 
