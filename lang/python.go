@@ -158,19 +158,16 @@ func (p python) generateNormalTestCode(q *leetcode.QuestionData) (string, error)
 		paramNames = append(paramNames, param.Name)
 		paramTypes = append(paramTypes, varType)
 	}
+	methodCall := fmt.Sprintf(
+		"Solution().%s(%s)",
+		q.MetaData.Name,
+		strings.Join(paramNames, ", "),
+	)
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
-		code += fmt.Sprintf(
-			"\tans = Solution().%s(%s)\n",
-			q.MetaData.Name,
-			strings.Join(paramNames, ", "),
-		)
+		code += fmt.Sprintf("\tans = %s\n", methodCall)
 		code += fmt.Sprintf("\tprint(\"\\n%s\", serialize(ans, \"%s\"))\n", testCaseOutputMark, q.MetaData.Return.Type)
 	} else {
-		code += fmt.Sprintf(
-			"\t%s(%s)\n",
-			q.MetaData.Name,
-			strings.Join(paramNames, ", "),
-		)
+		code += fmt.Sprintf("\t%s\n", methodCall)
 		if q.MetaData.Output != nil {
 			ansName := paramNames[q.MetaData.Output.ParamIndex]
 			code += fmt.Sprintf("\tans = %s\n", ansName)
