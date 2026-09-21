@@ -1,6 +1,8 @@
 package lang
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestToRustVarName(t *testing.T) {
 	tests := []struct {

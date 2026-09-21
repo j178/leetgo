@@ -3,12 +3,10 @@ package lang
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/j178/leetgo/config"
@@ -18,11 +16,11 @@ import (
 
 const leetgoRs = "leetgo-rs"
 
-var rustDeps = []string{
-	"serde@1.0.196",
-	"serde_json@1.0.113",
-	"anyhow@1.0.79",
-	leetgoRs + "@0.2.2",
+var rustDeps = map[string]string{
+	"serde":      "1.0.196",
+	"serde_json": "1.0.113",
+	"anyhow":     "1.0.79",
+	leetgoRs:     "0.2.2",
 }
 
 type rust struct {
@@ -51,23 +49,21 @@ func (r rust) InitWorkspace(outDir string) error {
 	}
 	_ = utils.RemoveIfExist(filepath.Join(outDir, "Cargo.lock"))
 
-	const packageName = "leetcode-solutions"
-	cmd := exec.Command("cargo", "init", "--bin", "--name", packageName, outDir)
-	log.Info("cargo init", "cmd", cmd.String())
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = outDir
-	err = cmd.Run()
+	manifest := map[string]any{
+		"package": map[string]any{
+			"name":    "leetcode-solutions",
+			"version": "0.1.0",
+			"edition": "2024",
+		},
+		"dependencies": rustDeps,
+	}
+
+	data, err := toml.Marshal(manifest)
 	if err != nil {
 		return err
 	}
-	cmd = exec.Command("cargo", "add")
-	cmd.Args = append(cmd.Args, rustDeps...)
-	log.Info("cargo add", "cmd", cmd.String())
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = outDir
-	err = cmd.Run()
+
+	err = os.WriteFile(filepath.Join(outDir, "Cargo.toml"), data, 0o644)
 	if err != nil {
 		return err
 	}
