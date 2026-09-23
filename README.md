@@ -173,6 +173,11 @@ Use "leetgo [command] --help" for more information about a command.
 ### Interactive question picker
 
 Run `leetgo pick` to browse and search questions, with filters for difficulty, status, and tags.
+Search results update as you type; press `Enter` or `Esc` to leave the input and browse them.
+Click a filter in the top bar, or press `d`/`s`/`t`, to open its dropdown. Difficulty and status apply immediately when clicked; tags support search and multiple selections with `Apply`/`Cancel`. Press `Esc` or click outside to dismiss the dropdown without applying changes.
+The highlighted question's Markdown description appears on the right in terminals at least 80 columns wide.
+Use `Tab` to switch panes, or `←`/`→` to focus the question list or preview. Arrow keys and `PgUp`/`PgDn` navigate the focused pane; `J`/`K` or `Ctrl+D`/`Ctrl+U` scroll the preview from either pane.
+Click a question to preview it, or a tag to toggle it. The mouse wheel scrolls the list or text under the pointer; press `Enter` to confirm your selection.
 Press `?` in the picker for keyboard shortcuts.
 
 ![Interactive question picker](misc/pick.png)

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"image"
 	"io"
 	"strings"
 
@@ -15,6 +16,15 @@ import (
 	"github.com/muesli/reflow/wrap"
 
 	"github.com/j178/leetgo/leetcode"
+)
+
+const (
+	pickMinWidth        = 36
+	pickMinHeight       = 12
+	pickPreviewMinWidth = 80
+	pickPadding         = 1
+	pickFooterHeight    = 3
+	pickDivider         = " │ "
 )
 
 var (
@@ -35,32 +45,43 @@ var (
 			Background(lipgloss.AdaptiveColor{Light: "#BFDBFE", Dark: "#1D4ED8"})
 )
 
-const pickHelp = `BROWSE QUESTIONS
+const pickHelp = `PANES
 
-↑ / ↓ or j / k       Move between questions
-PgUp / PgDn          Move one page
-Home / End           First / last loaded question
+Tab / Shift+Tab      Switch between questions and preview
+← / → or h / l       Focus questions / preview
+↑ / ↓ or j / k       Navigate the focused pane
+PgUp / PgDn          Page through the focused pane
+Home / End           Beginning / end of the focused pane
 Enter                Pick the selected question
-/                    Search by title or question ID
-m                    Load more results
+/                    Search by title or question ID as you type
+Enter / Esc          Leave question search and browse results
+m                    Load more questions
 r                    Retry a failed request
 
 FILTERS
 
-Tab / →              Next difficulty
-Shift+Tab / ←        Previous difficulty
-1 / 2 / 3 / 4        All / Easy / Medium / Hard
-d                    Cycle difficulty
-s                    Cycle completion status
-t                    Open the tag picker
-c                    Clear all filters and search
-
-TAG PICKER
-
-/                    Find a tag
+d / s / t            Open Difficulty / Status / Tags
+Click a filter       Open its dropdown
+↑ / ↓                Highlight an option
+Click an option      Apply a single choice or toggle a tag
 Space                Toggle the highlighted tag
-Enter                Apply selected tags
-Esc                  Cancel tag changes
+Enter / Apply        Apply the selection
+Esc / outside click  Close the dropdown and discard changes
+/                    Find a tag
+c / Clear            Clear all filters and search
+
+DESCRIPTION PREVIEW
+
+The preview is visible in terminals at least 80 columns wide.
+J / K                Scroll the preview from either pane
+Ctrl+D / Ctrl+U      Scroll the preview half a page
+
+MOUSE
+
+Click a pane         Focus it
+Click a question     Highlight it and update the preview
+Wheel over a list    Move up / down three items
+Wheel over text      Scroll the preview, help, or messages
 
 MESSAGES
 
@@ -89,12 +110,12 @@ func (rowDelegate) Render(w io.Writer, m list.Model, index int, entry list.Item)
 	case *item:
 		q := (*leetcode.QuestionData)(entry)
 		row = style.Render(cursor) + questionCells(q.QuestionFrontendId, q.GetTitle(), q.Difficulty, q.Status, m.Width()-2, style)
-	case *tagItem:
+	case *filterItem:
 		check := "[ ] "
 		if entry.checked {
 			check = "[✓] "
 		}
-		row = style.Render(cursor + fitCell(check+entry.Name, m.Width()-2))
+		row = style.Render(cursor + fitCell(check+entry.label, m.Width()-2))
 	}
 	_, _ = fmt.Fprint(w, row)
 }
@@ -158,22 +179,15 @@ func splitLine(left, right string, width int) string {
 	return fitCell(left, width-rightWidth) + right
 }
 
-func (m *model) headerView() string {
-	width := m.list.Width()
-	var tabs []string
-	for i, difficulty := range difficulties {
-		label := fmt.Sprintf(" %d %s ", i+1, difficulty.label)
-		if width < 50 {
-			label = " " + difficulty.label + " "
-		}
-		if i == m.difficulty {
-			label = pickActiveStyle.Render("[" + strings.TrimSpace(label) + "]")
-		} else {
-			label = pickMutedStyle.Render(label)
-		}
-		tabs = append(tabs, label)
+func paneTitle(title string, focused bool) string {
+	if focused {
+		return pickAccentStyle.Bold(true).Render("● " + title)
 	}
-	title := strings.Join(tabs, " ")
+	return pickMutedStyle.Render("○ " + title)
+}
+
+func (m *model) headerView() string {
+	width := m.layout().body.Dx()
 	search := pickMutedStyle.Render("/ Search by title or question ID")
 	if m.query != "" {
 		search = "/ " + m.query
@@ -181,38 +195,29 @@ func (m *model) headerView() string {
 	if m.search.Focused() {
 		search = m.search.View()
 	}
-	columns := "  " + questionCells("ID", "TITLE", "LEVEL", "STATUS", width-2, pickAccentStyle.Bold(true))
-	if m.showTags {
-		title = pickMutedStyle.Render("Questions / ") + pickActiveStyle.Render(" Tags ")
-		search = pickMutedStyle.Render("/ Find a tag · space to toggle")
-		if m.search.Focused() || m.search.Value() != "" {
-			search = m.search.View()
-		}
-		columns = "  SELECT TAGS"
+	heading := paneTitle("QUESTIONS", !m.previewFocused)
+	columns := "  " + questionCells("ID", "TITLE", "LEVEL", "STATUS", m.list.Width()-2, pickAccentStyle.Bold(true))
+	if m.previewVisible() {
+		heading = m.joinPreview(fitCell(heading, m.list.Width()), m.previewHeader())
+		columns = m.joinPreview(columns, strings.Repeat(" ", m.preview.viewport.Width))
 	}
 	if m.panel != "" {
-		title = pickMutedStyle.Render("Questions / ") + pickActiveStyle.Render(" "+m.panel+" ")
+		heading = pickAccentStyle.Bold(true).Render(m.panel)
 		search = pickMutedStyle.Render("↑↓ scroll · esc to return")
 		columns = ""
 	}
 	return strings.Join([]string{
-		splitLine(title, pickAccentStyle.Bold(true).Render("leetgo / pick"), width),
+		m.filterBarView(),
 		fitCell(search, width),
 		pickMutedStyle.Render(strings.Repeat("─", width)),
-		pickAccentStyle.Bold(true).Render(fitCell(columns, width)),
+		fitCell(heading, width),
+		fitCell(columns, width),
 	}, "\n")
 }
 
 func (m *model) footerView() string {
-	width := m.list.Width()
-	tags := "All"
-	if len(m.tags) == 1 {
-		tags = m.tags[0]
-	} else if len(m.tags) > 1 {
-		tags = fmt.Sprintf("%d selected", len(m.tags))
-	}
-	filters := pickAccentStyle.Render("[s]") + " " + statuses[m.status].label + "   " +
-		pickAccentStyle.Render("[t]") + " " + tags + "   " + pickMutedStyle.Render("[c] clear")
+	width := m.layout().body.Dx()
+	summary := "Questions"
 	count := fmt.Sprintf("%d loaded / %d total", len(m.list.Items()), m.total)
 	if len(m.list.Items()) > 0 {
 		start, end := m.list.Paginator.GetSliceBounds(len(m.list.Items()))
@@ -221,52 +226,52 @@ func (m *model) footerView() string {
 			count += "  [m] more"
 		}
 	}
-	if width < 60 {
-		filters = pickAccentStyle.Render("[s]") + " " + statuses[m.status].label + "  " +
-			pickAccentStyle.Render("[t]") + " " + tags
-		count = fmt.Sprintf("%d / %d", len(m.list.Items()), m.total)
-	}
-	notice := pickMutedStyle.Render("Choose a question to generate a solution")
-	if m.notice != nil {
-		notice = lipgloss.NewStyle().Foreground(pickYellow).Render("[!] " + m.notice.summary())
-	}
 	if m.loading {
 		count = "Loading questions…"
 	}
+	hints := []key.Binding{pickHint("↑↓", "move"), pickHint("enter", "pick"), pickHint("/", "search")}
+	if m.previewVisible() {
+		hints = append([]key.Binding{pickHint("tab/←→", "pane")}, hints...)
+	}
+	if m.previewFocused {
+		summary = "Preview"
+		hints = []key.Binding{pickHint("tab/←", "list"), pickHint("↑↓", "scroll"), pickHint("pgup/pgdn", "page"), pickHint("enter", "pick")}
+	}
+	hints = append(hints, pickHint("?", "help"), pickHint("q", "quit"))
+	if m.notice != nil {
+		summary = lipgloss.NewStyle().Foreground(pickYellow).Render("[!] " + m.notice.summary())
+	}
 	if m.err != nil {
-		notice = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load questions: " + m.err.Error() + " · r retry")
+		summary = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load questions: " + m.err.Error() + " · r retry")
 	}
-	hints := []key.Binding{
-		pickHint("↑↓", "move"), pickHint("enter", "pick"), pickHint("/", "search"),
-		pickHint("?", "help"), pickHint("q", "quit"),
-	}
-	if m.search.Focused() {
-		hints = []key.Binding{pickHint("enter", "search"), pickHint("esc", "cancel")}
-	}
-	if m.showTags {
-		selected := 0
-		for _, entry := range m.tagItems {
-			if entry.(*tagItem).checked {
-				selected++
+	if m.filter != noFilter {
+		summary, count = m.filter.title(), fmt.Sprintf("%d options", len(m.filterList.VisibleItems()))
+		hints = []key.Binding{pickHint("↑↓", "move"), pickHint("enter", "apply"), pickHint("esc", "cancel")}
+		if m.filter == tagsFilter {
+			selected := 0
+			for _, entry := range m.filterItems {
+				if entry.(*filterItem).checked {
+					selected++
+				}
+			}
+			summary = fmt.Sprintf("%d selected", selected)
+			hints = append([]key.Binding{pickHint("space", "toggle"), pickHint("/", "find")}, hints[1:]...)
+			if m.tagsLoading {
+				count = "Loading tags…"
+			}
+			if m.tagsErr != nil {
+				summary = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load tags: " + m.tagsErr.Error() + " · r retry")
 			}
 		}
-		filters = fmt.Sprintf("%d selected", selected)
-		count = fmt.Sprintf("%d tags", len(m.tagList.VisibleItems()))
-		if m.tagsLoading {
-			count = "Loading tags…"
-		}
-		if m.tagsErr != nil {
-			notice = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load tags: " + m.tagsErr.Error() + " · r retry")
-		}
-		hints = []key.Binding{
-			pickHint("space", "toggle"), pickHint("enter", "apply"), pickHint("/", "find"), pickHint("esc", "cancel"),
-		}
-		if m.search.Focused() {
-			hints = []key.Binding{pickHint("enter", "find"), pickHint("esc", "cancel search")}
-		}
+	}
+	if m.search.Focused() {
+		hints = []key.Binding{pickHint("enter/esc", "browse results")}
+	}
+	if m.filterSearch.Focused() {
+		hints = []key.Binding{pickHint("↑↓", "move"), pickHint("click", "toggle"), pickHint("enter", "apply"), pickHint("esc", "cancel")}
 	}
 	if m.panel != "" {
-		filters, count = m.panel, fmt.Sprintf("%.0f%%", m.details.ScrollPercent()*100)
+		summary, count = m.panel, fmt.Sprintf("%.0f%%", m.details.ScrollPercent()*100)
 		hints = []key.Binding{pickHint("↑↓", "scroll"), pickHint("pgup/pgdn", "page"), pickHint("esc", "back")}
 	}
 	h := help.New()
@@ -275,9 +280,8 @@ func (m *model) footerView() string {
 	h.Styles.ShortDesc = pickMutedStyle
 	return strings.Join([]string{
 		pickMutedStyle.Render(strings.Repeat("─", width)),
-		splitLine(filters, pickMutedStyle.Render(count), width),
+		splitLine(summary, pickMutedStyle.Render(count), width),
 		fitCell(h.ShortHelpView(hints), width),
-		fitCell(notice, width),
 	}, "\n")
 }
 
@@ -285,12 +289,57 @@ func pickHint(keyName, description string) key.Binding {
 	return key.NewBinding(key.WithKeys(keyName), key.WithHelp(keyName, description))
 }
 
+type pickLayout struct {
+	body      image.Rectangle
+	questions image.Rectangle
+	preview   image.Rectangle
+	search    image.Rectangle
+}
+
+// Component sizes and mouse hit areas must use the same terminal coordinates.
+func (m *model) layout() pickLayout {
+	width := max(1, m.width-2*pickPadding)
+	controls := m.filterControls()
+	toolbarHeight := controls[len(controls)-1].bounds.Max.Y
+	headerHeight := toolbarHeight + 4
+	height := max(1, m.height-headerHeight-pickFooterHeight)
+	body := image.Rect(pickPadding, headerHeight, pickPadding+width, headerHeight+height)
+	layout := pickLayout{
+		body: body, questions: body,
+		search: image.Rect(body.Min.X, toolbarHeight, body.Max.X, toolbarHeight+1),
+	}
+	if m.width >= pickPreviewMinWidth {
+		dividerWidth := lipgloss.Width(pickDivider)
+		layout.questions.Max.X = body.Min.X + (width-dividerWidth)*45/100
+		layout.preview = body
+		layout.preview.Min.X = layout.questions.Max.X + dividerWidth
+	}
+	return layout
+}
+
 func (m *model) resize() {
-	width, height := max(1, m.width-2), max(1, m.height-8)
+	layout := m.layout()
+	width, height := layout.body.Dx(), layout.body.Dy()
 	m.search.Width = max(1, width-3)
-	m.list.SetSize(width, height)
-	m.tagList.SetSize(width, height)
+	m.list.SetSize(layout.questions.Dx(), height)
+	if m.filter != noFilter {
+		menu := m.dropdownLayout()
+		m.filterList.SetSize(menu.options.Dx(), menu.options.Dy())
+		m.filterSearch.Width = max(1, menu.search.Dx()-3)
+	}
 	m.details.Width, m.details.Height = width, height
+	previewWidth := max(1, layout.preview.Dx())
+	if m.preview.viewport.Width != previewWidth {
+		m.preview.viewport.Width = previewWidth
+		if m.width >= pickPreviewMinWidth {
+			m.renderPreview()
+		}
+	}
+	if m.width < pickPreviewMinWidth || m.height < pickMinHeight {
+		m.previewFocused = false
+	}
+	m.preview.viewport.Height = height
+	m.preview.viewport.SetYOffset(m.preview.viewport.YOffset)
 	m.refreshPanel()
 }
 
@@ -311,7 +360,7 @@ func (m *model) refreshPanel() {
 }
 
 func (m *model) View() string {
-	if m.width < 36 || m.height < 12 {
+	if m.width < pickMinWidth || m.height < pickMinHeight {
 		return lipgloss.NewStyle().MaxWidth(max(1, m.width)).MaxHeight(max(1, m.height)).Render(
 			"Resize to at least 36 × 12. Ctrl+C to quit.",
 		)
@@ -328,25 +377,22 @@ func (m *model) View() string {
 			empty = "No matching questions. Press c to clear filters."
 		}
 	}
-	if m.showTags {
-		body, empty = m.tagList.View(), ""
-		switch {
-		case m.tagsLoading:
-			empty = "Loading tags…"
-		case m.tagsErr != nil:
-			empty = "Unable to load tags. Press r to retry."
-		case len(m.tagList.VisibleItems()) == 0:
-			empty = "No matching tags."
-		}
-	}
+	bodyWidth := m.list.Width()
 	if empty != "" {
-		body = lipgloss.Place(m.list.Width(), m.list.Height(), lipgloss.Center, lipgloss.Center,
-			pickMutedStyle.Render(strings.TrimSpace(fitCell(empty, m.list.Width()))))
+		body = lipgloss.Place(bodyWidth, m.list.Height(), lipgloss.Center, lipgloss.Center,
+			pickMutedStyle.Render(strings.TrimSpace(fitCell(empty, bodyWidth))))
+	}
+	if m.previewVisible() {
+		body = m.joinPreview(body, m.preview.viewport.View())
 	}
 	if m.panel != "" {
 		body = m.details.View()
 	}
-	return lipgloss.NewStyle().Padding(0, 1).Render(
+	view := lipgloss.NewStyle().Padding(0, pickPadding).Render(
 		lipgloss.JoinVertical(lipgloss.Left, m.headerView(), body, m.footerView()),
 	)
+	if m.filter != noFilter && m.panel == "" {
+		view = m.overlayFilter(view)
+	}
+	return view
 }
