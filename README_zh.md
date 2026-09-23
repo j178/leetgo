@@ -167,6 +167,12 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
+### 交互式选题
+
+运行 `leetgo pick` 即可浏览和搜索题目，并按难度、状态和标签筛选。在选题页面按 `?` 查看快捷键。
+
+![交互式选题](misc/pick.png)
+
 ### 题目标志符 `qid`
 
 许多 `leetgo` 命令都依赖 `qid` 来定位 LeetCode 题目。`qid` 是 `leetgo` 定义的一种简化的题目标志符，目的是让指定一个题目更简单，支持多种形式：

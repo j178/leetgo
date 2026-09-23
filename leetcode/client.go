@@ -925,18 +925,28 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		return QuestionList{}, err
 	}
 
+	return decodeQuestionList(resp.Get("data.problemsetQuestionList"), c)
+}
+
+func decodeQuestionList(data gjson.Result, c Client) (QuestionList, error) {
 	var result QuestionList
-	questionList := resp.Get("data.problemsetQuestionList")
-	err = json.Unmarshal(utils.StringToBytes(questionList.Raw), &result)
-	if err != nil {
+	if err := json.Unmarshal(utils.StringToBytes(data.Raw), &result); err != nil {
 		return QuestionList{}, err
 	}
-	for _, q := range result.Questions {
+	questions := data.Get("questions").Array()
+	for i, q := range result.Questions {
+		// List responses use different field names from question details.
+		if q.QuestionFrontendId == "" {
+			q.QuestionFrontendId = questions[i].Get("frontendQuestionId").Str
+		}
+		if q.TranslatedTitle == "" {
+			q.TranslatedTitle = questions[i].Get("titleCn").Str
+		}
 		q.client = c
 		q.partial = 1
 	}
 
-	return result, err
+	return result, nil
 }
 
 func (c *cnClient) GetQuestionTags() ([]QuestionTag, error) {

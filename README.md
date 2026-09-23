@@ -170,6 +170,13 @@ Use "leetgo [command] --help" for more information about a command.
 ```
 <!-- END USAGE -->
 
+### Interactive question picker
+
+Run `leetgo pick` to browse and search questions, with filters for difficulty, status, and tags.
+Press `?` in the picker for keyboard shortcuts.
+
+![Interactive question picker](misc/pick.png)
+
 ### Question Identifier
 
 Many `leetgo` commands rely on `qid` to find the leetcode question. `qid` is a simplified question
