@@ -215,9 +215,11 @@ func (m *MetaData) NArg() int {
 func (m *MetaData) ResultType() string {
 	if m.Return != nil && m.Return.Type != "void" {
 		return m.Return.Type
-	} else {
-		return m.Params[m.Output.ParamIndex].Type
 	}
+	if m.Output == nil {
+		return ""
+	}
+	return m.Params[m.Output.ParamIndex].Type
 }
 
 type JsonExampleTestCases []string
