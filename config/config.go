@@ -69,7 +69,7 @@ type Modifier struct {
 }
 
 type CodeConfig struct {
-	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java... \n(will be overridden by command line flag -l/--lang)."`
+	Lang                    string         `yaml:"lang" mapstructure:"lang" comment:"Language of code generated for questions: go, cpp, python, java...\n(will be overridden by command line flag -l/--lang)."`
 	FilenameTemplate        string         `yaml:"filename_template" mapstructure:"filename_template" comment:"The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}\nAvailable attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful\n(Most questions have descriptive slugs, but some consist of random characters. The SlugIsMeaningful boolean indicates whether a slug is meaningful.)\nAvailable functions: lower, upper, trim, padWithZero, toUnderscore, group."`
 	SeparateDescriptionFile bool           `yaml:"separate_description_file" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file, otherwise it will be embed in the code file."`
 	Blocks                  []Block        `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Default block definitions for all languages."`
