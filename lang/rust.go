@@ -125,17 +125,20 @@ func toRustVarName(name string) string {
 	return utils.CamelToSnake(name)
 }
 
+func formatRustConversion(rustType, expr string) string {
+	if rustType == "BinaryTree" || rustType == "LinkedList" {
+		return expr + ".into()"
+	}
+	return expr
+}
+
 func formatCallArgs(argTypes, args []string) string {
 	if len(args) == 0 {
 		return ""
 	}
 	res := make([]string, 0, len(args))
 	for i, arg := range args {
-		if argTypes[i] == "BinaryTree" || argTypes[i] == "LinkedList" {
-			res = append(res, arg+".into()")
-		} else {
-			res = append(res, arg)
-		}
+		res = append(res, formatRustConversion(argTypes[i], arg))
 	}
 	return strings.Join(res, ", ")
 }
@@ -162,11 +165,13 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	}
 
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
+		returnType := toRustType(q.MetaData.Return.Type)
+		call := fmt.Sprintf("Solution::%s(%s)",
+			toRustVarName(q.MetaData.Name), formatCallArgs(paramTypes, paramNames))
 		code += fmt.Sprintf(
-			"\tlet ans: %s = Solution::%s(%s).into();\n",
-			toRustType(q.MetaData.Return.Type),
-			toRustVarName(q.MetaData.Name),
-			formatCallArgs(paramTypes, paramNames),
+			"\tlet ans: %s = %s;\n",
+			returnType,
+			formatRustConversion(returnType, call),
 		)
 	} else {
 		// TODO: input param should be mut ref
@@ -179,9 +184,9 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			ansName := paramNames[q.MetaData.Output.ParamIndex]
 			ansType := paramTypes[q.MetaData.Output.ParamIndex]
 			code += fmt.Sprintf(
-				"\tlet ans: %s = %s.into();\n",
-				toRustType(ansType),
-				toRustVarName(ansName),
+				"\tlet ans: %s = %s;\n",
+				ansType,
+				ansName,
 			)
 		} else {
 			code += "\tlet ans = ();\n"
@@ -261,11 +266,13 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		}
 
 		if method.Return.Type != "" && method.Return.Type != "void" {
+			returnType := toRustType(method.Return.Type)
+			call := fmt.Sprintf("obj.%s(%s)",
+				toRustVarName(method.Name), formatCallArgs(methodParamTypes, methodParamNames))
 			methodCall += fmt.Sprintf(
-				"\t\t\t\tlet ans: %s = obj.%s(%s).into();\n\t\t\t\toutput.push(serialize(ans)?);\n",
-				toRustType(method.Return.Type),
-				toRustVarName(method.Name),
-				formatCallArgs(methodParamTypes, methodParamNames),
+				"\t\t\t\tlet ans: %s = %s;\n\t\t\t\toutput.push(serialize(ans)?);\n",
+				returnType,
+				formatRustConversion(returnType, call),
 			)
 		} else {
 			methodCall += fmt.Sprintf(
