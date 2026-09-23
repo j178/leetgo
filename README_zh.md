@@ -207,7 +207,7 @@ author: Bob
 # Language of the question description: 'zh' (Simplified Chinese) or 'en' (English).
 language: zh
 code:
-  # Language of code generated for questions: go, cpp, python, java... 
+  # Language of code generated for questions: go, cpp, python, java...
   # (will be overridden by command line flag -l/--lang).
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
@@ -296,12 +296,12 @@ editor:
       from: browser
   ```
 
-  > [!IMPORTANT]  
+  > [!IMPORTANT]
   On Windows, Chrome/Edge v127 enabled [App-Bound Encryption](https://security.googleblog.com/2024/07/improving-security-of-chrome-cookies-on.html) and `leetgo` can no longer decrypt cookies from Chrome/Edge.
   You would need to provide cookies manually or use other browsers.
 
 - 手动提供 Cookie
-  
+
   你需要打开 LeetCode 页面，从浏览器的 DevTools 中获取 `LEETCODE_SESSION` 和 `csrftoken` 这两个 Cookie 的值，设置为 `LEETCODE_SESSION` 和 `LEETCODE_CSRFTOKEN` 环境变量。如果你在使用 `leetcode.com`, 你还需要设置 `LEETCODE_CFCLEARANCE` 为 `cf_clearance` cookie 的值。
 
   ```yaml
@@ -319,9 +319,9 @@ editor:
   ```
 
 > [!TIP]
-> 你可以指定读取哪个浏览器的 Cookie，比如 `browsers: [chrome]`。  
-> 你可以指定多种方式，`leetgo` 会按照顺序尝试，比如 `from: [browser, cookies]`。  
-> 你可以将 `LEETCODE_XXX` 等环境变量放到项目根目录的 `.env` 文件中，`leetgo` 会自动读取这个文件。  
+> 你可以指定读取哪个浏览器的 Cookie，比如 `browsers: [chrome]`。
+> 你可以指定多种方式，`leetgo` 会按照顺序尝试，比如 `from: [browser, cookies]`。
+> 你可以将 `LEETCODE_XXX` 等环境变量放到项目根目录的 `.env` 文件中，`leetgo` 会自动读取这个文件。
 
 > [!NOTE]
 > 不推荐使用用户名密码的认证方式, 而且 `leetcode.com` (美国站) 也不支持用户名密码登录.

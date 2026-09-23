@@ -324,28 +324,28 @@ func (c *cnClient) Inspect(typ string) (map[string]any, error) {
 	query := `
 query a {
   __type(name: "$type") {
-    name 
+    name
     fields {
-      name 
+      name
       args {
-        name 
-        description 
-        defaultValue 
+        name
+        description
+        defaultValue
         type {
-          name 
-          kind 
+          name
+          kind
           ofType {
-            name 
-            kind 
+            name
+            kind
           }
         }
       }
       type {
-        name 
-        kind 
+        name
+        kind
         ofType {
-          name 
-          kind 
+          name
+          kind
         }
       }
     }
