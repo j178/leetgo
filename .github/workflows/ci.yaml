@@ -10,27 +10,33 @@ jobs:
   prek:
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v6
-     - uses: j178/prek-action@v3.0.0
+     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+       with:
+         persist-credentials: false
+     - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version: "1.26.x"
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.x"
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: latest
           args: --timeout 3m0s
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version: "1.26.x"
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.x"
       - name: check-readme
         run: |
           go run ./scripts/update_readme.go
@@ -39,5 +45,5 @@ jobs:
       - name: test
         run: |
           go test -v ./...
-          cd ./testutils/go/... && go test -v ./...
-          cd ./testutils/cpp/tests && g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Werror -o tests tests.cpp && ./tests
+          (cd testutils/go && go test -v ./...)
+          (cd testutils/cpp/tests && g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Werror -o tests tests.cpp && ./tests)
