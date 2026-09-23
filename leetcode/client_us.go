@@ -9,11 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
 
 	"github.com/j178/leetgo/config"
-	"github.com/j178/leetgo/utils"
 )
 
 type usClient struct {
@@ -330,18 +328,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		return QuestionList{}, err
 	}
 
-	var result QuestionList
-	questionList := resp.Get("data.problemsetQuestionList")
-	err = json.Unmarshal(utils.StringToBytes(questionList.Raw), &result)
-	if err != nil {
-		return QuestionList{}, err
-	}
-	for _, q := range result.Questions {
-		q.client = c
-		q.partial = 1
-	}
-
-	return result, err
+	return decodeQuestionList(resp.Get("data.problemsetQuestionList"), c)
 }
 
 func (c *usClient) GetQuestionTags() ([]QuestionTag, error) {
