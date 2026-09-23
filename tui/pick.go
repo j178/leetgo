@@ -124,6 +124,8 @@ func newModel(c leetcode.Client) *model {
 			pending:  make(map[string]bool),
 		},
 	}
+	m.preview.viewport.MouseWheelDelta = 1
+	m.details.MouseWheelDelta = 1
 	m.resize()
 	return m
 }
@@ -201,7 +203,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.pendingSearch = nil
 		return m, cmd
 	case previewLoadMsg:
-		if msg.slug != m.preview.slug || !m.preview.loading || !m.previewVisible() {
+		if msg.request != m.preview.request || msg.slug != m.preview.slug || !m.preview.loading || !m.previewVisible() {
 			return m, nil
 		}
 		return m, m.loadPreview()

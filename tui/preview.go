@@ -18,13 +18,17 @@ import (
 type questionPreview struct {
 	viewport viewport.Model
 	slug     string
+	request  int
 	loading  bool
 	err      error
 	cache    map[string]*leetcode.QuestionData
 	pending  map[string]bool
 }
 
-type previewLoadMsg struct{ slug string }
+type previewLoadMsg struct {
+	slug    string
+	request int
+}
 
 type previewMsg struct {
 	slug     string
@@ -37,6 +41,7 @@ func (m *model) previewVisible() bool {
 }
 
 func (m *model) syncPreview() tea.Cmd {
+	m.preview.request++
 	var slug string
 	if selected, ok := m.list.SelectedItem().(*item); ok {
 		slug = selected.TitleSlug
@@ -51,9 +56,10 @@ func (m *model) syncPreview() tea.Cmd {
 	if !m.preview.loading || m.preview.pending[slug] || !m.previewVisible() {
 		return nil
 	}
-	// Wait for navigation to settle before fetching a description.
-	return tea.Tick(150*time.Millisecond, func(time.Time) tea.Msg {
-		return previewLoadMsg{slug: slug}
+	// Invalidate older timers even when navigation returns to the same question.
+	request := m.preview.request
+	return tea.Tick(400*time.Millisecond, func(time.Time) tea.Msg {
+		return previewLoadMsg{slug: slug, request: request}
 	})
 }
 

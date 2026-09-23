@@ -45,50 +45,21 @@ var (
 			Background(lipgloss.AdaptiveColor{Light: "#BFDBFE", Dark: "#1D4ED8"})
 )
 
-const pickHelp = `PANES
+const pickHelp = `Tab / ← / →      Switch panes
+↑ / ↓ or j / k   Navigate / scroll
+Enter            Pick question
+/                Search
+m                Load more
 
-Tab / Shift+Tab      Switch between questions and preview
-← / → or h / l       Focus questions / preview
-↑ / ↓ or j / k       Navigate the focused pane
-PgUp / PgDn          Page through the focused pane
-Home / End           Beginning / end of the focused pane
-Enter                Pick the selected question
-/                    Search by title or question ID as you type
-Enter / Esc          Leave question search and browse results
-m                    Load more questions
-r                    Retry a failed request
+d / s / t        Difficulty / Status / Tags
+Space            Toggle tag
+Enter / Esc      Apply / cancel filter
+c                Clear filters and search
 
-FILTERS
+Click to select; wheel to scroll.
 
-d / s / t            Open Difficulty / Status / Tags
-Click a filter       Open its dropdown
-↑ / ↓                Highlight an option
-Click an option      Apply a single choice or toggle a tag
-Space                Toggle the highlighted tag
-Enter / Apply        Apply the selection
-Esc / outside click  Close the dropdown and discard changes
-/                    Find a tag
-c / Clear            Clear all filters and search
-
-DESCRIPTION PREVIEW
-
-The preview is visible in terminals at least 80 columns wide.
-J / K                Scroll the preview from either pane
-Ctrl+D / Ctrl+U      Scroll the preview half a page
-
-MOUSE
-
-Click a pane         Focus it
-Click a question     Highlight it and update the preview
-Wheel over a list    Move up / down three items
-Wheel over text      Scroll the preview, help, or messages
-
-MESSAGES
-
-!                    Show the latest warning
-?                    Show this help
-Esc / q              Close help or messages
-q / Ctrl+C           Quit the picker`
+Esc / q          Close help
+Ctrl+C           Quit`
 
 type rowDelegate struct{}
 

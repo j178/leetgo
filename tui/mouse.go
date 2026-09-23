@@ -125,13 +125,9 @@ func updateListMouse(l *list.Model, msg tea.MouseMsg, bounds image.Rectangle) bo
 		}
 		l.Select(index)
 	case tea.MouseButtonWheelUp:
-		for range 3 {
-			l.CursorUp()
-		}
+		l.CursorUp()
 	case tea.MouseButtonWheelDown:
-		for range 3 {
-			l.CursorDown()
-		}
+		l.CursorDown()
 	default:
 		return false
 	}
