@@ -325,8 +325,6 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		Post(graphQLPath).
 		Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").
 		BodyJSON(body).Request()
-	// withAuth so the server can evaluate the status filter (NOT_STARTED/TRIED/AC)
-	// against the signed-in user; without credentials it behaves like withoutAuth.
 	_, err := c.send(req, withAuth, &resp)
 	if err != nil {
 		return QuestionList{}, err
