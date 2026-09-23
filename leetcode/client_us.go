@@ -325,7 +325,7 @@ query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $fi
 		Post(graphQLPath).
 		Set("Cookie", "NEW_PROBLEMLIST_PAGE=1").
 		BodyJSON(body).Request()
-	_, err := c.send(req, withoutAuth, &resp)
+	_, err := c.send(req, withAuth, &resp)
 	if err != nil {
 		return QuestionList{}, err
 	}
