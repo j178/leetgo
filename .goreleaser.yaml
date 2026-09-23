@@ -67,8 +67,6 @@ homebrew_casks:
   - repository:
       owner: j178
       name: homebrew-tap
-    conflicts:
-      - formula: leetgo
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
