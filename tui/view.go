@@ -217,7 +217,7 @@ func (m *model) headerView() string {
 
 func (m *model) footerView() string {
 	width := m.layout().body.Dx()
-	summary := "Questions"
+	var summary string
 	count := fmt.Sprintf("%d loaded / %d total", len(m.list.Items()), m.total)
 	if len(m.list.Items()) > 0 {
 		start, end := m.list.Paginator.GetSliceBounds(len(m.list.Items()))
@@ -234,7 +234,6 @@ func (m *model) footerView() string {
 		hints = append([]key.Binding{pickHint("tab/←→", "pane")}, hints...)
 	}
 	if m.previewFocused {
-		summary = "Preview"
 		hints = []key.Binding{pickHint("tab/←", "list"), pickHint("↑↓", "scroll"), pickHint("pgup/pgdn", "page"), pickHint("enter", "pick")}
 	}
 	hints = append(hints, pickHint("?", "help"), pickHint("q", "quit"))
