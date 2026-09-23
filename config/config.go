@@ -88,6 +88,7 @@ type BaseLangConfig struct {
 	SeparateDescriptionFile bool       `yaml:"separate_description_file,omitempty" mapstructure:"separate_description_file" comment:"Generate question description into a separate question.md file, otherwise it will be embed in the code file."`
 	Blocks                  []Block    `yaml:"blocks,omitempty" mapstructure:"blocks" comment:"Replace some blocks of the generated code."`
 	Modifiers               []Modifier `yaml:"modifiers,omitempty" mapstructure:"modifiers" comment:"Functions that modify the generated code."`
+	PostPickAction          string     `yaml:"post_pick_action,omitempty" mapstructure:"post_pick_action" comment: "Run command after picking problem."`
 }
 
 type GoConfig struct {
