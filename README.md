@@ -1,7 +1,7 @@
 **[简体中文](./README_zh.md) | English**
 
 # Leetgo
- 
+
 [![CI](https://github.com/j178/leetgo/actions/workflows/ci.yaml/badge.svg)](https://github.com/j178/leetgo/actions/workflows/ci.yaml)
 [![GitHub downloads](https://img.shields.io/github/downloads/j178/leetgo/total)](https://github.com/j178/leetgo/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
@@ -68,7 +68,7 @@ func main() {
 }
 ```
 
-This is a complete and runnable program. You can run it directly, input the test cases, and compare the results. 
+This is a complete and runnable program. You can run it directly, input the test cases, and compare the results.
 `leetgo test -L` will automatically run this program with the test cases in `testcases.txt` and compare the results.
 
 Local testing means that you can run the test cases on your local machine, so you can use a debugger to debug your code.
@@ -211,7 +211,7 @@ author: Bob
 # Language of the question description: 'zh' (Simplified Chinese) or 'en' (English).
 language: zh
 code:
-  # Language of code generated for questions: go, cpp, python, java... 
+  # Language of code generated for questions: go, cpp, python, java...
   # (will be overridden by command line flag -l/--lang).
   lang: go
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
@@ -300,7 +300,7 @@ There are three ways to make cookies available to `leetgo`:
       from: browser
   ```
 
-  > [!IMPORTANT]  
+  > [!IMPORTANT]
   On Windows, Chrome/Edge v127 enabled [App-Bound Encryption](https://security.googleblog.com/2024/07/improving-security-of-chrome-cookies-on.html) and `leetgo` can no longer decrypt cookies from Chrome/Edge.
   You would need to provide cookies manually or use other browsers.
 
@@ -323,9 +323,9 @@ There are three ways to make cookies available to `leetgo`:
   ```
 
 > [!TIP]
-> You can specify which browser to read cookies from, e.g. `browsers: [chrome]`.  
-> You can specify multiple authentication methods, `leetgo` will try them in order, e.g. `from: [browser, cookies]`.  
-> You can put all the environment variables in a `.env` file in the project's root directory, `leetgo` will automatically read them.  
+> You can specify which browser to read cookies from, e.g. `browsers: [chrome]`.
+> You can specify multiple authentication methods, `leetgo` will try them in order, e.g. `from: [browser, cookies]`.
+> You can put all the environment variables in a `.env` file in the project's root directory, `leetgo` will automatically read them.
 
 > [!NOTE]
 > Password authentication is not recommended, and it is not supported by `leetcode.com`.
