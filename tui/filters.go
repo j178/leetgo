@@ -6,10 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/ansi"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 type filterKind int
@@ -154,7 +153,7 @@ func (m *model) clearFilters() tea.Cmd {
 }
 
 func (m *model) updateFilter(msg tea.Msg) tea.Cmd {
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 		switch keyMsg.String() {
 		case "esc":
 			m.closeFilter()
@@ -181,7 +180,7 @@ func (m *model) updateFilter(msg tea.Msg) tea.Cmd {
 		}
 		return cmd
 	}
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 		switch keyMsg.String() {
 		case "q":
 			m.closeFilter()
@@ -207,7 +206,7 @@ func (m *model) updateFilter(msg tea.Msg) tea.Cmd {
 				return m.filterSearch.Focus()
 			}
 			return nil
-		case " ":
+		case "space":
 			if choice, ok := m.filterList.SelectedItem().(*filterItem); ok && m.filter == tagsFilter {
 				choice.checked = !choice.checked
 			}
@@ -256,12 +255,12 @@ func (m *model) filterBarView() string {
 	controls := m.filterControls()
 	lines := make([]string, controls[len(controls)-1].bounds.Max.Y)
 	for _, control := range controls {
-		style := pickMutedStyle
+		style := m.styles.mutedStyle
 		if control.kind != noFilter && m.filter == control.kind {
-			style = pickActiveStyle
+			style = m.styles.activeStyle
 		} else if control.kind == difficultyFilter && m.difficulty != 0 ||
 			control.kind == statusFilter && m.status != 0 || control.kind == tagsFilter && len(m.tags) > 0 {
-			style = pickAccentStyle
+			style = m.styles.accentStyle
 		}
 		line := &lines[control.bounds.Min.Y]
 		*line += strings.Repeat(" ", control.bounds.Min.X-pickPadding-lipgloss.Width(*line)) + style.Render(control.label)
@@ -322,7 +321,7 @@ func (m *model) dropdownView() string {
 	}
 	body = lipgloss.NewStyle().Width(width).Height(height).MaxWidth(width).MaxHeight(height).Render(body)
 	if m.filter == tagsFilter {
-		search := pickMutedStyle.Render("/ Find tags")
+		search := m.styles.mutedStyle.Render("/ Find tags")
 		if m.filterSearch.Focused() || m.filterSearch.Value() != "" {
 			search = m.filterSearch.View()
 		}
@@ -333,31 +332,16 @@ func (m *model) dropdownView() string {
 			}
 		}
 		buttons := filterApplyLabel + " " + filterCancelLabel
-		footer := splitLine(buttons, pickMutedStyle.Render(fmt.Sprintf("%d selected", selected)), width)
+		footer := splitLine(buttons, m.styles.mutedStyle.Render(fmt.Sprintf("%d selected", selected)), width)
 		body = fitCell(search, width) + "\n" + body + "\n" + footer
 	}
-	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(pickAccent).Render(body)
+	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(m.styles.accent).Render(body)
 }
 
 func (m *model) overlayFilter(view string) string {
 	bounds := m.dropdownLayout().bounds
-	lines := strings.Split(view, "\n")
-	for i, row := range strings.Split(m.dropdownView(), "\n") {
-		y := bounds.Min.Y + i
-		if y >= len(lines) {
-			break
-		}
-		line := fitCell(lines[y], m.width)
-		left := fitCell(ansi.Cut(line, 0, bounds.Min.X), bounds.Min.X)
-		rightWidth := m.width - bounds.Max.X
-		right := ansi.Cut(line, bounds.Max.X, m.width)
-		// A wide character crossing the menu edge must leave blank cells,
-		// rather than shifting the rest of the background to the right.
-		for start := bounds.Max.X; ansi.StringWidth(right) > rightWidth; start++ {
-			right = ansi.Cut(line, start+1, m.width)
-		}
-		right = strings.Repeat(" ", rightWidth-ansi.StringWidth(right)) + right
-		lines[y] = left + row + right
-	}
-	return strings.Join(lines, "\n")
+	return lipgloss.NewCompositor(
+		lipgloss.NewLayer(view),
+		lipgloss.NewLayer(m.dropdownView()).X(bounds.Min.X).Y(bounds.Min.Y).Z(1),
+	).Render()
 }

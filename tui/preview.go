@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
 
@@ -82,7 +82,7 @@ func (m *model) renderPreview() {
 	if m.width < pickPreviewMinWidth {
 		return
 	}
-	width := m.preview.viewport.Width
+	width := m.preview.viewport.Width()
 	content := "Select a question to preview its description."
 	switch {
 	case m.preview.loading:
@@ -97,12 +97,11 @@ func (m *model) renderPreview() {
 		}
 		content = fmt.Sprintf("# %s. %s\n\n%s", q.QuestionFrontendId, q.GetTitle(), description)
 		style := "light"
-		if lipgloss.HasDarkBackground() {
+		if m.darkBackground {
 			style = "dark"
 		}
 		renderer, err := glamour.NewTermRenderer(
 			glamour.WithStandardStyle(style),
-			glamour.WithColorProfile(lipgloss.ColorProfile()),
 			glamour.WithWordWrap(width),
 		)
 		if err == nil {
@@ -126,10 +125,10 @@ func (m *model) previewHeader() string {
 	case m.preview.slug != "":
 		status = fmt.Sprintf("%.0f%%", m.preview.viewport.ScrollPercent()*100)
 	}
-	return splitLine(paneTitle("PREVIEW", m.previewFocused), status, m.preview.viewport.Width)
+	return splitLine(m.styles.paneTitle("PREVIEW", m.previewFocused), status, m.preview.viewport.Width())
 }
 
 func (m *model) joinPreview(left, right string) string {
 	divider := strings.TrimSuffix(strings.Repeat(pickDivider+"\n", lipgloss.Height(left)), "\n")
-	return lipgloss.JoinHorizontal(lipgloss.Top, left, pickMutedStyle.Render(divider), right)
+	return lipgloss.JoinHorizontal(lipgloss.Top, left, m.styles.mutedStyle.Render(divider), right)
 }

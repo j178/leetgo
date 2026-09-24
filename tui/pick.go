@@ -4,10 +4,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/leetcode"
@@ -17,7 +17,7 @@ import (
 // Cancelling returns a nil question and no error.
 func Pick(c leetcode.Client) (*leetcode.QuestionData, error) {
 	m := newModel(c)
-	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(m)
 
 	// Authentication and HTTP retries log from command goroutines. Route all of
 	// their output through Update so only Bubble Tea writes to the terminal.
@@ -93,12 +93,24 @@ type model struct {
 	details        viewport.Model
 	preview        questionPreview
 	previewFocused bool
+	darkBackground bool
+	styles         pickStyles
 }
 
 func newModel(c leetcode.Client) *model {
-	l := list.New(nil, rowDelegate{}, 80, 20)
-	filters := list.New(nil, rowDelegate{}, 80, 20)
-	for _, l := range []*list.Model{&l, &filters} {
+	m := &model{
+		client: c, width: 80, height: 24,
+		search: textinput.New(), filterSearch: textinput.New(),
+		details: viewport.New(viewport.WithWidth(80), viewport.WithHeight(16)),
+		preview: questionPreview{
+			viewport: viewport.New(viewport.WithWidth(1), viewport.WithHeight(1)),
+			cache:    make(map[string]*leetcode.QuestionData),
+			pending:  make(map[string]bool),
+		},
+	}
+	m.list = list.New(nil, rowDelegate{styles: &m.styles}, 80, 20)
+	m.filterList = list.New(nil, rowDelegate{styles: &m.styles}, 80, 20)
+	for _, l := range []*list.Model{&m.list, &m.filterList} {
 		l.SetShowTitle(false)
 		l.SetShowStatusBar(false)
 		l.SetShowHelp(false)
@@ -107,30 +119,21 @@ func newModel(c leetcode.Client) *model {
 		l.KeyMap.NextPage.SetKeys("pgdown", "f", "ctrl+f")
 		l.KeyMap.PrevPage.SetKeys("pgup", "b", "ctrl+b")
 	}
-	filters.DisableQuitKeybindings()
-
-	search := textinput.New()
-	search.Prompt = "/ "
-	search.Placeholder = "Title or question ID"
-	filterSearch := textinput.New()
-	filterSearch.Prompt = "/ "
-	filterSearch.Placeholder = "Find tags"
-	m := &model{
-		client: c, list: l, filterList: filters, search: search, filterSearch: filterSearch,
-		width: 80, height: 24, details: viewport.New(80, 16),
-		preview: questionPreview{
-			viewport: viewport.New(1, 1),
-			cache:    make(map[string]*leetcode.QuestionData),
-			pending:  make(map[string]bool),
-		},
-	}
+	m.filterList.DisableQuitKeybindings()
+	m.search.Prompt = "/ "
+	m.search.Placeholder = "Title or question ID"
+	m.filterSearch.Prompt = "/ "
+	m.filterSearch.Placeholder = "Find tags"
+	m.setTheme(true)
 	m.preview.viewport.MouseWheelDelta = 1
 	m.details.MouseWheelDelta = 1
 	m.resize()
 	return m
 }
 
-func (m *model) Init() tea.Cmd { return m.loadQuestions(true) }
+func (m *model) Init() tea.Cmd {
+	return tea.Batch(tea.RequestBackgroundColor, m.loadQuestions(true))
+}
 
 func (m *model) loadQuestions(reset bool) tea.Cmd {
 	m.pendingSearch = nil
@@ -181,6 +184,10 @@ func (m *model) loadTags() tea.Cmd {
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.BackgroundColorMsg:
+		m.setTheme(msg.IsDark())
+		m.renderPreview()
+		return m, nil
 	case logMsg:
 		if msg.Level == "warn" || msg.Level == "error" {
 			m.notice = &msg
@@ -247,14 +254,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.populateFilter()
 		}
 		return m, nil
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
 	}
 
 	if m.panel != "" {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 			switch keyMsg.String() {
 			case "esc", "q", "?", "!":
 				m.panel = ""
@@ -268,7 +275,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.filter != noFilter {
 		return m, m.updateFilter(msg)
 	}
-	if keyMsg, ok := msg.(tea.KeyMsg); ok && !m.search.Focused() {
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok && !m.search.Focused() {
 		switch keyMsg.String() {
 		case "?":
 			m.openPanel("Help")
@@ -281,7 +288,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	if m.search.Focused() {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 			switch keyMsg.String() {
 			case "enter":
 				m.search.Blur()
@@ -302,7 +309,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 		switch keyMsg.String() {
 		case "tab", "shift+tab":
 			m.previewFocused = m.previewVisible() && !m.previewFocused
@@ -361,7 +368,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	if m.previewFocused && m.previewVisible() {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 			switch keyMsg.String() {
 			case "home", "g":
 				m.preview.viewport.GotoTop()

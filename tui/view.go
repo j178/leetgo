@@ -3,14 +3,16 @@ package tui
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"io"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/muesli/reflow/truncate"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
@@ -27,23 +29,39 @@ const (
 	pickDivider         = " │ "
 )
 
-var (
-	pickAccent = lipgloss.AdaptiveColor{Light: "#007F8B", Dark: "#22D3EE"}
-	pickMuted  = lipgloss.AdaptiveColor{Light: "#667085", Dark: "#8492A6"}
-	pickText   = lipgloss.AdaptiveColor{Light: "#172033", Dark: "#E2E8F0"}
-	pickStripe = lipgloss.AdaptiveColor{Light: "#F1F5F9", Dark: "#1E2531"}
-	pickGreen  = lipgloss.AdaptiveColor{Light: "#15803D", Dark: "#4ADE80"}
-	pickYellow = lipgloss.AdaptiveColor{Light: "#A16207", Dark: "#FACC15"}
-	pickRed    = lipgloss.AdaptiveColor{Light: "#BE123C", Dark: "#FB7185"}
+type pickStyles struct {
+	accent, muted, stripe, green, yellow, red                   color.Color
+	accentStyle, mutedStyle, activeStyle, rowStyle, selectStyle lipgloss.Style
+}
 
-	pickAccentStyle = lipgloss.NewStyle().Foreground(pickAccent)
-	pickMutedStyle  = lipgloss.NewStyle().Foreground(pickMuted)
-	pickActiveStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#07151C")).Background(pickAccent).Bold(true)
-	pickRowStyle    = lipgloss.NewStyle().Foreground(pickText)
-	pickSelectStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.AdaptiveColor{Light: "#172554", Dark: "#FFFFFF"}).
-			Background(lipgloss.AdaptiveColor{Light: "#BFDBFE", Dark: "#1D4ED8"})
-)
+func newPickStyles(dark bool) pickStyles {
+	lightDark := lipgloss.LightDark(dark)
+	s := pickStyles{
+		accent: lightDark(lipgloss.Color("#007F8B"), lipgloss.Color("#22D3EE")),
+		muted:  lightDark(lipgloss.Color("#667085"), lipgloss.Color("#8492A6")),
+		stripe: lightDark(lipgloss.Color("#F1F5F9"), lipgloss.Color("#1E2531")),
+		green:  lightDark(lipgloss.Color("#15803D"), lipgloss.Color("#4ADE80")),
+		yellow: lightDark(lipgloss.Color("#A16207"), lipgloss.Color("#FACC15")),
+		red:    lightDark(lipgloss.Color("#BE123C"), lipgloss.Color("#FB7185")),
+	}
+	s.accentStyle = lipgloss.NewStyle().Foreground(s.accent)
+	s.mutedStyle = lipgloss.NewStyle().Foreground(s.muted)
+	s.activeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#07151C")).Background(s.accent).Bold(true)
+	s.rowStyle = lipgloss.NewStyle().Foreground(lightDark(lipgloss.Color("#172033"), lipgloss.Color("#E2E8F0")))
+	s.selectStyle = lipgloss.NewStyle().
+		Foreground(lightDark(lipgloss.Color("#172554"), lipgloss.Color("#FFFFFF"))).
+		Background(lightDark(lipgloss.Color("#BFDBFE"), lipgloss.Color("#1D4ED8")))
+	return s
+}
+
+func (m *model) setTheme(dark bool) {
+	m.darkBackground = dark
+	m.styles = newPickStyles(dark)
+	m.list.Styles = list.DefaultStyles(dark)
+	m.filterList.Styles = list.DefaultStyles(dark)
+	m.search.SetStyles(textinput.DefaultStyles(dark))
+	m.filterSearch.SetStyles(textinput.DefaultStyles(dark))
+}
 
 const pickHelp = `Tab / ← / →      Switch panes
 ↑ / ↓ or j / k   Navigate / scroll
@@ -61,26 +79,28 @@ Click to select; wheel to scroll.
 Esc / q          Close help
 Ctrl+C           Quit`
 
-type rowDelegate struct{}
+type rowDelegate struct {
+	styles *pickStyles
+}
 
 func (rowDelegate) Height() int                         { return 1 }
 func (rowDelegate) Spacing() int                        { return 0 }
 func (rowDelegate) Update(tea.Msg, *list.Model) tea.Cmd { return nil }
-func (rowDelegate) Render(w io.Writer, m list.Model, index int, entry list.Item) {
+func (d rowDelegate) Render(w io.Writer, m list.Model, index int, entry list.Item) {
 	cursor := "  "
-	style := pickRowStyle
+	style := d.styles.rowStyle
 	if index%2 == 1 {
-		style = style.Background(pickStripe)
+		style = style.Background(d.styles.stripe)
 	}
 	if index == m.Index() {
 		cursor = "▸ "
-		style = pickSelectStyle
+		style = d.styles.selectStyle
 	}
 	var row string
 	switch entry := entry.(type) {
 	case *item:
 		q := (*leetcode.QuestionData)(entry)
-		row = style.Render(cursor) + questionCells(q.QuestionFrontendId, q.GetTitle(), q.Difficulty, q.Status, m.Width()-2, style)
+		row = style.Render(cursor) + d.styles.questionCells(q.QuestionFrontendId, q.GetTitle(), q.Difficulty, q.Status, m.Width()-2, style)
 	case *filterItem:
 		check := "[ ] "
 		if entry.checked {
@@ -102,7 +122,7 @@ func fitCell(text string, width int) string {
 	return text + strings.Repeat(" ", max(0, width-lipgloss.Width(text)))
 }
 
-func questionCells(id, title, difficulty, status string, width int, style lipgloss.Style) string {
+func (s pickStyles) questionCells(id, title, difficulty, status string, width int, style lipgloss.Style) string {
 	idWidth, difficultyWidth, statusWidth := 7, 8, 12
 	if width < 62 {
 		idWidth, statusWidth = 5, 0
@@ -110,25 +130,25 @@ func questionCells(id, title, difficulty, status string, width int, style lipglo
 	if width >= 100 {
 		idWidth = 12
 	}
-	difficultyColor := pickAccent
+	difficultyColor := s.accent
 	switch strings.ToUpper(difficulty) {
 	case "EASY":
-		difficulty, difficultyColor = "Easy", pickGreen
+		difficulty, difficultyColor = "Easy", s.green
 	case "MEDIUM":
-		difficulty, difficultyColor = "Medium", pickYellow
+		difficulty, difficultyColor = "Medium", s.yellow
 	case "HARD":
-		difficulty, difficultyColor = "Hard", pickRed
+		difficulty, difficultyColor = "Hard", s.red
 	}
-	statusColor := pickMuted
+	statusColor := s.muted
 	switch status {
 	case "ac", "AC":
-		status, statusColor = "✓ Accepted", pickGreen
+		status, statusColor = "✓ Accepted", s.green
 	case "notac", "TRIED":
-		status, statusColor = "• Tried", pickYellow
+		status, statusColor = "• Tried", s.yellow
 	case "", "NOT_STARTED":
 		status = "—"
 	case "STATUS":
-		statusColor = pickAccent
+		statusColor = s.accent
 	}
 	titleWidth := width - idWidth - difficultyWidth - 2
 	if statusWidth > 0 {
@@ -150,37 +170,37 @@ func splitLine(left, right string, width int) string {
 	return fitCell(left, width-rightWidth) + right
 }
 
-func paneTitle(title string, focused bool) string {
+func (s pickStyles) paneTitle(title string, focused bool) string {
 	if focused {
-		return pickAccentStyle.Bold(true).Render("● " + title)
+		return s.accentStyle.Bold(true).Render("● " + title)
 	}
-	return pickMutedStyle.Render("○ " + title)
+	return s.mutedStyle.Render("○ " + title)
 }
 
 func (m *model) headerView() string {
 	width := m.layout().body.Dx()
-	search := pickMutedStyle.Render("/ Search by title or question ID")
+	search := m.styles.mutedStyle.Render("/ Search by title or question ID")
 	if m.query != "" {
 		search = "/ " + m.query
 	}
 	if m.search.Focused() {
 		search = m.search.View()
 	}
-	heading := paneTitle("QUESTIONS", !m.previewFocused)
-	columns := "  " + questionCells("ID", "TITLE", "LEVEL", "STATUS", m.list.Width()-2, pickAccentStyle.Bold(true))
+	heading := m.styles.paneTitle("QUESTIONS", !m.previewFocused)
+	columns := "  " + m.styles.questionCells("ID", "TITLE", "LEVEL", "STATUS", m.list.Width()-2, m.styles.accentStyle.Bold(true))
 	if m.previewVisible() {
 		heading = m.joinPreview(fitCell(heading, m.list.Width()), m.previewHeader())
-		columns = m.joinPreview(columns, strings.Repeat(" ", m.preview.viewport.Width))
+		columns = m.joinPreview(columns, strings.Repeat(" ", m.preview.viewport.Width()))
 	}
 	if m.panel != "" {
-		heading = pickAccentStyle.Bold(true).Render(m.panel)
-		search = pickMutedStyle.Render("↑↓ scroll · esc to return")
+		heading = m.styles.accentStyle.Bold(true).Render(m.panel)
+		search = m.styles.mutedStyle.Render("↑↓ scroll · esc to return")
 		columns = ""
 	}
 	return strings.Join([]string{
 		m.filterBarView(),
 		fitCell(search, width),
-		pickMutedStyle.Render(strings.Repeat("─", width)),
+		m.styles.mutedStyle.Render(strings.Repeat("─", width)),
 		fitCell(heading, width),
 		fitCell(columns, width),
 	}, "\n")
@@ -209,10 +229,10 @@ func (m *model) footerView() string {
 	}
 	hints = append(hints, pickHint("?", "help"), pickHint("q", "quit"))
 	if m.notice != nil {
-		summary = lipgloss.NewStyle().Foreground(pickYellow).Render("[!] " + m.notice.summary())
+		summary = lipgloss.NewStyle().Foreground(m.styles.yellow).Render("[!] " + m.notice.summary())
 	}
 	if m.err != nil {
-		summary = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load questions: " + m.err.Error() + " · r retry")
+		summary = lipgloss.NewStyle().Foreground(m.styles.red).Render("Could not load questions: " + m.err.Error() + " · r retry")
 	}
 	if m.filter != noFilter {
 		summary, count = m.filter.title(), fmt.Sprintf("%d options", len(m.filterList.VisibleItems()))
@@ -230,7 +250,7 @@ func (m *model) footerView() string {
 				count = "Loading tags…"
 			}
 			if m.tagsErr != nil {
-				summary = lipgloss.NewStyle().Foreground(pickRed).Render("Could not load tags: " + m.tagsErr.Error() + " · r retry")
+				summary = lipgloss.NewStyle().Foreground(m.styles.red).Render("Could not load tags: " + m.tagsErr.Error() + " · r retry")
 			}
 		}
 	}
@@ -245,12 +265,13 @@ func (m *model) footerView() string {
 		hints = []key.Binding{pickHint("↑↓", "scroll"), pickHint("pgup/pgdn", "page"), pickHint("esc", "back")}
 	}
 	h := help.New()
-	h.Width = width
-	h.Styles.ShortKey = pickAccentStyle
-	h.Styles.ShortDesc = pickMutedStyle
+	h.SetWidth(width)
+	h.Styles = help.DefaultStyles(m.darkBackground)
+	h.Styles.ShortKey = m.styles.accentStyle
+	h.Styles.ShortDesc = m.styles.mutedStyle
 	return strings.Join([]string{
-		pickMutedStyle.Render(strings.Repeat("─", width)),
-		splitLine(summary, pickMutedStyle.Render(count), width),
+		m.styles.mutedStyle.Render(strings.Repeat("─", width)),
+		splitLine(summary, m.styles.mutedStyle.Render(count), width),
 		fitCell(h.ShortHelpView(hints), width),
 	}, "\n")
 }
@@ -290,17 +311,18 @@ func (m *model) layout() pickLayout {
 func (m *model) resize() {
 	layout := m.layout()
 	width, height := layout.body.Dx(), layout.body.Dy()
-	m.search.Width = max(1, width-3)
+	m.search.SetWidth(max(1, width-3))
 	m.list.SetSize(layout.questions.Dx(), height)
 	if m.filter != noFilter {
 		menu := m.dropdownLayout()
 		m.filterList.SetSize(menu.options.Dx(), menu.options.Dy())
-		m.filterSearch.Width = max(1, menu.search.Dx()-3)
+		m.filterSearch.SetWidth(max(1, menu.search.Dx()-3))
 	}
-	m.details.Width, m.details.Height = width, height
+	m.details.SetWidth(width)
+	m.details.SetHeight(height)
 	previewWidth := max(1, layout.preview.Dx())
-	if m.preview.viewport.Width != previewWidth {
-		m.preview.viewport.Width = previewWidth
+	if m.preview.viewport.Width() != previewWidth {
+		m.preview.viewport.SetWidth(previewWidth)
 		if m.width >= pickPreviewMinWidth {
 			m.renderPreview()
 		}
@@ -308,8 +330,8 @@ func (m *model) resize() {
 	if m.width < pickPreviewMinWidth || m.height < pickMinHeight {
 		m.previewFocused = false
 	}
-	m.preview.viewport.Height = height
-	m.preview.viewport.SetYOffset(m.preview.viewport.YOffset)
+	m.preview.viewport.SetHeight(height)
+	m.preview.viewport.SetYOffset(m.preview.viewport.YOffset())
 	m.refreshPanel()
 }
 
@@ -325,11 +347,18 @@ func (m *model) refreshPanel() {
 		content = m.notice.details()
 	}
 	if m.panel != "" {
-		m.details.SetContent(wrap.String(wordwrap.String(content, m.details.Width), m.details.Width))
+		m.details.SetContent(wrap.String(wordwrap.String(content, m.details.Width()), m.details.Width()))
 	}
 }
 
-func (m *model) View() string {
+func (m *model) View() tea.View {
+	view := tea.NewView(m.viewContent())
+	view.AltScreen = true
+	view.MouseMode = tea.MouseModeCellMotion
+	return view
+}
+
+func (m *model) viewContent() string {
 	if m.width < pickMinWidth || m.height < pickMinHeight {
 		return lipgloss.NewStyle().MaxWidth(max(1, m.width)).MaxHeight(max(1, m.height)).Render(
 			"Resize to at least 36 × 12. Ctrl+C to quit.",
@@ -350,7 +379,7 @@ func (m *model) View() string {
 	bodyWidth := m.list.Width()
 	if empty != "" {
 		body = lipgloss.Place(bodyWidth, m.list.Height(), lipgloss.Center, lipgloss.Center,
-			pickMutedStyle.Render(strings.TrimSpace(fitCell(empty, bodyWidth))))
+			m.styles.mutedStyle.Render(strings.TrimSpace(fitCell(empty, bodyWidth))))
 	}
 	if m.previewVisible() {
 		body = m.joinPreview(body, m.preview.viewport.View())
