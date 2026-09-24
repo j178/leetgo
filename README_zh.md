@@ -169,7 +169,8 @@ Use "leetgo [command] --help" for more information about a command.
 
 ### 交互式选题
 
-运行 `leetgo pick` 即可浏览和搜索题目，并按难度、状态和标签筛选。在选题页面按 `?` 查看快捷键。
+运行 `leetgo pick` 可搜索题目，按难度、状态和标签筛选，并查看 Markdown 题目预览。
+支持键盘和鼠标操作，按 `?` 查看快捷键。
 
 ![交互式选题](misc/pick.png)
 

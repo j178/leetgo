@@ -172,8 +172,8 @@ Use "leetgo [command] --help" for more information about a command.
 
 ### Interactive question picker
 
-Run `leetgo pick` to browse and search questions, with filters for difficulty, status, and tags.
-Press `?` in the picker for keyboard shortcuts.
+Run `leetgo pick` to search questions, filter by difficulty, status, and tags, and preview descriptions in Markdown.
+Use the keyboard or mouse to navigate; press `?` for shortcuts.
 
 ![Interactive question picker](misc/pick.png)
 

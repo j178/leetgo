@@ -1,13 +1,13 @@
 package tui
 
 import (
-	"slices"
 	"strings"
+	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log"
 
 	"github.com/j178/leetgo/leetcode"
@@ -17,7 +17,7 @@ import (
 // Cancelling returns a nil question and no error.
 func Pick(c leetcode.Client) (*leetcode.QuestionData, error) {
 	m := newModel(c)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m)
 
 	// Authentication and HTTP retries log from command goroutines. Route all of
 	// their output through Update so only Bubble Tea writes to the terminal.
@@ -50,6 +50,8 @@ type questionsMsg struct {
 	err     error
 }
 
+type searchMsg struct{ request int }
+
 type tagsMsg struct {
 	tags []leetcode.QuestionTag
 	err  error
@@ -59,75 +61,88 @@ type item leetcode.QuestionData
 
 func (i *item) FilterValue() string { return (*leetcode.QuestionData)(i).GetTitle() }
 
-type tagItem struct {
-	leetcode.QuestionTag
-	checked bool
-}
-
-func (i *tagItem) FilterValue() string { return i.Name + " " + i.NameTranslated + " " + i.Slug }
-
 type model struct {
-	client     leetcode.Client
-	difficulty int
-	status     int
-	query      string
-	tags       []string
-	list       list.Model
-	search     textinput.Model
-	selected   *leetcode.QuestionData
-	width      int
-	height     int
-	request    int
-	loading    bool
-	err        error
-	total      int
-	hasMore    bool
+	client        leetcode.Client
+	difficulty    int
+	status        int
+	query         string
+	tags          []string
+	list          list.Model
+	search        textinput.Model
+	selected      *leetcode.QuestionData
+	width         int
+	height        int
+	request       int
+	loading       bool
+	err           error
+	total         int
+	hasMore       bool
+	pendingSearch tea.Cmd
 
-	showTags    bool
-	tagItems    []list.Item
-	tagList     list.Model
-	tagsLoaded  bool
-	tagsLoading bool
-	tagsErr     error
+	filter        filterKind
+	filterItems   []list.Item
+	filterList    list.Model
+	filterSearch  textinput.Model
+	availableTags []leetcode.QuestionTag
+	tagsLoaded    bool
+	tagsLoading   bool
+	tagsErr       error
 
-	notice  *logMsg
-	panel   string
-	details viewport.Model
+	notice         *logMsg
+	panel          string
+	details        viewport.Model
+	preview        questionPreview
+	previewFocused bool
+	darkBackground bool
+	styles         pickStyles
 }
 
 func newModel(c leetcode.Client) *model {
-	l := list.New(nil, rowDelegate{}, 80, 20)
-	tags := list.New(nil, rowDelegate{}, 80, 20)
-	for _, l := range []*list.Model{&l, &tags} {
+	m := &model{
+		client: c, width: 80, height: 24,
+		search: textinput.New(), filterSearch: textinput.New(),
+		details: viewport.New(viewport.WithWidth(80), viewport.WithHeight(16)),
+		preview: questionPreview{
+			viewport: viewport.New(viewport.WithWidth(1), viewport.WithHeight(1)),
+			cache:    make(map[string]*leetcode.QuestionData),
+			pending:  make(map[string]bool),
+		},
+	}
+	m.list = list.New(nil, rowDelegate{styles: &m.styles}, 80, 20)
+	m.filterList = list.New(nil, rowDelegate{styles: &m.styles}, 80, 20)
+	for _, l := range []*list.Model{&m.list, &m.filterList} {
 		l.SetShowTitle(false)
 		l.SetShowStatusBar(false)
 		l.SetShowHelp(false)
 		l.SetShowPagination(false)
 		l.SetFilteringEnabled(false)
+		l.KeyMap.NextPage.SetKeys("pgdown", "f", "ctrl+f")
+		l.KeyMap.PrevPage.SetKeys("pgup", "b", "ctrl+b")
 	}
-	l.KeyMap.NextPage.SetKeys("pgdown", "f", "ctrl+f")
-	l.KeyMap.PrevPage.SetKeys("pgup", "b", "ctrl+b")
-	tags.DisableQuitKeybindings()
-
-	search := textinput.New()
-	search.Prompt = "/ "
-	search.Placeholder = "Title or question ID"
-	m := &model{
-		client: c, list: l, tagList: tags, search: search,
-		width: 80, height: 24, details: viewport.New(80, 16),
-	}
+	m.filterList.DisableQuitKeybindings()
+	m.search.Prompt = "/ "
+	m.search.Placeholder = "Title or question ID"
+	m.filterSearch.Prompt = "/ "
+	m.filterSearch.Placeholder = "Find tags"
+	m.setTheme(true)
+	m.preview.viewport.MouseWheelDelta = 1
+	m.details.MouseWheelDelta = 1
 	m.resize()
 	return m
 }
 
-func (m *model) Init() tea.Cmd { return m.loadQuestions(true) }
+func (m *model) Init() tea.Cmd {
+	return tea.Batch(tea.RequestBackgroundColor, m.loadQuestions(true))
+}
 
 func (m *model) loadQuestions(reset bool) tea.Cmd {
+	m.pendingSearch = nil
 	if reset {
 		m.list.SetItems(nil)
 		m.list.ResetSelected()
 		m.total = 0
 		m.hasMore = false
+		m.syncPreview()
 	}
 	m.request++
 	m.loading = true
@@ -143,6 +158,20 @@ func (m *model) loadQuestions(reset bool) tea.Cmd {
 	}
 }
 
+func (m *model) searchQuestions() tea.Cmd {
+	query := strings.TrimSpace(m.search.Value())
+	if query == m.query {
+		return nil
+	}
+	m.query = query
+	// Invalidate old responses immediately, before the debounce timer fires.
+	m.pendingSearch = m.loadQuestions(true)
+	request := m.request
+	return tea.Tick(150*time.Millisecond, func(time.Time) tea.Msg {
+		return searchMsg{request: request}
+	})
+}
+
 func (m *model) loadTags() tea.Cmd {
 	m.tagsLoading = true
 	m.tagsErr = nil
@@ -155,6 +184,10 @@ func (m *model) loadTags() tea.Cmd {
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.BackgroundColorMsg:
+		m.setTheme(msg.IsDark())
+		m.renderPreview()
+		return m, nil
 	case logMsg:
 		if msg.Level == "warn" || msg.Level == "error" {
 			m.notice = &msg
@@ -166,6 +199,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 		m.resize()
+		return m, m.syncPreview()
+	case tea.MouseMsg:
+		return m, m.updateMouse(msg)
+	case searchMsg:
+		if msg.request != m.request {
+			return m, nil
+		}
+		cmd := m.pendingSearch
+		m.pendingSearch = nil
+		return m, cmd
+	case previewLoadMsg:
+		if msg.request != m.preview.request || msg.slug != m.preview.slug || !m.preview.loading || !m.previewVisible() {
+			return m, nil
+		}
+		return m, m.loadPreview()
+	case previewMsg:
+		delete(m.preview.pending, msg.slug)
+		if msg.err == nil {
+			m.preview.cache[msg.slug] = msg.question
+		}
+		if msg.slug == m.preview.slug {
+			m.preview.loading, m.preview.err = false, msg.err
+			m.renderPreview()
+		}
 		return m, nil
 	case questionsMsg:
 		if msg.request != m.request {
@@ -183,7 +240,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.total = msg.result.Total
 		// The US endpoint provides total, but not hasMore.
 		m.hasMore = len(msg.result.Questions) > 0 && (msg.result.HasMore || len(items) < m.total)
-		return m, m.list.SetItems(items)
+		cmd := m.list.SetItems(items)
+		return m, tea.Batch(cmd, m.syncPreview())
 	case tagsMsg:
 		m.tagsLoading = false
 		m.tagsErr = msg.err
@@ -191,31 +249,33 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.tagsLoaded = true
-		m.tagItems = make([]list.Item, len(msg.tags))
-		for i, tag := range msg.tags {
-			m.tagItems[i] = &tagItem{QuestionTag: tag}
+		m.availableTags = msg.tags
+		if m.filter == tagsFilter {
+			m.populateFilter()
 		}
-		m.filterTags()
 		return m, nil
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
 	}
 
 	if m.panel != "" {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 			switch keyMsg.String() {
 			case "esc", "q", "?", "!":
 				m.panel = ""
-				return m, nil
+				return m, m.syncPreview()
 			}
 		}
 		var cmd tea.Cmd
 		m.details, cmd = m.details.Update(msg)
 		return m, cmd
 	}
-	if keyMsg, ok := msg.(tea.KeyMsg); ok && !m.search.Focused() {
+	if m.filter != noFilter {
+		return m, m.updateFilter(msg)
+	}
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok && !m.search.Focused() {
 		switch keyMsg.String() {
 		case "?":
 			m.openPanel("Help")
@@ -228,144 +288,101 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	if m.search.Focused() {
-		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 			switch keyMsg.String() {
 			case "enter":
 				m.search.Blur()
-				if m.showTags {
-					return m, nil
-				}
-				m.query = strings.TrimSpace(m.search.Value())
-				return m, m.loadQuestions(true)
+				m.previewFocused = false
+				return m, nil
 			case "esc":
 				m.search.Blur()
-				if m.showTags {
-					m.search.Reset()
-					m.filterTags()
-				}
+				m.previewFocused = false
 				return m, nil
 			}
 		}
 		var cmd tea.Cmd
 		query := m.search.Value()
 		m.search, cmd = m.search.Update(msg)
-		if m.showTags && m.search.Value() != query {
-			m.filterTags()
+		if m.search.Value() != query {
+			return m, tea.Batch(cmd, m.searchQuestions())
 		}
 		return m, cmd
 	}
-	if m.showTags {
-		return m.updateTags(msg)
-	}
 
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
+	if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
 		switch keyMsg.String() {
-		case "d", "tab", "right", "l", "shift+tab", "left", "h", "1", "2", "3", "4":
-			switch keyMsg.String() {
-			case "shift+tab", "left", "h":
-				m.difficulty = (m.difficulty + len(difficulties) - 1) % len(difficulties)
-			case "1", "2", "3", "4":
-				m.difficulty = int(keyMsg.String()[0] - '1')
-			default:
-				m.difficulty = (m.difficulty + 1) % len(difficulties)
-			}
-			return m, m.loadQuestions(true)
-		case "s":
-			m.status = (m.status + 1) % len(statuses)
-			return m, m.loadQuestions(true)
-		case "t":
-			m.showTags = true
-			m.search.Reset()
-			m.search.Placeholder = "Tag name"
-			for _, entry := range m.tagItems {
-				tag := entry.(*tagItem)
-				tag.checked = slices.Contains(m.tags, tag.Slug)
-			}
-			m.filterTags()
-			if !m.tagsLoaded && !m.tagsLoading {
-				return m, m.loadTags()
-			}
+		case "tab", "shift+tab":
+			m.previewFocused = m.previewVisible() && !m.previewFocused
 			return m, nil
+		case "left", "h":
+			m.previewFocused = false
+			return m, nil
+		case "right", "l":
+			m.previewFocused = m.previewVisible()
+			return m, nil
+		case "d":
+			return m, m.openFilter(difficultyFilter)
+		case "s":
+			return m, m.openFilter(statusFilter)
+		case "t":
+			return m, m.openFilter(tagsFilter)
 		case "/":
 			m.search.Placeholder = "Title or question ID"
 			m.search.SetValue(m.query)
 			m.search.CursorEnd()
 			return m, m.search.Focus()
 		case "c":
-			m.difficulty, m.status = 0, 0
-			m.query, m.tags = "", nil
-			return m, m.loadQuestions(true)
+			return m, m.clearFilters()
 		case "r", "m":
+			if keyMsg.String() == "r" && m.err == nil && m.previewVisible() && m.preview.err != nil {
+				return m, m.loadPreview()
+			}
 			if !m.loading && (m.err != nil || m.hasMore) {
 				return m, m.loadQuestions(false)
 			}
 			return m, nil
+		case "q", "esc":
+			return m, tea.Quit
 		case "enter":
 			if selected, ok := m.list.SelectedItem().(*item); ok {
 				m.selected = (*leetcode.QuestionData)(selected)
+				if q := m.preview.cache[m.selected.TitleSlug]; q != nil {
+					m.selected = q
+				}
 				return m, tea.Quit
 			}
+		case "J", "K", "ctrl+d", "ctrl+u":
+			if m.previewVisible() {
+				switch keyMsg.String() {
+				case "J":
+					m.preview.viewport.ScrollDown(1)
+				case "K":
+					m.preview.viewport.ScrollUp(1)
+				case "ctrl+d":
+					m.preview.viewport.HalfPageDown()
+				case "ctrl+u":
+					m.preview.viewport.HalfPageUp()
+				}
+			}
+			return m, nil
 		}
+	}
+	if m.previewFocused && m.previewVisible() {
+		if keyMsg, ok := msg.(tea.KeyPressMsg); ok {
+			switch keyMsg.String() {
+			case "home", "g":
+				m.preview.viewport.GotoTop()
+				return m, nil
+			case "end", "G":
+				m.preview.viewport.GotoBottom()
+				return m, nil
+			}
+		}
+		var cmd tea.Cmd
+		m.preview.viewport, cmd = m.preview.viewport.Update(msg)
+		return m, cmd
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	return m, cmd
-}
-
-func (m *model) updateTags(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		switch keyMsg.String() {
-		case "esc", "q":
-			m.showTags = false
-			return m, nil
-		case "r":
-			if m.tagsErr != nil && !m.tagsLoading {
-				return m, m.loadTags()
-			}
-		case "/":
-			return m, m.search.Focus()
-		case " ":
-			if tag, ok := m.tagList.SelectedItem().(*tagItem); ok {
-				tag.checked = !tag.checked
-			}
-			return m, nil
-		case "enter":
-			if m.tagsLoading || m.tagsErr != nil {
-				return m, nil
-			}
-			var tags []string
-			for _, entry := range m.tagItems {
-				if tag := entry.(*tagItem); tag.checked {
-					tags = append(tags, tag.Slug)
-				}
-			}
-			if len(tags) == len(m.tagItems) {
-				tags = nil
-			}
-			m.tags = tags
-			m.showTags = false
-			return m, m.loadQuestions(true)
-		}
-	}
-	var cmd tea.Cmd
-	m.tagList, cmd = m.tagList.Update(msg)
-	return m, cmd
-}
-
-// Tags are a small local list; filtering here avoids asynchronous results
-// replacing a newer search or a reopened selection draft.
-func (m *model) filterTags() {
-	items := m.tagItems
-	if query := m.search.Value(); query != "" && m.showTags {
-		targets := make([]string, len(m.tagItems))
-		for i, entry := range m.tagItems {
-			targets[i] = entry.FilterValue()
-		}
-		items = nil
-		for _, rank := range list.DefaultFilter(query, targets) {
-			items = append(items, m.tagItems[rank.Index])
-		}
-	}
-	m.tagList.SetItems(items)
-	m.tagList.ResetSelected()
+	return m, tea.Batch(cmd, m.syncPreview())
 }
