@@ -9,6 +9,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/charmbracelet/log"
+	"github.com/goccy/go-json"
 	"github.com/spf13/viper"
 
 	"github.com/j178/leetgo/config"
@@ -116,11 +117,15 @@ func Generate(q *leetcode.QuestionData) (*GenerateResult, error) {
 	}
 
 	state := config.LoadState()
-	state.LastQuestion = config.LastQuestion{
-		Slug:       q.TitleSlug,
-		FrontendID: q.QuestionFrontendId,
-		Gen:        gen.Slug(),
+	saved, err := saveQuestionState(q, gen.Slug())
+	if err != nil {
+		return nil, err
 	}
+	if state.Questions == nil {
+		state.Questions = make(map[string]config.LastQuestion)
+	}
+	state.Questions[q.TitleSlug] = saved
+	state.LastQuestion = saved
 	config.SaveState(state)
 
 	return result, nil
@@ -147,10 +152,44 @@ func GenerateContest(ct *leetcode.Contest) ([]*GenerateResult, error) {
 	}
 
 	state := config.LoadState()
+	if state.Questions == nil {
+		state.Questions = make(map[string]config.LastQuestion)
+	}
+	if state.Contests == nil {
+		state.Contests = make(map[string][]string)
+	}
+	questionSlugs := make([]string, 0, len(results))
+	for _, result := range results {
+		saved, err := saveQuestionState(result.Question, result.Lang.Slug())
+		if err != nil {
+			return nil, err
+		}
+		state.Questions[result.Question.TitleSlug] = saved
+		questionSlugs = append(questionSlugs, result.Question.TitleSlug)
+	}
 	state.LastContest = ct.TitleSlug
+	state.Contests[ct.TitleSlug] = questionSlugs
 	config.SaveState(state)
-
 	return results, nil
+}
+
+func saveQuestionState(q *leetcode.QuestionData, langSlug string) (config.LastQuestion, error) {
+	metaData, err := json.Marshal(q.MetaData)
+	if err != nil {
+		return config.LastQuestion{}, err
+	}
+	saved := config.LastQuestion{
+		Slug:              q.TitleSlug,
+		FrontendID:        q.QuestionFrontendId,
+		Gen:               langSlug,
+		Content:           q.Content,
+		TranslatedContent: q.TranslatedContent,
+		MetaData:          metaData,
+	}
+	if q.IsContest() {
+		saved.ContestSlug = q.Contest().TitleSlug
+	}
+	return saved, nil
 }
 
 func tryWrite(file string, content string) (bool, error) {
