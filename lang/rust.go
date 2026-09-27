@@ -126,7 +126,7 @@ func toRustVarName(name string) string {
 	return utils.CamelToSnake(name)
 }
 
-// rustMutableParams reports which inputs the Rust solution takes by &mut, in metadata order.
+// rustMutableParams reports which inputs the Rust solution expects as mutable.
 func rustMutableParams(q *leetcode.QuestionData) []bool {
 	mutable := make([]bool, len(q.MetaData.Params))
 	snippet := q.GetCodeSnippet("rust")
@@ -178,11 +178,19 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	code := ""
 	paramTypes := make([]string, 0, len(q.MetaData.Params))
 	paramNames := make([]string, 0, len(q.MetaData.Params))
-	for _, param := range q.MetaData.Params {
+	mutable := rustMutableParams(q)
+	//	for _, param := range q.MetaData.Params {
+	for i, param := range q.MetaData.Params {
 		varName := toRustVarName(param.Name)
 		varType := toRustType(param.Type)
+
+		letKeyword := "let"
+		if mutable[i] {
+			letKeyword = "let mut"
+		}
 		code += fmt.Sprintf(
-			"\tlet %s: %s = deserialize(&read_line()?)?;\n",
+			"\t%s %s: %s = deserialize(&read_line()?)?;\n",
+			letKeyword,
 			varName,
 			varType,
 		)
