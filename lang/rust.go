@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -123,6 +124,31 @@ func toRustType(typeName string) string {
 
 func toRustVarName(name string) string {
 	return utils.CamelToSnake(name)
+}
+
+// rustMutableParams reports which inputs the Rust solution takes by &mut, in metadata order.
+func rustMutableParams(q *leetcode.QuestionData) []bool {
+	mutable := make([]bool, len(q.MetaData.Params))
+	snippet := q.GetCodeSnippet("rust")
+
+	// Metadata has input types but no Rust borrowing information, so read the starter signature.
+	methodName := toRustVarName(q.MetaData.Name)
+	signature := regexp.MustCompile(
+		`(?s)\bfn\s+` + regexp.QuoteMeta(methodName) + `\s*\((.*?)\)`,
+	).FindStringSubmatch(snippet)
+	if len(signature) != 2 {
+		// Without a matching signature, leave every input marked as passed by value.
+		return mutable
+	}
+
+	// Match each metadata parameter against its declaration inside the Rust signature.
+	for i, param := range q.MetaData.Params {
+		paramName := toRustVarName(param.Name)
+		pattern := `\b` + regexp.QuoteMeta(paramName) +
+			`\s*:\s*&\s*('[A-Za-z_][A-Za-z0-9_]*\s*)?mut\b`
+		mutable[i] = regexp.MustCompile(pattern).MatchString(signature[1])
+	}
+	return mutable
 }
 
 func formatRustConversion(rustType, expr string) string {
