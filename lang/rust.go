@@ -158,13 +158,18 @@ func formatRustConversion(rustType, expr string) string {
 	return expr
 }
 
-func formatCallArgs(argTypes, args []string) string {
+func formatCallArgs(argTypes, args []string, mutable []bool) string {
 	if len(args) == 0 {
 		return ""
 	}
 	res := make([]string, 0, len(args))
 	for i, arg := range args {
-		res = append(res, formatRustConversion(argTypes[i], arg))
+		if i < len(mutable) && mutable[i] {
+			res = append(res, "&mut "+arg)
+		} else {
+			res = append(res, formatRustConversion(argTypes[i], arg))
+		}
+		// res = append(res, formatRustConversion(argTypes[i], arg))
 	}
 	return strings.Join(res, ", ")
 }
@@ -201,7 +206,7 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		returnType := toRustType(q.MetaData.Return.Type)
 		call := fmt.Sprintf("Solution::%s(%s)",
-			toRustVarName(q.MetaData.Name), formatCallArgs(paramTypes, paramNames))
+			toRustVarName(q.MetaData.Name), formatCallArgs(paramTypes, paramNames, mutable))
 		code += fmt.Sprintf(
 			"\tlet ans: %s = %s;\n",
 			returnType,
@@ -212,7 +217,7 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 		code += fmt.Sprintf(
 			"\tSolution::%s(%s);\n",
 			toRustVarName(q.MetaData.Name),
-			formatCallArgs(paramTypes, paramNames),
+			formatCallArgs(paramTypes, paramNames, mutable),
 		)
 		if q.MetaData.Output != nil {
 			ansName := paramNames[q.MetaData.Output.ParamIndex]
@@ -275,7 +280,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 	prepareCode += fmt.Sprintf(
 		"\t#[allow(unused_mut)]\n\tlet mut obj = %s::new(%s);",
 		q.MetaData.ClassName,
-		formatCallArgs(paramTypes, paramNames),
+		formatCallArgs(paramTypes, paramNames, nil),
 	)
 
 	callCode := ""
@@ -302,7 +307,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			returnType := toRustType(method.Return.Type)
 			call := fmt.Sprintf("obj.%s(%s)",
-				toRustVarName(method.Name), formatCallArgs(methodParamTypes, methodParamNames))
+				toRustVarName(method.Name), formatCallArgs(methodParamTypes, methodParamNames, nil))
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet ans: %s = %s;\n\t\t\t\toutput.push(serialize(ans)?);\n",
 				returnType,
@@ -312,7 +317,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tobj.%s(%s);\n",
 				toRustVarName(method.Name),
-				formatCallArgs(methodParamTypes, methodParamNames),
+				formatCallArgs(methodParamTypes, methodParamNames, nil),
 			)
 			methodCall += "\t\t\t\toutput.push(\"null\".to_string());\n"
 		}
