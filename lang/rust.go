@@ -169,7 +169,6 @@ func formatCallArgs(argTypes, args []string, mutable []bool) string {
 		} else {
 			res = append(res, formatRustConversion(argTypes[i], arg))
 		}
-		// res = append(res, formatRustConversion(argTypes[i], arg))
 	}
 	return strings.Join(res, ", ")
 }
@@ -184,7 +183,6 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	paramTypes := make([]string, 0, len(q.MetaData.Params))
 	paramNames := make([]string, 0, len(q.MetaData.Params))
 	mutable := rustMutableParams(q)
-	//	for _, param := range q.MetaData.Params {
 	for i, param := range q.MetaData.Params {
 		varName := toRustVarName(param.Name)
 		varType := toRustType(param.Type)
@@ -213,7 +211,6 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 			formatRustConversion(returnType, call),
 		)
 	} else {
-		// TODO: input param should be mut ref
 		code += fmt.Sprintf(
 			"\tSolution::%s(%s);\n",
 			toRustVarName(q.MetaData.Name),
