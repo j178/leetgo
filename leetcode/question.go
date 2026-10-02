@@ -414,7 +414,24 @@ func htmlToMarkdown(html string) string {
 			return md.String(content)
 		},
 	}
-	converter.AddRules(replaceSub, replaceSup, replaceEm)
+	// The default #text rule drops whitespace-only nodes at these inline boundaries.
+	preserveKeywordWhitespace := md.Rule{
+		Filter: []string{"#text"},
+		Replacement: func(_ string, selec *goquery.Selection, _ *md.Options) *string {
+			text := selec.Text()
+			if text == "" || strings.TrimSpace(text) != "" {
+				return nil
+			}
+
+			prev, next := selec.Prev(), selec.Next()
+			if (prev.Is("em") && next.Is("span[data-keyword]")) ||
+				(prev.Is("span[data-keyword]") && next.Is("em")) {
+				return md.String(" ")
+			}
+			return nil
+		},
+	}
+	converter.AddRules(replaceSub, replaceSup, replaceEm, preserveKeywordWhitespace)
 	content, err := converter.ConvertString(html)
 	if err != nil {
 		return content
