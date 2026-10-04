@@ -394,11 +394,15 @@ func usesUpstreamSpacingRule(selec *goquery.Selection) bool {
 	switch goquery.NodeName(selec) {
 	case "a":
 		href := strings.TrimSpace(selec.AttrOr("href", ""))
-		return href != "" && href != "#"
+		if href == "" || href == "#" {
+			return false
+		}
+		return strings.TrimSpace(selec.Text()) != "" ||
+			strings.TrimSpace(selec.AttrOr("title", selec.AttrOr("aria-label", ""))) != ""
 	case "strong", "b":
-		return !selec.Parent().Is("strong, b")
+		return strings.TrimSpace(selec.Text()) != "" && !selec.Parent().Is("strong, b")
 	case "i":
-		return !selec.Parent().Is("i, em")
+		return strings.TrimSpace(selec.Text()) != "" && !selec.Parent().Is("i, em")
 	case "code", "kbd", "samp", "tt", "del", "s", "strike":
 		return true
 	default:
