@@ -390,6 +390,22 @@ func (q *QuestionData) GetPreferContent() (string, config.Language) {
 	return q.Content, config.EN
 }
 
+func usesUpstreamSpacingRule(selec *goquery.Selection) bool {
+	switch goquery.NodeName(selec) {
+	case "a":
+		href := strings.TrimSpace(selec.AttrOr("href", ""))
+		return href != "" && href != "#"
+	case "strong", "b":
+		return !selec.Parent().Is("strong, b")
+	case "i":
+		return !selec.Parent().Is("i, em")
+	case "code", "kbd", "samp", "tt", "del", "s", "strike":
+		return true
+	default:
+		return false
+	}
+}
+
 func htmlToMarkdown(html string) string {
 	// Convert to markdown
 	converter := md.NewConverter("", true, nil)
@@ -414,8 +430,8 @@ func htmlToMarkdown(html string) string {
 			return md.String(content)
 		},
 	}
-	// The default #text rule drops whitespace-only nodes at these inline boundaries.
-	preserveKeywordWhitespace := md.Rule{
+	// The default #text rule drops whitespace-only nodes between inline elements.
+	preserveInlineWhitespace := md.Rule{
 		Filter: []string{"#text"},
 		Replacement: func(_ string, selec *goquery.Selection, _ *md.Options) *string {
 			text := selec.Text()
@@ -424,14 +440,21 @@ func htmlToMarkdown(html string) string {
 			}
 
 			prev, next := selec.Prev(), selec.Next()
-			if (prev.Is("em") && next.Is("span[data-keyword]")) ||
-				(prev.Is("span[data-keyword]") && next.Is("em")) {
-				return md.String(" ")
+			if !md.IsInlineElement(goquery.NodeName(prev)) || !md.IsInlineElement(goquery.NodeName(next)) {
+				return nil
 			}
-			return nil
+
+			// Do not duplicate spaces supplied by the dependency's inline rules.
+			if usesUpstreamSpacingRule(prev) && strings.HasSuffix(md.AddSpaceIfNessesary(prev, "x"), " ") {
+				return nil
+			}
+			if usesUpstreamSpacingRule(next) && strings.HasPrefix(md.AddSpaceIfNessesary(next, "x"), " ") {
+				return nil
+			}
+			return md.String(" ")
 		},
 	}
-	converter.AddRules(replaceSub, replaceSup, replaceEm, preserveKeywordWhitespace)
+	converter.AddRules(replaceSub, replaceSup, replaceEm, preserveInlineWhitespace)
 	content, err := converter.ConvertString(html)
 	if err != nil {
 		return content
