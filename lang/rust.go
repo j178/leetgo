@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -125,6 +126,27 @@ func toRustVarName(name string) string {
 	return utils.CamelToSnake(name)
 }
 
+var (
+	rustSignaturePattern    = regexp.MustCompile(`\bfn\s+(\w+)\s*\(([^)]*)\)`)
+	rustMutableParamPattern = regexp.MustCompile(`\b(\w+)\s*:\s*&\s*(?:'\w+\s+)?mut\b`)
+)
+
+// Metadata omits Rust borrowing information, so read it from the starter signature.
+func rustMutableParams(q *leetcode.QuestionData) map[string]bool {
+	mutable := make(map[string]bool)
+	methodName := toRustVarName(q.MetaData.Name)
+	for _, signature := range rustSignaturePattern.FindAllStringSubmatch(q.GetCodeSnippet("rust"), -1) {
+		if signature[1] != methodName {
+			continue
+		}
+		for _, param := range rustMutableParamPattern.FindAllStringSubmatch(signature[2], -1) {
+			mutable[param[1]] = true
+		}
+		break
+	}
+	return mutable
+}
+
 func formatRustConversion(rustType, expr string) string {
 	if rustType == "BinaryTree" || rustType == "LinkedList" {
 		return expr + ".into()"
@@ -150,43 +172,43 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	Ok(())
 }`
 	code := ""
-	paramTypes := make([]string, 0, len(q.MetaData.Params))
-	paramNames := make([]string, 0, len(q.MetaData.Params))
+	args := make([]string, 0, len(q.MetaData.Params))
+	mutable := rustMutableParams(q)
 	for _, param := range q.MetaData.Params {
 		varName := toRustVarName(param.Name)
 		varType := toRustType(param.Type)
+		binding, arg := varName, varName
+		if mutable[varName] {
+			binding = "mut " + varName
+			arg = "&mut " + varName
+		}
+		// Keep the converted value in a binding so mutations survive the call.
+		value := fmt.Sprintf("deserialize::<%s>(&read_line()?)?", varType)
 		code += fmt.Sprintf(
-			"\tlet %s: %s = deserialize(&read_line()?)?;\n",
-			varName,
-			varType,
+			"\tlet %s = %s;\n",
+			binding,
+			formatRustConversion(varType, value),
 		)
-		paramNames = append(paramNames, varName)
-		paramTypes = append(paramTypes, varType)
+		args = append(args, arg)
 	}
 
+	call := fmt.Sprintf("Solution::%s(%s)", toRustVarName(q.MetaData.Name), strings.Join(args, ", "))
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		returnType := toRustType(q.MetaData.Return.Type)
-		call := fmt.Sprintf("Solution::%s(%s)",
-			toRustVarName(q.MetaData.Name), formatCallArgs(paramTypes, paramNames))
 		code += fmt.Sprintf(
 			"\tlet ans: %s = %s;\n",
 			returnType,
 			formatRustConversion(returnType, call),
 		)
 	} else {
-		// TODO: input param should be mut ref
-		code += fmt.Sprintf(
-			"\tSolution::%s(%s);\n",
-			toRustVarName(q.MetaData.Name),
-			formatCallArgs(paramTypes, paramNames),
-		)
+		code += fmt.Sprintf("\t%s;\n", call)
 		if q.MetaData.Output != nil {
-			ansName := paramNames[q.MetaData.Output.ParamIndex]
-			ansType := paramTypes[q.MetaData.Output.ParamIndex]
+			param := q.MetaData.Params[q.MetaData.Output.ParamIndex]
+			ansType := toRustType(param.Type)
 			code += fmt.Sprintf(
 				"\tlet ans: %s = %s;\n",
 				ansType,
-				ansName,
+				formatRustConversion(ansType, toRustVarName(param.Name)),
 			)
 		} else {
 			code += "\tlet ans = ();\n"
