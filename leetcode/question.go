@@ -8,13 +8,17 @@ import (
 	"sync/atomic"
 	"text/template"
 
-	md "github.com/JohannesKaufmann/html-to-markdown"
-	"github.com/JohannesKaufmann/html-to-markdown/plugin"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/converter"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/base"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/strikethrough"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/table"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goccy/go-json"
 	"github.com/k3a/html2text"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
+	"golang.org/x/net/html"
 
 	"github.com/j178/leetgo/config"
 	"github.com/j178/leetgo/utils"
@@ -390,32 +394,42 @@ func (q *QuestionData) GetPreferContent() (string, config.Language) {
 	return q.Content, config.EN
 }
 
-func htmlToMarkdown(html string) string {
-	// Convert to markdown
-	converter := md.NewConverter("", true, nil)
-	converter.Use(plugin.GitHubFlavored())
-	replaceSub := md.Rule{
-		Filter: []string{"sub"},
-		Replacement: func(content string, selec *goquery.Selection, opt *md.Options) *string {
-			selec.SetText(utils.ReplaceSubscript(content))
-			return nil
-		},
-	}
-	replaceSup := md.Rule{
-		Filter: []string{"sup"},
-		Replacement: func(content string, selec *goquery.Selection, opt *md.Options) *string {
-			selec.SetText(utils.ReplaceSuperscript(content))
-			return nil
-		},
-	}
-	replaceEm := md.Rule{
-		Filter: []string{"em"},
-		Replacement: func(content string, selec *goquery.Selection, options *md.Options) *string {
-			return md.String(content)
-		},
-	}
-	converter.AddRules(replaceSub, replaceSup, replaceEm)
-	content, err := converter.ConvertString(html)
+func htmlToMarkdown(input string) string {
+	conv := converter.NewConverter(converter.WithPlugins(
+		base.NewBasePlugin(),
+		commonmark.NewCommonmarkPlugin(),
+		strikethrough.NewStrikethroughPlugin(),
+		table.NewTablePlugin(
+			table.WithCellPaddingBehavior(table.CellPaddingBehaviorMinimal),
+			table.WithNewlineBehavior(table.NewlineBehaviorPreserve),
+		),
+	))
+	// Code renderers read text directly, bypassing renderers for nested tags.
+	conv.Register.PreRenderer(func(_ converter.Context, doc *html.Node) {
+		goquery.NewDocumentFromNode(doc).Find("sub, sup").Each(func(_ int, s *goquery.Selection) {
+			if s.Is("sub") {
+				s.SetText(utils.ReplaceSubscript(s.Text()))
+			} else {
+				s.SetText(utils.ReplaceSuperscript(s.Text()))
+			}
+		})
+	}, converter.PriorityEarly)
+	// v2 does not yet provide the task-list plugin included in v1's GitHubFlavored.
+	conv.Register.RendererFor("input", converter.TagTypeInline, func(_ converter.Context, w converter.Writer, n *html.Node) converter.RenderStatus {
+		s := goquery.NewDocumentFromNode(n)
+		if s.Parent().Is("li") && s.AttrOr("type", "") == "checkbox" {
+			if _, checked := s.Attr("checked"); checked {
+				_, _ = w.WriteString("[x]")
+			} else {
+				_, _ = w.WriteString("[ ]")
+			}
+			if next := n.NextSibling; next == nil || next.Type != html.TextNode || !strings.HasPrefix(next.Data, " ") {
+				_, _ = w.WriteString(" ")
+			}
+		}
+		return converter.RenderSuccess
+	}, converter.PriorityEarly)
+	content, err := conv.ConvertString(input)
 	if err != nil {
 		return content
 	}
@@ -423,9 +437,6 @@ func htmlToMarkdown(html string) string {
 	// Remove special HTML entities characters
 	replacer := strings.NewReplacer("\u00A0", " ", "\u200B", "")
 	content = replacer.Replace(content)
-
-	// Remove extra newline at the end of code blocks
-	content = strings.ReplaceAll(content, "\n\n```\n\n", "\n```\n\n")
 
 	return content
 }
