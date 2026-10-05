@@ -126,27 +126,23 @@ func toRustVarName(name string) string {
 	return utils.CamelToSnake(name)
 }
 
-// rustMutableParams reports which inputs the Rust solution expects as mutable.
-func rustMutableParams(q *leetcode.QuestionData) []bool {
-	mutable := make([]bool, len(q.MetaData.Params))
-	snippet := q.GetCodeSnippet("rust")
+var (
+	rustSignaturePattern    = regexp.MustCompile(`\bfn\s+(\w+)\s*\(([^)]*)\)`)
+	rustMutableParamPattern = regexp.MustCompile(`\b(\w+)\s*:\s*&\s*(?:'\w+\s+)?mut\b`)
+)
 
-	// Metadata has input types but no Rust borrowing information, so read the starter signature.
+// Metadata omits Rust borrowing information, so read it from the starter signature.
+func rustMutableParams(q *leetcode.QuestionData) map[string]bool {
+	mutable := make(map[string]bool)
 	methodName := toRustVarName(q.MetaData.Name)
-	signature := regexp.MustCompile(
-		`(?s)\bfn\s+` + regexp.QuoteMeta(methodName) + `\s*\((.*?)\)`,
-	).FindStringSubmatch(snippet)
-	if len(signature) != 2 {
-		// Without a matching signature, leave every input marked as passed by value.
-		return mutable
-	}
-
-	// Match each metadata parameter against its declaration inside the Rust signature.
-	for i, param := range q.MetaData.Params {
-		paramName := toRustVarName(param.Name)
-		pattern := `\b` + regexp.QuoteMeta(paramName) +
-			`\s*:\s*&\s*('[A-Za-z_][A-Za-z0-9_]*\s*)?mut\b`
-		mutable[i] = regexp.MustCompile(pattern).MatchString(signature[1])
+	for _, signature := range rustSignaturePattern.FindAllStringSubmatch(q.GetCodeSnippet("rust"), -1) {
+		if signature[1] != methodName {
+			continue
+		}
+		for _, param := range rustMutableParamPattern.FindAllStringSubmatch(signature[2], -1) {
+			mutable[param[1]] = true
+		}
+		break
 	}
 	return mutable
 }
@@ -158,17 +154,13 @@ func formatRustConversion(rustType, expr string) string {
 	return expr
 }
 
-func formatCallArgs(argTypes, args []string, mutable []bool) string {
+func formatCallArgs(argTypes, args []string) string {
 	if len(args) == 0 {
 		return ""
 	}
 	res := make([]string, 0, len(args))
 	for i, arg := range args {
-		if i < len(mutable) && mutable[i] {
-			res = append(res, "&mut "+arg)
-		} else {
-			res = append(res, formatRustConversion(argTypes[i], arg))
-		}
+		res = append(res, formatRustConversion(argTypes[i], arg))
 	}
 	return strings.Join(res, ", ")
 }
@@ -180,49 +172,43 @@ func (r rust) generateNormalTestCode(q *leetcode.QuestionData) (string, error) {
 	Ok(())
 }`
 	code := ""
-	paramTypes := make([]string, 0, len(q.MetaData.Params))
-	paramNames := make([]string, 0, len(q.MetaData.Params))
+	args := make([]string, 0, len(q.MetaData.Params))
 	mutable := rustMutableParams(q)
-	for i, param := range q.MetaData.Params {
+	for _, param := range q.MetaData.Params {
 		varName := toRustVarName(param.Name)
 		varType := toRustType(param.Type)
-
-		letKeyword := "let"
-		if mutable[i] {
-			letKeyword = "let mut"
+		binding, arg := varName, varName
+		if mutable[varName] {
+			binding = "mut " + varName
+			arg = "&mut " + varName
 		}
+		// Keep the converted value in a binding so mutations survive the call.
+		value := fmt.Sprintf("deserialize::<%s>(&read_line()?)?", varType)
 		code += fmt.Sprintf(
-			"\t%s %s: %s = deserialize(&read_line()?)?;\n",
-			letKeyword,
-			varName,
-			varType,
+			"\tlet %s = %s;\n",
+			binding,
+			formatRustConversion(varType, value),
 		)
-		paramNames = append(paramNames, varName)
-		paramTypes = append(paramTypes, varType)
+		args = append(args, arg)
 	}
 
+	call := fmt.Sprintf("Solution::%s(%s)", toRustVarName(q.MetaData.Name), strings.Join(args, ", "))
 	if q.MetaData.Return != nil && q.MetaData.Return.Type != "void" {
 		returnType := toRustType(q.MetaData.Return.Type)
-		call := fmt.Sprintf("Solution::%s(%s)",
-			toRustVarName(q.MetaData.Name), formatCallArgs(paramTypes, paramNames, mutable))
 		code += fmt.Sprintf(
 			"\tlet ans: %s = %s;\n",
 			returnType,
 			formatRustConversion(returnType, call),
 		)
 	} else {
-		code += fmt.Sprintf(
-			"\tSolution::%s(%s);\n",
-			toRustVarName(q.MetaData.Name),
-			formatCallArgs(paramTypes, paramNames, mutable),
-		)
+		code += fmt.Sprintf("\t%s;\n", call)
 		if q.MetaData.Output != nil {
-			ansName := paramNames[q.MetaData.Output.ParamIndex]
-			ansType := paramTypes[q.MetaData.Output.ParamIndex]
+			param := q.MetaData.Params[q.MetaData.Output.ParamIndex]
+			ansType := toRustType(param.Type)
 			code += fmt.Sprintf(
 				"\tlet ans: %s = %s;\n",
 				ansType,
-				ansName,
+				formatRustConversion(ansType, toRustVarName(param.Name)),
 			)
 		} else {
 			code += "\tlet ans = ();\n"
@@ -277,7 +263,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 	prepareCode += fmt.Sprintf(
 		"\t#[allow(unused_mut)]\n\tlet mut obj = %s::new(%s);",
 		q.MetaData.ClassName,
-		formatCallArgs(paramTypes, paramNames, nil),
+		formatCallArgs(paramTypes, paramNames),
 	)
 
 	callCode := ""
@@ -304,7 +290,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 		if method.Return.Type != "" && method.Return.Type != "void" {
 			returnType := toRustType(method.Return.Type)
 			call := fmt.Sprintf("obj.%s(%s)",
-				toRustVarName(method.Name), formatCallArgs(methodParamTypes, methodParamNames, nil))
+				toRustVarName(method.Name), formatCallArgs(methodParamTypes, methodParamNames))
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tlet ans: %s = %s;\n\t\t\t\toutput.push(serialize(ans)?);\n",
 				returnType,
@@ -314,7 +300,7 @@ func (r rust) generateSystemDesignTestCode(q *leetcode.QuestionData) (string, er
 			methodCall += fmt.Sprintf(
 				"\t\t\t\tobj.%s(%s);\n",
 				toRustVarName(method.Name),
-				formatCallArgs(methodParamTypes, methodParamNames, nil),
+				formatCallArgs(methodParamTypes, methodParamNames),
 			)
 			methodCall += "\t\t\t\toutput.push(\"null\".to_string());\n"
 		}
