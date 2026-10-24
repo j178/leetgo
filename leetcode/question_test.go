@@ -1,6 +1,7 @@
 package leetcode_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/j178/leetgo/leetcode"
@@ -53,6 +54,55 @@ func TestGetFormattedContentHTML(t *testing.T) {
 			q := leetcode.QuestionData{Content: tt.html, EditorType: leetcode.EditorTypeCKEditor}
 			if got := q.GetFormattedContent(); got != tt.want {
 				t.Errorf("GetFormattedContent() = %q; want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseExampleOutputs(t *testing.T) {
+	tests := []struct {
+		name    string
+		editor  leetcode.EditorType
+		content string
+		want    []string
+	}{
+		{
+			name:    "output wrapped in code",
+			editor:  leetcode.EditorTypeCKEditor,
+			content: "<p><strong>Input:</strong> <code>nums = [2,7,11,15], target = 9</code></p>\n\n<p><strong>Output:</strong> <code>[0,1]</code></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>The sum of <code>nums[0]</code> and <code>nums[1]</code> is <code>2 + 7 = 9</code>, which equals the target. Therefore, the indices <code>[0, 1]</code> are returned.</p>\n\n<p><strong>Example 2:</strong></p>\n\n<p><strong>Input:</strong> <code>nums = [3,2,4], target = 6</code></p>\n\n<p><strong>Output:</strong> <code>[1,2]</code></p>",
+			want:    []string{"[0,1]", "[1,2]"},
+		},
+		{
+			name:    "plain output in pre",
+			editor:  leetcode.EditorTypeCKEditor,
+			content: "<pre>\n<strong>Input:</strong> nums = [2,7,11,15], target = 9\n<strong>Output:</strong> [0,1]\n<strong>Explanation:</strong> Because nums[0] + nums[1] == 9, we return [0, 1].\n</pre>",
+			want:    []string{"[0,1]"},
+		},
+		{
+			name:    "output wrapped in span",
+			editor:  leetcode.EditorTypeCKEditor,
+			content: "<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [1,3,4], nums2 = [1,3,4], k = 1</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>",
+			want:    []string{"5"},
+		},
+		{
+			name:    "chinese output",
+			editor:  leetcode.EditorTypeCKEditor,
+			content: "<pre>\n<strong>输入：</strong>nums = [2,7,11,15], target = 9\n<strong>输出：</strong>[0,1]\n<strong>解释：</strong>因为 nums[0] + nums[1] == 9 ，返回 [0, 1] 。\n</pre>",
+			want:    []string{"[0,1]"},
+		},
+		{
+			name:    "markdown output wrapped in code",
+			editor:  leetcode.EditorTypeMarkdown,
+			content: "Input: nums = [2,7,11,15], target = 9\nOutput: <code>[0,1]</code>\n",
+			want:    []string{"[0,1]"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			q := leetcode.QuestionData{Content: tt.content, EditorType: tt.editor}
+			got := q.ParseExampleOutputs()
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("ParseExampleOutputs() = %q; want %q", got, tt.want)
 			}
 		})
 	}
